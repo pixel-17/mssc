@@ -6,6 +6,7 @@ use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Turno;
+use App\Services\DeterminadorFinDeTurno;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\Vencida;
 use Illuminate\Console\Command;
@@ -32,6 +33,11 @@ class ProcesarVencimientosPapeletas extends Command
     protected $signature = 'papeletas:procesar-vencimientos';
 
     protected $description = 'Escala al Jefe de Área las papeletas cuyo SLA de jefe venció, y vence las que ya no tienen turno/día vigente.';
+
+    public function __construct(private DeterminadorFinDeTurno $finDeTurno)
+    {
+        parent::__construct();
+    }
 
     public function handle(): int
     {
@@ -91,7 +97,7 @@ class ProcesarVencimientosPapeletas extends Command
     {
         Papeleta::whereState('estado', $this->estadosNoTerminalesPreAutorizacion())
             ->each(function (Papeleta $papeleta) {
-                if ($this->turnoDelDiaYaTermino($papeleta)) {
+                if ($this->finDeTurno->yaTermino($papeleta)) {
                     DB::transaction(function () use ($papeleta) {
                         $estadoAnterior = class_basename($papeleta->estado);
 
@@ -125,24 +131,4 @@ class ProcesarVencimientosPapeletas extends Command
         ];
     }
 
-    private function turnoDelDiaYaTermino(Papeleta $papeleta): bool
-    {
-        if ($papeleta->regimen === '728') {
-            // 728 no tiene ventana de horario: el "fin de día" se toma
-            // como el cierre del día operativo a medianoche.
-            return now()->toDateString() > $papeleta->dia_operativo->toDateString();
-        }
-
-        $turno = Turno::where('user_id', $papeleta->trabajador_id)
-            ->whereDate('fecha', $papeleta->dia_operativo)
-            ->first();
-
-        if (! $turno || ! $turno->hora_fin) {
-            // Sin turno cargado, se usa fin de día como respaldo.
-            return now()->toDateString() > $papeleta->dia_operativo->toDateString();
-        }
-
-        return now()->toDateString() > $papeleta->dia_operativo->toDateString()
-            || now()->format('H:i:s') > $turno->hora_fin;
-    }
 }

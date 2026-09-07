@@ -23,6 +23,7 @@ class Motivo extends Model
         'permite_cierre_sin_retorno',
         'requiere_sustento_en_retorno',
         'participa_regla_exclusividad',
+        'es_destino_reclasificacion',
         'activo',
     ];
 
@@ -34,6 +35,7 @@ class Motivo extends Model
             'permite_cierre_sin_retorno' => 'boolean',
             'requiere_sustento_en_retorno' => 'boolean',
             'participa_regla_exclusividad' => 'boolean',
+            'es_destino_reclasificacion' => 'boolean',
             'activo' => 'boolean',
         ];
     }

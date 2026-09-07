@@ -51,6 +51,9 @@ class Papeleta extends Model
         'motivo_rechazo',
         'cancelada_at',
         'vencida_at',
+        'causa_finalizacion_sin_retorno',
+        'requiere_visto_bueno',
+        'regularizacion_fecha_limite',
         'motivo_original_id',
         'justificacion',
         'adjunto_inicial_path',
@@ -72,6 +75,8 @@ class Papeleta extends Model
             'hora_salida_real' => 'datetime',
             'cancelada_at' => 'datetime',
             'vencida_at' => 'datetime',
+            'requiere_visto_bueno' => 'boolean',
+            'regularizacion_fecha_limite' => 'datetime',
         ];
     }
 
