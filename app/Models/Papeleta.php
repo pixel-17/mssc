@@ -2,22 +2,26 @@
 
 namespace App\Models;
 
+use App\States\Papeleta\PapeletaState;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Spatie\ModelStates\HasStates;
 
 /**
  * Núcleo del flujo. Sede/régimen/día operativo son la "fotografía
  * inmutable" tomada al crear (Paso 1) — no se actualizan si el
  * trabajador cambia de sede o de régimen después.
  *
- * Esto es solo el modelo de datos: la máquina de estados (transiciones
- * válidas, reloj de 5 min, escalamiento, etc.) va en Actions/Fluent
- * (spatie/laravel-model-states, según AGENTS.md), no aquí.
+ * La máquina de estados (transiciones válidas, ver PapeletaState::config())
+ * vive conectada aquí vía HasStates; el RELOJ de 5 min, el escalamiento,
+ * etc. viven en Actions/Console\Commands, no en el modelo.
  */
 class Papeleta extends Model
 {
+    use HasStates;
+
     protected $fillable = [
         'trabajador_id',
         'motivo_id',
@@ -55,6 +59,7 @@ class Papeleta extends Model
     protected function casts(): array
     {
         return [
+            'estado' => PapeletaState::class,
             'dia_operativo' => 'date',
             'es_emergencia' => 'boolean',
             'slot_normal_activo' => 'boolean',
