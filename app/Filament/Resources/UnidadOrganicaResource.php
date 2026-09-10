@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\UnidadOrganicaResource\Pages;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -29,9 +31,9 @@ class UnidadOrganicaResource extends Resource
 {
     protected static ?string $model = UnidadOrganica::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-office';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Unidades orgánicas';
 

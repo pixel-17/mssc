@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\MotivoResource\Pages;
 use App\Models\Motivo;
 use Filament\Actions\BulkActionGroup;
@@ -28,9 +30,9 @@ class MotivoResource extends Resource
 {
     protected static ?string $model = Motivo::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Motivos';
 

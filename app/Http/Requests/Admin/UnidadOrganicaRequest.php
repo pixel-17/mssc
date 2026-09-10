@@ -33,7 +33,7 @@ class UnidadOrganicaRequest extends FormRequest
             ])],
             'parent_id' => [
                 'nullable',
-                'exists:unidades_organicas,id',
+                'exists:unidad_organicas,id',
                 Rule::notIn($idsProhibidos),
             ],
             'jefe_id' => ['nullable', 'exists:users,id'],

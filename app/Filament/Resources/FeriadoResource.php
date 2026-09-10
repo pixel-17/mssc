@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\FeriadoResource\Pages;
 use App\Models\Feriado;
 use Filament\Actions\BulkActionGroup;
@@ -24,9 +26,9 @@ class FeriadoResource extends Resource
 {
     protected static ?string $model = Feriado::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Feriados';
 

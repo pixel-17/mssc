@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\HorarioRrhhResource\Pages;
 use App\Models\HorarioRrhh;
 use Filament\Actions\EditAction;
@@ -23,9 +25,9 @@ class HorarioRrhhResource extends Resource
 {
     protected static ?string $model = HorarioRrhh::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-calendar';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Horario de RRHH';
 

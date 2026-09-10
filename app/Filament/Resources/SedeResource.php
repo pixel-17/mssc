@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\SedeResource\Pages;
 use App\Models\Sede;
 use Filament\Actions\BulkActionGroup;
@@ -25,9 +27,9 @@ class SedeResource extends Resource
 {
     protected static ?string $model = Sede::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-building-office-2';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Sedes';
 

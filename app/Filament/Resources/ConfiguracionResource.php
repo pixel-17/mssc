@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\ConfiguracionResource\Pages;
 use App\Models\Configuracion;
 use Filament\Actions\EditAction;
@@ -21,9 +23,9 @@ class ConfiguracionResource extends Resource
 {
     protected static ?string $model = Configuracion::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Configuraciones';
 

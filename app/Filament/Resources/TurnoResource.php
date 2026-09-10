@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use BackedEnum;
+use UnitEnum;
 use App\Filament\Resources\TurnoResource\Pages;
 use App\Models\Turno;
 use App\Models\User;
@@ -29,9 +31,9 @@ class TurnoResource extends Resource
 {
     protected static ?string $model = Turno::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-clock';
 
-    protected static ?string $navigationGroup = 'Catálogos';
+    protected static string | UnitEnum | null $navigationGroup = 'Catálogos';
 
     protected static ?string $navigationLabel = 'Turnos';
 

@@ -11,10 +11,13 @@ use App\Http\Controllers\Rrhh\SustentoController as RrhhSustentoController;
 use App\Http\Controllers\Trabajador\PapeletaController as TrabajadorPapeletaController;
 use App\Http\Controllers\Trabajador\RetornoController as TrabajadorRetornoController;
 use App\Http\Controllers\Trabajador\SustentoController as TrabajadorSustentoController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return Auth::check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
 });
 
 /*

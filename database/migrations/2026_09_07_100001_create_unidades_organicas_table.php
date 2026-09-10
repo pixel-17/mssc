@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('unidades_organicas', function (Blueprint $table) {
+        Schema::create('unidad_organicas', function (Blueprint $table) {
             $table->id();
             $table->string('nombre');
 
@@ -40,7 +40,7 @@ return new class extends Migration
             ])->nullable();
 
             $table->foreignId('parent_id')->nullable()
-                ->constrained('unidades_organicas')->nullOnDelete();
+                ->constrained('unidad_organicas')->nullOnDelete();
 
             // Quien encabeza esta unidad. Nullable porque una unidad puede
             // crearse antes de asignarle jefe.
@@ -53,7 +53,7 @@ return new class extends Migration
 
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('unidad_organica_id')->nullable()->after('jefe_area_id')
-                ->constrained('unidades_organicas')->nullOnDelete();
+                ->constrained('unidad_organicas')->nullOnDelete();
         });
     }
 
@@ -63,6 +63,6 @@ return new class extends Migration
             $table->dropConstrainedForeignId('unidad_organica_id');
         });
 
-        Schema::dropIfExists('unidades_organicas');
+        Schema::dropIfExists('unidad_organicas');
     }
 };
