@@ -2,10 +2,16 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Desde que el régimen 276 (ordinario) pasó a validarse contra el
+ * horario único global (HorarioOrdinarioService) en vez de una fila
+ * diaria por trabajador, esta pantalla de Turnos es informativa para
+ * TODOS los regímenes: solo el 728 (rotativo) la usa en la práctica,
+ * y ninguno de los dos bloquea la creación de papeleta por esto.
+ */
 class TurnoRequest extends FormRequest
 {
     public function authorize(): bool
@@ -17,12 +23,6 @@ class TurnoRequest extends FormRequest
     {
         $actual = $this->route('turno');
 
-        // CAS: hora_inicio/hora_fin son obligatorias (salvo descanso) porque
-        // el sistema valida contra ellas para permitir crear papeleta.
-        // 728: son opcionales, la fila es solo informativa.
-        $usuario = User::find($this->input('user_id'));
-        $esCas = $usuario?->regimen === 'CAS';
-
         return [
             'user_id' => ['required', 'exists:users,id'],
             'sede_id' => ['nullable', 'exists:sedes,id'],
@@ -33,14 +33,8 @@ class TurnoRequest extends FormRequest
                     ->ignore($actual?->id),
             ],
             'es_descanso' => ['boolean'],
-            'hora_inicio' => [
-                $esCas ? 'required_if:es_descanso,false' : 'nullable',
-                'nullable', 'date_format:H:i',
-            ],
-            'hora_fin' => [
-                $esCas ? 'required_if:es_descanso,false' : 'nullable',
-                'nullable', 'date_format:H:i', 'after:hora_inicio',
-            ],
+            'hora_inicio' => ['nullable', 'date_format:H:i'],
+            'hora_fin' => ['nullable', 'date_format:H:i', 'after:hora_inicio'],
         ];
     }
 

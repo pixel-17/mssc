@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Para CAS: fila obligatoria por día para poder crear papeleta
-     * (sin fila ese día = bloqueo total, salvo Emergencia).
-     * Para 728: la tabla es opcional y no se usa para validar nada,
-     * pero puede seguir sirviendo como referencia informativa de turno/descanso.
-     * También se reutiliza para saber si un Jefe Inmediato / Jefe de Área
-     * "está en su horario" al momento de escalar (Paso 2).
-     */
+     /**
+      * Informativa para todos los regímenes desde el rediseño de 276:
+      * ya no es obligatoria fila por día (276 valida contra el horario
+      * único global de HorarioOrdinarioService/Configuraciones). Para
+      * 728 sigue siendo la referencia opcional de turno/descanso, y es
+      * la que efectivamente se consulta al escalar (Paso 2) cuando el
+      * actor (Jefe Inmediato / Jefe de Área) es régimen 728.
+      */
     public function up(): void
     {
         Schema::create('turnos', function (Blueprint $table) {

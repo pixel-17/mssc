@@ -37,7 +37,7 @@ use Illuminate\Support\Facades\DB;
  *
  * El refrigerio (Paso 7) se calcula siempre al cerrar, comparando la
  * ausencia real (hora_salida_real -> hora_servidor del retorno) contra
- * el bloque de almuerzo configurable, y solo si el régimen es CAS.
+ * el bloque de almuerzo configurable, y solo si el régimen es 276.
  */
 class MarcarRetornoAction
 {
@@ -204,14 +204,14 @@ class MarcarRetornoAction
     }
 
     /**
-     * Paso 7: solo CAS descuenta refrigerio. Se compara el solapamiento
+     * Paso 7: solo 276 descuenta refrigerio. Se compara el solapamiento
      * real de la ausencia contra el bloque de almuerzo configurable
      * (BLOQUE_ALMUERZO_INICIO / BLOQUE_ALMUERZO_FIN, HH:MM). Si el
      * bloque no cae dentro de la ausencia, el descuento es 0.
      */
     private function calcularDescuentoRefrigerio(Papeleta $papeleta, Carbon $horaRetorno): int
     {
-        if ($papeleta->regimen !== 'CAS' || ! $papeleta->hora_salida_real) {
+        if ($papeleta->regimen !== '276' || ! $papeleta->hora_salida_real) {
             return 0;
         }
 

@@ -8,6 +8,7 @@ use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Turno;
 use App\Models\User;
+use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteJefe;
@@ -16,11 +17,14 @@ use Illuminate\Support\Facades\DB;
 /**
  * Paso 1 del flujo: creación.
  *
- * - CAS: ventana estricta (NOW() dentro del turno de hoy). Sin turno ese
- *   día (descanso o sin cargar) -> bloqueo total, salvo el motivo que
- *   tenga permite_bypass_aprobacion = true (Emergencia, por bandera,
- *   nunca por nombre — ver comentario en Motivo.php).
- * - 728: activo 24/7, sin validar horario ni día de descanso.
+ * - 276 (ordinario): ventana estricta contra el horario ÚNICO GLOBAL
+ *   (HorarioOrdinarioService, editable en Configuraciones) — ya no
+ *   contra una fila diaria por trabajador en `turnos` (insostenible con
+ *   ~500 trabajadores 276). Fuera de ventana -> bloqueo total, salvo el
+ *   motivo que tenga permite_bypass_aprobacion = true (Emergencia, por
+ *   bandera, nunca por nombre — ver comentario en Motivo.php).
+ * - 728 (rotativo): activo 24/7, sin validar horario ni día de descanso.
+ *   `turnos` sigue existiendo para 728 pero es solo informativo.
  * - Máximo 1 papeleta activa por carril (participa_regla_exclusividad),
  *   forzado también a nivel de BD (slot_normal_activo / slot_emergencia_activo).
  * - Sede/regimen/dia_operativo quedan fijados como fotografía inmutable.
@@ -82,9 +86,10 @@ class CrearPapeletaAction
     }
 
     /**
-     * CAS: ventana estricta contra la fila de turno de hoy.
-     * 728: se busca el turno solo como referencia (puede no existir,
-     * puede ser descanso) pero NUNCA bloquea ni se valida la hora.
+     * 728 (rotativo): se busca el turno solo como referencia (puede no
+     * existir, puede ser descanso) pero NUNCA bloquea ni se valida la hora.
+     * 276 (ordinario): ventana estricta contra el horario único global —
+     * ya no contra una fila diaria en `turnos`, por eso no devuelve Turno.
      */
     private function resolverTurnoActivo(User $trabajador): ?Turno
     {
@@ -94,22 +99,14 @@ class CrearPapeletaAction
                 ->first(); // puede ser null, o incluso es_descanso=true: no importa para 728
         }
 
-        // CAS: ventana estricta
-        $turno = Turno::where('user_id', $trabajador->id)
-            ->whereDate('fecha', now()->toDateString())
-            ->where('es_descanso', false)
-            ->whereTime('hora_inicio', '<=', now())
-            ->whereTime('hora_fin', '>=', now())
-            ->first();
-
-        if (! $turno) {
+        if (! app(HorarioOrdinarioService::class)->estaDentroDeVentana()) {
             throw new PapeletaException(
-                'No tienes un turno activo en este momento. Sin turno asignado (o en descanso), '.
-                'no puedes crear una papeleta salvo un motivo que permita bypass de aprobación.'
+                'Estás fuera de tu horario ordinario en este momento (o hoy no es día laborable). '.
+                'No puedes crear una papeleta salvo un motivo que permita bypass de aprobación.'
             );
         }
 
-        return $turno;
+        return null;
     }
 
     private function verificarExclusividad(User $trabajador, Motivo $motivo): void

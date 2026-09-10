@@ -18,7 +18,7 @@ return new class extends Migration
             // Aunque después cambien la sede o el régimen del trabajador,
             // esta papeleta conserva el valor que tenía al momento de crearse.
             $table->foreignId('sede_id')->constrained('sedes');
-            $table->enum('regimen', ['CAS', '728']);
+            $table->enum('regimen', ['276', '728']);
             $table->date('dia_operativo');
 
             // --- Estado (pensado para spatie/laravel-model-states) ---
@@ -58,7 +58,7 @@ return new class extends Migration
             // --- Salida real (inmutable una vez fijada) ---
             $table->timestamp('hora_salida_real')->nullable();
 
-            // --- Refrigerio (Paso 7, solo CAS) ---
+            // --- Refrigerio (Paso 7, solo 276) ---
             $table->unsignedSmallInteger('descuento_refrigerio_minutos')->default(0);
 
             // --- Rechazo / cancelación / vencimiento ---

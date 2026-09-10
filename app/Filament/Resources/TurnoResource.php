@@ -23,9 +23,11 @@ use Filament\Tables\Table;
 use Filament\Forms\Components\TimePicker;
 
 /**
- * Horario de un trabajador en una fecha. Para CAS es el candado de
- * creación de papeletas (Paso 1); para 728 es solo informativo. Único
- * índice user_id+fecha (ver migración) — el form valida lo mismo.
+ * Horario de un trabajador en una fecha. Informativo para todos los
+ * regímenes: 276 (ordinario) ya no depende de esto (usa el horario
+ * único global en Configuraciones); 728 (rotativo) lo usa solo como
+ * referencia, sin que bloquee nada. Único índice user_id+fecha (ver
+ * migración) — el form valida lo mismo.
  */
 class TurnoResource extends Resource
 {

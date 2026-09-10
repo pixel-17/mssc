@@ -17,7 +17,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             // Régimen es fotografiado (copiado) a la papeleta al crearla,
             // pero aquí vive el valor "actual" del trabajador.
-            $table->enum('regimen', ['CAS', '728'])->nullable()->after('id');
+            $table->enum('regimen', ['276', '728'])->nullable()->after('id');
 
             $table->foreignId('sede_id')->nullable()->after('regimen')
                 ->constrained('sedes')->nullOnDelete();

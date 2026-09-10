@@ -10,10 +10,12 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 
 /**
- * El admin carga aquí la hora de CADA trabajador (CAS, 728, o jefes) por
- * fecha. Para CAS es obligatorio (TurnoRequest lo exige) para poder crear
- * papeleta ese día; para 728 es informativo. Un mismo trabajador no puede
- * tener dos filas para la misma fecha (unique en la migración y en la
+ * El admin puede cargar aquí la hora de un trabajador por fecha, pero
+ * es informativo para todos los regímenes: 276 (ordinario) se valida
+ * contra el horario único global (HorarioOrdinarioService, en
+ * Configuraciones), no contra estas filas; 728 (rotativo) las usa como
+ * referencia sin que bloqueen nada. Un mismo trabajador no puede tener
+ * dos filas para la misma fecha (unique en la migración y en la
  * validación).
  */
 class TurnoController extends Controller

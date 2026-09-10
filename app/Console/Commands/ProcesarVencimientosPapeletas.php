@@ -6,7 +6,9 @@ use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Turno;
+use App\Models\User;
 use App\Services\DeterminadorFinDeTurno;
+use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\Vencida;
@@ -38,6 +40,7 @@ class ProcesarVencimientosPapeletas extends Command
     public function __construct(
         private DeterminadorFinDeTurno $finDeTurno,
         private NotificarPapeletaService $notificar,
+        private HorarioOrdinarioService $horarioOrdinario,
     ) {
         parent::__construct();
     }
@@ -84,18 +87,28 @@ class ProcesarVencimientosPapeletas extends Command
     }
 
     /**
-     * "Está en su horario" se valida SIEMPRE contra la propia fila de
-     * `turnos` del actor para el día de hoy — nunca contra el horario de
-     * otro actor ni contra parámetros globales.
+     * "Está en su horario" se valida SIEMPRE contra el propio régimen del
+     * actor — nunca contra el horario de otro actor:
+     * - 276 (ordinario): horario único global (HorarioOrdinarioService),
+     *   igual que para el trabajador que crea la papeleta.
+     * - 728 (rotativo): sigue contra su propia fila de `turnos` de hoy
+     *   (opcional/informativa; si no la cargaron, no se considera "en
+     *   horario" para efectos de escalar).
      */
     private function actorEstaEnHorario(int $userId): bool
     {
-        return Turno::where('user_id', $userId)
-            ->whereDate('fecha', now()->toDateString())
-            ->where('es_descanso', false)
-            ->whereTime('hora_inicio', '<=', now())
-            ->whereTime('hora_fin', '>=', now())
-            ->exists();
+        $actor = User::find($userId);
+
+        if ($actor?->regimen === '728') {
+            return Turno::where('user_id', $userId)
+                ->whereDate('fecha', now()->toDateString())
+                ->where('es_descanso', false)
+                ->whereTime('hora_inicio', '<=', now())
+                ->whereTime('hora_fin', '>=', now())
+                ->exists();
+        }
+
+        return $this->horarioOrdinario->estaDentroDeVentana();
     }
 
     private function vencerPapeletasSinTurnoVigente(): void

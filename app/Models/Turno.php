@@ -6,13 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Horario de UN usuario en UNA fecha, cargado por el admin. Se usa para:
- * - Validar la ventana de creación de papeleta si el usuario es CAS.
- * - Decidir si un Jefe Inmediato/Jefe de Área/trabajador "está en su
- *   horario" al momento de escalar (cada actor se valida SOLO contra su
- *   propia fila, nunca contra el horario de otro actor).
- * Para 728 esta tabla es informativa: el sistema no valida nada contra
- * ella para ese régimen.
+ * Horario de UN usuario en UNA fecha, cargado por el admin.
+ *
+ * Desde el rediseño de régimen 276 (ordinario): esta tabla ya NO se usa
+ * para 276 — ese horario es único y global (ver HorarioOrdinarioService,
+ * editable en Configuraciones), para no obligar al admin a cargar una
+ * fila por cada uno de los ~500 trabajadores 276 todos los días.
+ *
+ * Para 728 (rotativo) sigue existiendo tal como antes: informativa,
+ * opcional, y el sistema nunca bloquea nada contra ella para ese
+ * régimen (ni al crear papeleta ni al escalar).
  */
 class Turno extends Model
 {

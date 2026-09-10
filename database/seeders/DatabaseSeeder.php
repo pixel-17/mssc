@@ -21,6 +21,15 @@ class DatabaseSeeder extends Seeder
             MotivoSeeder::class,
             ConfiguracionSeeder::class,
             HorarioRrhhSeeder::class,
+
+            // Un usuario de prueba por cada rol/perfil real del sistema.
+            // El orden importa: Jefe de Área y Jefe Inmediato arman el
+            // árbol de jefaturas que Trabajador necesita para escalar.
+            AdminUserSeeder::class,
+            RrhhUserSeeder::class,
+            JefeAreaUserSeeder::class,
+            JefeInmediatoUserSeeder::class,
+            TrabajadorUserSeeder::class,
         ]);
 
         // User::factory(10)->create();
