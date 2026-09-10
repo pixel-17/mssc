@@ -6,6 +6,7 @@ use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\PendienteJefe;
@@ -21,7 +22,10 @@ use Illuminate\Support\Facades\DB;
  */
 class AprobarJefeAction
 {
-    public function __construct(private RrhhHorarioService $horarioRrhh) {}
+    public function __construct(
+        private RrhhHorarioService $horarioRrhh,
+        private NotificarPapeletaService $notificar,
+    ) {}
 
     public function ejecutar(Papeleta $papeleta, User $quienAprueba, string $actorTipo = 'jefe_inmediato'): Papeleta
     {
@@ -29,7 +33,7 @@ class AprobarJefeAction
             throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
         }
 
-        return DB::transaction(function () use ($papeleta, $quienAprueba, $actorTipo) {
+        $papeleta = DB::transaction(function () use ($papeleta, $quienAprueba, $actorTipo) {
             $estadoAnterior = class_basename($papeleta->estado);
             $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 
@@ -57,5 +61,14 @@ class AprobarJefeAction
 
             return $papeleta;
         });
+
+        if ($papeleta->estado->equals(PendienteRrhh::class)) {
+            $this->notificar->pendienteDeRrhh($papeleta);
+        } else {
+            $this->notificar->puedeSalir($papeleta);
+            $this->notificar->revisionPosthocPendiente($papeleta);
+        }
+
+        return $papeleta;
     }
 }

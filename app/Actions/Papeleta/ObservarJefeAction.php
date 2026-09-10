@@ -7,6 +7,7 @@ use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\Rechazada;
@@ -20,13 +21,15 @@ use Illuminate\Support\Facades\DB;
  */
 class ObservarJefeAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function ejecutar(Papeleta $papeleta, User $jefe, string $comentario, string $actorTipo = 'jefe_inmediato'): Papeleta
     {
         if (! $papeleta->estado->equals(PendienteJefe::class)) {
             throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
         }
 
-        return DB::transaction(function () use ($papeleta, $jefe, $comentario, $actorTipo) {
+        $papeleta = DB::transaction(function () use ($papeleta, $jefe, $comentario, $actorTipo) {
             $estadoAnterior = class_basename($papeleta->estado);
             $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
 
@@ -53,5 +56,13 @@ class ObservarJefeAction
 
             return $papeleta;
         });
+
+        if ($papeleta->estado->equals(Rechazada::class)) {
+            $this->notificar->rechazada($papeleta);
+        } else {
+            $this->notificar->observadaPorJefe($papeleta);
+        }
+
+        return $papeleta;
     }
 }

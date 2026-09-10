@@ -8,6 +8,7 @@ use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Turno;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteJefe;
 use Illuminate\Support\Facades\DB;
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\DB;
  */
 class CrearPapeletaAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function ejecutar(User $trabajador, Motivo $motivo, array $datos): Papeleta
     {
         if ($motivo->adjunto === 'obligatorio' && empty($datos['justificacion'] ?? null)) {
@@ -38,7 +41,7 @@ class CrearPapeletaAction
 
         $unidad = $trabajador->unidadOrganica;
 
-        return DB::transaction(function () use ($trabajador, $motivo, $datos, $bypassAprobacion, $turno, $unidad) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $bypassAprobacion, $turno, $unidad) {
             $this->verificarExclusividad($trabajador, $motivo);
 
             $papeleta = Papeleta::create([
@@ -69,6 +72,13 @@ class CrearPapeletaAction
 
             return $papeleta;
         });
+
+        // Fuera de la transacción: si algo falla en el envío (push caído,
+        // cola no disponible) nunca debe revertir la creación ya
+        // confirmada en BD.
+        $this->notificar->creada($papeleta);
+
+        return $papeleta;
     }
 
     /**

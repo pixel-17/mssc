@@ -7,6 +7,7 @@ use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Turno;
 use App\Services\DeterminadorFinDeTurno;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\Vencida;
 use Illuminate\Console\Command;
@@ -34,8 +35,10 @@ class ProcesarVencimientosPapeletas extends Command
 
     protected $description = 'Escala al Jefe de Área las papeletas cuyo SLA de jefe venció, y vence las que ya no tienen turno/día vigente.';
 
-    public function __construct(private DeterminadorFinDeTurno $finDeTurno)
-    {
+    public function __construct(
+        private DeterminadorFinDeTurno $finDeTurno,
+        private NotificarPapeletaService $notificar,
+    ) {
         parent::__construct();
     }
 
@@ -71,6 +74,8 @@ class ProcesarVencimientosPapeletas extends Command
                             'justificacion' => 'Escalado automático: Jefe Inmediato no respondió dentro del SLA.',
                         ]);
                     });
+
+                    $this->notificar->escaladaAJefeDeArea($papeleta);
                 }
                 // Si el Jefe de Área NO está en horario: no se hace nada.
                 // La papeleta sigue en PENDIENTE_JEFE, esperando, sin alerta
@@ -114,6 +119,8 @@ class ProcesarVencimientosPapeletas extends Command
                             'justificacion' => 'Vencida automáticamente: fin de turno/día sin decisión.',
                         ]);
                     });
+
+                    $this->notificar->vencida($papeleta);
                 }
             });
     }

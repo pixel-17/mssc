@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Actions\Papeleta\ReclasificarAParticularAction;
 use App\Models\HistorialPapeleta;
 use App\Models\Sustento;
+use App\Services\NotificarPapeletaService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -28,8 +29,11 @@ class ProcesarVencimientoSustentos extends Command
 
     protected $description = 'Reclasifica a Particular los sustentos de Salud vencidos sin presentar; marca visto bueno pendiente si hay archivo sin revisar.';
 
-    public function handle(ReclasificarAParticularAction $reclasificar): int
+    public function handle(ReclasificarAParticularAction $reclasificar, NotificarPapeletaService $notificar): int
     {
+        // ReclasificarAParticularAction ya notifica al trabajador
+        // internamente (mismo Action que usa el flujo humano de
+        // reclasificación), no hay que duplicar el envío aquí.
         Sustento::where('estado', 'pendiente')
             ->where('fecha_limite', '<=', now())
             ->with('papeleta')
@@ -51,8 +55,8 @@ class ProcesarVencimientoSustentos extends Command
             ->where('fecha_limite', '<=', now())
             ->whereHas('papeleta', fn ($q) => $q->where('requiere_visto_bueno', false))
             ->with('papeleta')
-            ->each(function (Sustento $sustento) {
-                DB::transaction(function () use ($sustento) {
+            ->each(function (Sustento $sustento) use ($notificar) {
+                $papeleta = DB::transaction(function () use ($sustento) {
                     $papeleta = $sustento->papeleta;
                     $papeleta->requiere_visto_bueno = true;
                     $papeleta->save();
@@ -65,7 +69,11 @@ class ProcesarVencimientoSustentos extends Command
                         'estado_nuevo' => class_basename($papeleta->estado),
                         'justificacion' => 'Sustento presentado sin revisar: venció el plazo de 48h hábiles sin decisión humana.',
                     ]);
+
+                    return $papeleta;
                 });
+
+                $notificar->sustentoSinRevisar($papeleta);
             });
 
         return self::SUCCESS;

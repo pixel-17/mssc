@@ -6,6 +6,7 @@ use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Support\Facades\DB;
@@ -21,13 +22,15 @@ use Illuminate\Support\Facades\DB;
  */
 class AprobarRrhhAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function ejecutar(Papeleta $papeleta, User $rrhh): Papeleta
     {
         if (! $papeleta->estado->equals(PendienteRrhh::class)) {
             throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
         }
 
-        return DB::transaction(function () use ($papeleta, $rrhh) {
+        $papeleta = DB::transaction(function () use ($papeleta, $rrhh) {
             $estadoAnterior = class_basename($papeleta->estado);
 
             $papeleta->estado = new AutorizadaYCorriendo($papeleta);
@@ -46,5 +49,9 @@ class AprobarRrhhAction
 
             return $papeleta;
         });
+
+        $this->notificar->puedeSalir($papeleta);
+
+        return $papeleta;
     }
 }

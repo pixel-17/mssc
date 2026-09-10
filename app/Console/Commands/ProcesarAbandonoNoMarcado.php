@@ -7,6 +7,7 @@ use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Services\CalculadorDiasHabiles;
 use App\Services\DeterminadorFinDeTurno;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\FinalizadoSinRetorno;
 use Illuminate\Console\Command;
@@ -35,7 +36,7 @@ class ProcesarAbandonoNoMarcado extends Command
 
     protected $description = 'Marca FINALIZADO_SIN_RETORNO (abandono) las papeletas en curso cuyo turno/día terminó sin que el trabajador marcara retorno.';
 
-    public function handle(DeterminadorFinDeTurno $finDeTurno, CalculadorDiasHabiles $diasHabiles): int
+    public function handle(DeterminadorFinDeTurno $finDeTurno, CalculadorDiasHabiles $diasHabiles, NotificarPapeletaService $notificar): int
     {
         // Mismo plazo que el sustento de Salud (Paso 5: "misma ventana
         // de 48h"), en horas hábiles y con la misma clave de config por
@@ -44,7 +45,7 @@ class ProcesarAbandonoNoMarcado extends Command
 
         Papeleta::whereState('estado', AutorizadaYCorriendo::class)
             ->whereDoesntHave('retorno')
-            ->each(function (Papeleta $papeleta) use ($finDeTurno, $diasHabiles, $horasVentana) {
+            ->each(function (Papeleta $papeleta) use ($finDeTurno, $diasHabiles, $horasVentana, $notificar) {
                 if (! $finDeTurno->yaTermino($papeleta)) {
                     return;
                 }
@@ -66,12 +67,11 @@ class ProcesarAbandonoNoMarcado extends Command
                         'estado_nuevo' => class_basename($papeleta->estado),
                         'justificacion' => 'Abandono no marcado: turno/día terminó sin registro de retorno. Notificado a jefe y RRHH.',
                     ]);
-
-                    // TODO: notificación web push + in-app a jefe_inmediato_id
-                    // y a RRHH (canal ya definido en la sección de
-                    // notificaciones del documento, pendiente de implementar
-                    // el listener/Notification class correspondiente).
                 });
+
+                // Notificación web push + in-app a jefe_inmediato_id y a
+                // RRHH, fuera de la transacción (ver NotificarPapeletaService).
+                $notificar->abandonoNoMarcado($papeleta);
             });
 
         return self::SUCCESS;

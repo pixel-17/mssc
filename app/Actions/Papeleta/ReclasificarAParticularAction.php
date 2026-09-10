@@ -6,6 +6,7 @@ use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\ReclasificadoAParticular;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ use Illuminate\Support\Facades\DB;
  */
 class ReclasificarAParticularAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function ejecutar(Papeleta $papeleta, ?int $actorId, string $actorTipo, string $justificacion): Papeleta
     {
         if (! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
@@ -31,7 +34,7 @@ class ReclasificarAParticularAction
             throw new PapeletaException('No hay un motivo configurado como destino de reclasificación (es_destino_reclasificacion).');
         }
 
-        return DB::transaction(function () use ($papeleta, $motivoParticular, $actorId, $actorTipo, $justificacion) {
+        $papeleta = DB::transaction(function () use ($papeleta, $motivoParticular, $actorId, $actorTipo, $justificacion) {
             $estadoAnterior = class_basename($papeleta->estado);
             $motivoAnteriorId = $papeleta->motivo_id;
 
@@ -54,5 +57,9 @@ class ReclasificarAParticularAction
 
             return $papeleta;
         });
+
+        $this->notificar->reclasificadaAParticular($papeleta);
+
+        return $papeleta;
     }
 }

@@ -6,6 +6,7 @@ use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\FinalizadoSinRetorno;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,8 @@ use Illuminate\Support\Facades\DB;
  */
 class MarcarAbandonoSobreRetornoPendienteAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function ejecutar(Papeleta $papeleta, User $quienDecide, string $justificacion): Papeleta
     {
         if (! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
@@ -33,7 +36,7 @@ class MarcarAbandonoSobreRetornoPendienteAction
             throw new PapeletaException('La justificación es obligatoria para marcar abandono sobre un retorno ya registrado.');
         }
 
-        return DB::transaction(function () use ($papeleta, $quienDecide, $justificacion) {
+        $papeleta = DB::transaction(function () use ($papeleta, $quienDecide, $justificacion) {
             $estadoAnterior = class_basename($papeleta->estado);
 
             $papeleta->estado = new FinalizadoSinRetorno($papeleta);
@@ -52,5 +55,9 @@ class MarcarAbandonoSobreRetornoPendienteAction
 
             return $papeleta;
         });
+
+        $this->notificar->abandonoNoMarcado($papeleta);
+
+        return $papeleta;
     }
 }

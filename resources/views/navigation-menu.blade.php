@@ -71,6 +71,11 @@
                     </div>
                 @endif
 
+                <!-- Notificaciones (in-app + web push) -->
+                <div class="ms-3 relative">
+                    <livewire:notification-bell />
+                </div>
+
                 <!-- Settings Dropdown -->
                 <div class="ms-3 relative">
                     <x-dropdown align="right" width="48">
@@ -101,6 +106,16 @@
                             <x-dropdown-link href="{{ route('profile.show') }}">
                                 {{ __('Profile') }}
                             </x-dropdown-link>
+
+                            <button
+                                type="button"
+                                x-data="msscPushToggle()"
+                                x-init="init()"
+                                @click="alternar()"
+                                class="block w-full text-start px-4 py-2 text-sm leading-5 text-gray-700 hover:bg-gray-100 focus:outline-none transition"
+                            >
+                                <span x-text="etiqueta"></span>
+                            </button>
 
                             @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
                                 <x-dropdown-link href="{{ route('api-tokens.index') }}">
@@ -164,6 +179,16 @@
                 <x-responsive-nav-link href="{{ route('profile.show') }}" :active="request()->routeIs('profile.show')">
                     {{ __('Profile') }}
                 </x-responsive-nav-link>
+
+                <button
+                    type="button"
+                    x-data="msscPushToggle()"
+                    x-init="init()"
+                    @click="alternar()"
+                    class="block w-full text-start ps-3 pe-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none transition"
+                >
+                    <span x-text="etiqueta"></span>
+                </button>
 
                 @if (Laravel\Jetstream\Jetstream::hasApiFeatures())
                     <x-responsive-nav-link href="{{ route('api-tokens.index') }}" :active="request()->routeIs('api-tokens.index')">

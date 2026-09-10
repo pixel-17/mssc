@@ -7,6 +7,7 @@ use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Rechazada;
@@ -23,13 +24,15 @@ use Illuminate\Support\Facades\DB;
  */
 class ObservarRrhhAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function ejecutar(Papeleta $papeleta, User $rrhh, string $comentario): Papeleta
     {
         if (! $papeleta->estado->equals(PendienteRrhh::class)) {
             throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
         }
 
-        return DB::transaction(function () use ($papeleta, $rrhh, $comentario) {
+        $papeleta = DB::transaction(function () use ($papeleta, $rrhh, $comentario) {
             $estadoAnterior = class_basename($papeleta->estado);
             $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
 
@@ -56,5 +59,16 @@ class ObservarRrhhAction
 
             return $papeleta;
         });
+
+        // Tope alcanzado -> rechazo automático, sí llega al trabajador.
+        // Si no, la observación de RRHH nunca llega al trabajador: solo
+        // al Jefe Inmediato (ver NotificarPapeletaService::observadaPorRrhh).
+        if ($papeleta->estado->equals(Rechazada::class)) {
+            $this->notificar->rechazada($papeleta);
+        } else {
+            $this->notificar->observadaPorRrhh($papeleta);
+        }
+
+        return $papeleta;
     }
 }

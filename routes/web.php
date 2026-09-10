@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Jefe\DecisionController as JefeDecisionController;
 use App\Http\Controllers\Jefe\PapeletaController as JefePapeletaController;
 use App\Http\Controllers\Jefe\SustentoController as JefeSustentoController;
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Rrhh\DecisionController as RrhhDecisionController;
 use App\Http\Controllers\Rrhh\PapeletaController as RrhhPapeletaController;
 use App\Http\Controllers\Rrhh\SustentoController as RrhhSustentoController;
@@ -29,6 +30,16 @@ Route::middleware([
     'verified',
 ])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    /*
+     * Registro in-app de web push (notificaciones): cualquier rol
+     * autenticado puede activar/desactivar push en su propio
+     * navegador. Sin middleware de rol porque trabajador, jefe, RRHH
+     * y admin reciben notificaciones por igual (ver
+     * NotificarPapeletaService).
+     */
+    Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
+    Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
 
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
     Route::prefix('papeletas')->name('trabajador.papeletas.')->middleware('role:trabajador')->group(function () {

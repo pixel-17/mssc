@@ -7,6 +7,7 @@ use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Sustento;
 use App\Models\User;
+use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Support\Facades\DB;
@@ -22,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RevisarSustentoAction
 {
+    public function __construct(private NotificarPapeletaService $notificar) {}
+
     public function aprobar(Sustento $sustento, User $revisor): Papeleta
     {
         return $this->resolver($sustento, $revisor, 'aprobado');
@@ -44,7 +47,7 @@ class RevisarSustentoAction
             throw new PapeletaException('Este sustento todavía no tiene un archivo presentado para revisar.');
         }
 
-        return DB::transaction(function () use ($papeleta, $sustento, $revisor, $resultado, $comentario) {
+        $papeleta = DB::transaction(function () use ($papeleta, $sustento, $revisor, $resultado, $comentario) {
             $sustento->estado = $resultado;
             $sustento->revisado_por_id = $revisor->id;
             $sustento->revisado_at = now();
@@ -75,5 +78,11 @@ class RevisarSustentoAction
 
             return $papeleta;
         });
+
+        if ($resultado === 'observado') {
+            $this->notificar->sustentoObservado($papeleta);
+        }
+
+        return $papeleta;
     }
 }
