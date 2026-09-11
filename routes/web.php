@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Jefe\DecisionController as JefeDecisionController;
 use App\Http\Controllers\Jefe\PapeletaController as JefePapeletaController;
 use App\Http\Controllers\Jefe\SustentoController as JefeSustentoController;
+use App\Http\Controllers\Papeleta\EmergenciaController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Rrhh\DecisionController as RrhhDecisionController;
 use App\Http\Controllers\Rrhh\PapeletaController as RrhhPapeletaController;
@@ -11,6 +12,7 @@ use App\Http\Controllers\Rrhh\SustentoController as RrhhSustentoController;
 use App\Http\Controllers\Trabajador\PapeletaController as TrabajadorPapeletaController;
 use App\Http\Controllers\Trabajador\RetornoController as TrabajadorRetornoController;
 use App\Http\Controllers\Trabajador\SustentoController as TrabajadorSustentoController;
+use App\Http\Controllers\Usuario\JefeAdicionalController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +46,24 @@ Route::middleware([
     Route::post('/push-subscriptions', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
     Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
 
+    /*
+     * jefes_inmediatos_adicionales: sin middleware de rol porque puede
+     * asignar/quitar un admin, el jefe de área del trabajador, o
+     * cualquier jefe inmediato (automático o adicional) que el
+     * trabajador ya tenga — la autorización real vive en las Actions
+     * (AsignarJefeAdicionalAction / DesasignarJefeAdicionalAction).
+     */
+    Route::post('/trabajadores/{trabajador}/jefes-adicionales', [JefeAdicionalController::class, 'store'])->name('jefes-adicionales.store');
+    Route::delete('/trabajadores/{trabajador}/jefes-adicionales/{jefe}', [JefeAdicionalController::class, 'destroy'])->name('jefes-adicionales.destroy');
+
+    /*
+     * Paso 6: revisión post-hoc doble de Emergencia. Sin middleware de
+     * rol por el mismo motivo que jefes-adicionales — RevisarEmergenciaAction
+     * distingue jefe/RRHH internamente (hasRole('rrhh') / esJefeInmediatoDe).
+     */
+    Route::post('/papeletas/{papeleta}/emergencia/aprobar', [EmergenciaController::class, 'aprobar'])->name('emergencia.aprobar');
+    Route::post('/papeletas/{papeleta}/emergencia/observar', [EmergenciaController::class, 'observar'])->name('emergencia.observar');
+
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
     Route::prefix('papeletas')->name('trabajador.papeletas.')->middleware('role:trabajador')->group(function () {
         Route::get('/', [TrabajadorPapeletaController::class, 'index'])->name('index');
@@ -54,6 +74,7 @@ Route::middleware([
 
         Route::post('/{papeleta}/retorno', [TrabajadorRetornoController::class, 'store'])->name('retorno.store');
         Route::post('/sustentos/{sustento}', [TrabajadorSustentoController::class, 'store'])->name('sustento.store');
+        Route::post('/{papeleta}/emergencia/subsanar', [EmergenciaController::class, 'subsanar'])->name('emergencia.subsanar');
     });
 
     /*

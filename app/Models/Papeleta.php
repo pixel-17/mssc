@@ -57,6 +57,14 @@ class Papeleta extends Model
         'motivo_original_id',
         'justificacion',
         'adjunto_inicial_path',
+        'visto_bueno_jefe_emergencia',
+        'visto_bueno_jefe_emergencia_por_id',
+        'visto_bueno_jefe_emergencia_at',
+        'visto_bueno_rrhh_emergencia',
+        'visto_bueno_rrhh_emergencia_por_id',
+        'visto_bueno_rrhh_emergencia_at',
+        'subsanacion_emergencia_fecha_limite',
+        'subsanacion_emergencia_adjunto_path',
     ];
 
     protected function casts(): array
@@ -77,6 +85,9 @@ class Papeleta extends Model
             'vencida_at' => 'datetime',
             'requiere_visto_bueno' => 'boolean',
             'regularizacion_fecha_limite' => 'datetime',
+            'visto_bueno_jefe_emergencia_at' => 'datetime',
+            'visto_bueno_rrhh_emergencia_at' => 'datetime',
+            'subsanacion_emergencia_fecha_limite' => 'datetime',
         ];
     }
 
@@ -123,6 +134,16 @@ class Papeleta extends Model
     public function revisionPosthocPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revision_posthoc_por_id');
+    }
+
+    public function vistoBuenoJefeEmergenciaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'visto_bueno_jefe_emergencia_por_id');
+    }
+
+    public function vistoBuenoRrhhEmergenciaPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'visto_bueno_rrhh_emergencia_por_id');
     }
 
     public function rechazadaPor(): BelongsTo

@@ -47,6 +47,21 @@ class UserPolicy
     }
 
     /**
+     * ¿Puede $creator crear ALGÚN usuario, sin importar en qué unidad?
+     * Sirve para mostrar/ocultar el enlace "Crear usuario" en el menú,
+     * sin repetir la lógica de crearEnUnidad()/crearTrabajadorPropio().
+     */
+    public function puedeCrearAlgo(User $creator): bool
+    {
+        if ($creator->hasRole('admin')) {
+            return true;
+        }
+
+        return $creator->unidadesQueEncabeza()->exists()
+            || $this->crearTrabajadorPropio($creator);
+    }
+
+    /**
      * ¿Puede $viewer ver el perfil/listado de $target?
      */
     public function view(User $viewer, User $target): bool

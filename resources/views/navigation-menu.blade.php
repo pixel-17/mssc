@@ -15,6 +15,30 @@
                     <x-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    {{--
+                        "Jefe" no es un rol de Spatie: cualquier trabajador
+                        que encabece una unidad o tenga trabajadores propios
+                        (automáticos o adicionales) ve este enlace, sin
+                        importar su rol (ver UserPolicy::crearTrabajadorPropio()).
+                    --}}
+                    @can('crearTrabajadorPropio', App\Models\User::class)
+                        <x-nav-link href="{{ route('jefe.papeletas.index') }}" :active="request()->routeIs('jefe.*')">
+                            {{ __('Bandeja de Jefe') }}
+                        </x-nav-link>
+                    @endcan
+
+                    @hasrole('rrhh')
+                        <x-nav-link href="{{ route('rrhh.papeletas.index') }}" :active="request()->routeIs('rrhh.*')">
+                            {{ __('Papeletas RRHH') }}
+                        </x-nav-link>
+                    @endhasrole
+
+                    @can('puedeCrearAlgo', App\Models\User::class)
+                        <x-nav-link href="{{ route('usuarios.index') }}" :active="request()->routeIs('usuarios.*')">
+                            {{ __('Usuarios') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -157,6 +181,24 @@
             <x-responsive-nav-link href="{{ route('dashboard') }}" :active="request()->routeIs('dashboard')">
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
+
+            @can('crearTrabajadorPropio', App\Models\User::class)
+                <x-responsive-nav-link href="{{ route('jefe.papeletas.index') }}" :active="request()->routeIs('jefe.*')">
+                    {{ __('Bandeja de Jefe') }}
+                </x-responsive-nav-link>
+            @endcan
+
+            @hasrole('rrhh')
+                <x-responsive-nav-link href="{{ route('rrhh.papeletas.index') }}" :active="request()->routeIs('rrhh.*')">
+                    {{ __('Papeletas RRHH') }}
+                </x-responsive-nav-link>
+            @endhasrole
+
+            @can('puedeCrearAlgo', App\Models\User::class)
+                <x-responsive-nav-link href="{{ route('usuarios.index') }}" :active="request()->routeIs('usuarios.*')">
+                    {{ __('Usuarios') }}
+                </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->

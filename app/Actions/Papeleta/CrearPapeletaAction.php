@@ -63,6 +63,8 @@ class CrearPapeletaAction
                 'hora_salida_real' => $bypassAprobacion ? now() : null,
                 'justificacion' => $datos['justificacion'] ?? null,
                 'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
+                'visto_bueno_jefe_emergencia' => $bypassAprobacion ? 'pendiente' : null,
+                'visto_bueno_rrhh_emergencia' => $bypassAprobacion ? 'pendiente' : null,
             ]);
 
             HistorialPapeleta::create([

@@ -7,14 +7,19 @@ use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Services\NotificarPapeletaService;
+use App\States\Papeleta\AutorizadaYCorriendo;
+use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\ReclasificadoAParticular;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Support\Facades\DB;
 
 /**
  * "Solo cambia el motivo, horas intactas" — usada en dos casos del
- * documento: sustento de Salud vencido sin nada presentado (Paso 5) y
- * subsanación de Emergencia observada sin resolver a tiempo (Paso 6).
+ * documento: sustento de Salud vencido sin nada presentado (Paso 5,
+ * estado RetornoPendienteSustento) y subsanación de Emergencia
+ * observada sin resolver a tiempo (Paso 6, estado AutorizadaYCorriendo
+ * o ya Cerrada — la revisión post-hoc de Emergencia no bloquea que el
+ * trabajador retorne y cierre normalmente mientras se resuelve).
  * Actor null = job automático (Console\Commands); si un humano la
  * dispara explícitamente, se pasa su id.
  */
@@ -24,8 +29,12 @@ class ReclasificarAParticularAction
 
     public function ejecutar(Papeleta $papeleta, ?int $actorId, string $actorTipo, string $justificacion): Papeleta
     {
-        if (! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
-            throw new PapeletaException('Solo se puede reclasificar una papeleta en espera de sustento.');
+        $esCasoSalud = $papeleta->estado->equals(RetornoPendienteSustento::class);
+        $esCasoEmergencia = $papeleta->es_emergencia
+            && ($papeleta->estado->equals(AutorizadaYCorriendo::class) || $papeleta->estado->equals(Cerrada::class));
+
+        if (! $esCasoSalud && ! $esCasoEmergencia) {
+            throw new PapeletaException('Esta papeleta no está en un estado que se pueda reclasificar a Particular.');
         }
 
         $motivoParticular = Motivo::where('es_destino_reclasificacion', true)->first();

@@ -42,6 +42,13 @@ abstract class PapeletaState extends State
             ->allowTransition(AutorizadaYCorriendo::class, FinalizadoSinRetorno::class)
             ->allowTransition(AutorizadaYCorriendo::class, ReclasificadoAParticular::class) // Emergencia observada sin subsanar
 
+            // Paso 6: la revisión post-hoc de Emergencia NO bloquea el
+            // ciclo operativo — el trabajador puede retornar y cerrar
+            // normalmente ANTES de que jefe/RRHH terminen de revisar.
+            // Si luego de cerrada la observación no se subsana a tiempo,
+            // igual debe poder reclasificarse a Particular.
+            ->allowTransition(Cerrada::class, ReclasificadoAParticular::class) // Emergencia observada, ya cerrada, subsanación vencida
+
             ->allowTransition(RetornoPendienteSustento::class, Cerrada::class)
             ->allowTransition(RetornoPendienteSustento::class, ReclasificadoAParticular::class)
             ->allowTransition(RetornoPendienteSustento::class, FinalizadoSinRetorno::class); // abandono gana sobre sustento vencido

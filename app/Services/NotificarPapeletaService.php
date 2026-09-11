@@ -200,13 +200,57 @@ class NotificarPapeletaService
 
     public function reclasificadaAParticular(Papeleta $papeleta): void
     {
+        $mensaje = $papeleta->es_emergencia
+            ? 'El plazo para subsanar la observación de tu Emergencia venció sin resolverse. Tu papeleta se reclasificó a Particular.'
+            : 'El plazo para presentar sustento de Salud venció sin nada presentado. Tu papeleta se reclasificó a Particular.';
+
         $this->enviarUno(
             $papeleta->trabajador,
             $papeleta,
             'reclasificada_particular',
             'Papeleta reclasificada a Particular',
-            'El plazo para presentar sustento de Salud venció sin nada presentado. Tu papeleta se reclasificó a Particular.',
+            $mensaje,
             $this->urlTrabajador($papeleta),
+        );
+    }
+
+    public function emergenciaObservada(Papeleta $papeleta, string $rol): void
+    {
+        $quien = $rol === 'rrhh' ? 'RRHH' : 'tu Jefe Inmediato';
+
+        $this->enviarUno(
+            $papeleta->trabajador,
+            $papeleta,
+            'emergencia_observada',
+            'Emergencia observada',
+            "{$quien} observó la justificación de tu Emergencia. Tienes plazo para subsanar antes de que se reclasifique a Particular.",
+            $this->urlTrabajador($papeleta),
+        );
+    }
+
+    /**
+     * @param  array<int, string>  $roles  'jefe' y/o 'rrhh' — a quién
+     *         le toca volver a revisar tras la subsanación.
+     */
+    public function emergenciaSubsanada(Papeleta $papeleta, array $roles): void
+    {
+        $destinatarios = collect();
+
+        if (in_array('jefe', $roles, true) && $papeleta->jefeInmediato) {
+            $destinatarios->push($papeleta->jefeInmediato);
+        }
+
+        if (in_array('rrhh', $roles, true)) {
+            $destinatarios = $destinatarios->merge($this->usuariosRrhh());
+        }
+
+        $this->enviar(
+            $destinatarios,
+            $papeleta,
+            'emergencia_subsanada',
+            'Emergencia subsanada, pendiente de tu revisión',
+            "{$papeleta->trabajador->nombre_completo} subsanó la observación de su Emergencia. Vuelve a revisarla.",
+            fn (User $u) => $this->urlSegunRol($papeleta, $u),
         );
     }
 

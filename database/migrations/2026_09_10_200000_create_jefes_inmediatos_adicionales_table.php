@@ -40,7 +40,7 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->unique(['trabajador_id', 'jefe_inmediato_id']);
+            $table->unique(['trabajador_id', 'jefe_inmediato_id'], 'jefes_inmediatos_adic_trabajador_jefe_unique');
         });
     }
 
