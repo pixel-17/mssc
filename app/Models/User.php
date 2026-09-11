@@ -4,6 +4,8 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,7 +15,7 @@ use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens;
 
@@ -25,6 +27,16 @@ class User extends Authenticatable
     use HasRoles;
     use Notifiable;
     use TwoFactorAuthenticatable;
+
+    /**
+     * El panel /admin de Filament es solo para admin — los catálogos y
+     * la gestión de usuarios viven ahí. RRHH, jefes y trabajadores usan
+     * sus propias bandejas en Blade + Livewire, nunca este panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasRole('admin');
+    }
 
     /**
      * The attributes that are mass assignable.
@@ -118,6 +130,66 @@ class User extends Authenticatable
     public function unidadesQueEncabeza(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(UnidadOrganica::class, 'jefe_id');
+    }
+
+    /**
+     * Jefes inmediatos ADICIONALES de este usuario (cuando este usuario
+     * es el trabajador), asignados a mano. Aparte de jefeInmediato()
+     * (el automático, derivado de la unidad orgánica).
+     */
+    public function jefesInmediatosAdicionales(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'jefes_inmediatos_adicionales',
+            'trabajador_id',
+            'jefe_inmediato_id',
+        )->withPivot('asignado_por_id')->withTimestamps();
+    }
+
+    /**
+     * Trabajadores que este usuario supervisa como jefe inmediato
+     * ADICIONAL (asignado a mano), aparte de los que le llegan por
+     * ser jefe automático de una unidad orgánica.
+     */
+    public function trabajadoresAdicionales(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(
+            User::class,
+            'jefes_inmediatos_adicionales',
+            'jefe_inmediato_id',
+            'trabajador_id',
+        )->withPivot('asignado_por_id')->withTimestamps();
+    }
+
+    /**
+     * Todos los trabajadores que este usuario ve como Jefe Inmediato:
+     * los automáticos (jefe_inmediato_id de la unidad orgánica) más
+     * los adicionales asignados a mano. Para bandejas y visibilidad.
+     */
+    public function trabajadoresComoJefeInmediato(): \Illuminate\Support\Collection
+    {
+        return User::where('jefe_inmediato_id', $this->id)
+            ->get()
+            ->merge($this->trabajadoresAdicionales)
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * ¿Es este usuario jefe inmediato del trabajador dado, ya sea de
+     * forma automática (por unidad orgánica) o adicional (asignado a
+     * mano)? Cualquiera de los dos habilita a decidir sus papeletas.
+     */
+    public function esJefeInmediatoDe(User $trabajador): bool
+    {
+        if ($trabajador->jefe_inmediato_id === $this->id) {
+            return true;
+        }
+
+        return $trabajador->jefesInmediatosAdicionales()
+            ->where('users.id', $this->id)
+            ->exists();
     }
 
     public function turnos(): \Illuminate\Database\Eloquent\Relations\HasMany

@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             UnidadOrganicaSeeder::class,
             MotivoSeeder::class,
             ConfiguracionSeeder::class,
-            HorarioRrhhSeeder::class,
 
             // Un usuario de prueba por cada rol/perfil real del sistema.
             // El orden importa: Jefe de Área y Jefe Inmediato arman el

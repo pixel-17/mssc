@@ -32,7 +32,7 @@ class TrabajadorUserSeeder extends Seeder
                 'dni' => '10000005',
                 'password' => 'password',
                 'email_verified_at' => now(),
-                'regimen' => 'CAS',
+                'regimen' => '276',
                 'unidad_organica_id' => $unidad->id,
                 'jefe_inmediato_id' => $jefeInmediato->id,
                 'jefe_area_id' => $jefeArea->id,

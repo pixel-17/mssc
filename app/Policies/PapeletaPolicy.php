@@ -18,6 +18,13 @@ use App\States\Papeleta\PendienteRrhh;
  * misma Policy: se distinguen por CUÁL columna de la papeleta los
  * referencia (jefe_inmediato_id vs jefe_area_id), no por una tabla
  * o rol de permiso separado.
+ *
+ * Un trabajador puede tener varios jefes inmediatos (el automático de
+ * su unidad orgánica + adicionales asignados a mano, ver
+ * User::esJefeInmediatoDe()). Cualquiera de ellos puede decidir sus
+ * papeletas — el que llegue primero — por eso los checks de abajo ya
+ * no comparan solo contra el jefe_inmediato_id fotografiado en la
+ * papeleta, sino contra TODOS los jefes actuales del trabajador.
  */
 class PapeletaPolicy
 {
@@ -25,7 +32,7 @@ class PapeletaPolicy
     {
         return $user->hasRole('rrhh')
             || $papeleta->trabajador_id === $user->id
-            || $papeleta->jefe_inmediato_id === $user->id
+            || $user->esJefeInmediatoDe($papeleta->trabajador)
             || $papeleta->jefe_area_id === $user->id;
     }
 
@@ -56,17 +63,18 @@ class PapeletaPolicy
             return $papeleta->jefe_area_id === $user->id;
         }
 
-        return $papeleta->jefe_inmediato_id === $user->id;
+        return $user->esJefeInmediatoDe($papeleta->trabajador);
     }
 
     /**
-     * La observación de RRHH solo la reconoce el Jefe Inmediato
-     * original — nunca el trabajador, nunca el Jefe de Área.
+     * La observación de RRHH solo la reconoce alguno de los Jefes
+     * Inmediatos del trabajador — nunca el trabajador, nunca el Jefe
+     * de Área.
      */
     public function reconocerObservacionRrhh(User $user, Papeleta $papeleta): bool
     {
         return $papeleta->estado->equals(ObservadaPorRrhh::class)
-            && $papeleta->jefe_inmediato_id === $user->id;
+            && $user->esJefeInmediatoDe($papeleta->trabajador);
     }
 
     public function decidirComoRrhh(User $user, Papeleta $papeleta): bool
@@ -96,7 +104,7 @@ class PapeletaPolicy
      */
     public function marcarRetornoManual(User $user, Papeleta $papeleta): bool
     {
-        return $papeleta->jefe_inmediato_id === $user->id;
+        return $user->esJefeInmediatoDe($papeleta->trabajador);
     }
 
     /**
@@ -105,7 +113,7 @@ class PapeletaPolicy
      */
     public function cerrarSinRetorno(User $user, Papeleta $papeleta): bool
     {
-        return $papeleta->jefe_inmediato_id === $user->id || $user->hasRole('rrhh');
+        return $user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh');
     }
 
     /**
@@ -114,7 +122,7 @@ class PapeletaPolicy
      */
     public function marcarAbandono(User $user, Papeleta $papeleta): bool
     {
-        return $papeleta->jefe_inmediato_id === $user->id || $user->hasRole('rrhh');
+        return $user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh');
     }
 
     /**
@@ -123,6 +131,6 @@ class PapeletaPolicy
      */
     public function revisarSustento(User $user, \App\Models\Sustento $sustento): bool
     {
-        return $sustento->papeleta->jefe_inmediato_id === $user->id || $user->hasRole('rrhh');
+        return $user->esJefeInmediatoDe($sustento->papeleta->trabajador) || $user->hasRole('rrhh');
     }
 }

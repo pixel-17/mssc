@@ -65,8 +65,8 @@ class MarcarRetornoAction
      */
     public function manual(Papeleta $papeleta, User $jefe, string $justificacion): Papeleta
     {
-        if ($papeleta->jefe_inmediato_id !== $jefe->id) {
-            throw new PapeletaException('Solo el jefe inmediato puede marcar un retorno manual por falla de conectividad.');
+        if (! $jefe->esJefeInmediatoDe($papeleta->trabajador)) {
+            throw new PapeletaException('Solo un jefe inmediato del trabajador puede marcar un retorno manual por falla de conectividad.');
         }
 
         if (trim($justificacion) === '') {
@@ -158,7 +158,7 @@ class MarcarRetornoAction
             HistorialPapeleta::create([
                 'papeleta_id' => $papeleta->id,
                 'actor_id' => $quienConfirma->id,
-                'actor_tipo' => $quienConfirma->id === $papeleta->jefe_inmediato_id ? 'jefe_inmediato' : 'rrhh',
+                'actor_tipo' => $quienConfirma->esJefeInmediatoDe($papeleta->trabajador) ? 'jefe_inmediato' : 'rrhh',
                 'estado_anterior' => $estadoAnterior,
                 'estado_nuevo' => class_basename($papeleta->estado),
                 'justificacion' => 'Visto bueno humano: comisión de servicio cerrada sin retorno físico.',
