@@ -8,7 +8,6 @@
     "require": {
         "php": "^8.3",
         "cmixin/business-day": "^1.21",
-        "filament/filament": "^4.12",
         "laravel-notification-channels/webpush": "^12.1",
         "laravel/framework": "^13.17",
         "laravel/jetstream": "^5.5",
@@ -63,8 +62,7 @@
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
-            "@php artisan package:discover --ansi",
-            "@php artisan filament:upgrade"
+            "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force"

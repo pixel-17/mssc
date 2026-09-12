@@ -25,14 +25,17 @@ Route::get('/', function () {
 });
 
 /*
- * El resto del catálogo de administración (motivos, turnos, feriados,
- * unidades orgánicas, configuraciones, horario de RRHH) sigue
- * viviendo en el panel de Filament registrado en /admin
- * (AdminPanelProvider). Sedes es la excepción — ver bloque de rutas
- * 'sedes.*' justo abajo.
+ * Todo el catálogo de administración (Sedes, Motivos, Turnos,
+ * Feriados, Unidades orgánicas, Configuraciones, Horario de RRHH,
+ * Usuarios) ya vive en Blade + Livewire puro, uno por uno, en los
+ * bloques de abajo. Filament ya no se usa en este proyecto —
+ * AdminPanelProvider fue retirado de bootstrap/providers.php y la
+ * dependencia se sacó de composer.json (las carpetas
+ * app/Filament/Resources/* quedaron sin uso, listas para borrarse
+ * cuando se limpie el repo).
  */
 /*
- * Sedes: único recurso del catálogo de administración ya migrado
+ * Sedes: primer recurso del catálogo de administración ya migrado
  * fuera de Filament, a pedido — vive en Blade + Livewire puro
  * (App\Livewire\Sedes\*). Prefijo 'sedes' (no 'admin/sedes') para no
  * pisar la ruta del panel.
@@ -46,6 +49,116 @@ Route::middleware([
     Route::get('/', \App\Livewire\Sedes\SedeIndex::class)->name('index');
     Route::get('/crear', \App\Livewire\Sedes\SedeForm::class)->name('crear');
     Route::get('/{sede}/editar', \App\Livewire\Sedes\SedeForm::class)->name('editar');
+});
+
+/*
+ * Motivos: segundo recurso del catálogo de administración migrado
+ * fuera de Filament — vive en Blade + Livewire puro
+ * (App\Livewire\Motivos\*), mismo patrón que Sedes.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('motivos')->name('motivos.')->group(function () {
+    Route::get('/', \App\Livewire\Motivos\MotivoIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\Motivos\MotivoForm::class)->name('crear');
+    Route::get('/{motivo}/editar', \App\Livewire\Motivos\MotivoForm::class)->name('editar');
+});
+
+/*
+ * Turnos: tercer recurso migrado — Blade + Livewire puro
+ * (App\Livewire\Turnos\*), mismo patrón que Sedes/Motivos.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('turnos')->name('turnos.')->group(function () {
+    Route::get('/', \App\Livewire\Turnos\TurnoIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\Turnos\TurnoForm::class)->name('crear');
+    Route::get('/{turno}/editar', \App\Livewire\Turnos\TurnoForm::class)->name('editar');
+});
+
+/*
+ * Feriados: cuarto recurso migrado — Blade + Livewire puro
+ * (App\Livewire\Feriados\*).
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('feriados')->name('feriados.')->group(function () {
+    Route::get('/', \App\Livewire\Feriados\FeriadoIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\Feriados\FeriadoForm::class)->name('crear');
+    Route::get('/{feriado}/editar', \App\Livewire\Feriados\FeriadoForm::class)->name('editar');
+});
+
+/*
+ * Unidades orgánicas: quinto recurso migrado — Blade + Livewire puro
+ * (App\Livewire\UnidadesOrganicas\*).
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('unidades-organicas')->name('unidades-organicas.')->group(function () {
+    Route::get('/', \App\Livewire\UnidadesOrganicas\UnidadOrganicaIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::class)->name('crear');
+    Route::get('/{unidad}/editar', \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::class)->name('editar');
+});
+
+/*
+ * Configuraciones: sexto recurso migrado — Blade + Livewire puro
+ * (App\Livewire\Configuraciones\*). Sin ruta de creación: son filas
+ * fijas sembradas por ConfiguracionSeeder, solo se editan.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('configuraciones')->name('configuraciones.')->group(function () {
+    Route::get('/', \App\Livewire\Configuraciones\ConfiguracionIndex::class)->name('index');
+    Route::get('/{configuracion}/editar', \App\Livewire\Configuraciones\ConfiguracionForm::class)->name('editar');
+});
+
+/*
+ * Horario de RRHH: séptimo recurso migrado — Blade + Livewire puro
+ * (App\Livewire\HorarioRrhh\*). Sin ruta de creación: son filas fijas
+ * por día de semana sembradas por HorarioRrhhSeeder, solo se editan.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('horario-rrhh')->name('horario-rrhh.')->group(function () {
+    Route::get('/', \App\Livewire\HorarioRrhh\HorarioRrhhIndex::class)->name('index');
+    Route::get('/{horario}/editar', \App\Livewire\HorarioRrhh\HorarioRrhhForm::class)->name('editar');
+});
+
+/*
+ * Usuarios (gestión de admin): octavo y último recurso migrado —
+ * Blade + Livewire puro (App\Livewire\Usuarios\*). Prefijo
+ * 'usuarios-admin' (no 'usuarios') para no chocar con las rutas
+ * 'usuarios.*' de más abajo, que son la vía de alta para Jefe de
+ * Área / Jefe Inmediato con reglas propias (UserPolicy) — control
+ * total sin esas restricciones de área es exclusivo de admin.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('usuarios-admin')->name('usuarios-admin.')->group(function () {
+    Route::get('/', \App\Livewire\Usuarios\UsuarioAdminIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('crear');
+    Route::get('/{usuario}/editar', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('editar');
 });
 
 Route::middleware([

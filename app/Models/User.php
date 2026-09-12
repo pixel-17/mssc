@@ -4,8 +4,6 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -15,7 +13,7 @@ use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable
 {
     use HasApiTokens;
 
@@ -27,16 +25,6 @@ class User extends Authenticatable implements FilamentUser
     use HasRoles;
     use Notifiable;
     use TwoFactorAuthenticatable;
-
-    /**
-     * El panel /admin de Filament es solo para admin — los catálogos y
-     * la gestión de usuarios viven ahí. RRHH, jefes y trabajadores usan
-     * sus propias bandejas en Blade + Livewire, nunca este panel.
-     */
-    public function canAccessPanel(Panel $panel): bool
-    {
-        return $this->hasRole('admin');
-    }
 
     /**
      * The attributes that are mass assignable.

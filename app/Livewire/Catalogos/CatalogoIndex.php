@@ -8,17 +8,13 @@ use Livewire\Component;
 
 /**
  * Punto de entrada único a los catálogos de administración, en
- * reemplazo del panel de Filament (/admin) que se va a eliminar.
+ * reemplazo del panel de Filament (/admin), que ya fue retirado del
+ * proyecto.
  *
- * Mientras dure la migración, cada catálogo listado abajo apunta a
- * SU PROPIA versión más nueva: Sedes ya vive en Blade/Livewire
- * (route('sedes.index')); el resto SIGUE en Filament (/admin/...)
- * hasta que se migre uno por uno — por eso Filament no se puede
- * borrar todavía sin dejar esos 6 catálogos sin pantalla.
- *
- * Actualiza el array $catalogos de este componente a medida que cada
- * catálogo se vaya migrando (cambia 'listo' a true y la 'ruta' a la
- * nueva route() de Livewire).
+ * Los 8 catálogos ya viven en Blade + Livewire puro, uno por uno,
+ * cada uno con su propio par Index/Form (ver App\Livewire\Sedes,
+ * Motivos, Turnos, Feriados, UnidadesOrganicas, Configuraciones,
+ * HorarioRrhh y Usuarios).
  */
 #[Layout('layouts.app')]
 class CatalogoIndex extends Component
@@ -28,13 +24,13 @@ class CatalogoIndex extends Component
         return view('livewire.catalogos.catalogo-index', [
             'catalogos' => [
                 ['nombre' => 'Sedes', 'listo' => true, 'ruta' => route('sedes.index')],
-                ['nombre' => 'Motivos', 'listo' => false, 'ruta' => '/admin/motivos'],
-                ['nombre' => 'Turnos', 'listo' => false, 'ruta' => '/admin/turnos'],
-                ['nombre' => 'Feriados', 'listo' => false, 'ruta' => '/admin/feriados'],
-                ['nombre' => 'Unidades orgánicas', 'listo' => false, 'ruta' => '/admin/unidad-organicas'],
-                ['nombre' => 'Configuraciones', 'listo' => false, 'ruta' => '/admin/configuracions'],
-                ['nombre' => 'Horario de RRHH', 'listo' => false, 'ruta' => '/admin/horario-rrhhs'],
-                ['nombre' => 'Usuarios', 'listo' => false, 'ruta' => '/admin/users'],
+                ['nombre' => 'Motivos', 'listo' => true, 'ruta' => route('motivos.index')],
+                ['nombre' => 'Turnos', 'listo' => true, 'ruta' => route('turnos.index')],
+                ['nombre' => 'Feriados', 'listo' => true, 'ruta' => route('feriados.index')],
+                ['nombre' => 'Unidades orgánicas', 'listo' => true, 'ruta' => route('unidades-organicas.index')],
+                ['nombre' => 'Configuraciones', 'listo' => true, 'ruta' => route('configuraciones.index')],
+                ['nombre' => 'Horario de RRHH', 'listo' => true, 'ruta' => route('horario-rrhh.index')],
+                ['nombre' => 'Usuarios', 'listo' => true, 'ruta' => route('usuarios-admin.index')],
             ],
         ]);
     }
