@@ -8,3 +8,4 @@
 
 import './echo';
 import './push-notifications';
+import './theme';

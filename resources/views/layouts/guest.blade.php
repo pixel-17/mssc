@@ -6,6 +6,14 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="theme-color" content="#0a2c4d">
 
+        <script>
+            (function () {
+                var modo = localStorage.getItem('mssc-theme');
+                var oscuro = modo === 'dark' || (modo === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', oscuro);
+            })();
+        </script>
+
         <title>{{ config('app.name', 'MSSC') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -15,7 +23,7 @@
 
         @livewireStyles
     </head>
-    <body class="font-sans text-gray-900 antialiased">
+    <body class="font-sans text-gray-900 dark:text-white antialiased">
         {{ $slot }}
 
         @livewireScripts

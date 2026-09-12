@@ -7,6 +7,19 @@
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
         <meta name="theme-color" content="#0a2c4d">
 
+        {{--
+            Aplica la clase `dark` en <html> ANTES del primer paint,
+            para no mostrar un flash de tema claro y luego cambiar a
+            oscuro. Ver resources/js/theme.js para el toggle en vivo.
+        --}}
+        <script>
+            (function () {
+                var modo = localStorage.getItem('mssc-theme');
+                var oscuro = modo === 'dark' || (modo === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                document.documentElement.classList.toggle('dark', oscuro);
+            })();
+        </script>
+
         <title>{{ config('app.name', 'MSSC') }}</title>
 
         <!-- Fonts -->
