@@ -1,4 +1,4 @@
-<div class="bg-white shadow-sm sm:rounded-lg p-6">
+<div class="glass-card p-6">
     <h3 class="text-sm font-semibold text-gray-700 mb-3">Historial</h3>
     <ol class="space-y-3">
         @forelse ($papeleta->historial as $evento)

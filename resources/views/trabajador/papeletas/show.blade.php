@@ -7,7 +7,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->motivo->nombre }}
             </h2>
             <x-estado-papeleta :estado="$papeleta->estado" class="text-sm" />
@@ -21,7 +21,7 @@
             @include('papeletas._info', ['papeleta' => $papeleta])
 
             @if ($puedeCancelar)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="glass-card p-6">
                     <form method="POST" action="{{ route('trabajador.papeletas.cancelar', $papeleta) }}"
                           onsubmit="return confirm('¿Cancelar esta papeleta?')">
                         @csrf
@@ -34,14 +34,14 @@
             @endif
 
             @if ($puedeMarcarRetorno)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6" x-data="{ lat: '', lng: '', obteniendo: false, error: '' }">
+                <div class="glass-card p-6" x-data="{ lat: '', lng: '', obteniendo: false, error: '' }">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Marcar retorno</h3>
                     <form method="POST" action="{{ route('trabajador.papeletas.retorno.store', $papeleta) }}" enctype="multipart/form-data" class="space-y-4">
                         @csrf
                         <div>
                             <label class="block text-sm font-medium text-gray-700">Foto</label>
                             <input type="file" name="foto" accept="image/*" required
-                                   class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                   class="mt-1 block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-ocean-50 file:text-ocean-700 hover:file:bg-ocean-100">
                         </div>
 
                         <div>
@@ -62,7 +62,7 @@
                         <input type="hidden" name="longitud" :value="lng">
 
                         <button type="submit" :disabled="!lat || !lng"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed">
+                                class="inline-flex items-center px-4 py-2 bg-ocean-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-ocean-700 disabled:opacity-40 disabled:cursor-not-allowed">
                             Confirmar retorno
                         </button>
                     </form>
@@ -70,7 +70,7 @@
             @endif
 
             @if ($sustentoPendiente)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-1">Sustento pendiente</h3>
                     <p class="text-xs text-gray-500 mb-3">
                         Fecha límite: {{ $sustentoPendiente->fecha_limite?->format('d/m/Y H:i') }}
@@ -78,9 +78,9 @@
                     <form method="POST" action="{{ route('trabajador.papeletas.sustento.store', $sustentoPendiente) }}" enctype="multipart/form-data" class="space-y-3">
                         @csrf
                         <input type="file" name="archivo" required
-                               class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                               class="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-ocean-50 file:text-ocean-700 hover:file:bg-ocean-100">
                         <button type="submit"
-                                class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+                                class="inline-flex items-center px-4 py-2 bg-ocean-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-ocean-700">
                             Presentar sustento
                         </button>
                     </form>

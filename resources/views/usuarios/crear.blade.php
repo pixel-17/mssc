@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
             Crear usuario
         </h2>
     </x-slot>
@@ -10,7 +10,7 @@
             <x-flash-messages />
             <x-validation-errors class="mb-4" />
 
-            <div class="bg-white shadow-sm sm:rounded-lg p-6">
+            <div class="glass-card p-6">
                 <form method="POST" action="{{ route('usuarios.store') }}" class="space-y-6"
                       x-data="{ tipo: '{{ old('tipo', 'trabajador') }}' }">
                     @csrf
@@ -19,7 +19,7 @@
                         <div>
                             <x-label for="tipo" value="¿Qué vas a crear?" />
                             <select id="tipo" name="tipo" x-model="tipo" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
                                 <option value="trabajador">Trabajador</option>
                                 <option value="jefe_inmediato">Jefe Inmediato</option>
                             </select>
@@ -31,7 +31,7 @@
                         <div>
                             <x-label for="unidad_organica_id" value="Unidad orgánica" />
                             <select id="unidad_organica_id" name="unidad_organica_id" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
                                 <option value="">Selecciona una unidad de tu área</option>
                                 @foreach ($unidades as $unidad)
                                     <option value="{{ $unidad->id }}" @selected(old('unidad_organica_id') == $unidad->id)>{{ $unidad->nombre }}</option>
@@ -39,7 +39,7 @@
                             </select>
                         </div>
                     @else
-                        <div class="rounded-md bg-indigo-50 border border-indigo-200 p-4 text-sm text-indigo-800">
+                        <div class="rounded-md bg-ocean-50 border border-ocean-200 p-4 text-sm text-ocean-800">
                             Este trabajador quedará bajo tu supervisión: te asignaremos automáticamente como su jefe inmediato.
                         </div>
                     @endif
@@ -66,7 +66,7 @@
                         <div>
                             <x-label for="regimen" value="Régimen" />
                             <select id="regimen" name="regimen" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
                                 <option value="">Selecciona</option>
                                 <option value="276" @selected(old('regimen') === '276')>276 (día)</option>
                                 <option value="728" @selected(old('regimen') === '728')>728 (rotativo)</option>
@@ -91,7 +91,7 @@
                     <div>
                         <x-label for="sede_id" value="Sede (opcional)" />
                         <select id="sede_id" name="sede_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
                             <option value="">— sin sede —</option>
                             @foreach ($sedes as $sede)
                                 <option value="{{ $sede->id }}" @selected(old('sede_id') == $sede->id)>{{ $sede->nombre }}</option>
@@ -101,7 +101,7 @@
 
                     <div class="flex items-center justify-end gap-3">
                         <a href="{{ route('usuarios.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancelar</a>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-ocean-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-ocean-700">
                             Crear
                         </button>
                     </div>

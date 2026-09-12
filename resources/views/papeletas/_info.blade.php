@@ -1,4 +1,4 @@
-<div class="bg-white shadow-sm sm:rounded-lg p-6">
+<div class="glass-card p-6">
     <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
         @if ($papeleta->relationLoaded('trabajador') && $papeleta->trabajador)
             <div>
@@ -58,7 +58,7 @@
 </div>
 
 @if ($papeleta->retorno)
-    <div class="bg-white shadow-sm sm:rounded-lg p-6">
+    <div class="glass-card p-6">
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Retorno registrado</h3>
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
@@ -88,7 +88,7 @@
 @endif
 
 @if ($papeleta->sustentos->isNotEmpty())
-    <div class="bg-white shadow-sm sm:rounded-lg p-6">
+    <div class="glass-card p-6">
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Sustentos</h3>
         <ul class="text-sm text-gray-700 space-y-1">
             @foreach ($papeleta->sustentos as $sustento)

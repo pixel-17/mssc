@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
             Confirmar vínculo
         </h2>
     </x-slot>
@@ -9,7 +9,7 @@
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <x-flash-messages />
 
-            <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-4">
+            <div class="glass-card p-6 space-y-4">
                 <div>
                     <p class="text-sm text-gray-500">Trabajador encontrado</p>
                     <p class="text-lg font-semibold text-gray-900">{{ $trabajador->nombre_completo }}</p>
@@ -44,7 +44,7 @@
 
                     <div class="flex items-center justify-end gap-3">
                         <a href="{{ route('usuarios.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancelar</a>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-ocean-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-ocean-700">
                             Confirmar vínculo
                         </button>
                     </div>

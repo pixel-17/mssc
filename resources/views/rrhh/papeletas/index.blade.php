@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
             Bandeja de RRHH
         </h2>
     </x-slot>
@@ -10,7 +10,7 @@
             <x-flash-messages />
 
             {{-- Por decidir --}}
-            <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+            <div class="glass-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100">
                     <h3 class="text-sm font-semibold text-gray-700">Por decidir ({{ $porDecidir->count() }})</h3>
                 </div>
@@ -18,7 +18,7 @@
                     <p class="p-4 text-sm text-gray-500">No hay papeletas pendientes de RRHH.</p>
                 @else
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-ocean-50/70">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
@@ -34,7 +34,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $papeleta->created_at->format('d/m/Y H:i') }}</td>
                                     <td class="px-4 py-3">
                                         <div class="flex items-center justify-end gap-2 flex-wrap">
-                                            <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium mr-2">Ver</a>
+                                            <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-ocean-600 hover:text-ocean-900 font-medium mr-2">Ver</a>
                                             <form method="POST" action="{{ route('rrhh.papeletas.aprobar', $papeleta) }}">
                                                 @csrf
                                                 <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">Aprobar</button>
@@ -52,12 +52,12 @@
 
             {{-- Revisión post-hoc --}}
             @if ($posthocPendientes->isNotEmpty())
-                <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+                <div class="glass-card overflow-hidden">
                     <div class="px-4 py-3 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-700">Revisión post-hoc — jefe autorizó fuera de horario RRHH ({{ $posthocPendientes->count() }})</h3>
                     </div>
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-ocean-50/70">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
@@ -72,7 +72,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $papeleta->resueltoPorJefe?->nombre_completo ?? '—' }}</td>
                                     <td class="px-4 py-3 text-right">
-                                        <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium">Revisar →</a>
+                                        <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-ocean-600 hover:text-ocean-900 font-medium">Revisar →</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -83,12 +83,12 @@
 
             {{-- Sustentos por revisar --}}
             @if ($sustentosPorRevisar->isNotEmpty())
-                <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
+                <div class="glass-card overflow-hidden">
                     <div class="px-4 py-3 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-700">Sustentos por revisar ({{ $sustentosPorRevisar->count() }})</h3>
                     </div>
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-gray-50">
+                        <thead class="bg-ocean-50/70">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
@@ -101,7 +101,7 @@
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-right">
-                                        <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-indigo-600 hover:text-indigo-900 font-medium">Revisar sustento →</a>
+                                        <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-ocean-600 hover:text-ocean-900 font-medium">Revisar sustento →</a>
                                     </td>
                                 </tr>
                             @endforeach

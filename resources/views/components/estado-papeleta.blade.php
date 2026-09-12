@@ -15,24 +15,25 @@ use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\ReclasificadoAParticular;
 
 $mapa = [
-    PendienteJefe::class            => ['Pendiente Jefe',        'bg-yellow-100 text-yellow-800'],
-    ObservadaPorJefe::class         => ['Observada por Jefe',    'bg-orange-100 text-orange-800'],
-    PendienteRrhh::class            => ['Pendiente RRHH',        'bg-yellow-100 text-yellow-800'],
-    ObservadaPorRrhh::class         => ['Observada por RRHH',    'bg-orange-100 text-orange-800'],
-    Rechazada::class                => ['Rechazada',             'bg-red-100 text-red-800'],
-    AutorizadaYCorriendo::class     => ['Autorizada / En curso', 'bg-blue-100 text-blue-800'],
-    RetornoPendienteSustento::class => ['Retorno: falta sustento','bg-purple-100 text-purple-800'],
-    FinalizadoSinRetorno::class     => ['Sin retorno (abandono)','bg-red-100 text-red-800'],
-    Cerrada::class                  => ['Cerrada',                'bg-green-100 text-green-800'],
-    Vencida::class                  => ['Vencida',                'bg-gray-200 text-gray-700'],
-    Cancelada::class                => ['Cancelada',              'bg-gray-200 text-gray-700'],
-    ReclasificadoAParticular::class => ['Reclasificada a Particular', 'bg-purple-100 text-purple-800'],
+    PendienteJefe::class            => ['Pendiente Jefe',        'bg-amber-50 text-amber-800 ring-amber-300', 'bg-amber-500'],
+    ObservadaPorJefe::class         => ['Observada por Jefe',    'bg-orange-50 text-orange-800 ring-orange-300', 'bg-orange-500'],
+    PendienteRrhh::class            => ['Pendiente RRHH',        'bg-amber-50 text-amber-800 ring-amber-300', 'bg-amber-500'],
+    ObservadaPorRrhh::class         => ['Observada por RRHH',    'bg-orange-50 text-orange-800 ring-orange-300', 'bg-orange-500'],
+    Rechazada::class                => ['Rechazada',             'bg-red-50 text-red-800 ring-red-300', 'bg-red-500'],
+    AutorizadaYCorriendo::class     => ['Autorizada / En curso', 'bg-ocean-50 text-ocean-800 ring-ocean-300', 'bg-ocean-500'],
+    RetornoPendienteSustento::class => ['Retorno: falta sustento','bg-purple-50 text-purple-800 ring-purple-300', 'bg-purple-500'],
+    FinalizadoSinRetorno::class     => ['Sin retorno (abandono)','bg-red-50 text-red-800 ring-red-300', 'bg-red-500'],
+    Cerrada::class                  => ['Cerrada',                'bg-emerald-50 text-emerald-800 ring-emerald-300', 'bg-emerald-500'],
+    Vencida::class                  => ['Vencida',                'bg-gray-100 text-gray-700 ring-gray-300', 'bg-gray-400'],
+    Cancelada::class                => ['Cancelada',              'bg-gray-100 text-gray-700 ring-gray-300', 'bg-gray-400'],
+    ReclasificadoAParticular::class => ['Reclasificada a Particular', 'bg-purple-50 text-purple-800 ring-purple-300', 'bg-purple-500'],
 ];
 
 $clave = $estado instanceof \Spatie\ModelStates\State ? get_class($estado) : (string) $estado;
-[$etiqueta, $colores] = $mapa[$clave] ?? [class_basename($clave), 'bg-gray-100 text-gray-800'];
+[$etiqueta, $colores, $punto] = $mapa[$clave] ?? [class_basename($clave), 'bg-gray-100 text-gray-800 ring-gray-300', 'bg-gray-400'];
 @endphp
 
-<span {{ $attributes->merge(['class' => "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium $colores"]) }}>
+<span {{ $attributes->merge(['class' => "badge-ocean $colores"]) }}>
+    <span class="size-1.5 rounded-full {{ $punto }}"></span>
     {{ $etiqueta }}
 </span>

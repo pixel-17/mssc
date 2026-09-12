@@ -5,3 +5,97 @@
 [x-cloak] {
     display: none;
 }
+
+:root {
+    --ocean-950: #0a2c4d;
+    --ocean-900: #0f4a80;
+    --ocean-800: #0c579f;
+    --ocean-700: #086ad0;
+    --ocean-600: #0a86f0;
+    --ocean-500: #1ea7ff;
+    --ocean-400: #48c6ff;
+    --ocean-100: #d9f4ff;
+    --ocean-50: #eefbff;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: var(--ocean-50);
+}
+
+/* Scrollbar acorde al tema */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--ocean-400), var(--ocean-700));
+    border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--ocean-600); }
+
+@layer components {
+    /* Fondo institucional con capas de gradiente océano */
+    .bg-institucional {
+        @apply bg-ocean-gradient-soft bg-fixed relative;
+    }
+    .bg-institucional::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        background-image: theme('backgroundImage.ocean-radial');
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    /* Vidrio esmerilado — tarjetas, paneles, headers */
+    .glass {
+        @apply bg-white/60 backdrop-blur-lg border border-white/60 shadow-glass;
+    }
+    .glass-strong {
+        @apply bg-white/80 backdrop-blur-xl border border-white/70 shadow-glass-lg;
+    }
+    .glass-dark {
+        @apply bg-ocean-950/40 backdrop-blur-lg border border-white/10 text-white shadow-glass-lg;
+    }
+    .glass-card {
+        @apply glass rounded-2xl;
+    }
+    .glass-nav {
+        @apply bg-ocean-950/30 backdrop-blur-xl border-b border-white/10;
+    }
+
+    /* Botones */
+    .btn-ocean {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white
+               bg-gradient-to-br from-ocean-500 to-ocean-700 shadow-ocean-glow
+               hover:from-ocean-400 hover:to-ocean-600 active:scale-[.97]
+               focus:outline-none focus:ring-2 focus:ring-ocean-400 focus:ring-offset-2
+               disabled:opacity-50 disabled:pointer-events-none transition-all duration-150;
+    }
+    .btn-ocean-outline {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm
+               text-ocean-700 bg-white/70 backdrop-blur border border-ocean-200 shadow-sm
+               hover:bg-white hover:border-ocean-400 active:scale-[.97]
+               focus:outline-none focus:ring-2 focus:ring-ocean-400 focus:ring-offset-2
+               disabled:opacity-40 transition-all duration-150;
+    }
+    .btn-danger-glass {
+        @apply inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm text-white
+               bg-gradient-to-br from-rose-500 to-red-600 shadow-md
+               hover:from-rose-400 hover:to-red-500 active:scale-[.97]
+               focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2
+               disabled:opacity-50 transition-all duration-150;
+    }
+
+    /* Badges de estado con look "vivo" */
+    .badge-ocean {
+        @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ring-1 ring-inset;
+    }
+
+    /* Icono contenedor circular tipo glass */
+    .icon-chip {
+        @apply inline-flex items-center justify-center size-9 rounded-xl bg-white/70 backdrop-blur border border-white/70 text-ocean-700 shadow-sm;
+    }
+}

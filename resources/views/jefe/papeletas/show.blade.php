@@ -20,7 +20,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
             <x-estado-papeleta :estado="$papeleta->estado" class="text-sm" />
@@ -34,7 +34,7 @@
             @include('papeletas._info', ['papeleta' => $papeleta])
 
             @if ($puedeDecidir)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisión</h3>
                     <div class="flex items-center gap-3 flex-wrap">
                         <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}">
@@ -51,7 +51,7 @@
             @endif
 
             @if ($puedeReconocer)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
+                <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Observación de RRHH</h3>
                     <p class="text-sm text-gray-600 mb-3">RRHH observó esta papeleta. Revisa el historial y reconoce para reabrirla en tu bandeja.</p>
                     <x-accion-comentario :action="route('jefe.papeletas.reconocer-observacion-rrhh', $papeleta)" label="Reconocer" color="orange" />
@@ -59,7 +59,7 @@
             @endif
 
             @if ($enCurso)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6 space-y-6">
+                <div class="glass-card p-6 space-y-6">
                     <h3 class="text-sm font-semibold text-gray-700">Papeleta en curso</h3>
 
                     @if (! $papeleta->retorno)
@@ -87,7 +87,7 @@
             @endif
 
             @if ($sustentoPresentado)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6" x-data="{ resultado: 'aprobado' }">
+                <div class="glass-card p-6" x-data="{ resultado: 'aprobado' }">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Revisar sustento presentado</h3>
                     <form method="POST" action="{{ route('jefe.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3">
                         @csrf
@@ -101,8 +101,8 @@
                         </div>
                         <textarea name="comentario" rows="2" maxlength="2000" x-show="resultado === 'observado'"
                                   placeholder="Motivo de la observación (mínimo 5 caracteres)..."
-                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500"></textarea>
+                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-ocean-600 hover:bg-ocean-700">
                             Confirmar revisión
                         </button>
                     </form>
