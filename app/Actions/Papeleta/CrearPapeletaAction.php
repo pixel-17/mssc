@@ -12,6 +12,7 @@ use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteJefe;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -45,39 +46,58 @@ class CrearPapeletaAction
 
         $unidad = $trabajador->unidadOrganica;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $bypassAprobacion, $turno, $unidad) {
-            $this->verificarExclusividad($trabajador, $motivo);
+        try {
+            $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $bypassAprobacion, $turno, $unidad) {
+                $this->verificarExclusividad($trabajador, $motivo);
 
-            $papeleta = Papeleta::create([
-                'trabajador_id' => $trabajador->id,
-                'motivo_id' => $motivo->id,
-                'sede_id' => $trabajador->sede_id,
-                'regimen' => $trabajador->regimen,
-                'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
-                'estado' => $bypassAprobacion ? AutorizadaYCorriendo::class : PendienteJefe::class,
-                'es_emergencia' => $bypassAprobacion,
-                'slot_normal_activo' => $motivo->participa_regla_exclusividad ? true : null,
-                'slot_emergencia_activo' => $motivo->participa_regla_exclusividad ? null : true,
-                'jefe_inmediato_id' => $unidad?->jefeInmediato()?->id,
-                'jefe_area_id' => $unidad?->jefeArea()?->id,
-                'hora_salida_real' => $bypassAprobacion ? now() : null,
-                'justificacion' => $datos['justificacion'] ?? null,
-                'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
-                'visto_bueno_jefe_emergencia' => $bypassAprobacion ? 'pendiente' : null,
-                'visto_bueno_rrhh_emergencia' => $bypassAprobacion ? 'pendiente' : null,
-            ]);
+                $papeleta = Papeleta::create([
+                    'trabajador_id' => $trabajador->id,
+                    'motivo_id' => $motivo->id,
+                    'sede_id' => $trabajador->sede_id,
+                    'regimen' => $trabajador->regimen,
+                    'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
+                    'estado' => $bypassAprobacion ? AutorizadaYCorriendo::class : PendienteJefe::class,
+                    'es_emergencia' => $bypassAprobacion,
+                    'slot_normal_activo' => $motivo->participa_regla_exclusividad ? true : null,
+                    'slot_emergencia_activo' => $motivo->participa_regla_exclusividad ? null : true,
+                    'jefe_inmediato_id' => $unidad?->jefeInmediato()?->id,
+                    'jefe_area_id' => $unidad?->jefeArea()?->id,
+                    'hora_salida_real' => $bypassAprobacion ? now() : null,
+                    'justificacion' => $datos['justificacion'] ?? null,
+                    'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
+                    'visto_bueno_jefe_emergencia' => $bypassAprobacion ? 'pendiente' : null,
+                    'visto_bueno_rrhh_emergencia' => $bypassAprobacion ? 'pendiente' : null,
+                ]);
 
-            HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
-                'actor_id' => $trabajador->id,
-                'actor_tipo' => 'trabajador',
-                'estado_nuevo' => class_basename($papeleta->estado),
-                'motivo_nuevo_id' => $motivo->id,
-                'justificacion' => $datos['justificacion'] ?? null,
-            ]);
+                HistorialPapeleta::create([
+                    'papeleta_id' => $papeleta->id,
+                    'actor_id' => $trabajador->id,
+                    'actor_tipo' => 'trabajador',
+                    'estado_nuevo' => class_basename($papeleta->estado),
+                    'motivo_nuevo_id' => $motivo->id,
+                    'justificacion' => $datos['justificacion'] ?? null,
+                ]);
 
-            return $papeleta;
-        });
+                return $papeleta;
+            });
+        } catch (QueryException $e) {
+            // Red de seguridad ante condición de carrera: dos requests
+            // casi simultáneas pueden pasar el SELECT de
+            // verificarExclusividad() antes de que cualquiera haga el
+            // INSERT. El constraint único de BD (slot_normal_activo /
+            // slot_emergencia_activo por trabajador) es quien realmente
+            // lo impide; acá solo traducimos ese fallo al mismo mensaje
+            // amigable en vez de dejar pasar un error crudo de BD.
+            if ($e->getCode() === '23000') {
+                $mensaje = $motivo->participa_regla_exclusividad
+                    ? 'Ya tienes una papeleta activa (Particular, Salud o Comisión). Solo puedes tener una a la vez.'
+                    : 'Ya tienes una papeleta de este carril (Emergencia) activa.';
+
+                throw new PapeletaException($mensaje);
+            }
+
+            throw $e;
+        }
 
         // Fuera de la transacción: si algo falla en el envío (push caído,
         // cola no disponible) nunca debe revertir la creación ya
@@ -96,9 +116,11 @@ class CrearPapeletaAction
     private function resolverTurnoActivo(User $trabajador): ?Turno
     {
         if ($trabajador->regimen === '728') {
-            return Turno::where('user_id', $trabajador->id)
-                ->whereDate('fecha', now()->toDateString())
-                ->first(); // puede ser null, o incluso es_descanso=true: no importa para 728
+            // Turno::vigenteParaUsuario maneja el cruce de medianoche del
+            // turno Noche, para que dia_operativo refleje el turno
+            // correcto también entre 00:00 y 06:00. Sigue siendo solo
+            // informativo: puede ser null y no bloquea nada para 728.
+            return Turno::vigenteParaUsuario($trabajador->id);
         }
 
         if (! app(HorarioOrdinarioService::class)->estaDentroDeVentana()) {
@@ -115,8 +137,14 @@ class CrearPapeletaAction
     {
         $columna = $motivo->participa_regla_exclusividad ? 'slot_normal_activo' : 'slot_emergencia_activo';
 
+        // lockForUpdate: si ya existe una fila activa de este trabajador,
+        // una segunda transacción concurrente espera a que esta termine
+        // en vez de leer un estado ya obsoleto. No cubre el caso de la
+        // PRIMERA papeleta (no hay fila que bloquear todavía) — para eso
+        // está el catch de QueryException en ejecutar().
         $existeActiva = Papeleta::where('trabajador_id', $trabajador->id)
             ->where($columna, true)
+            ->lockForUpdate()
             ->exists();
 
         if ($existeActiva) {

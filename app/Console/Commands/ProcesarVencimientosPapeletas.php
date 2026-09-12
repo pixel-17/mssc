@@ -100,12 +100,10 @@ class ProcesarVencimientosPapeletas extends Command
         $actor = User::find($userId);
 
         if ($actor?->regimen === '728') {
-            return Turno::where('user_id', $userId)
-                ->whereDate('fecha', now()->toDateString())
-                ->where('es_descanso', false)
-                ->whereTime('hora_inicio', '<=', now())
-                ->whereTime('hora_fin', '>=', now())
-                ->exists();
+            // Turno::vigenteParaUsuario maneja el cruce de medianoche del
+            // turno Noche (22:00-06:00 del día siguiente); antes, entre
+            // 00:00 y 06:00 esto nunca detectaba al actor como "en turno".
+            return Turno::vigenteParaUsuario($userId, now()) !== null;
         }
 
         return $this->horarioOrdinario->estaDentroDeVentana();
