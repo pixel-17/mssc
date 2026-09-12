@@ -25,12 +25,36 @@ Route::get('/', function () {
 });
 
 /*
- * El catálogo de administración (sedes, motivos, turnos, feriados,
- * unidades orgánicas, configuraciones, horario de RRHH) vive
- * exclusivamente en el panel de Filament registrado en /admin
- * (AdminPanelProvider) — a propósito no hay rutas admin.* acá, para
- * no chocar con esa ruta.
+ * El resto del catálogo de administración (motivos, turnos, feriados,
+ * unidades orgánicas, configuraciones, horario de RRHH) sigue
+ * viviendo en el panel de Filament registrado en /admin
+ * (AdminPanelProvider). Sedes es la excepción — ver bloque de rutas
+ * 'sedes.*' justo abajo.
  */
+/*
+ * Sedes: único recurso del catálogo de administración ya migrado
+ * fuera de Filament, a pedido — vive en Blade + Livewire puro
+ * (App\Livewire\Sedes\*). Prefijo 'sedes' (no 'admin/sedes') para no
+ * pisar la ruta del panel.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('sedes')->name('sedes.')->group(function () {
+    Route::get('/', \App\Livewire\Sedes\SedeIndex::class)->name('index');
+    Route::get('/crear', \App\Livewire\Sedes\SedeForm::class)->name('crear');
+    Route::get('/{sede}/editar', \App\Livewire\Sedes\SedeForm::class)->name('editar');
+});
+
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->get('/catalogos', \App\Livewire\Catalogos\CatalogoIndex::class)->name('catalogos.index');
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),

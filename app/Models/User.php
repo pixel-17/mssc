@@ -54,6 +54,9 @@ class User extends Authenticatable implements FilamentUser
         'jefe_inmediato_id',
         'jefe_area_id',
         'unidad_organica_id',
+        'volumen_notificacion',
+        'permite_gps',
+        'permite_camara',
     ];
 
     /**

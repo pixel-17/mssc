@@ -43,6 +43,15 @@
                         </x-nav-link>
                     @endhasrole
 
+                    @hasrole('admin')
+                        <x-nav-link href="{{ route('catalogos.index') }}" :active="request()->routeIs('catalogos.*', 'sedes.*')">
+                            <x-slot:icon>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                            </x-slot:icon>
+                            {{ __('Catálogos') }}
+                        </x-nav-link>
+                    @endhasrole
+
                     @can('puedeCrearAlgo', App\Models\User::class)
                         <x-nav-link href="{{ route('usuarios.index') }}" :active="request()->routeIs('usuarios.*')">
                             <x-slot:icon>
@@ -228,6 +237,13 @@
                 <x-responsive-nav-link href="{{ route('rrhh.papeletas.index') }}" :active="request()->routeIs('rrhh.*')">
                     <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg></x-slot:icon>
                     {{ __('Papeletas RRHH') }}
+                </x-responsive-nav-link>
+            @endhasrole
+
+            @hasrole('admin')
+                <x-responsive-nav-link href="{{ route('catalogos.index') }}" :active="request()->routeIs('catalogos.*', 'sedes.*')">
+                    <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg></x-slot:icon>
+                    {{ __('Catálogos') }}
                 </x-responsive-nav-link>
             @endhasrole
 

@@ -8,4 +8,6 @@
 
 import './echo';
 import './push-notifications';
+import './device-settings';
+import './sede-mapa';
 import './theme';

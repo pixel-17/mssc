@@ -8,6 +8,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
         <meta name="theme-color" content="#0a2c4d">
+        <link rel="manifest" href="/manifest.json">
 
         {{-- Anti-parpadeo de modo oscuro — ver resources/js/theme.js para el toggle en vivo. --}}
         <script>

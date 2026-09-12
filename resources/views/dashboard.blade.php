@@ -13,7 +13,7 @@
                 <section class="space-y-4 animate-fade-in-up">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <h3 class="text-lg font-bold text-ocean-950 dark:text-white">Administración</h3>
-                        <a href="/admin" class="btn-ocean-outline text-xs">
+                        <a href="{{ route('catalogos.index') }}" class="btn-ocean-outline text-xs">
                             Ir al panel de catálogos
                         </a>
                     </div>
@@ -56,7 +56,7 @@
                         </x-stat-card>
 
                         <x-stat-card label="Papeletas nuevas (30 días)" :value="$admin['papeletas_periodo']" />
-                        <x-stat-card label="Sedes activas" :value="$admin['sedes_activas']" href="/admin/sedes" />
+                        <x-stat-card label="Sedes activas" :value="$admin['sedes_activas']" href="{{ route('sedes.index') }}" />
                         <x-stat-card label="Unidades orgánicas activas" :value="$admin['unidades_organicas']" href="/admin/unidad-organicas" />
                     </div>
 
