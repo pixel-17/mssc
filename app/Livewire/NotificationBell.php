@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Livewire\Concerns\EscuchaNotificacionesEnVivo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
@@ -13,13 +14,18 @@ use Livewire\Component;
  * componente es solo lectura/lectura-marcada, nunca decide a quién
  * notificar (eso vive en NotificarPapeletaService).
  *
- * wire:poll para verse "casi en tiempo real" sin depender de que el
- * usuario tenga permisos de push del navegador concedidos — el canal
- * in-app es "el registro de verdad" (ver comentario de la migración
- * de `notifications`), el push es solo un empujón adicional.
+ * Tiempo real vía Reverb: PapeletaNotification agregó el canal
+ * 'broadcast', que empuja cada notificación nueva al canal privado
+ * `App.Models.User.{id}` (routes/channels.php). Este componente
+ * escucha ese evento (ver getListeners()) y simplemente se re-renderiza
+ * — no hace falta pintar nada a mano en JS, Livewire vuelve a pedir
+ * las notificaciones de la base de datos al instante. Reemplaza al
+ * wire:poll.30s que había antes.
  */
 class NotificationBell extends Component
 {
+    use EscuchaNotificacionesEnVivo;
+
     public int $porMostrar = 8;
 
     public function marcarComoLeida(string $id): void

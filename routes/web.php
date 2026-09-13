@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Jefe\DecisionController as JefeDecisionController;
 use App\Http\Controllers\Jefe\PapeletaController as JefePapeletaController;
 use App\Http\Controllers\Jefe\SustentoController as JefeSustentoController;
@@ -173,7 +172,7 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', \App\Livewire\DashboardIndex::class)->name('dashboard');
 
     /*
      * Registro in-app de web push (notificaciones): cualquier rol
@@ -222,7 +221,7 @@ Route::middleware([
 
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
     Route::prefix('papeletas')->name('trabajador.papeletas.')->middleware('role:trabajador')->group(function () {
-        Route::get('/', [TrabajadorPapeletaController::class, 'index'])->name('index');
+        Route::get('/', \App\Livewire\Papeletas\TrabajadorIndex::class)->name('index');
         Route::get('/crear', [TrabajadorPapeletaController::class, 'create'])->name('create');
         Route::post('/', [TrabajadorPapeletaController::class, 'store'])->name('store');
         Route::get('/{papeleta}', [TrabajadorPapeletaController::class, 'show'])->name('show');
@@ -240,7 +239,7 @@ Route::middleware([
      * vive en PapeletaPolicy y se aplica por papeleta.
      */
     Route::prefix('jefe')->name('jefe.')->group(function () {
-        Route::get('/papeletas', [JefePapeletaController::class, 'index'])->name('papeletas.index');
+        Route::get('/papeletas', \App\Livewire\Papeletas\JefeIndex::class)->name('papeletas.index');
         Route::get('/papeletas/{papeleta}', [JefePapeletaController::class, 'show'])->name('papeletas.show');
 
         Route::post('/papeletas/{papeleta}/aprobar', [JefeDecisionController::class, 'aprobar'])->name('papeletas.aprobar');
@@ -256,7 +255,7 @@ Route::middleware([
 
     // --- RRHH (Paso 3 y Paso 4) ---
     Route::prefix('rrhh')->name('rrhh.')->middleware('role:rrhh')->group(function () {
-        Route::get('/papeletas', [RrhhPapeletaController::class, 'index'])->name('papeletas.index');
+        Route::get('/papeletas', \App\Livewire\Papeletas\RrhhIndex::class)->name('papeletas.index');
         Route::get('/papeletas/{papeleta}', [RrhhPapeletaController::class, 'show'])->name('papeletas.show');
 
         Route::post('/papeletas/{papeleta}/aprobar', [RrhhDecisionController::class, 'aprobar'])->name('papeletas.aprobar');

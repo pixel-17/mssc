@@ -1,4 +1,4 @@
-<div x-data="{ open: false }" class="relative" wire:poll.30s>
+<div x-data="{ open: false }" class="relative">
     <button
         @click="open = ! open"
         type="button"
