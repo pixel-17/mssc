@@ -3,10 +3,12 @@
 @php
 $alignmentClasses = match ($align) {
     'left' => 'ltr:origin-top-left rtl:origin-top-right start-0',
-    'top' => 'origin-top',
+    'top' => 'origin-bottom bottom-full mb-2',
     'none', 'false' => '',
     default => 'ltr:origin-top-right rtl:origin-top-left end-0',
 };
+
+$verticalSpacing = $align === 'top' ? '' : 'mt-2';
 
 $width = match ($width) {
     '48' => 'w-48',
@@ -27,7 +29,7 @@ $width = match ($width) {
             x-transition:leave="transition ease-in duration-75"
             x-transition:leave-start="transform opacity-100 scale-100"
             x-transition:leave-end="transform opacity-0 scale-95"
-            class="absolute z-50 mt-2 {{ $width }} rounded-2xl shadow-glass-lg {{ $alignmentClasses }} {{ $dropdownClasses }}"
+            class="absolute z-50 {{ $verticalSpacing }} {{ $width }} rounded-2xl shadow-glass-lg {{ $alignmentClasses }} {{ $dropdownClasses }}"
             style="display: none;"
             @click="open = false">
         <div class="rounded-2xl ring-1 ring-ocean-900/5 overflow-hidden {{ $contentClasses }}">

@@ -1,0 +1,87 @@
+{
+    "Confirm Password": "Confirmar contraseña",
+    "For your security, please confirm your password to continue.": "Por tu seguridad, confirma tu contraseña para continuar.",
+    "Confirm": "Confirmar",
+    "Password": "Contraseña",
+    "Cancel": "Cancelar",
+    "Whoops! Something went wrong.": "¡Ups! Algo salió mal.",
+
+    "Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.": "¿Olvidaste tu contraseña? No hay problema. Indícanos tu correo y te enviaremos un enlace para restablecerla.",
+    "Email": "Correo electrónico",
+    "Email Password Reset Link": "Enviar enlace de restablecimiento",
+
+    "Name": "Nombre",
+    "Already registered?": "¿Ya tienes una cuenta?",
+    "Register": "Registrarme",
+
+    "This is a secure area of the application. Please confirm your password before continuing.": "Esta es un área segura de la aplicación. Confirma tu contraseña antes de continuar.",
+
+    "Reset Password": "Restablecer contraseña",
+
+    "Remember me": "Recordarme",
+    "Forgot your password?": "¿Olvidaste tu contraseña?",
+    "Log in": "Iniciar sesión",
+
+    "Please confirm access to your account by entering the authentication code provided by your authenticator application.": "Confirma el acceso a tu cuenta ingresando el código proporcionado por tu aplicación de autenticación.",
+    "Please confirm access to your account by entering one of your emergency recovery codes.": "Confirma el acceso a tu cuenta ingresando uno de tus códigos de recuperación.",
+    "Code": "Código",
+    "Recovery Code": "Código de recuperación",
+    "Use a recovery code": "Usar un código de recuperación",
+    "Use an authentication code": "Usar un código de autenticación",
+
+    "Profile Information": "Información del perfil",
+    "Update your account's profile information and email address.": "Actualiza la información de tu perfil y tu correo electrónico.",
+    "Photo": "Foto",
+    "Select A New Photo": "Elegir nueva foto",
+    "Remove Photo": "Quitar foto",
+    "Your email address is unverified.": "Tu correo electrónico no está verificado.",
+    "Click here to re-send the verification email.": "Haz clic aquí para reenviar el correo de verificación.",
+    "A new verification link has been sent to your email address.": "Se envió un nuevo enlace de verificación a tu correo.",
+    "Saved.": "Guardado.",
+    "Save": "Guardar",
+
+    "Delete Account": "Eliminar cuenta",
+    "Permanently delete your account.": "Elimina tu cuenta de forma permanente.",
+    "Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.": "Una vez eliminada tu cuenta, todos sus recursos y datos se borrarán de forma permanente. Antes de eliminarla, descarga cualquier información que quieras conservar.",
+    "Are you sure you want to delete your account? Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "¿Seguro que quieres eliminar tu cuenta? Una vez eliminada, todos sus recursos y datos se borrarán de forma permanente. Ingresa tu contraseña para confirmar.",
+
+    "Browser Sessions": "Sesiones del navegador",
+    "Manage and log out your active sessions on other browsers and devices.": "Administra y cierra tus sesiones activas en otros navegadores y dispositivos.",
+    "If necessary, you may log out of all of your other browser sessions across all of your devices. Some of your recent sessions are listed below; however, this list may not be exhaustive. If you feel your account has been compromised, you should also update your password.": "Si lo necesitas, puedes cerrar todas tus demás sesiones en otros navegadores y dispositivos. Abajo se listan tus sesiones recientes; esta lista podría no ser exhaustiva. Si crees que tu cuenta fue comprometida, actualiza también tu contraseña.",
+    "Unknown": "Desconocido",
+    "This device": "Este dispositivo",
+    "Last active": "Última actividad",
+    "Log Out Other Browser Sessions": "Cerrar otras sesiones del navegador",
+    "Done.": "Listo.",
+    "Please enter your password to confirm you would like to log out of your other browser sessions across all of your devices.": "Ingresa tu contraseña para confirmar que quieres cerrar tus demás sesiones en todos tus dispositivos.",
+
+    "Update Password": "Actualizar contraseña",
+    "Ensure your account is using a long, random password to stay secure.": "Usa una contraseña larga y aleatoria para mantener tu cuenta segura.",
+    "Current Password": "Contraseña actual",
+    "New Password": "Nueva contraseña",
+
+    "Two Factor Authentication": "Autenticación en dos pasos",
+    "Add additional security to your account using two factor authentication.": "Agrega seguridad adicional a tu cuenta con autenticación en dos pasos.",
+    "Finish enabling two factor authentication.": "Termina de activar la autenticación en dos pasos.",
+    "You have enabled two factor authentication.": "Activaste la autenticación en dos pasos.",
+    "You have not enabled two factor authentication.": "No has activado la autenticación en dos pasos.",
+    "When two factor authentication is enabled, you will be prompted for a secure, random token during authentication. You may retrieve this token from your phone's Google Authenticator application.": "Al activar la autenticación en dos pasos, se te pedirá un código seguro durante el inicio de sesión. Puedes obtenerlo desde una app como Google Authenticator en tu teléfono.",
+    "To finish enabling two factor authentication, scan the following QR code using your phone's authenticator application or enter the setup key and provide the generated OTP code.": "Para terminar de activarla, escanea este código QR con la app de autenticación de tu teléfono, o ingresa la clave manualmente y escribe el código generado.",
+    "Two factor authentication is now enabled. Scan the following QR code using your phone's authenticator application or enter the setup key.": "La autenticación en dos pasos ya está activa. Escanea este código QR con tu app de autenticación o ingresa la clave manualmente.",
+    "Setup Key": "Clave de configuración",
+    "Store these recovery codes in a secure password manager. They can be used to recover access to your account if your two factor authentication device is lost.": "Guarda estos códigos de recuperación en un lugar seguro. Te permitirán recuperar el acceso a tu cuenta si pierdes tu dispositivo de autenticación.",
+    "Enable": "Activar",
+    "Regenerate Recovery Codes": "Regenerar códigos de recuperación",
+    "Show Recovery Codes": "Mostrar códigos de recuperación",
+    "Disable": "Desactivar",
+
+    "Profile": "Perfil",
+
+    "Manage Team": "Gestionar equipo",
+    "Team Settings": "Configuración del equipo",
+    "Create New Team": "Crear nuevo equipo",
+    "Switch Teams": "Cambiar de equipo",
+    "Manage Account": "Gestionar cuenta",
+    "API Tokens": "Tokens de API",
+    "Log Out": "Salir"
+}
