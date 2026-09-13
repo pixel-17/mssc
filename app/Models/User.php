@@ -37,6 +37,7 @@ class User extends Authenticatable
         'dni',
         'email',
         'password',
+        'debe_actualizar_password',
         'regimen',
         'sede_id',
         'jefe_inmediato_id',
@@ -78,6 +79,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'debe_actualizar_password' => 'boolean',
         ];
     }
 

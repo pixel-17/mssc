@@ -30,14 +30,23 @@
                     @error('email') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Contraseña</label>
-                    <input type="password" wire:model="password" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        @if ($usuario) Déjala en blanco para no cambiar la contraseña actual. @endif
-                    </p>
-                    @error('password') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-                </div>
+                @if ($usuario)
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Contraseña (opcional)</label>
+                        <input type="password" wire:model="password" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Déjala en blanco para no cambiarla. Si la llenas, se le pedirá actualizarla en su próximo ingreso.
+                        </p>
+                        @error('password') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                    </div>
+                @else
+                    <div class="rounded-md bg-gray-50 dark:bg-gray-800 px-3 py-2">
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                            Su contraseña inicial será su DNI. El sistema le pedirá actualizarla
+                            (de forma opcional) la primera vez que ingrese.
+                        </p>
+                    </div>
+                @endif
 
                 <div>
                     <label class="block text-sm font-medium mb-1">Régimen</label>

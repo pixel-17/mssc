@@ -23,12 +23,18 @@ use Illuminate\Support\Facades\Hash;
  * vía UserObserver en cuanto se guarda con unidad_organica_id (si la
  * tiene). Nunca se tocan a mano aquí.
  *
- * admin NO pasa por aquí: usa el UserResource de Filament.
+ * Contraseña inicial: siempre el DNI del propio usuario (nunca la
+ * elige quien lo crea). debe_actualizar_password queda en true para
+ * que RedirigirSiDebeActualizarPassword le pida cambiarla —de forma
+ * opcional, puede omitirlo— la primera vez que entre.
+ *
+ * admin NO pasa por aquí: usa UsuarioAdminForm (mismo criterio de
+ * contraseña = DNI, ver ese componente).
  */
 class CrearUsuarioAction
 {
     /**
-     * @param  array{name:string,apellido:string,dni:string,email:string,password:string,regimen:string,sede_id:?int,unidad_organica_id:?int,tipo:string}  $datos
+     * @param  array{name:string,apellido:string,dni:string,email:string,regimen:string,sede_id:?int,unidad_organica_id:?int,tipo:string}  $datos
      */
     public function ejecutar(User $creador, array $datos, bool $esJefeDeArea): User
     {
@@ -38,7 +44,8 @@ class CrearUsuarioAction
                 'apellido' => $datos['apellido'],
                 'dni' => $datos['dni'],
                 'email' => $datos['email'],
-                'password' => Hash::make($datos['password']),
+                'password' => Hash::make($datos['dni']),
+                'debe_actualizar_password' => true,
                 'regimen' => $datos['regimen'],
                 'sede_id' => $datos['sede_id'] ?? null,
                 'unidad_organica_id' => $esJefeDeArea ? $datos['unidad_organica_id'] : null,

@@ -81,11 +81,11 @@
                         <x-input-error for="email" class="mt-2" />
                     </div>
 
-                    <div>
-                        <x-label for="password" value="Contraseña inicial" />
-                        <x-input id="password" name="password" type="text" minlength="8" required class="mt-1 block w-full" />
-                        <p class="mt-1 text-xs text-gray-500">El usuario podrá cambiarla luego desde su perfil.</p>
-                        <x-input-error for="password" class="mt-2" />
+                    <div class="rounded-md bg-gray-50 dark:bg-gray-800 px-3 py-2">
+                        <p class="text-xs text-gray-600 dark:text-gray-400">
+                            Su contraseña inicial será su DNI. El sistema le pedirá actualizarla
+                            (de forma opcional) la primera vez que ingrese.
+                        </p>
                     </div>
 
                     <div>

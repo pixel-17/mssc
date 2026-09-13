@@ -51,6 +51,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
         ]);
+
+        // Manda a /actualizar-password-inicial a quien todavía tiene
+        // pendiente cambiar la contraseña = DNI que le asignaron al
+        // crearlo (ver CrearUsuarioAction / UsuarioAdminForm). Va al
+        // final del grupo 'web' porque necesita que Auth ya esté
+        // resuelto; internamente solo actúa si corresponde.
+        $middleware->web(append: [
+            \App\Http\Middleware\RedirigirSiDebeActualizarPassword::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

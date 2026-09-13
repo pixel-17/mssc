@@ -175,6 +175,16 @@ Route::middleware([
     Route::get('/dashboard', \App\Livewire\DashboardIndex::class)->name('dashboard');
 
     /*
+     * Pantalla opcional de "actualiza tu contraseña" para quien entra
+     * por primera vez con la contraseña = DNI que le asignó
+     * CrearUsuarioAction/UsuarioAdminForm. A esta ruta la trae
+     * RedirigirSiDebeActualizarPassword (bootstrap/app.php); ella
+     * misma apaga la bandera al guardar o al omitir.
+     */
+    Route::get('/actualizar-password-inicial', \App\Livewire\Auth\ActualizarPasswordInicial::class)
+        ->name('password.actualizar-inicial');
+
+    /*
      * Registro in-app de web push (notificaciones): cualquier rol
      * autenticado puede activar/desactivar push en su propio
      * navegador. Sin middleware de rol porque trabajador, jefe, RRHH

@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\Auth;
  * No decide "qué cambió" ni pinta nada por JS a propósito: es más
  * simple y más confiable re-consultar (las queries de estas bandejas
  * son livianas) que tratar de parchear el estado a mano en el cliente.
+ *
+ * Además del refresh, dispara el evento de navegador
+ * 'notificacion-sonido' para que resources/js/notification-sound.js
+ * reproduzca el tono (afinado, ver ese archivo) sin que este trait
+ * necesite saber nada de audio.
  */
 trait EscuchaNotificacionesEnVivo
 {
@@ -27,7 +32,16 @@ trait EscuchaNotificacionesEnVivo
         $id = Auth::id();
 
         return [
-            "echo-notification:App.Models.User.{$id}" => '$refresh',
+            "echo-notification:App.Models.User.{$id}" => 'refrescarPorNotificacionEnVivo',
         ];
+    }
+
+    public function refrescarPorNotificacionEnVivo(): void
+    {
+        // Llamar a este método (en vez de '$refresh' plano) ya provoca
+        // el re-render normal de Livewire; solo se añade el dispatch
+        // para que el front pueda reaccionar (sonido) sin acoplarse
+        // a la lógica de datos de cada bandeja.
+        $this->dispatch('notificacion-sonido');
     }
 }

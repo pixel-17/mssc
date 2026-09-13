@@ -29,7 +29,6 @@ class CrearUsuarioRequest extends FormRequest
             'apellido' => ['required', 'string', 'max:255'],
             'dni' => ['required', 'string', 'size:8', 'unique:users,dni'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8'],
             'regimen' => ['required', Rule::in(['276', '728'])],
             'sede_id' => ['nullable', 'exists:sedes,id'],
             'tipo' => $esJefeDeArea

@@ -24,6 +24,13 @@ use Spatie\Permission\Models\Role;
  * solos vía UserObserver en cuanto se guarda unidad_organica_id. Para
  * que alguien sea "Jefe Inmediato" de una unidad, asígnalo como
  * jefe_id de esa unidad desde UnidadOrganicaForm.
+ *
+ * Contraseña: al crear, siempre es el DNI (el campo $password no se
+ * usa en ese caso, ver guardar()) y se marca debe_actualizar_password
+ * para que RedirigirSiDebeActualizarPassword se lo pida en su primer
+ * ingreso (opcional). Al editar, el campo sigue existiendo como
+ * reseteo manual opcional; si el admin lo llena, también se marca
+ * debe_actualizar_password para ese usuario.
  */
 #[Layout('layouts.app')]
 class UsuarioAdminForm extends Component
@@ -76,7 +83,7 @@ class UsuarioAdminForm extends Component
                 'required', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($this->usuario?->id),
             ],
-            'password' => [$this->usuario ? 'nullable' : 'required', 'string', 'min:8'],
+            'password' => ['nullable', 'string', 'min:8'],
             'regimen' => ['required', 'in:276,728'],
             'sedeId' => ['nullable', 'exists:sedes,id'],
             'unidadOrganicaId' => ['nullable', 'exists:unidad_organicas,id'],
@@ -86,7 +93,6 @@ class UsuarioAdminForm extends Component
     }
 
     protected $messages = [
-        'password.required' => 'La contraseña es obligatoria al crear un usuario nuevo.',
         'dni.digits' => 'El DNI debe tener 8 dígitos.',
     ];
 
@@ -104,13 +110,22 @@ class UsuarioAdminForm extends Component
             'unidad_organica_id' => $datos['unidadOrganicaId'],
         ];
 
-        if (filled($datos['password'])) {
-            $atributos['password'] = Hash::make($datos['password']);
-        }
-
         if ($this->usuario) {
+            // Reseteo manual opcional: si el admin llenó el campo, se
+            // le pedirá actualizarla de nuevo en su próximo ingreso.
+            if (filled($datos['password'])) {
+                $atributos['password'] = Hash::make($datos['password']);
+                $atributos['debe_actualizar_password'] = true;
+            }
+
             $this->usuario->update($atributos);
         } else {
+            // Alta nueva: la contraseña inicial siempre es el DNI,
+            // nunca lo que se haya escrito en el campo (que ni
+            // siquiera se muestra en este caso, ver la vista).
+            $atributos['password'] = Hash::make($datos['dni']);
+            $atributos['debe_actualizar_password'] = true;
+
             $this->usuario = User::create($atributos);
         }
 
