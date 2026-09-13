@@ -85,49 +85,61 @@ class MarcarRetornoAction
         ]);
     }
 
+    /**
+     * La fila se relee con lockForUpdate() dentro de la transacción
+     * (mismo criterio que CancelarPapeletaAction). Con esto, dos envíos
+     * casi simultáneos del mismo retorno (doble tap, reintento por mala
+     * señal) ya no pueden pasar ambos el chequeo de "no tiene retorno
+     * todavía": el segundo espera a que el primero confirme, relee, y
+     * recibe el PapeletaException amigable en vez de chocar contra el
+     * unique constraint de `retornos.papeleta_id` con un error crudo.
+     */
     private function ejecutar(Papeleta $papeleta, array $datosRetorno): Papeleta
     {
-        if (! $papeleta->estado->equals(AutorizadaYCorriendo::class)) {
-            throw new PapeletaException('Esta papeleta no está en curso, no se puede marcar el retorno.');
-        }
-
-        if ($papeleta->retorno()->exists()) {
-            throw new PapeletaException('Esta papeleta ya tiene un retorno registrado.');
-        }
-
         return DB::transaction(function () use ($papeleta, $datosRetorno) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $retorno = Retorno::create(array_merge(['papeleta_id' => $papeleta->id], $datosRetorno));
+            if (! $actual->estado->equals(AutorizadaYCorriendo::class)) {
+                throw new PapeletaException('Esta papeleta no está en curso, no se puede marcar el retorno.');
+            }
 
-            $papeleta->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($papeleta, $retorno->hora_servidor);
+            if ($actual->retorno()->exists()) {
+                throw new PapeletaException('Esta papeleta ya tiene un retorno registrado.');
+            }
 
-            if ($papeleta->motivo->requiere_sustento_en_retorno) {
-                $papeleta->estado = new RetornoPendienteSustento($papeleta);
+            $estadoAnterior = class_basename($actual->estado);
+
+            $retorno = Retorno::create(array_merge(['papeleta_id' => $actual->id], $datosRetorno));
+
+            $actual->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($actual, $retorno->hora_servidor);
+
+            if ($actual->motivo->requiere_sustento_en_retorno) {
+                $actual->estado = new RetornoPendienteSustento($actual);
 
                 $horasHabiles = (int) Configuracion::valorDe('SUSTENTO_HORAS_HABILES', 48);
                 Sustento::create([
-                    'papeleta_id' => $papeleta->id,
+                    'papeleta_id' => $actual->id,
                     'fecha_limite' => app(\App\Services\CalculadorDiasHabiles::class)
                         ->agregarHorasHabiles($retorno->hora_servidor->copy(), $horasHabiles),
                     'estado' => 'pendiente',
                 ]);
             } else {
-                $papeleta->estado = new Cerrada($papeleta);
+                $actual->estado = new Cerrada($actual);
             }
 
-            $papeleta->save();
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
-                'actor_id' => $datosRetorno['marcado_manual_por_id'] ?? $papeleta->trabajador_id,
+                'papeleta_id' => $actual->id,
+                'actor_id' => $datosRetorno['marcado_manual_por_id'] ?? $actual->trabajador_id,
                 'actor_tipo' => $datosRetorno['marcado_manual'] ? 'jefe_inmediato' : 'trabajador',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $datosRetorno['justificacion_manual'] ?? null,
             ]);
 
-            return $papeleta;
+            return $actual;
         });
     }
 
@@ -137,34 +149,39 @@ class MarcarRetornoAction
      * humano. FINALIZADO_SIN_RETORNO con causa distinta al abandono
      * del job de vencimiento — motivo por el que vive en su propio
      * método y no en ejecutar().
+     *
+     * Misma relectura con lockForUpdate() que ejecutar().
      */
     public function cerrarSinRetornoFisico(Papeleta $papeleta, User $quienConfirma): Papeleta
     {
-        if (! $papeleta->estado->equals(AutorizadaYCorriendo::class)) {
-            throw new PapeletaException('Esta papeleta no está en curso.');
-        }
-
-        if (! $papeleta->motivo->permite_cierre_sin_retorno) {
-            throw new PapeletaException('El motivo de esta papeleta no permite cierre sin retorno físico.');
-        }
-
         return DB::transaction(function () use ($papeleta, $quienConfirma) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->estado = new FinalizadoSinRetorno($papeleta);
-            $papeleta->causa_finalizacion_sin_retorno = 'comision_servicio_campo';
-            $papeleta->save();
+            if (! $actual->estado->equals(AutorizadaYCorriendo::class)) {
+                throw new PapeletaException('Esta papeleta no está en curso.');
+            }
+
+            if (! $actual->motivo->permite_cierre_sin_retorno) {
+                throw new PapeletaException('El motivo de esta papeleta no permite cierre sin retorno físico.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->estado = new FinalizadoSinRetorno($actual);
+            $actual->causa_finalizacion_sin_retorno = 'comision_servicio_campo';
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $quienConfirma->id,
-                'actor_tipo' => $quienConfirma->esJefeInmediatoDe($papeleta->trabajador) ? 'jefe_inmediato' : 'rrhh',
+                'actor_tipo' => $quienConfirma->esJefeInmediatoDe($actual->trabajador) ? 'jefe_inmediato' : 'rrhh',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => 'Visto bueno humano: comisión de servicio cerrada sin retorno físico.',
             ]);
 
-            return $papeleta;
+            return $actual;
         });
     }
 

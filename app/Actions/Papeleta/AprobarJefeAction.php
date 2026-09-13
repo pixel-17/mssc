@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\DB;
  * Si RRHH está en horario -> PENDIENTE_RRHH.
  * Si RRHH está fuera de horario -> directo a AUTORIZADA_Y_CORRIENDO,
  * marcada para revisión post-hoc obligatoria (Paso 4).
+ *
+ * La fila se relee con lockForUpdate() dentro de la transacción (mismo
+ * criterio que CancelarPapeletaAction) para que dos aprobaciones casi
+ * simultáneas del mismo jefe, o una aprobación que choca con una
+ * cancelación del trabajador, no puedan pisarse: quien confirme
+ * primero en BD gana, y el segundo ve el estado ya actualizado.
  */
 class AprobarJefeAction
 {
@@ -29,37 +35,40 @@ class AprobarJefeAction
 
     public function ejecutar(Papeleta $papeleta, User $quienAprueba, string $actorTipo = 'jefe_inmediato'): Papeleta
     {
-        if (! $papeleta->estado->equals(PendienteJefe::class) && ! $papeleta->estado->equals(ObservadaPorJefe::class)) {
-            throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
-        }
-
         $papeleta = DB::transaction(function () use ($papeleta, $quienAprueba, $actorTipo) {
-            $estadoAnterior = class_basename($papeleta->estado);
-            $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->resuelto_por_jefe_id = $quienAprueba->id;
-            $papeleta->jefe_resuelto_at = now();
-
-            if ($rrhhEnHorario) {
-                $papeleta->estado = new PendienteRrhh($papeleta);
-            } else {
-                $papeleta->estado = new AutorizadaYCorriendo($papeleta);
-                $papeleta->autorizado_con_rrhh_fuera_horario = true;
-                $papeleta->hora_salida_real = now();
-                $papeleta->revision_posthoc_estado = 'pendiente'; // Paso 4: obligatoria al día siguiente
+            if (! $actual->estado->equals(PendienteJefe::class) && ! $actual->estado->equals(ObservadaPorJefe::class)) {
+                throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
             }
 
-            $papeleta->save();
+            $estadoAnterior = class_basename($actual->estado);
+            $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
+
+            $actual->resuelto_por_jefe_id = $quienAprueba->id;
+            $actual->jefe_resuelto_at = now();
+
+            if ($rrhhEnHorario) {
+                $actual->estado = new PendienteRrhh($actual);
+            } else {
+                $actual->estado = new AutorizadaYCorriendo($actual);
+                $actual->autorizado_con_rrhh_fuera_horario = true;
+                $actual->hora_salida_real = now();
+                $actual->revision_posthoc_estado = 'pendiente'; // Paso 4: obligatoria al día siguiente
+            }
+
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $quienAprueba->id,
                 'actor_tipo' => $actorTipo,
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
             ]);
 
-            return $papeleta;
+            return $actual;
         });
 
         if ($papeleta->estado->equals(PendienteRrhh::class)) {

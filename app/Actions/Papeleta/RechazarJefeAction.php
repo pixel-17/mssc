@@ -12,34 +12,42 @@ use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\Rechazada;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * La fila se relee con lockForUpdate() dentro de la transacción (mismo
+ * criterio que CancelarPapeletaAction) para que un rechazo no pueda
+ * pisar una decisión que ya se confirmó en BD un instante antes.
+ */
 class RechazarJefeAction
 {
     public function __construct(private NotificarPapeletaService $notificar) {}
 
     public function ejecutar(Papeleta $papeleta, User $jefe, string $motivo, string $actorTipo = 'jefe_inmediato'): Papeleta
     {
-        if (! $papeleta->estado->equals(PendienteJefe::class) && ! $papeleta->estado->equals(ObservadaPorJefe::class)) {
-            throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
-        }
-
         $papeleta = DB::transaction(function () use ($papeleta, $jefe, $motivo, $actorTipo) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->estado = new Rechazada($papeleta);
-            $papeleta->rechazada_por_id = $jefe->id;
-            $papeleta->motivo_rechazo = $motivo;
-            $papeleta->save();
+            if (! $actual->estado->equals(PendienteJefe::class) && ! $actual->estado->equals(ObservadaPorJefe::class)) {
+                throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->estado = new Rechazada($actual);
+            $actual->rechazada_por_id = $jefe->id;
+            $actual->motivo_rechazo = $motivo;
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $jefe->id,
                 'actor_tipo' => $actorTipo,
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $motivo,
             ]);
 
-            return $papeleta;
+            return $actual;
         });
 
         $this->notificar->rechazada($papeleta);

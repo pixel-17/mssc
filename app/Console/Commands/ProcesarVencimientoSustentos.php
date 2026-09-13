@@ -6,6 +6,7 @@ use App\Actions\Papeleta\ReclasificarAParticularAction;
 use App\Models\HistorialPapeleta;
 use App\Models\Sustento;
 use App\Services\NotificarPapeletaService;
+use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
@@ -22,6 +23,15 @@ use Illuminate\Support\Facades\DB;
  *   -> el sistema NO cierra solo (Paso 8): marca
  *   papeleta.requiere_visto_bueno = true para que aparezca en la
  *   bandeja de jefe/RRHH, y deja que RevisarSustentoAction decida.
+ *
+ * Defensivo: ambas queries exigen que la papeleta siga en
+ * RetornoPendienteSustento antes de actuar. Un Sustento puede quedar
+ * huérfano si la papeleta sale de ese estado por otra vía que no
+ * cierre el Sustento asociado (p. ej. MarcarAbandonoSobreRetornoPendienteAction
+ * la mueve a FinalizadoSinRetorno sin tocar `sustentos`). Sin este
+ * filtro, ReclasificarAParticularAction lanza PapeletaException sobre
+ * ese registro y, al no estar capturada dentro del each(), tumba el
+ * resto del job para ese ciclo.
  */
 class ProcesarVencimientoSustentos extends Command
 {
@@ -36,6 +46,7 @@ class ProcesarVencimientoSustentos extends Command
         // reclasificación), no hay que duplicar el envío aquí.
         Sustento::where('estado', 'pendiente')
             ->where('fecha_limite', '<=', now())
+            ->whereHas('papeleta', fn ($q) => $q->whereState('estado', RetornoPendienteSustento::class))
             ->with('papeleta')
             ->each(function (Sustento $sustento) use ($reclasificar) {
                 DB::transaction(function () use ($sustento, $reclasificar) {
@@ -53,7 +64,8 @@ class ProcesarVencimientoSustentos extends Command
 
         Sustento::where('estado', 'presentado')
             ->where('fecha_limite', '<=', now())
-            ->whereHas('papeleta', fn ($q) => $q->where('requiere_visto_bueno', false))
+            ->whereHas('papeleta', fn ($q) => $q->where('requiere_visto_bueno', false)
+                ->whereState('estado', RetornoPendienteSustento::class))
             ->with('papeleta')
             ->each(function (Sustento $sustento) use ($notificar) {
                 $papeleta = DB::transaction(function () use ($sustento) {

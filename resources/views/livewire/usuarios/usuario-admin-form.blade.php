@@ -83,6 +83,19 @@
             </div>
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" wire:model="activo" class="rounded">
+                    <span class="text-sm font-medium">Activo</span>
+                </label>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Desmárcalo si el trabajador se retiró, cesó o está de licencia larga: el generador automático
+                    de turnos deja de crearle horario para los próximos meses (su configuración de turno no se
+                    borra, solo queda pausada).
+                </p>
+                @error('activo') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+            </div>
+
+            <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <label class="block text-sm font-medium mb-2">Rol(es)</label>
                 <div class="flex flex-wrap gap-4">
                     @foreach ($roles as $rol)

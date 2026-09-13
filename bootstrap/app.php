@@ -42,6 +42,16 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('papeletas:procesar-subsanacion-emergencia-vencida')
             ->hourly()
             ->withoutOverlapping();
+
+        // Día 25: si para esa fecha Admin/Jefe no cargaron el turno
+        // del mes siguiente, se genera solo continuando el ciclo
+        // vigente (ver GeneradorTurnoMensualService). Corre antes de
+        // fin de mes para dar margen a que alguien cargue una
+        // actualización manual sin que el automático se le adelante
+        // en el último día.
+        $schedule->command('turnos:generar-proximo-mes')
+            ->monthlyOn(25, '02:00')
+            ->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         // Alias de spatie/laravel-permission, usado por 'role:admin' en

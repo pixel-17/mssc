@@ -55,6 +55,8 @@ class UsuarioAdminForm extends Component
 
     public array $rolesSeleccionados = [];
 
+    public bool $activo = true;
+
     public function mount(?User $usuario = null): void
     {
         if ($usuario?->exists) {
@@ -67,6 +69,7 @@ class UsuarioAdminForm extends Component
             $this->sedeId = $usuario->sede_id;
             $this->unidadOrganicaId = $usuario->unidad_organica_id;
             $this->rolesSeleccionados = $usuario->roles->pluck('id')->all();
+            $this->activo = $usuario->activo;
         }
     }
 
@@ -89,6 +92,7 @@ class UsuarioAdminForm extends Component
             'unidadOrganicaId' => ['nullable', 'exists:unidad_organicas,id'],
             'rolesSeleccionados' => ['array'],
             'rolesSeleccionados.*' => ['exists:roles,id'],
+            'activo' => ['boolean'],
         ];
     }
 
@@ -108,6 +112,7 @@ class UsuarioAdminForm extends Component
             'regimen' => $datos['regimen'],
             'sede_id' => $datos['sedeId'],
             'unidad_organica_id' => $datos['unidadOrganicaId'],
+            'activo' => $datos['activo'],
         ];
 
         if ($this->usuario) {

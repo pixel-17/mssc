@@ -25,6 +25,14 @@ class ConfiguracionSeeder extends Seeder
             ['clave' => 'HORARIO_ORDINARIO_HORA_INICIO', 'valor' => '07:45', 'descripcion' => 'Hora de inicio del horario único global para régimen 276 (ordinario). Reemplaza la fila diaria de turnos.'],
             ['clave' => 'HORARIO_ORDINARIO_HORA_FIN', 'valor' => '16:15', 'descripcion' => 'Hora de fin del horario único global para régimen 276 (ordinario).'],
             ['clave' => 'HORARIO_ORDINARIO_DIAS_LABORABLES', 'valor' => '1,2,3,4,5', 'descripcion' => 'Días laborables (ISO: 1=Lunes ... 7=Domingo) del horario ordinario global, separados por coma.'],
+            ['clave' => 'TURNO_MANANA_HORA_INICIO', 'valor' => '06:00', 'descripcion' => 'Hora de inicio del turno Mañana (régimen 728, ciclo 6x1).'],
+            ['clave' => 'TURNO_MANANA_HORA_FIN', 'valor' => '14:00', 'descripcion' => 'Hora de fin del turno Mañana (régimen 728, ciclo 6x1).'],
+            ['clave' => 'TURNO_TARDE_HORA_INICIO', 'valor' => '14:00', 'descripcion' => 'Hora de inicio del turno Tarde (régimen 728, ciclo 6x1).'],
+            ['clave' => 'TURNO_TARDE_HORA_FIN', 'valor' => '22:00', 'descripcion' => 'Hora de fin del turno Tarde (régimen 728, ciclo 6x1).'],
+            ['clave' => 'TURNO_NOCHE_HORA_INICIO', 'valor' => '22:00', 'descripcion' => 'Hora de inicio del turno Noche (régimen 728, ciclo 6x1; cruza medianoche).'],
+            ['clave' => 'TURNO_NOCHE_HORA_FIN', 'valor' => '06:00', 'descripcion' => 'Hora de fin del turno Noche (régimen 728, ciclo 6x1; cruza medianoche).'],
+            ['clave' => 'TURNO_DIA_HORA_INICIO', 'valor' => '07:45', 'descripcion' => 'Hora de inicio del turno Día (único turno válido para régimen 276, ciclo 6x1).'],
+            ['clave' => 'TURNO_DIA_HORA_FIN', 'valor' => '16:15', 'descripcion' => 'Hora de fin del turno Día (único turno válido para régimen 276, ciclo 6x1).'],
         ];
 
         foreach ($configuraciones as $configuracion) {

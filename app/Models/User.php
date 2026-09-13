@@ -39,6 +39,7 @@ class User extends Authenticatable
         'password',
         'debe_actualizar_password',
         'regimen',
+        'activo',
         'sede_id',
         'jefe_inmediato_id',
         'jefe_area_id',
@@ -80,6 +81,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'debe_actualizar_password' => 'boolean',
+            'activo' => 'boolean',
         ];
     }
 
@@ -188,6 +190,20 @@ class User extends Authenticatable
     public function turnos(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Turno::class);
+    }
+
+    /**
+     * Quién puede cargar/actualizar el ciclo de turno (mensual) de un
+     * trabajador: Admin (rol Spatie), su Jefe Inmediato (automático o
+     * adicional, ver esJefeInmediatoDe) o su Jefe de Área explícito.
+     * "jefe" no es un rol de Spatie (ver RoleSeeder) — por eso esto se
+     * resuelve por relación, no por hasRole.
+     */
+    public function puedeGestionarTurnoDe(User $trabajador): bool
+    {
+        return $this->hasRole('admin')
+            || $this->esJefeInmediatoDe($trabajador)
+            || $trabajador->jefe_area_id === $this->id;
     }
 
     public function papeletas(): \Illuminate\Database\Eloquent\Relations\HasMany

@@ -82,6 +82,21 @@ Route::middleware([
 });
 
 /*
+ * Configuración mensual de turno (ciclo 6x1 con arrastre automático
+ * al mes siguiente): a diferencia del CRUD de arriba, NO es
+ * role:admin — la carga también la hace el Jefe Inmediato/Área del
+ * trabajador (ver User::puedeGestionarTurnoDe). La autorización fina
+ * por trabajador se resuelve dentro del componente, no aquí.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+])->prefix('turnos')->name('turnos.')->group(function () {
+    Route::get('/configuracion/{trabajador}', \App\Livewire\Turnos\ConfiguracionTurnoForm::class)->name('configuracion');
+});
+
+/*
  * Feriados: cuarto recurso migrado — Blade + Livewire puro
  * (App\Livewire\Feriados\*).
  */

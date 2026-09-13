@@ -19,6 +19,10 @@ use Illuminate\Support\Facades\DB;
  *
  * hora_salida_real se fija aquí e inmutable a partir de este punto
  * (no se vuelve a escribir en ninguna transición posterior).
+ *
+ * La fila se relee con lockForUpdate() dentro de la transacción (mismo
+ * criterio que CancelarPapeletaAction) para que dos decisiones casi
+ * simultáneas de RRHH no puedan pisarse.
  */
 class AprobarRrhhAction
 {
@@ -26,28 +30,31 @@ class AprobarRrhhAction
 
     public function ejecutar(Papeleta $papeleta, User $rrhh): Papeleta
     {
-        if (! $papeleta->estado->equals(PendienteRrhh::class)) {
-            throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
-        }
-
         $papeleta = DB::transaction(function () use ($papeleta, $rrhh) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->estado = new AutorizadaYCorriendo($papeleta);
-            $papeleta->resuelto_por_rrhh_id = $rrhh->id;
-            $papeleta->rrhh_resuelto_at = now();
-            $papeleta->hora_salida_real = now();
-            $papeleta->save();
+            if (! $actual->estado->equals(PendienteRrhh::class)) {
+                throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->estado = new AutorizadaYCorriendo($actual);
+            $actual->resuelto_por_rrhh_id = $rrhh->id;
+            $actual->rrhh_resuelto_at = now();
+            $actual->hora_salida_real = now();
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $rrhh->id,
                 'actor_tipo' => 'rrhh',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
             ]);
 
-            return $papeleta;
+            return $actual;
         });
 
         $this->notificar->puedeSalir($papeleta);

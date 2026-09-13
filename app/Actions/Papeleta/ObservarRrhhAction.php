@@ -21,6 +21,11 @@ use Illuminate\Support\Facades\DB;
  *
  * A diferencia de la observación del jefe, esta SIEMPRE vuelve al
  * jefe (nunca al trabajador) — ver ReconocerObservacionRrhhAction.
+ *
+ * La fila se relee con lockForUpdate() dentro de la transacción (mismo
+ * criterio que ObservarJefeAction) para proteger tanto la transición
+ * como el incremento de contador_observaciones_rrhh ante dos
+ * observaciones casi simultáneas.
  */
 class ObservarRrhhAction
 {
@@ -28,36 +33,39 @@ class ObservarRrhhAction
 
     public function ejecutar(Papeleta $papeleta, User $rrhh, string $comentario): Papeleta
     {
-        if (! $papeleta->estado->equals(PendienteRrhh::class)) {
-            throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
-        }
-
         $papeleta = DB::transaction(function () use ($papeleta, $rrhh, $comentario) {
-            $estadoAnterior = class_basename($papeleta->estado);
-            $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->contador_observaciones_rrhh++;
-
-            if ($papeleta->contador_observaciones_rrhh >= $tope) {
-                $papeleta->estado = new Rechazada($papeleta);
-                $papeleta->rechazada_por_id = $rrhh->id;
-                $papeleta->motivo_rechazo = "Tope de {$tope} observaciones de RRHH alcanzado.";
-            } else {
-                $papeleta->estado = new ObservadaPorRrhh($papeleta);
+            if (! $actual->estado->equals(PendienteRrhh::class)) {
+                throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
             }
 
-            $papeleta->save();
+            $estadoAnterior = class_basename($actual->estado);
+            $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+
+            $actual->contador_observaciones_rrhh++;
+
+            if ($actual->contador_observaciones_rrhh >= $tope) {
+                $actual->estado = new Rechazada($actual);
+                $actual->rechazada_por_id = $rrhh->id;
+                $actual->motivo_rechazo = "Tope de {$tope} observaciones de RRHH alcanzado.";
+            } else {
+                $actual->estado = new ObservadaPorRrhh($actual);
+            }
+
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $rrhh->id,
                 'actor_tipo' => 'rrhh',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $comentario,
             ]);
 
-            return $papeleta;
+            return $actual;
         });
 
         // Tope alcanzado -> rechazo automático, sí llega al trabajador.
