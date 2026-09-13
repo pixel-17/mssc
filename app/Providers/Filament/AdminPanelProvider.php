@@ -31,8 +31,8 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('MSSC · Municipalidad de Santiago de Cusco')
             ->favicon(asset('favicon.ico'))
             ->colors([
-                'primary' => Color::hex('#0a86f0'),
-                'info' => Color::hex('#1ea7ff'),
+                'primary' => Color::hex('#2c5480'),
+                'info' => Color::hex('#3b699e'),
                 'danger' => Color::Rose,
                 'success' => Color::Emerald,
                 'warning' => Color::Amber,

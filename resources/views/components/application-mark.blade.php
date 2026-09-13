@@ -2,9 +2,9 @@
 <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" {{ $attributes }}>
     <defs>
         <linearGradient id="mssc-shield" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stop-color="#48c6ff"/>
-            <stop offset="0.5" stop-color="#0a86f0"/>
-            <stop offset="1" stop-color="#0a2c4d"/>
+            <stop offset="0" stop-color="#5c86b8"/>
+            <stop offset="0.55" stop-color="#2c5480"/>
+            <stop offset="1" stop-color="#0f1c2e"/>
         </linearGradient>
     </defs>
     <path d="M24 2 L44 9 V22 C44 33.5 35.8 41.7 24 46 C12.2 41.7 4 33.5 4 22 V9 Z" fill="url(#mssc-shield)"/>

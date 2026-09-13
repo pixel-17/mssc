@@ -4,8 +4,8 @@
     "description": "Sistema de programación de turnos y papeletas de salida",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0a2c4d",
-    "theme_color": "#0a2c4d",
+    "background_color": "#0f1c2e",
+    "theme_color": "#0f1c2e",
     "icons": [
         {
             "src": "/icons/icon-192.png",

@@ -7,7 +7,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
-        <meta name="theme-color" content="#0a2c4d">
+        <meta name="theme-color" content="#0f1c2e">
         <link rel="manifest" href="/manifest.json">
 
         {{-- Anti-parpadeo de modo oscuro — ver resources/js/theme.js para el toggle en vivo. --}}
@@ -79,7 +79,7 @@
                     <div class="glass-strong rounded-[2rem] px-6 py-3 flex items-center justify-between">
                         <a
                             href="{{ route('trabajador.papeletas.index') }}"
-                            class="flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-semibold transition {{ request()->routeIs('trabajador.papeletas.*') ? 'text-ocean-600 dark:text-ocean-300' : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70' }}"
+                            class="flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-semibold transition {{ request()->routeIs('trabajador.papeletas.*') ? 'text-terracota-600 dark:text-terracota-300' : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70' }}"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12c0-1.5.5-2 2-2 1.24 0 1.5-.67 1.5-1.5C5.75 6.5 6.5 5.25 8 5.25h8c1.5 0 2.25 1.25 2.25 3.25 0 .83.26 1.5 1.5 1.5 1.5 0 2 .5 2 2s-.5 2-2 2c-1.24 0-1.5.67-1.5 1.5 0 2-.75 3.25-2.25 3.25H8c-1.5 0-2.25-1.25-2.25-3.25 0-.83-.26-1.5-1.5-1.5-1.5 0-2-.5-2-2z" /></svg>
                             Mis papeletas
@@ -87,7 +87,7 @@
 
                         <a
                             href="{{ route('trabajador.papeletas.create') }}"
-                            class="-mt-9 flex items-center justify-center size-14 rounded-full bg-gradient-to-br from-ocean-500 to-ocean-700 text-white shadow-ocean-glow ring-[6px] ring-ocean-50 dark:ring-ocean-950 hover:scale-105 active:scale-95 transition-transform"
+                            class="-mt-9 flex items-center justify-center size-14 rounded-full bg-gradient-to-br from-terracota-400 to-terracota-600 text-white shadow-andino-glow ring-[6px] ring-ocean-50 dark:ring-ocean-950 hover:scale-105 active:scale-95 transition-transform"
                             aria-label="Nueva papeleta"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
@@ -95,7 +95,7 @@
 
                         <a
                             href="{{ route('profile.show') }}"
-                            class="flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-semibold transition {{ request()->routeIs('profile.show') ? 'text-ocean-600 dark:text-ocean-300' : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70' }}"
+                            class="flex flex-col items-center gap-1 px-3 py-1 text-[11px] font-semibold transition {{ request()->routeIs('profile.show') ? 'text-terracota-600 dark:text-terracota-300' : 'text-gray-400 dark:text-white/40 hover:text-gray-600 dark:hover:text-white/70' }}"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="size-6"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                             Perfil

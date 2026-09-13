@@ -45,7 +45,7 @@ window.msscMapaSede = function (config) {
             this.marcador = L.marker([config.lat, config.lng], { draggable: true }).addTo(this.mapa);
             this.circulo = L.circle([config.lat, config.lng], {
                 radius: config.radio,
-                color: '#0a2c4d',
+                color: '#0f1c2e',
                 fillOpacity: 0.15,
             }).addTo(this.mapa);
 

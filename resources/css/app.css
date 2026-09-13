@@ -7,15 +7,15 @@
 }
 
 :root {
-    --ocean-950: #0a2c4d;
-    --ocean-900: #0f4a80;
-    --ocean-800: #0c579f;
-    --ocean-700: #086ad0;
-    --ocean-600: #0a86f0;
-    --ocean-500: #1ea7ff;
-    --ocean-400: #48c6ff;
-    --ocean-100: #d9f4ff;
-    --ocean-50: #eefbff;
+    --ocean-950: #0f1c2e;
+    --ocean-900: #182c46;
+    --ocean-800: #1d3654;
+    --ocean-700: #234368;
+    --ocean-600: #2c5480;
+    --ocean-500: #3b699e;
+    --ocean-400: #5c86b8;
+    --ocean-100: #e2eaf5;
+    --ocean-50: #f2f6fb;
 }
 
 html {
@@ -41,17 +41,33 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--ocean-600); }
 
 @layer components {
-    /* Fondo institucional con capas de gradiente océano */
+    /* Fondo institucional: superficie neutra con un toque sutil de marca,
+       no un gradiente saturado de punta a punta (eso cansa la vista en
+       pantallas de trabajo largas). El color vive en el sidebar y los acentos. */
     .bg-institucional {
-        @apply bg-ocean-gradient-soft dark:bg-ocean-gradient bg-fixed relative;
+        @apply bg-slate-50 dark:bg-ocean-950 relative;
     }
     .bg-institucional::before {
         content: '';
         position: fixed;
         inset: 0;
         background-image: theme('backgroundImage.ocean-radial');
+        opacity: .7;
         pointer-events: none;
         z-index: 0;
+    }
+
+    /* Panel del sidebar */
+    .sidebar {
+        @apply bg-white/90 dark:bg-ocean-950/90 backdrop-blur-xl border-r border-ocean-100 dark:border-white/10 shadow-glass-lg;
+    }
+    .sidebar-section-label {
+        @apply px-3 mb-1 text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-ocean-100/40;
+    }
+    /* Fila de utilidad en el pie del sidebar (tema, notificaciones, cuenta) */
+    .sidebar-row {
+        @apply flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-gray-600 dark:text-ocean-100/80
+               hover:bg-ocean-50 dark:hover:bg-white/10 hover:text-ocean-800 dark:hover:text-white transition;
     }
 
     /* Vidrio esmerilado — tarjetas, paneles, headers */

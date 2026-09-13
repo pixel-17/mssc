@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
-        <meta name="theme-color" content="#0a2c4d">
+        <meta name="theme-color" content="#0f1c2e">
         <link rel="manifest" href="/manifest.json">
 
         {{--
@@ -36,13 +36,19 @@
     <body class="font-sans antialiased">
         <x-banner />
 
-        <div class="min-h-screen bg-institucional">
-            <div class="relative z-10">
-                @livewire('navigation-menu')
+        <div class="min-h-screen bg-institucional" x-data>
+            @livewire('navigation-menu')
 
+            {{--
+                El sidebar es `fixed`, así que este contenedor reserva su
+                espacio con padding-left. El mismo store de Alpine que
+                colapsa el sidebar ajusta este padding, para que nunca
+                queden huecos ni contenido tapado.
+            --}}
+            <div class="relative z-10 transition-[padding] duration-200 ease-in-out" :class="$store.sidebar.collapsed ? 'lg:pl-20' : 'lg:pl-72'">
                 <!-- Page Heading -->
                 @if (isset($header))
-                    <header class="glass border-b border-white/40">
+                    <header class="glass border-b border-white/40 dark:border-white/10">
                         <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                             {{ $header }}
                         </div>
