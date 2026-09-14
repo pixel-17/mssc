@@ -50,6 +50,7 @@ class PapeletaController extends Controller
             $papeleta = $action->ejecutar(Auth::user(), $motivo, [
                 'justificacion' => $request->input('justificacion'),
                 'adjunto_inicial_path' => $adjuntoPath,
+                'hora_retorno_estimado' => $request->input('hora_retorno_estimado'),
             ]);
         } catch (PapeletaException $e) {
             return back()->withInput()->with('error', $e->getMessage());

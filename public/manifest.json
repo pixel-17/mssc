@@ -1,23 +1,30 @@
 {
-    "name": "MSSC — Papeletas de salida",
-    "short_name": "MSSC",
-    "description": "Sistema de programación de turnos y papeletas de salida",
+    "name": "Sistema de Papeletas",
+    "short_name": "Papeletas",
+    "description": "Gestión de papeletas de salida y notificaciones del sistema",
     "start_url": "/",
+    "scope": "/",
     "display": "standalone",
-    "background_color": "#0f1c2e",
-    "theme_color": "#0f1c2e",
+    "background_color": "#ffffff",
+    "theme_color": "#2c5480",
     "icons": [
         {
             "src": "/icons/icon-192.png",
             "sizes": "192x192",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
         },
         {
             "src": "/icons/icon-512.png",
             "sizes": "512x512",
             "type": "image/png",
-            "purpose": "any maskable"
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-maskable-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
         }
     ]
 }

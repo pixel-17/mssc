@@ -24,6 +24,9 @@ class StorePapeletaRequest extends FormRequest
             'motivo_id' => ['required', 'integer', 'exists:motivos,id'],
             'justificacion' => ['nullable', 'string', 'max:2000'],
             'adjunto_inicial_path' => ['nullable', 'file', 'max:10240'],
+            // Solo informativa (no bloquea el flujo de retorno real):
+            // el trabajador declara a qué hora piensa volver.
+            'hora_retorno_estimado' => ['nullable', 'date', 'after:now'],
         ];
     }
 

@@ -43,6 +43,18 @@
                 >{{ old('justificacion') }}</textarea>
             </div>
 
+            <div class="glass-card p-4 space-y-1.5">
+                <x-label for="hora_retorno_estimado" value="Hora de retorno estimada (opcional)" />
+                <input
+                    type="datetime-local"
+                    id="hora_retorno_estimado"
+                    name="hora_retorno_estimado"
+                    value="{{ old('hora_retorno_estimado') }}"
+                    class="w-full rounded-xl border-ocean-200 dark:border-white/15 bg-white/70 dark:bg-white/10 dark:text-white backdrop-blur focus:border-ocean-500 focus:ring-ocean-500 shadow-sm"
+                >
+                <p class="text-xs text-gray-400 dark:text-ocean-100/40">Solo informativa, para que tu jefe sepa cuándo esperarte.</p>
+            </div>
+
             <div class="glass-card p-4 space-y-2">
                 <x-label value="Adjunto (opcional según motivo)" />
 

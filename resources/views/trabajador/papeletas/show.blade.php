@@ -9,6 +9,7 @@
         ['Jefe inmediato', $papeleta->jefeInmediato?->nombre_completo ?? '—'],
         ['Jefe de área', $papeleta->jefeArea?->nombre_completo ? $papeleta->jefeArea->nombre_completo.($papeleta->escalado_jefe_area_at ? ' (escalado)' : '') : '—'],
         ['Hora de salida real', $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—'],
+        ['Retorno estimado', $papeleta->hora_retorno_estimado?->format('d/m/Y H:i') ?? '—'],
         ['Es emergencia', $papeleta->es_emergencia ? 'Sí' : 'No'],
     ]);
 
@@ -54,6 +55,44 @@
                 </div>
             @endif
         </div>
+
+        {{-- Salida autorizada / en curso: banner animado con la hora de retorno estimada --}}
+        @if ($papeleta->estado->equals(\App\States\Papeleta\AutorizadaYCorriendo::class) && ! $papeleta->retorno)
+            <div class="glass-card p-5 relative overflow-hidden border border-ocean-300/60 dark:border-ocean-400/30">
+                <div class="flex items-center gap-3">
+                    <span class="relative flex size-3 shrink-0">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-ocean-400 opacity-75"></span>
+                        <span class="relative inline-flex size-3 rounded-full bg-ocean-500"></span>
+                    </span>
+                    <div class="min-w-0">
+                        <p class="text-sm font-semibold text-ocean-950 dark:text-white">Salida autorizada, en curso</p>
+                        <p class="text-xs text-gray-500 dark:text-ocean-100/50">
+                            Saliste a las {{ $papeleta->hora_salida_real?->format('H:i') ?? '—' }}
+                        </p>
+                    </div>
+                </div>
+
+                @if ($papeleta->hora_retorno_estimado)
+                    <div class="mt-3 pt-3 border-t border-dashed border-ocean-200/70 dark:border-white/15 flex items-center justify-between gap-3">
+                        <span class="text-xs text-gray-500 dark:text-ocean-100/50">Retorno estimado</span>
+                        <span
+                            @class([
+                                'text-sm font-semibold',
+                                'text-red-600 dark:text-red-400 animate-pulse' => $papeleta->hora_retorno_estimado->isPast(),
+                                'text-ocean-700 dark:text-ocean-200' => ! $papeleta->hora_retorno_estimado->isPast(),
+                            ])
+                        >
+                            {{ $papeleta->hora_retorno_estimado->format('H:i') }}
+                            @if ($papeleta->hora_retorno_estimado->isPast())
+                                · ya pasó la hora estimada
+                            @else
+                                · en {{ $papeleta->hora_retorno_estimado->diffForHumans(null, true) }}
+                            @endif
+                        </span>
+                    </div>
+                @endif
+            </div>
+        @endif
 
         {{-- Acciones contextuales --}}
         @if ($puedeCancelar)

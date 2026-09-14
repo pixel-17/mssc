@@ -31,6 +31,12 @@ return new class extends Migration
             $table->boolean('requiere_sustento_en_retorno')->default(false); // Salud
             $table->boolean('participa_regla_exclusividad')->default(true); // false solo para Emergencia (carril aparte)
 
+            // Motivo.php documenta la regla "nunca comparar codigo ===
+            // 'SALUD' para decidir lógica, siempre usar banderas" — esta
+            // bandera permite que ReclasificarAParticularAction resuelva
+            // el motivo destino sin hardcodear el código.
+            $table->boolean('es_destino_reclasificacion')->default(false);
+
             $table->boolean('activo')->default(true);
             $table->timestamps();
         });

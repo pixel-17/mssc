@@ -63,6 +63,7 @@ class CrearPapeletaAction
                     'jefe_inmediato_id' => $unidad?->jefeInmediato()?->id,
                     'jefe_area_id' => $unidad?->jefeArea()?->id,
                     'hora_salida_real' => $bypassAprobacion ? now() : null,
+                    'hora_retorno_estimado' => $datos['hora_retorno_estimado'] ?? null,
                     'justificacion' => $datos['justificacion'] ?? null,
                     'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
                     'visto_bueno_jefe_emergencia' => $bypassAprobacion ? 'pendiente' : null,

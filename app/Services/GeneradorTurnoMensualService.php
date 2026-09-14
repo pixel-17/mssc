@@ -116,6 +116,8 @@ class GeneradorTurnoMensualService
 
         $dia = $mesInicio->copy()->startOfMonth();
         $finDeMes = $mesInicio->copy()->endOfMonth();
+        $ahora = now();
+        $filas = [];
 
         while ($dia->lessThanOrEqualTo($finDeMes)) {
             // Módulo positivo: fecha_ancla puede ser posterior a $dia
@@ -125,18 +127,31 @@ class GeneradorTurnoMensualService
             $posicion = (($offset % $ciclo) + $ciclo) % $ciclo;
             $esDescanso = $posicion >= $config->dias_trabajo;
 
-            Turno::updateOrCreate(
-                ['user_id' => $trabajador->id, 'fecha' => $dia->toDateString()],
-                [
-                    'sede_id' => $trabajador->sede_id,
-                    'es_descanso' => $esDescanso,
-                    'hora_inicio' => $esDescanso ? null : $horaInicio,
-                    'hora_fin' => $esDescanso ? null : $horaFin,
-                ]
-            );
+            $filas[] = [
+                'user_id' => $trabajador->id,
+                'fecha' => $dia->toDateString(),
+                'sede_id' => $trabajador->sede_id,
+                'es_descanso' => $esDescanso,
+                'hora_inicio' => $esDescanso ? null : $horaInicio,
+                'hora_fin' => $esDescanso ? null : $horaFin,
+                'created_at' => $ahora,
+                'updated_at' => $ahora,
+            ];
 
             $dia->addDay();
         }
+
+        // Un solo upsert para todo el mes (hasta 31 filas) en vez de
+        // un updateOrCreate por día: con cientos de trabajadores 728
+        // corriendo cada mes vía generarProximoMesParaTodos(), esto
+        // evita miles de queries individuales. 'created_at' solo se
+        // aplica al insertar filas nuevas (no está en el tercer
+        // argumento), igual que hacía updateOrCreate.
+        Turno::upsert(
+            $filas,
+            ['user_id', 'fecha'],
+            ['sede_id', 'es_descanso', 'hora_inicio', 'hora_fin', 'updated_at']
+        );
 
         CargaTurnoMensual::updateOrCreate(
             ['user_id' => $trabajador->id, 'anio' => $anio, 'mes' => $mes],

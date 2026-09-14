@@ -67,10 +67,65 @@ return new class extends Migration
             $table->timestamp('cancelada_at')->nullable();
             $table->timestamp('vencida_at')->nullable();
 
+            // Paso 5: FINALIZADO_SIN_RETORNO tiene dos causas distintas y hay
+            // que poder filtrarlas en reportes sin parsear texto libre:
+            // COMISION_SERVICIO_CAMPO (visto bueno humano, motivo
+            // permite_cierre_sin_retorno) y ABANDONO_NO_MARCADO (job de
+            // vencimiento, turno terminó sin marcación).
+            $table->enum('causa_finalizacion_sin_retorno', ['comision_servicio_campo', 'abandono_no_marcado'])
+                ->nullable();
+
+            // requiere_visto_bueno / regularizacion_fecha_limite son
+            // genéricos y se reutilizan en los 3 casos donde el
+            // automatismo NO puede cerrar solo (Paso 8): sustento de
+            // Salud vencido con adjunto sin revisar, abandono no marcado
+            // (ventana de 48h antes de quedar firme) y subsanación de
+            // Emergencia observada (ventana de 15 días hábiles).
+            $table->boolean('requiere_visto_bueno')->default(false);
+            $table->timestamp('regularizacion_fecha_limite')->nullable();
+
             // --- Reclasificación (Salud sin sustento / Emergencia observada) ---
             $table->foreignId('motivo_original_id')->nullable()->constrained('motivos')->nullOnDelete();
 
             $table->text('justificacion')->nullable(); // obligatoria en Emergencia
+
+            // Hora en la que el trabajador declara que piensa retornar,
+            // capturada al crear la papeleta. Es solo informativa/UX
+            // (mostrar en el ticket cuánto falta o si ya se pasó) y no
+            // bloquea ni valida nada del flujo de retorno real.
+            $table->timestamp('hora_retorno_estimado')->nullable();
+
+            // Paso 6 (Emergencia): revisión post-hoc DOBLE e independiente —
+            // Jefe y RRHH revisan en paralelo, cada uno con su propio visto
+            // bueno, sin bloquearse entre sí ni al ciclo operativo del
+            // trabajador. A propósito son columnas separadas y no
+            // reutilizan revision_posthoc_estado (esa es de un solo
+            // revisor: RRHH revisando lo que el jefe autorizó fuera de
+            // horario).
+            $table->enum('visto_bueno_jefe_emergencia', ['pendiente', 'aprobado', 'observado'])->nullable();
+            $table->foreignId('visto_bueno_jefe_emergencia_por_id')->nullable()
+                ->constrained('users')->nullOnDelete();
+            $table->timestamp('visto_bueno_jefe_emergencia_at')->nullable();
+
+            $table->enum('visto_bueno_rrhh_emergencia', ['pendiente', 'aprobado', 'observado'])->nullable();
+            $table->foreignId('visto_bueno_rrhh_emergencia_por_id')->nullable()
+                ->constrained('users')->nullOnDelete();
+            $table->timestamp('visto_bueno_rrhh_emergencia_at')->nullable();
+
+            // Plazo de subsanación (tope parametrizable, config
+            // SUBSANACION_EMERGENCIA_DIAS_HABILES). Se fija en la PRIMERA
+            // observación (jefe o RRHH, lo que ocurra antes) y no se
+            // reinicia si el otro observa después. NO reutiliza
+            // regularizacion_fecha_limite: esa existe para que el job de
+            // vencimiento NO cierre solo mientras espera a un humano; acá
+            // es al revés, el job SÍ debe actuar solo (reclasificar a
+            // Particular) si nadie subsana a tiempo.
+            $table->timestamp('subsanacion_emergencia_fecha_limite')->nullable();
+
+            // Adjunto que el trabajador sube al subsanar. Separado de
+            // adjunto_inicial_path (el de la creación) y de
+            // sustentos.archivo_path (exclusivo de Salud).
+            $table->string('subsanacion_emergencia_adjunto_path')->nullable();
 
             // --- Adjunto inicial al crear (Sección 3, distinto del sustento de retorno) ---
             // Salud: flexible (puede o no venir aquí). Comisión: opcional.
