@@ -1,29 +1,35 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
 import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
 
 /** @type {import('tailwindcss').Config} */
 export default {
     content: [
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
+        './vendor/laravel/jetstream/resources/views/**/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
+        './app/Livewire/**/*.php',
+        './app/Support/**/*.php',
     ],
+
+    // resources/js/theme.js pone/quita la clase `dark` en <html> a mano.
+    // Sin esta línea Tailwind usaría prefers-color-scheme y las ~290
+    // utilidades dark: de las vistas ignorarían el botón de tema.
+    darkMode: 'class',
 
     theme: {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
-            // Rebrand empresarial: "brand" pasa de celeste a la escala
-            // "ocean" (azul institucional: sidebar, headers, enlaces) y se
-            // agrega "accent" (terracota, único color cálido del sistema)
-            // para CTAs primarios, badges de conteo y estados activos.
-            // Mismos puntos replicados en resources/css/app.css (botón
-            // primario, sidebar, bottom-nav) para mantener todo coherente.
-            // Se conserva el nombre "brand" para no romper los ~46 usos
-            // existentes en las vistas (bg-brand-600, text-brand-700, etc).
+
+            // Paleta institucional. `ocean` es el azul de la municipalidad
+            // (sidebar, encabezados, enlaces); `terracota` es el único
+            // color cálido del sistema y se reserva para la acción
+            // principal, el estado activo y los contadores pendientes.
             colors: {
-                brand: {
+                ocean: {
                     50: '#f2f6fb',
                     100: '#e2eaf5',
                     200: '#c2d3e8',
@@ -36,7 +42,7 @@ export default {
                     900: '#182c46',
                     950: '#0f1c2e',
                 },
-                accent: {
+                terracota: {
                     50: '#fdf4ef',
                     100: '#fbe6da',
                     200: '#f6cbb0',
@@ -50,18 +56,20 @@ export default {
                     950: '#37150b',
                 },
             },
+
             boxShadow: {
-                // Usada en tarjetas de acceso rápido / avatares con
-                // degradado (dashboard admin); tampoco estaba definida.
-                glass: '0 4px 14px -4px rgba(14, 165, 233, 0.35)',
-                // shadow-glass-lg: usada en dropdowns, toasts, la campana
-                // de notificaciones y los íconos "hero" de login/errores/
-                // bloqueo — tampoco estaba definida, así que esos paneles
-                // flotantes se veían sin elevación (planos).
+                // Tarjetas de acceso rápido y avatares con degradado.
+                glass: '0 4px 14px -4px rgba(44, 84, 128, 0.35)',
+                // Dropdowns, toasts, campana de notificaciones e íconos
+                // "hero" de login/errores.
                 'glass-lg': '0 16px 40px -12px rgba(15, 15, 20, 0.28)',
+                // Halo azul: encabezados y tarjetas destacadas.
+                'ocean-glow': '0 12px 32px -10px rgba(35, 67, 104, 0.55)',
+                // Halo terracota: el botón flotante de "nueva papeleta".
+                'andino-glow': '0 10px 24px -6px rgba(212, 101, 47, 0.55)',
             },
         },
     },
 
-    plugins: [forms],
+    plugins: [forms, typography],
 };
