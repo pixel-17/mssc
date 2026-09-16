@@ -46,6 +46,36 @@
                     @livewire('profile.delete-user-form')
                 </div>
             @endif
+
+            <x-section-border />
+
+            {{--
+                Cerrar sesión: el trabajador no tiene sidebar, así que esta
+                (junto al botón de la barra superior) es su única salida.
+                No confundir con "cerrar las otras sesiones" de arriba, que
+                deja esta abierta.
+            --}}
+            <div class="mt-10 sm:mt-0">
+                <x-action-section>
+                    <x-slot name="title">
+                        Cerrar sesión
+                    </x-slot>
+
+                    <x-slot name="description">
+                        Sales de este dispositivo. Tus papeletas y tu historial quedan guardados.
+                    </x-slot>
+
+                    <x-slot name="content">
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+
+                            <x-button type="submit">
+                                Cerrar sesión
+                            </x-button>
+                        </form>
+                    </x-slot>
+                </x-action-section>
+            </div>
         </div>
     </div>
 </x-app-layout>
