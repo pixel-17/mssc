@@ -33,6 +33,8 @@ class ConfiguracionSeeder extends Seeder
             ['clave' => 'TURNO_NOCHE_HORA_FIN', 'valor' => '06:00', 'descripcion' => 'Hora de fin del turno Noche (régimen 728, ciclo 6x1; cruza medianoche).'],
             ['clave' => 'TURNO_DIA_HORA_INICIO', 'valor' => '07:45', 'descripcion' => 'Hora de inicio del turno Día (único turno válido para régimen 276, ciclo 6x1).'],
             ['clave' => 'TURNO_DIA_HORA_FIN', 'valor' => '16:15', 'descripcion' => 'Hora de fin del turno Día (único turno válido para régimen 276, ciclo 6x1).'],
+            ['clave' => 'MODO_ESTRICTO_728', 'valor' => '0', 'descripcion' => 'Interruptor global (solo régimen 728): en "1", bloquea la creación de papeleta si el trabajador 728 no tiene un turno vigente. Solo Admin lo cambia; Jefe de Área lo ve en modo lectura. Se maneja por temporadas.'],
+            ['clave' => 'MODO_ESTRICTO_728_MENSAJE', 'valor' => 'No puedes crear una papeleta en este momento: no tienes un turno vigente asignado. Comunícate con tu jefe para que regularice tu turno.', 'descripcion' => 'Mensaje mostrado al trabajador 728 cuando MODO_ESTRICTO_728 está activo y no tiene turno vigente.'],
         ];
 
         foreach ($configuraciones as $configuracion) {

@@ -30,7 +30,9 @@ class ConfiguracionForm extends Component
     protected function rules(): array
     {
         return [
-            'valor' => ['required', 'string', 'max:255'],
+            'valor' => $this->configuracion->clave === 'MODO_ESTRICTO_728'
+                ? ['required', 'string', 'in:0,1']
+                : ['required', 'string', 'max:255'],
         ];
     }
 

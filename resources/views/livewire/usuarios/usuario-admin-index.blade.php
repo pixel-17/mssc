@@ -65,6 +65,9 @@
                             <td class="px-4 py-3">{{ $usuario->unidadOrganica?->nombre ?? '—' }}</td>
                             <td class="px-4 py-3">{{ $usuario->roles->pluck('name')->join(', ') }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
+                                <a href="{{ route('turnos.calendario.individual-de', $usuario) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
+                                    Calendario
+                                </a>
                                 <a href="{{ route('usuarios-admin.editar', $usuario) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
                                     Editar
                                 </a>

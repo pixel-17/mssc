@@ -14,9 +14,12 @@ use Illuminate\Support\Carbon;
  * editable en Configuraciones), para no obligar al admin a cargar una
  * fila por cada uno de los ~500 trabajadores 276 todos los días.
  *
- * Para 728 (rotativo) sigue existiendo tal como antes: informativa,
- * opcional, y el sistema nunca bloquea nada contra ella para ese
- * régimen (ni al crear papeleta ni al escalar).
+ * Para 728 (rotativo) sigue existiendo tal como antes: informativa y
+ * opcional. Por defecto el sistema no bloquea nada contra ella para
+ * ese régimen (ni al crear papeleta ni al escalar); la única
+ * excepción es el interruptor global MODO_ESTRICTO_728 (tabla
+ * configuraciones), que si está activo SÍ bloquea la creación de
+ * papeleta cuando no hay turno vigente (ver CrearPapeletaAction).
  */
 class Turno extends Model
 {
@@ -91,5 +94,26 @@ class Turno extends Model
             ])
             ->get()
             ->first(fn (self $turno) => $turno->cubre($momento));
+    }
+
+    /**
+     * Etiqueta corta para la vista calendario (equipo/individual):
+     * 'D' para descanso, 'M'/'T'/'N' para régimen 728 (comparando
+     * hora_inicio contra las horas vigentes de cada turno en
+     * `configuraciones`) y 'DIA' para régimen 276. Solo para pintar la
+     * grilla — nunca se usa para validar ni bloquear nada.
+     */
+    public function etiqueta(): string
+    {
+        if ($this->es_descanso || ! $this->hora_inicio) {
+            return 'D';
+        }
+
+        return match ((string) $this->hora_inicio) {
+            (string) Configuracion::valorDe('TURNO_MANANA_HORA_INICIO', '06:00') => 'M',
+            (string) Configuracion::valorDe('TURNO_TARDE_HORA_INICIO', '14:00') => 'T',
+            (string) Configuracion::valorDe('TURNO_NOCHE_HORA_INICIO', '22:00') => 'N',
+            default => 'DIA',
+        };
     }
 }

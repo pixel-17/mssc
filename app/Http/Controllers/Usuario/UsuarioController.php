@@ -55,6 +55,11 @@ class UsuarioController extends Controller
                 ? UnidadOrganica::whereIn('id', $unidadIds)->orderBy('nombre')->get()
                 : collect(),
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->get(),
+            // Pre-selección del régimen (ver sección 5/6 del rediseño de
+            // turnos): el creador es, en la mayoría de los casos, del
+            // mismo régimen que sus trabajadores, pero no es una regla
+            // dura — por eso solo se pre-selecciona, nunca se fuerza.
+            'regimenCreador' => $user->regimen,
         ]);
     }
 

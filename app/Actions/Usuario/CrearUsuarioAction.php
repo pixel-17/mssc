@@ -23,6 +23,16 @@ use Illuminate\Support\Facades\Hash;
  * vía UserObserver en cuanto se guarda con unidad_organica_id (si la
  * tiene). Nunca se tocan a mano aquí.
  *
+ * Herencia cuando el creador es Jefe Inmediato (! $esJefeDeArea):
+ * sede_id y unidad_organica_id del trabajador nuevo se heredan SIEMPRE
+ * del creador (no son editables desde el formulario, aunque lleguen en
+ * $datos) — así unidad_organica_id queda igual a la del Jefe Inmediato
+ * y UserObserver calcula jefe_inmediato_id = el propio creador. Cuando
+ * el creador es Jefe de Área, unidad_organica_id sí viene del
+ * formulario (una de las unidades de su subárbol) y sede_id se deja
+ * como lo eligió el formulario, porque una misma área puede abarcar
+ * más de una sede.
+ *
  * Contraseña inicial: siempre el DNI del propio usuario (nunca la
  * elige quien lo crea). debe_actualizar_password queda en true para
  * que RedirigirSiDebeActualizarPassword le pida cambiarla —de forma
@@ -47,8 +57,8 @@ class CrearUsuarioAction
                 'password' => Hash::make($datos['dni']),
                 'debe_actualizar_password' => true,
                 'regimen' => $datos['regimen'],
-                'sede_id' => $datos['sede_id'] ?? null,
-                'unidad_organica_id' => $esJefeDeArea ? $datos['unidad_organica_id'] : null,
+                'sede_id' => $esJefeDeArea ? ($datos['sede_id'] ?? null) : $creador->sede_id,
+                'unidad_organica_id' => $esJefeDeArea ? $datos['unidad_organica_id'] : $creador->unidad_organica_id,
             ]);
 
             $nuevo->assignRole('trabajador');

@@ -40,7 +40,8 @@
                         </div>
                     @else
                         <div class="rounded-md bg-ocean-50 border border-ocean-200 p-4 text-sm text-ocean-800">
-                            Este trabajador quedará bajo tu supervisión: te asignaremos automáticamente como su jefe inmediato.
+                            Este trabajador quedará bajo tu supervisión: te asignaremos automáticamente como su jefe inmediato,
+                            y heredará tu misma sede y unidad orgánica (no se pueden editar aquí).
                         </div>
                     @endif
 
@@ -68,8 +69,8 @@
                             <select id="regimen" name="regimen" required
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
                                 <option value="">Selecciona</option>
-                                <option value="276" @selected(old('regimen') === '276')>276 (día)</option>
-                                <option value="728" @selected(old('regimen') === '728')>728 (rotativo)</option>
+                                <option value="276" @selected(old('regimen', $regimenCreador) === '276')>276 (día)</option>
+                                <option value="728" @selected(old('regimen', $regimenCreador) === '728')>728 (rotativo)</option>
                             </select>
                             <x-input-error for="regimen" class="mt-2" />
                         </div>
@@ -88,16 +89,18 @@
                         </p>
                     </div>
 
-                    <div>
-                        <x-label for="sede_id" value="Sede (opcional)" />
-                        <select id="sede_id" name="sede_id"
-                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
-                            <option value="">— sin sede —</option>
-                            @foreach ($sedes as $sede)
-                                <option value="{{ $sede->id }}" @selected(old('sede_id') == $sede->id)>{{ $sede->nombre }}</option>
-                            @endforeach
-                        </select>
-                    </div>
+                    @if ($esJefeDeArea)
+                        <div>
+                            <x-label for="sede_id" value="Sede (opcional)" />
+                            <select id="sede_id" name="sede_id"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
+                                <option value="">— sin sede —</option>
+                                @foreach ($sedes as $sede)
+                                    <option value="{{ $sede->id }}" @selected(old('sede_id') == $sede->id)>{{ $sede->nombre }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    @endif
 
                     <div class="flex items-center justify-end gap-3">
                         <a href="{{ route('usuarios.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancelar</a>

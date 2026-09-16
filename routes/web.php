@@ -87,6 +87,11 @@ Route::middleware([
  * role:admin — la carga también la hace el Jefe Inmediato/Área del
  * trabajador (ver User::puedeGestionarTurnoDe). La autorización fina
  * por trabajador se resuelve dentro del componente, no aquí.
+ *
+ * Calendario (vista de equipo/individual): mismo criterio, NO
+ * role:admin — la autorización fina vive dentro de cada componente
+ * (CalendarioEquipoIndex resuelve solo por relación; CalendarioIndividualIndex
+ * aborta con 403 si no es Admin ni el propio trabajador).
  */
 Route::middleware([
     'auth:sanctum',
@@ -94,6 +99,10 @@ Route::middleware([
     'verified',
 ])->prefix('turnos')->name('turnos.')->group(function () {
     Route::get('/configuracion/{trabajador}', \App\Livewire\Turnos\ConfiguracionTurnoForm::class)->name('configuracion');
+
+    Route::get('/calendario', \App\Livewire\Turnos\CalendarioEquipoIndex::class)->name('calendario.equipo');
+    Route::get('/calendario/mio', \App\Livewire\Turnos\CalendarioIndividualIndex::class)->name('calendario.individual');
+    Route::get('/calendario/{trabajador}', \App\Livewire\Turnos\CalendarioIndividualIndex::class)->name('calendario.individual-de');
 });
 
 /*

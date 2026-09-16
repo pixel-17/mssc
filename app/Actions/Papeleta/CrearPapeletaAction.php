@@ -3,6 +3,7 @@
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
+use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
@@ -25,7 +26,12 @@ use Illuminate\Support\Facades\DB;
  *   motivo que tenga permite_bypass_aprobacion = true (Emergencia, por
  *   bandera, nunca por nombre — ver comentario en Motivo.php).
  * - 728 (rotativo): activo 24/7, sin validar horario ni día de descanso.
- *   `turnos` sigue existiendo para 728 pero es solo informativo.
+ *   `turnos` sigue existiendo para 728 y por defecto es solo
+ *   informativo. Excepción: si el interruptor global MODO_ESTRICTO_728
+ *   (tabla configuraciones, solo lo cambia Admin) está en "1", un
+ *   trabajador 728 sin turno vigente (sin fila para hoy, o con
+ *   es_descanso) NO puede crear papeleta — salvo bypass de aprobación
+ *   (Emergencia), que nunca se bloquea por turno.
  * - Máximo 1 papeleta activa por carril (participa_regla_exclusividad),
  *   forzado también a nivel de BD (slot_normal_activo / slot_emergencia_activo).
  * - Sede/regimen/dia_operativo quedan fijados como fotografía inmutable.
@@ -109,8 +115,10 @@ class CrearPapeletaAction
     }
 
     /**
-     * 728 (rotativo): se busca el turno solo como referencia (puede no
-     * existir, puede ser descanso) pero NUNCA bloquea ni se valida la hora.
+     * 728 (rotativo): por defecto se busca el turno solo como referencia
+     * (puede no existir, puede ser descanso) y NO bloquea ni valida la
+     * hora. Si MODO_ESTRICTO_728 está activo, en cambio, la ausencia de
+     * turno vigente sí bloquea (ver bloquearSiModoEstrictoSinTurno).
      * 276 (ordinario): ventana estricta contra el horario único global —
      * ya no contra una fila diaria en `turnos`, por eso no devuelve Turno.
      */
@@ -119,9 +127,12 @@ class CrearPapeletaAction
         if ($trabajador->regimen === '728') {
             // Turno::vigenteParaUsuario maneja el cruce de medianoche del
             // turno Noche, para que dia_operativo refleje el turno
-            // correcto también entre 00:00 y 06:00. Sigue siendo solo
-            // informativo: puede ser null y no bloquea nada para 728.
-            return Turno::vigenteParaUsuario($trabajador->id);
+            // correcto también entre 00:00 y 06:00.
+            $turno = Turno::vigenteParaUsuario($trabajador->id);
+
+            $this->bloquearSiModoEstrictoSinTurno($turno);
+
+            return $turno;
         }
 
         if (! app(HorarioOrdinarioService::class)->estaDentroDeVentana()) {
@@ -132,6 +143,37 @@ class CrearPapeletaAction
         }
 
         return null;
+    }
+
+    /**
+     * MODO_ESTRICTO_728 (tabla configuraciones, clave global — no por
+     * área ni por trabajador, solo Admin la cambia): si está en "1" y
+     * el trabajador 728 no tiene turno vigente (sin fila para hoy, o
+     * la fila vigente es un día de descanso), se bloquea la creación
+     * con un mensaje editable en Configuraciones (MODO_ESTRICTO_728_MENSAJE)
+     * en vez de un texto fijo en el código. Nunca aplica a régimen 276
+     * (ese ya tiene su propia ventana en HorarioOrdinarioService) ni a
+     * un motivo con bypass de aprobación (resolverTurnoActivo no llega
+     * aquí en ese caso).
+     */
+    private function bloquearSiModoEstrictoSinTurno(?Turno $turno): void
+    {
+        $modoEstrictoActivo = Configuracion::valorDe('MODO_ESTRICTO_728', '0') === '1';
+
+        if (! $modoEstrictoActivo) {
+            return;
+        }
+
+        if ($turno && ! $turno->es_descanso) {
+            return;
+        }
+
+        throw new PapeletaException(
+            (string) Configuracion::valorDe(
+                'MODO_ESTRICTO_728_MENSAJE',
+                'No puedes crear una papeleta en este momento: no tienes un turno vigente asignado.'
+            )
+        );
     }
 
     private function verificarExclusividad(User $trabajador, Motivo $motivo): void
