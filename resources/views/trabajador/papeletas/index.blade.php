@@ -11,15 +11,20 @@
                 </div>
                 <p class="font-semibold text-ocean-950 dark:text-white">Todavía no tienes papeletas</p>
                 <p class="text-sm text-gray-500 dark:text-ocean-100/60">Cuando pidas un permiso de salida, aparecerá aquí con su estado en vivo.</p>
-                <a href="{{ route('trabajador.papeletas.create') }}" class="btn-ocean inline-flex mt-2">
+                <a href="{{ route('trabajador.papeletas.create') }}" class="btn-primary inline-flex mt-2">
                     Crear tu primera papeleta
                 </a>
             </div>
         @else
-            <div class="space-y-3">
-                @foreach ($papeletas as $papeleta)
-                    <x-papeleta-ticket :papeleta="$papeleta" />
-                @endforeach
+            <div>
+                <p class="text-sm font-semibold text-gray-500 dark:text-tinta-100/50 px-1 mb-2">
+                    Tu registro de papeletas
+                </p>
+                <div class="glass-card px-4 sm:px-5">
+                    @foreach ($papeletas as $papeleta)
+                        <x-papeleta-ticket :papeleta="$papeleta" />
+                    @endforeach
+                </div>
             </div>
 
             <div class="pt-1">

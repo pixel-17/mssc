@@ -13,7 +13,7 @@
                 <section class="space-y-4 animate-fade-in-up">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <h3 class="text-lg font-bold text-ocean-950 dark:text-white">Administración</h3>
-                        <a href="{{ route('catalogos.index') }}" class="btn-ocean-outline text-xs">
+                        <a href="{{ route('catalogos.index') }}" class="btn-secondary text-xs">
                             Ir al panel de catálogos
                         </a>
                     </div>
@@ -72,7 +72,7 @@
                 <section class="space-y-4 animate-fade-in-up">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <h3 class="text-lg font-bold text-ocean-950 dark:text-white">RRHH</h3>
-                        <a href="{{ route('rrhh.papeletas.index') }}" class="btn-ocean text-xs">
+                        <a href="{{ route('rrhh.papeletas.index') }}" class="btn-primary text-xs">
                             Ir a la bandeja de RRHH
                         </a>
                     </div>
@@ -128,7 +128,7 @@
                 <section class="space-y-4 animate-fade-in-up">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <h3 class="text-lg font-bold text-ocean-950 dark:text-white">Tu equipo</h3>
-                        <a href="{{ route('jefe.papeletas.index') }}" class="btn-ocean text-xs">
+                        <a href="{{ route('jefe.papeletas.index') }}" class="btn-primary text-xs">
                             Ir a la bandeja de Jefe
                         </a>
                     </div>

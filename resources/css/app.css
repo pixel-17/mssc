@@ -12,22 +12,32 @@
 
 :root {
     --surface: #ffffff;
-    --surface-muted: #f5f5f7;
-    --border-soft: #e3e3e8;
-    --ink-900: #18181b;
-    --sidebar-bg: linear-gradient(180deg, #2c5480 0%, #1d3654 100%);
+    --surface-muted: #f2f3f1;
+    --border-soft: #e2e5e2;
+    --ink-900: #101c22;
+    --sidebar-bg: linear-gradient(180deg, #293f43 0%, #1b2b34 100%);
     --sidebar-bg-active: rgba(255, 255, 255, 0.14);
-    accent-color: #d4652f;
+    accent-color: #b8792f;
 }
 
 html {
     scroll-behavior: smooth;
 }
 
+/* Fraunces lleva la identidad (folios, títulos, cifras grandes);
+   se aplica a los encabezados semánticos directamente para que no haga
+   falta agregar una clase en cada vista. Un span.font-display cubre
+   los casos puntuales (folio, wordmark) que no son un <h1-3>. */
+h1, h2, h3,
+.font-display {
+    font-family: 'Fraunces', ui-serif, Georgia, serif;
+    font-optical-sizing: auto;
+}
+
 body.app-bg {
     background: var(--surface-muted);
     min-height: 100vh;
-    color: #18181b;
+    color: #101c22;
 }
 
 /* Modo oscuro: gris carbón neutro (zinc), a propósito SIN tinte azul/
@@ -37,14 +47,14 @@ body.app-bg {
 .dark body.app-bg,
 .dark .app-bg {
     --surface: #1f1f23;
-    --surface-muted: #121214;
+    --surface-muted: #14181a;
     --border-soft: #2d2d33;
     background: var(--surface-muted);
     color: #e4e4e7;
 }
 
 /* Fondo de las pantallas de acceso (login, recuperar contraseña, etc.):
-   un degradado radial muy sutil con el color de marca, para que no se
+   un degradado radial muy sutil con la tinta de sello, para que no se
    sienta como una pantalla gris plana sin perder la base "sin
    glassmorfismo" del resto del sistema. */
 
@@ -52,7 +62,7 @@ body.app-bg {
     background:
         radial-gradient(
             60rem 32rem at 50% -10%,
-            rgba(14, 165, 233, 0.10),
+            rgba(184, 121, 47, 0.09),
             transparent 65%
         ),
         var(--surface-muted);
@@ -62,7 +72,7 @@ body.app-bg {
     background:
         radial-gradient(
             60rem 32rem at 50% -10%,
-            rgba(14, 165, 233, 0.14),
+            rgba(198, 144, 47, 0.14),
             transparent 65%
         ),
         var(--surface-muted);
@@ -184,6 +194,43 @@ body.app-bg {
     color: #71717a;
 }
 
+/* Familia `ocean-*` (texto/fondo/borde): se usa en ~60 vistas para
+   títulos, etiquetas y bordes de input, pero nunca tuvo variante dark: 
+   propia — a diferencia de gray-*/white arriba, se quedaba con el
+   mismo tono oscuro/claro fijo en ambos temas. En modo oscuro eso
+   volvía casi ilegibles los títulos (ocean-950 es casi negro) y
+   dejaba tarjetas bg-ocean-50 brillando blancas sobre fondo oscuro.
+   Mismo criterio que el resto del archivo: un solo lugar que arregla
+   todas las vistas, sin tocar cada Blade una por una. */
+
+.dark .text-ocean-950,
+.dark .text-ocean-900 {
+    color: #f3f5f4;
+}
+
+.dark .text-ocean-800 {
+    color: #c3d0ce;
+}
+
+.dark .text-ocean-700 {
+    color: #98adab;
+}
+
+.dark .text-ocean-600 {
+    color: #647d7d;
+}
+
+.dark .bg-ocean-50,
+.dark .bg-ocean-50\/50,
+.dark .bg-ocean-100 {
+    background-color: rgba(100, 125, 125, 0.14);
+}
+
+.dark .border-ocean-100,
+.dark .border-ocean-200 {
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
 .dark .bg-white\/50,
 .dark .bg-white\/40,
 .dark .bg-white\/60,
@@ -234,6 +281,20 @@ body.app-bg {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Badges de estado (estado-papeleta, papeleta-ticket)                 */
+/* ------------------------------------------------------------------ */
+
+/* La cápsula del "sello": bordes casi rectos (no píldora) y una leve
+   rotación, como si estuviera estampado a mano — el color (bg/text/
+   ring por estado) lo aporta PapeletaEstadoPresentacion::para() en
+   cada uso, ya con sus propias variantes dark:. */
+.badge-ocean {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold ring-1 ring-inset;
+    transform: rotate(-1.5deg);
+    letter-spacing: 0.01em;
+}
+
+/* ------------------------------------------------------------------ */
 /*  Botones                                                             */
 /* ------------------------------------------------------------------ */
 
@@ -244,11 +305,11 @@ body.app-bg {
 
 .btn-primary {
     @apply btn-glass text-white;
-    background: #d4652f;
+    background: #b8792f;
 }
 
 .btn-primary:hover {
-    background: #b94f22;
+    background: #9a6027;
 }
 
 .btn-primary:active {
@@ -256,11 +317,11 @@ body.app-bg {
 }
 
 .dark .btn-primary {
-    background: #e3824f;
+    background: #c6902f;
 }
 
 .dark .btn-primary:hover {
-    background: #d4652f;
+    background: #b8792f;
 }
 
 .btn-secondary {
@@ -291,6 +352,35 @@ body.app-bg {
     background: #be123c;
 }
 
+/* btn-danger-glass: alias histórico de btn-danger, todavía referenciado
+   por <x-danger-button>. Se mantiene como alias en vez de tocar el
+   componente para no arriesgar su uso en formularios de confirmación
+   (borrar cuenta, cancelar papeleta, etc.). */
+.btn-danger-glass {
+    @apply btn-danger;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Tarjetas de estadística (dashboard)                                 */
+/* ------------------------------------------------------------------ */
+
+.stat-card {
+    @apply glass-card flex items-center justify-between gap-3 p-4;
+}
+
+.stat-card-label {
+    @apply text-xs font-medium text-gray-500 dark:text-zinc-400;
+}
+
+.stat-card-value {
+    @apply text-2xl font-bold;
+    color: var(--ink-900);
+}
+
+.dark .stat-card-value {
+    color: #ffffff;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Inputs                                                              */
 /* ------------------------------------------------------------------ */
@@ -309,8 +399,8 @@ body.app-bg {
 }
 
 .input-glass:focus {
-    border-color: #0ea5e9;
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+    border-color: #b8792f;
+    box-shadow: 0 0 0 3px rgba(184, 121, 47, 0.15);
 }
 
 .dark .input-glass {
@@ -323,8 +413,8 @@ body.app-bg {
 }
 
 .dark .input-glass:focus {
-    border-color: #38bdf8;
-    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.18);
+    border-color: #c6902f;
+    box-shadow: 0 0 0 3px rgba(198, 144, 47, 0.18);
 }
 
 /* Scrollbar sutil */
@@ -443,7 +533,7 @@ body.app-bg {
 
 .avatar-mark,
 .sidebar-brand-mark {
-    background: linear-gradient(135deg, #5c86b8 0%, #2c5480 100%);
+    background: linear-gradient(135deg, #647d7d 0%, #324e52 100%);
 }
 
 /* ==================================================================== */
@@ -496,10 +586,10 @@ body.app-bg {
 }
 
 .sidebar-section-label {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
     color: rgba(226, 234, 245, 0.6);
     padding: 1rem 0.75rem 0.375rem;
 }
@@ -525,7 +615,7 @@ body.app-bg {
 .sidebar-link.is-active {
     background: var(--sidebar-bg-active);
     color: #ffffff;
-    box-shadow: inset 3px 0 0 0 #d4652f;
+    box-shadow: inset 3px 0 0 0 #b8792f;
 }
 
 .sidebar-link.is-active .sidebar-icon {
@@ -542,7 +632,7 @@ body.app-bg {
     margin-left: auto;
     font-size: 0.6875rem;
     font-weight: 700;
-    background: #d4652f;
+    background: #b8792f;
     color: #fff;
     border-radius: 9999px;
     padding: 0.0625rem 0.4375rem;
@@ -594,8 +684,8 @@ body.app-bg {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.375rem;
-    height: 2.375rem;
+    width: 2.75rem;
+    height: 2.75rem;
     border-radius: 9999px;
     color: #71717a;
     background: transparent;
@@ -615,6 +705,44 @@ body.app-bg {
 /* ==================================================================== */
 /*  Layout: Mobile shell (Trabajador / Vigilante)                       */
 /* ==================================================================== */
+
+/* Fondo de pantalla completa del shell del trabajador
+   (components/trabajador-layout.blade.php). Mismo tono neutro que el
+   resto de la app — sin gradiente propio — para que la única superficie
+   "de marca" siga siendo el header (.glass-nav) y no compita con él. */
+.bg-institucional {
+    background: var(--surface-muted);
+}
+
+/* Header del shell del trabajador: mismo degradado institucional que
+   .app-sidebar (Admin/Jefe/RRHH), para que ambas entradas al sistema
+   compartan una sola "superficie de marca". Los íconos dentro se pintan
+   en blanco vía .icon-chip + los modificadores !bg-white/10 ya puestos
+   en el markup. */
+.glass-nav {
+    background: var(--sidebar-bg);
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset;
+}
+
+/* Badge/botón circular de ícono: solo geometría, sin fondo/color
+   propios a propósito. Cada lugar que lo usa (header del trabajador,
+   stat-card por tono, logo de acceso, tarjetas de welcome) ya trae su
+   propio bg-*/text-* de Tailwind — si icon-chip impusiera un color acá,
+   esas variantes de color quedarían todas iguales, ya que este archivo
+   no usa @layer y por lo tanto cualquier regla de acá le gana a una
+   utilidad de Tailwind sin `!`. El único caso sin bg-*/text-* propio
+   (botón de cerrar del drawer móvil) hereda el color del contenedor,
+   que es justamente lo que se necesita ahí. */
+.icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
 
 .mobile-action-bar {
     background: color-mix(in srgb, var(--surface) 88%, transparent);
@@ -680,20 +808,15 @@ body.app-bg {
 }
 
 .bottom-nav-item.is-active {
-    color: #d4652f;
+    color: #b8792f;
 }
 
 .dark .bottom-nav-item.is-active {
-    color: #e3824f;
+    color: #c6902f;
 }
 
 .bottom-nav-item.is-active span:last-child {
-    color: #234368;
     font-weight: 700;
-}
-
-.dark .bottom-nav-item.is-active span:last-child {
-    color: #e4e4e7;
 }
 
 .bottom-nav-item .nav-badge {
@@ -702,7 +825,7 @@ body.app-bg {
     right: calc(50% - 0.9rem);
     font-size: 0.625rem;
     font-weight: 700;
-    background: #d4652f;
+    background: #b8792f;
     color: #fff;
     border-radius: 9999px;
     min-width: 1.05rem;

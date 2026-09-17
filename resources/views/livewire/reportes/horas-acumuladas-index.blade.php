@@ -12,10 +12,10 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <button type="button" onclick="window.print()" class="btn-ocean-outline text-xs">
+                <button type="button" onclick="window.print()" class="btn-secondary text-xs">
                     Imprimir
                 </button>
-                <button type="button" wire:click="exportar" wire:loading.attr="disabled" class="btn-ocean text-xs">
+                <button type="button" wire:click="exportar" wire:loading.attr="disabled" class="btn-primary text-xs">
                     <span wire:loading.remove wire:target="exportar">Exportar a Excel</span>
                     <span wire:loading wire:target="exportar">Generando...</span>
                 </button>

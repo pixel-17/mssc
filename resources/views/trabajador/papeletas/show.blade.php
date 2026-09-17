@@ -18,7 +18,7 @@
     }
 @endphp
 
-<x-trabajador-layout :titulo="'Papeleta #'.$papeleta->id" :volver-a="route('trabajador.papeletas.index')">
+<x-trabajador-layout titulo="Detalle de papeleta" :volver-a="route('trabajador.papeletas.index')">
     <div class="space-y-5">
         <x-flash-messages />
 
@@ -26,8 +26,8 @@
         <div class="glass-card">
             <div class="p-5 flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                    <p class="text-xs text-gray-500 dark:text-ocean-100/50">Motivo</p>
-                    <p class="font-bold text-lg text-ocean-950 dark:text-white leading-snug">{{ $papeleta->motivo->nombre }}</p>
+                    <p class="font-mono text-xs text-tinta-400 dark:text-tinta-300/60">N.° {{ str_pad($papeleta->id, 4, '0', STR_PAD_LEFT) }}</p>
+                    <p class="font-display font-semibold text-lg text-tinta-950 dark:text-white leading-snug mt-0.5">{{ $papeleta->motivo->nombre }}</p>
                 </div>
                 <x-estado-papeleta :estado="$papeleta->estado" class="shrink-0 whitespace-nowrap" />
             </div>
@@ -130,7 +130,7 @@
                                 (p) => { lat = p.coords.latitude; lng = p.coords.longitude; obteniendo = false; },
                                 (e) => { error = 'No se pudo obtener tu ubicación: ' + e.message; obteniendo = false; }
                             )"
-                            class="btn-ocean-outline w-full text-sm py-2.5">
+                            class="btn-secondary w-full text-sm py-2.5">
                         <span x-show="!obteniendo">📍 Usar mi ubicación actual</span>
                         <span x-show="obteniendo">Obteniendo ubicación...</span>
                     </button>
@@ -140,7 +140,7 @@
                     <input type="hidden" name="latitud" :value="lat">
                     <input type="hidden" name="longitud" :value="lng">
 
-                    <button type="submit" :disabled="!lat || !lng" class="btn-ocean w-full text-sm py-3 disabled:opacity-40 disabled:pointer-events-none">
+                    <button type="submit" :disabled="!lat || !lng" class="btn-primary w-full text-sm py-3 disabled:opacity-40 disabled:pointer-events-none">
                         Confirmar retorno
                     </button>
                 </form>
@@ -166,7 +166,7 @@
                     <input type="file" id="archivo-sustento" name="archivo" required class="hidden"
                            @change="archivo = $event.target.files[0]?.name ?? null">
 
-                    <button type="submit" class="btn-ocean w-full text-sm py-3">
+                    <button type="submit" class="btn-primary w-full text-sm py-3">
                         Presentar sustento
                     </button>
                 </form>
@@ -224,6 +224,9 @@
                             <span class="text-gray-600 dark:text-ocean-100/70">
                                 {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
                                 · límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
+                                @if ($sustento->archivo_path)
+                                    · <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="underline hover:text-ocean-600 dark:hover:text-ocean-300">ver archivo</a>
+                                @endif
                             </span>
                             <span class="badge-ocean shrink-0 {{ match($sustento->estado) {
                                 'aprobado' => 'bg-emerald-50 text-emerald-800 ring-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/30',

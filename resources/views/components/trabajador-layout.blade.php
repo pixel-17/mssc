@@ -22,7 +22,7 @@
         <title>{{ $titulo ? $titulo.' — ' : '' }}{{ config('app.name', 'MSSC') }}</title>
 
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|fraunces:500,600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -40,11 +40,11 @@
                             <a href="{{ $volverA }}" class="icon-chip !bg-white/10 !border-white/20 !text-white shrink-0" aria-label="Volver">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
                             </a>
-                            <p class="font-bold text-lg leading-tight text-white truncate">{{ $titulo }}</p>
+                            <p class="font-display font-semibold text-lg leading-tight text-white truncate">{{ $titulo }}</p>
                         @else
                             <div class="min-w-0">
                                 <p class="text-xs text-white/70">Hola,</p>
-                                <p class="font-bold text-lg leading-tight text-white truncate">{{ $titulo ?? explode(' ', auth()->user()->name)[0] }}</p>
+                                <p class="font-display font-semibold text-lg leading-tight text-white truncate">{{ $titulo ?? explode(' ', auth()->user()->name)[0] }}</p>
                             </div>
                         @endif
                     </div>

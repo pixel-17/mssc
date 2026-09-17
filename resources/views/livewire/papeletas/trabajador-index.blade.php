@@ -10,7 +10,7 @@
             </div>
             <p class="font-semibold text-ocean-950 dark:text-white">Todavía no tienes papeletas</p>
             <p class="text-sm text-gray-500 dark:text-ocean-100/60">Cuando pidas un permiso de salida, aparecerá aquí con su estado en vivo.</p>
-            <a href="{{ route('trabajador.papeletas.create') }}" class="btn-ocean inline-flex mt-2">
+            <a href="{{ route('trabajador.papeletas.create') }}" class="btn-primary inline-flex mt-2">
                 Crear tu primera papeleta
             </a>
         </div>

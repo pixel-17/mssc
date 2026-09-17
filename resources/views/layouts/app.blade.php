@@ -18,7 +18,7 @@
     <meta name="apple-mobile-web-app-title" content="Papeletas">
 
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|fraunces:500,600,700,800&display=swap" rel="stylesheet" />
 
     {{--
         Anti-parpadeo de tema: se aplica ANTES de pintar. La clave y los

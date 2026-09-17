@@ -47,7 +47,7 @@
                     Limpiar filtros
                 </button>
 
-                <button type="button" onclick="window.print()" class="btn-ocean-outline text-xs ml-auto">
+                <button type="button" onclick="window.print()" class="btn-secondary text-xs ml-auto">
                     Imprimir
                 </button>
             </div>

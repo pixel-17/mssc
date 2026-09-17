@@ -10,7 +10,7 @@
         <a href="{{ route('dashboard') }}" class="flex min-w-0 items-center gap-2.5">
             <x-application-mark class="h-9 w-9 shrink-0" />
             <span class="min-w-0">
-                <span class="block truncate text-sm font-extrabold tracking-tight text-white">MSSC</span>
+                <span class="block truncate text-sm font-display font-semibold tracking-tight text-white">MSSC</span>
                 <span class="-mt-0.5 block truncate text-[11px] font-medium text-ocean-200">{{ $rolLabel }}</span>
             </span>
         </a>

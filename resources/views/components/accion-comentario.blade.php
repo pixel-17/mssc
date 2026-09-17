@@ -56,7 +56,7 @@
         </div>
 
         <div x-show="open"
-             class="relative mb-6 w-full sm:max-w-md sm:mx-auto bg-white rounded-lg shadow-xl overflow-hidden"
+             class="relative mb-6 w-full sm:max-w-md sm:mx-auto bg-white dark:bg-zinc-900 dark:border dark:border-white/10 rounded-lg shadow-xl overflow-hidden"
              x-transition:enter="ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
              x-transition:leave="ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0">
 
@@ -68,7 +68,7 @@
                 <div>
                     <textarea name="{{ $field }}" x-model="texto" rows="4" required minlength="{{ (int) $minlength }}" maxlength="2000"
                               placeholder="{{ $placeholder }}"
-                              class="block w-full rounded-md border-gray-300 shadow-sm text-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                              class="block w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-ocean-500 focus:ring-ocean-500"></textarea>
                     <p class="mt-1 text-xs text-gray-400">
                         <span x-text="texto.trim().length"></span>/{{ (int) $minlength }} caracteres mínimos
                     </p>
@@ -76,7 +76,7 @@
 
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                     <button type="button" @click="open = false"
-                            class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            class="inline-flex justify-center items-center px-4 py-2 border border-gray-300 dark:border-white/15 rounded-md text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-transparent hover:bg-gray-50 dark:hover:bg-white/5">
                         Cancelar
                     </button>
                     <button type="submit" :disabled="texto.trim().length < minlength"

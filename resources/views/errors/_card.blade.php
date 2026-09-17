@@ -7,7 +7,7 @@
 
             <p class="text-sm text-gray-500 dark:text-ocean-100/60 mb-6">{{ $mensaje }}</p>
 
-            <a href="{{ url('/') }}" class="btn-ocean inline-flex items-center justify-center w-full text-sm py-3">
+            <a href="{{ url('/') }}" class="btn-primary inline-flex items-center justify-center w-full text-sm py-3">
                 Volver al inicio
             </a>
         </div>
