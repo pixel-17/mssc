@@ -96,6 +96,9 @@
                     <span>
                         Presentado {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
                         · Límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
+                        @if ($sustento->archivo_path)
+                            · <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="text-ocean-600 hover:text-ocean-700 underline">Ver archivo</a>
+                        @endif
                     </span>
                     <span class="text-xs px-2 py-0.5 rounded-full {{ $sustento->estado === 'aprobado' ? 'bg-green-100 text-green-800' : ($sustento->estado === 'observado' ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-600') }}">
                         {{ ucfirst($sustento->estado) }}

@@ -162,7 +162,15 @@ return [
     */
 
     'features' => [
-        Features::registration(),
+        // Sistema interno: los usuarios se dan de alta desde
+        // UsuarioAdminForm / UsuarioController (contraseña = DNI,
+        // con rol asignado desde el inicio) — nunca por auto-registro
+        // público. Registration queda deshabilitado a propósito;
+        // sin esto, cualquiera en internet podía crear una cuenta sin
+        // rol en /register (MustVerifyEmail tampoco está implementado
+        // en User, así que ni siquiera quedaba una verificación de
+        // por medio).
+        // Features::registration(),
         Features::resetPasswords(),
         // Features::emailVerification(),
         Features::updateProfileInformation(),

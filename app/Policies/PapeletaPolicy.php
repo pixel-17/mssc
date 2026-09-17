@@ -133,4 +133,16 @@ class PapeletaPolicy
     {
         return $user->esJefeInmediatoDe($sustento->papeleta->trabajador) || $user->hasRole('rrhh');
     }
+
+    /**
+     * Ver/descargar el archivo adjunto de un sustento: el propio
+     * trabajador dueño, o cualquiera que pueda darle visto bueno
+     * (jefe inmediato o RRHH) — mismo criterio que revisarSustento,
+     * más el dueño.
+     */
+    public function verSustento(User $user, \App\Models\Sustento $sustento): bool
+    {
+        return $sustento->papeleta->trabajador_id === $user->id
+            || $this->revisarSustento($user, $sustento);
+    }
 }

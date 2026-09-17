@@ -4,6 +4,7 @@ use App\Http\Controllers\Jefe\DecisionController as JefeDecisionController;
 use App\Http\Controllers\Jefe\PapeletaController as JefePapeletaController;
 use App\Http\Controllers\Jefe\SustentoController as JefeSustentoController;
 use App\Http\Controllers\Papeleta\EmergenciaController;
+use App\Http\Controllers\Papeleta\SustentoArchivoController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Rrhh\DecisionController as RrhhDecisionController;
 use App\Http\Controllers\Rrhh\PapeletaController as RrhhPapeletaController;
@@ -252,6 +253,14 @@ Route::middleware([
      */
     Route::post('/papeletas/{papeleta}/emergencia/aprobar', [EmergenciaController::class, 'aprobar'])->name('emergencia.aprobar');
     Route::post('/papeletas/{papeleta}/emergencia/observar', [EmergenciaController::class, 'observar'])->name('emergencia.observar');
+
+    /*
+     * Ver/descargar el archivo de un sustento (Paso 5/8): sin
+     * middleware de rol por el mismo motivo que emergencia.* — la
+     * autorización real vive en PapeletaPolicy::verSustento
+     * (trabajador dueño, jefe inmediato o RRHH).
+     */
+    Route::get('/papeletas/sustentos/{sustento}/archivo', [SustentoArchivoController::class, 'show'])->name('sustentos.archivo');
 
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
     Route::prefix('papeletas')->name('trabajador.papeletas.')->middleware('role:trabajador')->group(function () {

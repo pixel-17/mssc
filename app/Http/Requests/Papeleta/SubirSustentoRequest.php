@@ -22,7 +22,7 @@ class SubirSustentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'archivo' => ['required', 'file', 'max:10240'],
+            'archivo' => ['required', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
         ];
     }
 }
