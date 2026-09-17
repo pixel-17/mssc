@@ -81,15 +81,32 @@ class UnidadOrganica extends Model
      * o a cualquiera de sus propios descendientes, lo que crearía un
      * ciclo infinito en el árbol.
      *
+     * Trae TODAS las unidades en una sola query (son las oficinas del
+     * organigrama, no trabajadores — un volumen chico) y arma el árbol
+     * en memoria. La versión anterior recorría `hijos` recursivamente y
+     * hacía 1 query por cada nodo descendiente; con un organigrama de
+     * varios niveles esto se sentía en cada request que llama a esto
+     * (UsuarioController, CrearUsuarioRequest, CalendarioEquipoIndex).
+     *
      * @return array<int>
      */
     public function descendantIds(): array
     {
-        $ids = [];
+        $porPadre = static::query()
+            ->select('id', 'parent_id')
+            ->get()
+            ->groupBy('parent_id');
 
-        foreach ($this->hijos as $hijo) {
-            $ids[] = $hijo->id;
-            $ids = array_merge($ids, $hijo->descendantIds());
+        $ids = [];
+        $pendientes = [$this->id];
+
+        while ($pendientes) {
+            $idActual = array_pop($pendientes);
+
+            foreach ($porPadre->get($idActual, []) as $hijo) {
+                $ids[] = $hijo->id;
+                $pendientes[] = $hijo->id;
+            }
         }
 
         return $ids;

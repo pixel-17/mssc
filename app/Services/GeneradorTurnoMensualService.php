@@ -84,13 +84,21 @@ class GeneradorTurnoMensualService
      * ConfiguracionTurno. Un 'manual' explícito sí podría forzarlo
      * (ej. reincorporación), por eso el corte es solo para automático.
      */
-    public function generarMes(User $trabajador, Carbon $mesInicio, ?User $actor, string $origen = 'automatico'): void
-    {
+    public function generarMes(
+        User $trabajador,
+        Carbon $mesInicio,
+        ?User $actor,
+        string $origen = 'automatico',
+        ?ConfiguracionTurno $config = null,
+    ): void {
         if ($origen === 'automatico' && ! $trabajador->activo) {
             return;
         }
 
-        $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
+        // Permite pasar la ConfiguracionTurno ya cargada (ver
+        // generarProximoMesParaTodos, que ya la trae con ->with) en
+        // vez de volver a consultarla por cada trabajador del batch.
+        $config ??= ConfiguracionTurno::where('user_id', $trabajador->id)->first();
 
         if (! $config) {
             return;
@@ -99,16 +107,20 @@ class GeneradorTurnoMensualService
         $anio = $mesInicio->year;
         $mes = $mesInicio->month;
 
-        $cargaExistente = CargaTurnoMensual::where('user_id', $trabajador->id)
-            ->where('anio', $anio)
-            ->where('mes', $mes)
-            ->first();
-
         // El automático nunca pisa un mes ya resuelto (manual o
         // automático previo). Solo una carga 'manual' explícita puede
-        // regenerar un mes que ya tenía turnos.
-        if ($cargaExistente && $origen === 'automatico') {
-            return;
+        // regenerar un mes que ya tenía turnos. Queda como red de
+        // seguridad para llamadas directas; generarProximoMesParaTodos
+        // ya descarta antes estos casos con una sola query en batch.
+        if ($origen === 'automatico') {
+            $yaTieneCargaEsteMes = CargaTurnoMensual::where('user_id', $trabajador->id)
+                ->where('anio', $anio)
+                ->where('mes', $mes)
+                ->exists();
+
+            if ($yaTieneCargaEsteMes) {
+                return;
+            }
         }
 
         [$horaInicio, $horaFin] = $this->horasDe($config->turno);
@@ -174,12 +186,36 @@ class GeneradorTurnoMensualService
     {
         $proximoMes = now()->addMonthNoOverflow()->startOfMonth();
 
-        ConfiguracionTurno::with('usuario')
+        $configs = ConfiguracionTurno::with('usuario')
             ->whereHas('usuario', fn ($q) => $q->where('activo', true))
-            ->get()
+            ->get();
+
+        if ($configs->isEmpty()) {
+            return;
+        }
+
+        // Una sola consulta para saber qué trabajadores ya tienen el
+        // mes siguiente resuelto, en vez de una por trabajador dentro
+        // de generarMes: en régimen estable (la mayoría de meses ya
+        // generados) esto evita 2 queries redundantes por cada
+        // trabajador activo con turno rotativo.
+        $userIdsConCarga = CargaTurnoMensual::where('anio', $proximoMes->year)
+            ->where('mes', $proximoMes->month)
+            ->whereIn('user_id', $configs->pluck('user_id'))
+            ->pluck('user_id')
+            ->all();
+
+        $configs
+            ->reject(fn (ConfiguracionTurno $config) => in_array($config->user_id, $userIdsConCarga, true))
             ->each(function (ConfiguracionTurno $config) use ($proximoMes) {
                 if ($config->usuario) {
-                    $this->generarMes($config->usuario, $proximoMes->copy(), actor: null, origen: 'automatico');
+                    $this->generarMes(
+                        $config->usuario,
+                        $proximoMes->copy(),
+                        actor: null,
+                        origen: 'automatico',
+                        config: $config,
+                    );
                 }
             });
     }

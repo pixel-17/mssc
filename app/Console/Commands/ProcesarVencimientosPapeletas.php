@@ -62,8 +62,12 @@ class ProcesarVencimientosPapeletas extends Command
             ->whereNull('jefe_resuelto_at')
             ->where('created_at', '<=', now()->subMinutes($slaMinutos))
             ->whereNotNull('jefe_area_id')
+            // Varias papeletas suelen escalar al mismo Jefe de Área: cargar
+            // la relación evita un User::find() repetido por papeleta
+            // (Eloquent deduplica el fetch por FK al hacer eager load).
+            ->with('jefeArea')
             ->each(function (Papeleta $papeleta) {
-                if ($this->actorEstaEnHorario($papeleta->jefe_area_id)) {
+                if ($this->actorEstaEnHorario($papeleta->jefeArea)) {
                     DB::transaction(function () use ($papeleta) {
                         $papeleta->escalado_jefe_area_at = now();
                         $papeleta->save();
@@ -87,6 +91,16 @@ class ProcesarVencimientosPapeletas extends Command
     }
 
     /**
+     * Memoiza por user_id el resultado de "está en su turno vigente"
+     * dentro de esta misma corrida del comando (cada minuto): si el
+     * mismo Jefe de Área tiene varias papeletas escalando a la vez,
+     * evita repetir la consulta a `turnos` para el mismo usuario.
+     *
+     * @var array<int, bool>
+     */
+    private array $cacheEnHorario728 = [];
+
+    /**
      * "Está en su horario" se valida SIEMPRE contra el propio régimen del
      * actor — nunca contra el horario de otro actor:
      * - 276 (ordinario): horario único global (HorarioOrdinarioService),
@@ -95,15 +109,13 @@ class ProcesarVencimientosPapeletas extends Command
      *   (opcional/informativa; si no la cargaron, no se considera "en
      *   horario" para efectos de escalar).
      */
-    private function actorEstaEnHorario(int $userId): bool
+    private function actorEstaEnHorario(?User $actor): bool
     {
-        $actor = User::find($userId);
-
         if ($actor?->regimen === '728') {
             // Turno::vigenteParaUsuario maneja el cruce de medianoche del
             // turno Noche (22:00-06:00 del día siguiente); antes, entre
             // 00:00 y 06:00 esto nunca detectaba al actor como "en turno".
-            return Turno::vigenteParaUsuario($userId, now()) !== null;
+            return $this->cacheEnHorario728[$actor->id] ??= Turno::vigenteParaUsuario($actor->id, now()) !== null;
         }
 
         return $this->horarioOrdinario->estaDentroDeVentana();

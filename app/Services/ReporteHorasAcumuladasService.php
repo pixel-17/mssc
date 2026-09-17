@@ -101,10 +101,14 @@ class ReporteHorasAcumuladasService
      * "quién salió más / a quién le toca descuento": total de horas,
      * horas que sí descuentan (motivo->suma_descuento) y cantidad de
      * papeletas, ordenado de mayor a menor tiempo acumulado.
+     *
+     * Acepta el detalle ya calculado (ver HorasAcumuladasIndex::render,
+     * que necesita este resumen Y el diario en la misma vista) para no
+     * correr la misma query pesada dos veces; si no se pasa, la calcula.
      */
-    public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = []): Collection
+    public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
-        return $this->detalle($usuario, $mes, $filtros)
+        return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
             ->groupBy('trabajador_id')
             ->map(function (Collection $filas) {
                 $conDescuento = $filas->where('suma_descuento', true);
@@ -129,10 +133,13 @@ class ReporteHorasAcumuladasService
      * Agregado diario por trabajador (matriz día x trabajador), para
      * la vista "por día y por mes" que pidió el usuario: cuántos
      * minutos acumuló cada trabajador cada día del mes.
+     *
+     * Mismo criterio que resumenPorTrabajador: acepta el detalle ya
+     * calculado para evitar repetir la query.
      */
-    public function resumenDiarioPorTrabajador(User $usuario, string $mes, array $filtros = []): Collection
+    public function resumenDiarioPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
-        return $this->detalle($usuario, $mes, $filtros)
+        return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
             ->groupBy(fn (array $fila) => $fila['trabajador_id'].'|'.$fila['dia'])
             ->map(fn (Collection $filas) => [
                 'trabajador_id' => $filas->first()['trabajador_id'],

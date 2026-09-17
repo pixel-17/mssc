@@ -81,8 +81,8 @@ class HorasAcumuladasIndex extends Component
         /** @var User $user */
         $user = Auth::user();
 
-        $resumen = $service->resumenPorTrabajador($user, $this->mes, $this->filtros());
         $detalle = $service->detalle($user, $this->mes, $this->filtros());
+        $resumen = $service->resumenPorTrabajador($user, $this->mes, $this->filtros(), $detalle);
 
         $nombreArchivo = "horas-acumuladas-{$this->mes}.xlsx";
 
@@ -118,9 +118,11 @@ class HorasAcumuladasIndex extends Component
             $unidadesQuery->whereIn('id', $unidadIds);
         }
 
+        $detalle = $service->detalle($user, $this->mes, $this->filtros());
+
         return view('livewire.reportes.horas-acumuladas-index', [
-            'resumen' => $service->resumenPorTrabajador($user, $this->mes, $this->filtros()),
-            'detalleDiario' => $service->resumenDiarioPorTrabajador($user, $this->mes, $this->filtros()),
+            'resumen' => $service->resumenPorTrabajador($user, $this->mes, $this->filtros(), $detalle),
+            'detalleDiario' => $service->resumenDiarioPorTrabajador($user, $this->mes, $this->filtros(), $detalle),
             'trabajadoresDisponibles' => $trabajadoresDisponibles,
             'sedes' => $sedesQuery->orderBy('nombre')->get(),
             'unidadesOrganicas' => $unidadesQuery->orderBy('nombre')->get(),
