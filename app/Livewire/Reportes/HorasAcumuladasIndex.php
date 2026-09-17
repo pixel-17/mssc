@@ -3,6 +3,7 @@
 namespace App\Livewire\Reportes;
 
 use App\Exports\HorasAcumuladasExport;
+use App\Livewire\Concerns\RestringeAReportes;
 use App\Models\Motivo;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -29,6 +30,8 @@ use Maatwebsite\Excel\Facades\Excel;
 #[Layout('layouts.app')]
 class HorasAcumuladasIndex extends Component
 {
+    use RestringeAReportes;
+
     public string $mes;
 
     public ?int $trabajadorId = null;
@@ -47,12 +50,7 @@ class HorasAcumuladasIndex extends Component
 
     public function mount(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        if (! $user->hasRole('admin') && ! $user->hasRole('rrhh') && ! $user->can('crearTrabajadorPropio', User::class)) {
-            $this->redirectRoute('trabajador.papeletas.index');
-        }
+        $this->autorizarAccesoAReportes();
 
         $this->mes = now()->format('Y-m');
     }

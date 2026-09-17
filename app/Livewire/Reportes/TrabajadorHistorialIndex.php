@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Reportes;
 
+use App\Livewire\Concerns\RestringeAReportes;
 use App\Models\User;
 use App\Services\HistorialTrabajadorService;
 use Illuminate\Contracts\View\View;
@@ -18,18 +19,15 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class TrabajadorHistorialIndex extends Component
 {
+    use RestringeAReportes;
+
     public string $buscar = '';
 
     public ?int $trabajadorId = null;
 
     public function mount(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        if (! $user->hasRole('admin') && ! $user->hasRole('rrhh') && ! $user->can('crearTrabajadorPropio', User::class)) {
-            $this->redirectRoute('trabajador.papeletas.index');
-        }
+        $this->autorizarAccesoAReportes();
     }
 
     public function elegir(int $trabajadorId): void

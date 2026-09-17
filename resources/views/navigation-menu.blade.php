@@ -92,6 +92,24 @@
                     </div>
                 @endif
 
+                @if (auth()->user()->hasRole('admin') || auth()->user()->hasRole('rrhh') || auth()->user()->can('crearTrabajadorPropio', App\Models\User::class))
+                    <div class="space-y-1">
+                        <p class="sidebar-section-label" :class="$store.sidebar.collapsed && 'lg:hidden'">{{ __('Reportes') }}</p>
+
+                        <x-nav-link href="{{ route('reportes.horas-acumuladas') }}" :active="request()->routeIs('reportes.horas-acumuladas')" :icon="'<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.8\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M12 6v6h4.5M9 3.75H6.108c-1.135 0-2.098.845-2.192 1.976-.106 1.28-.106 2.559 0 3.838M9 3.75c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125M9 3.75v16.5m6-16.5v16.5m0-16.5h2.892c1.135 0 2.098.845 2.192 1.976a48.424 48.424 0 010 3.548M15 3.75c0-.621-.504-1.125-1.125-1.125h-3.75C9.504 2.625 9 3.129 9 3.75\\' /></svg>'">
+                            {{ __('Horas acumuladas') }}
+                        </x-nav-link>
+
+                        <x-nav-link href="{{ route('reportes.trabajador-historial') }}" :active="request()->routeIs('reportes.trabajador-historial')" :icon="'<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.8\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z\\' /></svg>'">
+                            {{ __('Historial por trabajador') }}
+                        </x-nav-link>
+
+                        <x-nav-link href="{{ route('reportes.sustentos') }}" :active="request()->routeIs('reportes.sustentos')" :icon="'<svg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke-width=\'1.8\' stroke=\'currentColor\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' d=\'M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-1.519-2.639L12 17.25m1.481-2.639a3 3 0 10-2.962 0M8.25 21h7.5a2.25 2.25 0 002.25-2.25V11.25a4.5 4.5 0 00-4.5-4.5H8.25a2.25 2.25 0 00-2.25 2.25v9.75A2.25 2.25 0 008.25 21z\\' /></svg>'">
+                            {{ __('Sustentos') }}
+                        </x-nav-link>
+                    </div>
+                @endif
+
                 @if (auth()->user()->hasRole('admin') || auth()->user()->can('puedeCrearAlgo', App\Models\User::class))
                     <div class="space-y-1">
                         <p class="sidebar-section-label" :class="$store.sidebar.collapsed && 'lg:hidden'">{{ __('Administración') }}</p>

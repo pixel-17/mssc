@@ -200,6 +200,23 @@ Route::middleware([
     Route::get('/dashboard', \App\Livewire\DashboardIndex::class)->name('dashboard');
 
     /*
+     * Reporte de cierre de mes (no confundir con el dashboard "en
+     * vivo" de arriba): admin/RRHH ven todo el personal, jefe solo su
+     * equipo — mismo criterio de acceso que el dashboard, aplicado en
+     * HorasAcumuladasIndex::mount(). Sin middleware de rol por el
+     * mismo motivo que 'jefe' en el resto del archivo: "jefe" no es un
+     * rol de Spatie.
+     */
+    Route::get('/reportes/horas-acumuladas', \App\Livewire\Reportes\HorasAcumuladasIndex::class)
+        ->name('reportes.horas-acumuladas');
+
+    Route::get('/reportes/trabajador', \App\Livewire\Reportes\TrabajadorHistorialIndex::class)
+        ->name('reportes.trabajador-historial');
+
+    Route::get('/reportes/sustentos', \App\Livewire\Reportes\SustentosIndex::class)
+        ->name('reportes.sustentos');
+
+    /*
      * Pantalla opcional de "actualiza tu contraseña" para quien entra
      * por primera vez con la contraseña = DNI que le asignó
      * CrearUsuarioAction/UsuarioAdminForm. A esta ruta la trae

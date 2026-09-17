@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Reportes;
 
+use App\Livewire\Concerns\RestringeAReportes;
 use App\Models\User;
 use App\Services\ReporteSustentosService;
 use Illuminate\Contracts\View\View;
@@ -19,7 +20,7 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class SustentosIndex extends Component
 {
-    use WithPagination;
+    use RestringeAReportes, WithPagination;
 
     public ?int $trabajadorId = null;
 
@@ -31,12 +32,7 @@ class SustentosIndex extends Component
 
     public function mount(): void
     {
-        /** @var User $user */
-        $user = Auth::user();
-
-        if (! $user->hasRole('admin') && ! $user->hasRole('rrhh') && ! $user->can('crearTrabajadorPropio', User::class)) {
-            $this->redirectRoute('trabajador.papeletas.index');
-        }
+        $this->autorizarAccesoAReportes();
     }
 
     public function updatingTrabajadorId(): void
