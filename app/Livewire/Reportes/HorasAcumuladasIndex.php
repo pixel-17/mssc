@@ -101,12 +101,29 @@ class HorasAcumuladasIndex extends Component
             ? User::role('trabajador')->orderBy('name')->get(['id', 'name', 'apellido'])
             : collect($user->trabajadoresComoJefeInmediato())->sortBy('name')->values();
 
+        // Admin/RRHH filtran contra toda la organización (catálogo
+        // completo). Un jefe solo debería poder filtrar por sedes y
+        // unidades que existen dentro de su propio equipo — mostrarle
+        // el catálogo completo filtraba datos de estructura
+        // organizacional (nombres de sedes/unidades) fuera de su
+        // alcance, aunque la query de papeletas ya estaba protegida.
+        $sedesQuery = Sede::where('activo', true);
+        $unidadesQuery = UnidadOrganica::where('activo', true);
+
+        if (! $esAdmin && ! $esRrhh) {
+            $sedeIds = $trabajadoresDisponibles->pluck('sede_id')->filter()->unique();
+            $unidadIds = $trabajadoresDisponibles->pluck('unidad_organica_id')->filter()->unique();
+
+            $sedesQuery->whereIn('id', $sedeIds);
+            $unidadesQuery->whereIn('id', $unidadIds);
+        }
+
         return view('livewire.reportes.horas-acumuladas-index', [
             'resumen' => $service->resumenPorTrabajador($user, $this->mes, $this->filtros()),
             'detalleDiario' => $service->resumenDiarioPorTrabajador($user, $this->mes, $this->filtros()),
             'trabajadoresDisponibles' => $trabajadoresDisponibles,
-            'sedes' => Sede::where('activo', true)->orderBy('nombre')->get(),
-            'unidadesOrganicas' => UnidadOrganica::where('activo', true)->orderBy('nombre')->get(),
+            'sedes' => $sedesQuery->orderBy('nombre')->get(),
+            'unidadesOrganicas' => $unidadesQuery->orderBy('nombre')->get(),
             'motivos' => Motivo::where('activo', true)->orderBy('nombre')->get(),
         ]);
     }
