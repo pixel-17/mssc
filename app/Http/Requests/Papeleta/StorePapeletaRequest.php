@@ -20,13 +20,23 @@ class StorePapeletaRequest extends FormRequest
 
     public function rules(): array
     {
+        // 276 (horario fijo): la papeleta y el retorno son del mismo día
+        // calendario, tope a medianoche de hoy.
+        // 728 (rotativo, 24/7): incluye turno NOCHE (22:00-06:00, cruza
+        // medianoche) — acotar a "hoy" rechazaría un retorno real y
+        // legítimo a la madrugada del día siguiente. Tope: fin del día
+        // siguiente, no de hoy.
+        $tope = $this->user()->regimen === '728'
+            ? now()->addDay()->endOfDay()
+            : now()->endOfDay();
+
         return [
             'motivo_id' => ['required', 'integer', 'exists:motivos,id'],
             'justificacion' => ['nullable', 'string', 'max:2000'],
             'adjunto_inicial_path' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
             // Solo informativa (no bloquea el flujo de retorno real):
             // el trabajador declara a qué hora piensa volver.
-            'hora_retorno_estimado' => ['nullable', 'date', 'after:now'],
+            'hora_retorno_estimado' => ['nullable', 'date', 'after:now', 'before:'.$tope->toDateTimeString()],
         ];
     }
 

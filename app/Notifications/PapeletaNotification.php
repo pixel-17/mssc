@@ -89,6 +89,8 @@ class PapeletaNotification extends Notification implements ShouldQueue
         $mensaje = (new WebPushMessage)
             ->title($this->titulo)
             ->body($this->mensaje)
+            ->icon('/icons/icon-192.png')
+            ->badge('/icons/badge-72.png')
             ->tag("papeleta-{$this->papeleta->id}")
             ->data([
                 'tipo' => $this->tipo,

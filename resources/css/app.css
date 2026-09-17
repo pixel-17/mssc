@@ -196,7 +196,7 @@ body.app-bg {
 
 /* Familia `ocean-*` (texto/fondo/borde): se usa en ~60 vistas para
    títulos, etiquetas y bordes de input, pero nunca tuvo variante dark: 
-   propia — a diferencia de gray-*/white arriba, se quedaba con el
+   propia — a diferencia de gray-* y white arriba, se quedaba con el
    mismo tono oscuro/claro fijo en ambos temas. En modo oscuro eso
    volvía casi ilegibles los títulos (ocean-950 es casi negro) y
    dejaba tarjetas bg-ocean-50 brillando blancas sobre fondo oscuro.
@@ -727,10 +727,10 @@ body.app-bg {
 /* Badge/botón circular de ícono: solo geometría, sin fondo/color
    propios a propósito. Cada lugar que lo usa (header del trabajador,
    stat-card por tono, logo de acceso, tarjetas de welcome) ya trae su
-   propio bg-*/text-* de Tailwind — si icon-chip impusiera un color acá,
+   propio bg-* / text-* de Tailwind — si icon-chip impusiera un color acá,
    esas variantes de color quedarían todas iguales, ya que este archivo
    no usa @layer y por lo tanto cualquier regla de acá le gana a una
-   utilidad de Tailwind sin `!`. El único caso sin bg-*/text-* propio
+   utilidad de Tailwind sin `!`. El único caso sin bg-* / text-* propio
    (botón de cerrar del drawer móvil) hereda el color del contenedor,
    que es justamente lo que se necesita ahí. */
 .icon-chip {

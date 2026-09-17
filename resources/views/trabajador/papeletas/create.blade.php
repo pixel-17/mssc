@@ -74,6 +74,8 @@
                                 id="hora_retorno_estimado"
                                 name="hora_retorno_estimado"
                                 value="{{ old('hora_retorno_estimado') }}"
+                                min="{{ now()->format('Y-m-d\TH:i') }}"
+                                max="{{ (auth()->user()->regimen === '728' ? now()->addDay() : now())->endOfDay()->format('Y-m-d\TH:i') }}"
                                 class="input-glass @error('hora_retorno_estimado') !border-alarma-500 @enderror"
                             >
                             <p class="text-xs text-gray-400 dark:text-tinta-100/40">Solo informativa, para que tu jefe sepa cuándo esperarte.</p>
