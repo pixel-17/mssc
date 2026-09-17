@@ -55,6 +55,12 @@ class CalendarioIndividualIndex extends Component
         $this->mes = $fecha->month;
     }
 
+    public function irAHoy(): void
+    {
+        $this->anio = now()->year;
+        $this->mes = now()->month;
+    }
+
     public function render(): View
     {
         $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
@@ -62,6 +68,7 @@ class CalendarioIndividualIndex extends Component
 
         $turnosPorDia = Turno::where('user_id', $this->trabajador->id)
             ->whereBetween('fecha', [$inicioMes->toDateString(), $finMes->toDateString()])
+            ->with('sede')
             ->get()
             ->keyBy(fn (Turno $turno) => $turno->fecha->day);
 
@@ -85,6 +92,7 @@ class CalendarioIndividualIndex extends Component
             'inicioMes' => $inicioMes,
             'semanas' => $semanas,
             'turnosPorDia' => $turnosPorDia,
+            'hoy' => now(),
         ]);
     }
 }

@@ -195,15 +195,35 @@ class User extends Authenticatable
     /**
      * Quién puede cargar/actualizar el ciclo de turno (mensual) de un
      * trabajador: Admin (rol Spatie), su Jefe Inmediato (automático o
-     * adicional, ver esJefeInmediatoDe) o su Jefe de Área explícito.
-     * "jefe" no es un rol de Spatie (ver RoleSeeder) — por eso esto se
-     * resuelve por relación, no por hasRole.
+     * adicional, ver esJefeInmediatoDe), su Jefe de Área explícito, o el
+     * propio trabajador si es jefe de alguien (ver esJefeDeAlguien) —
+     * un jefe no tiene, dentro del sistema, un jefe inmediato/de área
+     * propio que le cargue el horario. "jefe" no es un rol de Spatie
+     * (ver RoleSeeder) — por eso esto se resuelve por relación, no por
+     * hasRole.
      */
     public function puedeGestionarTurnoDe(User $trabajador): bool
     {
         return $this->hasRole('admin')
+            || ($this->id === $trabajador->id && $this->esJefeDeAlguien())
             || $this->esJefeInmediatoDe($trabajador)
             || $trabajador->jefe_area_id === $this->id;
+    }
+
+    /**
+     * ¿Este usuario es jefe de alguien, sea de forma automática (encabeza
+     * una unidad orgánica o tiene trabajadores con jefe_inmediato_id
+     * apuntando a él) o adicional (asignado a mano)? Mismo criterio que
+     * UserPolicy::crearTrabajadorPropio() — se usa aquí para habilitar la
+     * auto-gestión del propio turno: un jefe no tiene, por definición, un
+     * jefe inmediato/de área propio dentro del sistema que le cargue el
+     * horario, así que debe poder hacerlo él mismo.
+     */
+    public function esJefeDeAlguien(): bool
+    {
+        return $this->unidadesQueEncabeza()->exists()
+            || User::where('jefe_inmediato_id', $this->id)->exists()
+            || $this->trabajadoresAdicionales()->exists();
     }
 
     public function papeletas(): \Illuminate\Database\Eloquent\Relations\HasMany

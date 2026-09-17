@@ -52,6 +52,12 @@ class CalendarioEquipoIndex extends Component
         $this->mes = $fecha->month;
     }
 
+    public function irAHoy(): void
+    {
+        $this->anio = now()->year;
+        $this->mes = now()->month;
+    }
+
     /**
      * IDs de todas las unidades (encabezadas + sub-unidades) donde el
      * usuario autenticado es Jefe de Área. Vacío si solo es Jefe
@@ -76,8 +82,12 @@ class CalendarioEquipoIndex extends Component
         $esJefeDeArea = $unidadIds->isNotEmpty();
 
         $trabajadores = $esJefeDeArea
-            ? User::whereIn('unidad_organica_id', $unidadIds)->where('id', '!=', $user->id)->orderBy('name')->get()
-            : $user->trabajadoresComoJefeInmediato()->sortBy('name')->values();
+            ? User::whereIn('unidad_organica_id', $unidadIds)->orderBy('name')->get()
+            : $user->trabajadoresComoJefeInmediato()
+                ->push($user)
+                ->unique('id')
+                ->sortBy('name')
+                ->values();
 
         $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
@@ -85,6 +95,7 @@ class CalendarioEquipoIndex extends Component
 
         $turnosPorUsuario = Turno::whereIn('user_id', $trabajadores->pluck('id'))
             ->whereBetween('fecha', [$inicioMes->toDateString(), $finMes->toDateString()])
+            ->with('sede')
             ->get()
             ->groupBy('user_id')
             ->map(fn ($turnos) => $turnos->keyBy(fn (Turno $turno) => $turno->fecha->day));
@@ -96,6 +107,7 @@ class CalendarioEquipoIndex extends Component
             'inicioMes' => $inicioMes,
             'turnosPorUsuario' => $turnosPorUsuario,
             'modoEstricto728Activo' => Configuracion::valorDe('MODO_ESTRICTO_728', '0') === '1',
+            'hoy' => now(),
         ]);
     }
 }
