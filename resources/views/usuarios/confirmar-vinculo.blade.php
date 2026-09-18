@@ -7,8 +7,6 @@
 
     <div class="py-12">
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <x-flash-messages />
-
             <div class="glass-card p-6 space-y-4">
                 <div>
                     <p class="text-sm text-gray-500">Trabajador encontrado</p>
@@ -17,14 +15,14 @@
                 </div>
 
                 @if (! empty($jefesActuales))
-                    <div class="rounded-md bg-yellow-50 border border-yellow-200 p-4">
-                        <p class="text-sm font-medium text-yellow-800">Este trabajador ya tiene jefe(s) inmediato(s):</p>
-                        <ul class="mt-2 text-sm text-yellow-800 list-disc list-inside">
+                    <div class="rounded-md bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 p-4">
+                        <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Este trabajador ya tiene jefe(s) inmediato(s):</p>
+                        <ul class="mt-2 text-sm text-yellow-800 dark:text-yellow-200 list-disc list-inside">
                             @foreach ($jefesActuales as $nombre)
                                 <li>{{ $nombre }}</li>
                             @endforeach
                         </ul>
-                        <p class="mt-2 text-sm text-yellow-800">Puedes añadirte como jefe inmediato adicional. Ambos podrán decidir sobre sus papeletas.</p>
+                        <p class="mt-2 text-sm text-yellow-800 dark:text-yellow-200">Puedes añadirte como jefe inmediato adicional. Ambos podrán decidir sobre sus papeletas.</p>
                     </div>
                 @else
                     <p class="text-sm text-gray-500">Este trabajador todavía no tiene jefe inmediato asignado.</p>

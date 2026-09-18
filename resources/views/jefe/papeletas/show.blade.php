@@ -29,17 +29,18 @@
 
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <x-flash-messages />
-
             @include('papeletas._info', ['papeleta' => $papeleta])
 
             @if ($puedeDecidir)
                 <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisión</h3>
                     <div class="flex items-center gap-3 flex-wrap">
-                        <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}">
+                        <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}" x-data="{ enviando: false }" @submit="enviando = true">
                             @csrf
-                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">Aprobar</button>
+                            <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
+                                <span x-show="! enviando">Aprobar</span>
+                                <span x-show="enviando" x-cloak>Aprobando…</span>
+                            </button>
                         </form>
                         <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" />
                         <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
@@ -87,9 +88,9 @@
             @endif
 
             @if ($sustentoPresentado)
-                <div class="glass-card p-6" x-data="{ resultado: 'aprobado' }">
+                <div class="glass-card p-6" x-data="{ resultado: 'aprobado', enviando: false }">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Revisar sustento presentado</h3>
-                    <form method="POST" action="{{ route('jefe.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3">
+                    <form method="POST" action="{{ route('jefe.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3" @submit="enviando = true">
                         @csrf
                         <div class="flex items-center gap-4 text-sm">
                             <label class="inline-flex items-center gap-1">
@@ -101,9 +102,10 @@
                         </div>
                         <textarea name="comentario" rows="2" maxlength="2000" x-show="resultado === 'observado'"
                                   placeholder="Motivo de la observación (mínimo 5 caracteres)..."
-                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500"></textarea>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-ocean-600 hover:bg-ocean-700">
-                            Confirmar revisión
+                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
+                        <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-ocean-600 hover:bg-ocean-700">
+                            <span x-show="! enviando">Confirmar revisión</span>
+                            <span x-show="enviando" x-cloak>Enviando…</span>
                         </button>
                     </form>
                 </div>

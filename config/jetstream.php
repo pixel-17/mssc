@@ -62,7 +62,9 @@ return [
         // Features::profilePhotos(),
         // Features::api(),
         // Features::teams(['invitations' => true]),
-        Features::accountDeletion(),
+        // Features::accountDeletion(), // Deshabilitado a propósito: el
+        // usuario no debe poder eliminar su propia cuenta. La baja de
+        // usuarios, si hace falta, se gestiona desde UsuarioAdminForm.
     ],
 
     /*

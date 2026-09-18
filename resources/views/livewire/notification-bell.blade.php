@@ -2,8 +2,10 @@
     <button
         @click="open = ! open"
         type="button"
-        class="relative inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 focus:outline-none transition"
+        class="relative inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 focus:outline-none transition"
         aria-label="{{ __('Notificaciones') }}"
+        aria-haspopup="true"
+        :aria-expanded="open"
     >
         <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
@@ -20,7 +22,7 @@
         x-show="open"
         @click.outside="open = false"
         x-transition
-        class="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5"
+        class="absolute right-0 z-50 mt-2 w-80 origin-top-right rounded-md bg-white dark:bg-zinc-900 shadow-lg ring-1 ring-black/5 dark:ring-white/10"
         style="display: none;"
     >
         <div class="flex items-center justify-between px-4 py-2 border-b border-gray-100">
@@ -30,24 +32,43 @@
                 <button
                     type="button"
                     wire:click="marcarTodasComoLeidas"
-                    class="text-xs text-amber-600 hover:text-amber-700"
+                    class="text-xs text-amber-600 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
                 >
                     {{ __('Marcar todas como leídas') }}
                 </button>
             @endif
         </div>
 
-        <div class="max-h-96 overflow-y-auto divide-y divide-gray-100">
+        <div class="max-h-96 overflow-y-auto divide-y divide-gray-100 dark:divide-white/10">
             @forelse ($notificaciones as $notificacion)
-                <a
-                    href="{{ $notificacion->data['url'] ?? '#' }}"
-                    wire:click="marcarComoLeida('{{ $notificacion->id }}')"
-                    class="block px-4 py-3 text-sm hover:bg-gray-50 {{ $notificacion->read_at ? 'bg-white' : 'bg-amber-50' }}"
-                >
-                    <p class="font-medium text-gray-800">{{ $notificacion->data['titulo'] ?? '' }}</p>
-                    <p class="text-gray-500 mt-0.5">{{ $notificacion->data['mensaje'] ?? '' }}</p>
-                    <p class="text-gray-400 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
-                </a>
+                @php
+                    $url = $notificacion->data['url'] ?? null;
+                    $fondo = $notificacion->read_at ? 'bg-white dark:bg-transparent' : 'bg-amber-50 dark:bg-amber-500/10';
+                    $clases = "block w-full text-left px-4 py-3 text-sm hover:bg-gray-50 dark:hover:bg-white/5 {$fondo}";
+                @endphp
+
+                @if ($url)
+                    <a
+                        href="{{ $url }}"
+                        wire:click="marcarComoLeida('{{ $notificacion->id }}')"
+                        class="{{ $clases }}"
+                    >
+                        <p class="font-medium text-gray-800">{{ $notificacion->data['titulo'] ?? '' }}</p>
+                        <p class="text-gray-500 mt-0.5">{{ $notificacion->data['mensaje'] ?? '' }}</p>
+                        <p class="text-gray-400 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
+                    </a>
+                @else
+                    {{-- Sin url: no es un enlace navegable, solo se marca como leída al tocarla. --}}
+                    <button
+                        type="button"
+                        wire:click="marcarComoLeida('{{ $notificacion->id }}')"
+                        class="{{ $clases }}"
+                    >
+                        <p class="font-medium text-gray-800">{{ $notificacion->data['titulo'] ?? '' }}</p>
+                        <p class="text-gray-500 mt-0.5">{{ $notificacion->data['mensaje'] ?? '' }}</p>
+                        <p class="text-gray-400 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
+                    </button>
+                @endif
             @empty
                 <p class="px-4 py-6 text-sm text-gray-400 text-center">{{ __('Sin notificaciones por ahora.') }}</p>
             @endforelse

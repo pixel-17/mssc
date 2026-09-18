@@ -52,11 +52,11 @@
             </div>
         @endif
 
-        <!-- Name -->
+        <!-- Name (solo lectura: lo gestiona el administrador) -->
         <div class="col-span-6 sm:col-span-4">
             <x-label for="name" value="{{ __('Name') }}" />
-            <x-input id="name" type="text" class="mt-1 block w-full" wire:model="state.name" required autocomplete="name" />
-            <x-input-error for="name" class="mt-2" />
+            <x-input id="name" type="text" class="mt-1 block w-full bg-gray-100 dark:bg-gray-800 cursor-not-allowed" wire:model="state.name" disabled readonly autocomplete="name" />
+            <p class="text-sm text-gray-500 mt-1">Si necesitas corregir tu nombre, pídeselo a un administrador.</p>
         </div>
 
         <!-- Email -->

@@ -7,8 +7,6 @@
 
     <div class="py-12">
         <div class="max-w-6xl mx-auto sm:px-6 lg:px-8 space-y-8">
-            <x-flash-messages />
-
             {{-- Por decidir --}}
             <div class="glass-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
@@ -17,8 +15,8 @@
                 @if ($porDecidir->isEmpty())
                     <p class="p-4 text-sm text-gray-500">No tienes papeletas pendientes de decisión.</p>
                 @else
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-ocean-50/70">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                        <thead class="bg-ocean-50/70 dark:bg-white/5">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
@@ -26,7 +24,7 @@
                                 <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-white/10">
                             @foreach ($porDecidir as $papeleta)
                                 <tr>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $papeleta->trabajador->nombre_completo }}</td>
@@ -35,9 +33,12 @@
                                     <td class="px-4 py-3">
                                         <div class="flex items-center justify-end gap-2 flex-wrap">
                                             <a href="{{ route('jefe.papeletas.show', $papeleta) }}" class="text-xs text-ocean-600 hover:text-ocean-900 font-medium mr-2">Ver</a>
-                                            <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}">
+                                            <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}" x-data="{{ enviando: false }}" @submit="enviando = true">
                                                 @csrf
-                                                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">Aprobar</button>
+                                                <button type="submit" :disabled="enviando" :class="{{ 'opacity-50 cursor-not-allowed': enviando }}" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
+                                                    <span x-show="! enviando">Aprobar</span>
+                                                    <span x-show="enviando" x-cloak>Aprobando…</span>
+                                                </button>
                                             </form>
                                             <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" />
                                             <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
@@ -56,15 +57,15 @@
                     <div class="px-4 py-3 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-700">Observadas por RRHH — requieren tu reconocimiento ({{ $observacionesRrhh->count() }})</h3>
                     </div>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-ocean-50/70">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                        <thead class="bg-ocean-50/70 dark:bg-white/5">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
                                 <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-white/10">
                             @foreach ($observacionesRrhh as $papeleta)
                                 <tr>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $papeleta->trabajador->nombre_completo }}</td>
@@ -88,8 +89,8 @@
                     <div class="px-4 py-3 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-700">En curso ({{ $enCurso->count() }})</h3>
                     </div>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-ocean-50/70">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                        <thead class="bg-ocean-50/70 dark:bg-white/5">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
@@ -97,7 +98,7 @@
                                 <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-white/10">
                             @foreach ($enCurso as $papeleta)
                                 <tr>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $papeleta->trabajador->nombre_completo }}</td>
@@ -119,15 +120,15 @@
                     <div class="px-4 py-3 border-b border-gray-100">
                         <h3 class="text-sm font-semibold text-gray-700">Sustentos por revisar ({{ $sustentosPorRevisar->count() }})</h3>
                     </div>
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-ocean-50/70">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                        <thead class="bg-ocean-50/70 dark:bg-white/5">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Trabajador</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Motivo</th>
                                 <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-white/10">
                             @foreach ($sustentosPorRevisar as $papeleta)
                                 <tr>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $papeleta->trabajador->nombre_completo }}</td>

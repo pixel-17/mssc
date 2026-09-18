@@ -167,7 +167,7 @@
             $navItems = [
                 ['label' => 'Papeletas', 'route' => route('trabajador.papeletas.index'), 'active' => request()->routeIs('trabajador.papeletas.index', 'trabajador.papeletas.show'), 'icon' => 'document'],
                 ['label' => 'Nueva', 'route' => route('trabajador.papeletas.create'), 'active' => request()->routeIs('trabajador.papeletas.create'), 'icon' => 'plus-circle'],
-                ['label' => 'Calendario', 'route' => route('calendario.individual'), 'active' => request()->routeIs('calendario.individual'), 'icon' => 'calendar'],
+                ['label' => 'Calendario', 'route' => route('turnos.calendario.individual'), 'active' => request()->routeIs('turnos.calendario.individual'), 'icon' => 'calendar'],
                 ['label' => 'Perfil', 'route' => route('profile.show'), 'active' => request()->routeIs('profile.show'), 'icon' => 'user-circle'],
             ];
         @endphp

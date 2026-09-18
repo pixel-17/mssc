@@ -7,8 +7,6 @@
 
     <div class="py-12">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <x-flash-messages />
-
             <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="text-sm text-gray-500">
                     @if ($esJefeDeArea)
@@ -30,8 +28,8 @@
                 @if ($usuarios->isEmpty())
                     <p class="p-4 text-sm text-gray-500">Todavía no tienes usuarios a cargo.</p>
                 @else
-                    <table class="min-w-full divide-y divide-gray-200">
-                        <thead class="bg-ocean-50/70">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                        <thead class="bg-ocean-50/70 dark:bg-white/5">
                             <tr>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">DNI</th>
@@ -39,7 +37,7 @@
                                 <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unidad</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200">
+                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-transparent dark:divide-white/10">
                             @foreach ($usuarios as $usuario)
                                 <tr>
                                     <td class="px-4 py-3 text-sm text-gray-900">{{ $usuario->nombre_completo }}</td>

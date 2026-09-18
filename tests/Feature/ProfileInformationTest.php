@@ -22,7 +22,7 @@ class ProfileInformationTest extends TestCase
         $this->assertEquals($user->email, $component->state['email']);
     }
 
-    public function test_profile_information_can_be_updated(): void
+    public function test_email_can_be_updated(): void
     {
         $this->actingAs($user = User::factory()->create());
 
@@ -30,7 +30,17 @@ class ProfileInformationTest extends TestCase
             ->set('state', ['name' => 'Test Name', 'email' => 'test@example.com'])
             ->call('updateProfileInformation');
 
-        $this->assertEquals('Test Name', $user->fresh()->name);
         $this->assertEquals('test@example.com', $user->fresh()->email);
+    }
+
+    public function test_name_cannot_be_updated(): void
+    {
+        $this->actingAs($user = User::factory()->create(['name' => 'Nombre Original']));
+
+        Livewire::test(UpdateProfileInformationForm::class)
+            ->set('state', ['name' => 'Nombre Cambiado', 'email' => $user->email])
+            ->call('updateProfileInformation');
+
+        $this->assertEquals('Nombre Original', $user->fresh()->name);
     }
 }

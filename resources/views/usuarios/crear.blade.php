@@ -7,7 +7,6 @@
 
     <div class="py-12">
         <div class="max-w-2xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            <x-flash-messages />
             <x-validation-errors class="mb-4" />
 
             <div class="glass-card p-6">
@@ -19,7 +18,7 @@
                         <div>
                             <x-label for="tipo" value="¿Qué vas a crear?" />
                             <select id="tipo" name="tipo" x-model="tipo" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
                                 <option value="trabajador">Trabajador</option>
                                 <option value="jefe_inmediato">Jefe Inmediato</option>
                             </select>
@@ -31,7 +30,7 @@
                         <div>
                             <x-label for="unidad_organica_id" value="Unidad orgánica" />
                             <select id="unidad_organica_id" name="unidad_organica_id" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
                                 <option value="">Selecciona una unidad de tu área</option>
                                 @foreach ($unidades as $unidad)
                                     <option value="{{ $unidad->id }}" @selected(old('unidad_organica_id') == $unidad->id)>{{ $unidad->nombre }}</option>
@@ -67,7 +66,7 @@
                         <div>
                             <x-label for="regimen" value="Régimen" />
                             <select id="regimen" name="regimen" required
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
                                 <option value="">Selecciona</option>
                                 <option value="276" @selected(old('regimen', $regimenCreador) === '276')>276 (día)</option>
                                 <option value="728" @selected(old('regimen', $regimenCreador) === '728')>728 (rotativo)</option>
@@ -93,7 +92,7 @@
                         <div>
                             <x-label for="sede_id" value="Sede (opcional)" />
                             <select id="sede_id" name="sede_id"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm">
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
                                 <option value="">— sin sede —</option>
                                 @foreach ($sedes as $sede)
                                     <option value="{{ $sede->id }}" @selected(old('sede_id') == $sede->id)>{{ $sede->nombre }}</option>
