@@ -14,6 +14,16 @@
         <div class="glass-card p-4 print:hidden">
             <div class="flex flex-wrap gap-4 items-end">
                 <div class="max-w-xs">
+                    <label class="block text-sm font-medium mb-1">Buscar por nombre o DNI</label>
+                    <input
+                        type="search"
+                        wire:model.live.debounce.400ms="buscar"
+                        placeholder="Nombre, apellido o DNI..."
+                        class="w-full rounded-md border-gray-300 dark:bg-gray-800"
+                    >
+                </div>
+
+                <div class="max-w-xs">
                     <label class="block text-sm font-medium mb-1">Trabajador</label>
                     <select wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todos</option>
@@ -74,7 +84,10 @@
                     <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
                         @foreach ($sustentos as $sustento)
                             <tr wire:key="sustento-{{ $sustento->id }}">
-                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $sustento->papeleta->trabajador->nombre_completo }}</td>
+                                <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
+                                    {{ $sustento->papeleta->trabajador->nombre_completo }}
+                                    <span class="block text-xs text-gray-400">DNI {{ $sustento->papeleta->trabajador->dni ?? '—' }}</span>
+                                </td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->papeleta->trabajador->sede?->nombre ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->papeleta->dia_operativo->format('d/m/Y') }} · {{ $sustento->papeleta->motivo->nombre }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->fecha_limite?->format('d/m/Y H:i') }}</td>

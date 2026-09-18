@@ -31,6 +31,16 @@
                 </div>
 
                 <div class="max-w-xs">
+                    <label class="block text-sm font-medium mb-1">Buscar por nombre o DNI</label>
+                    <input
+                        type="search"
+                        wire:model.live.debounce.400ms="buscar"
+                        placeholder="Nombre, apellido o DNI..."
+                        class="w-full rounded-md border-gray-300 dark:bg-gray-800"
+                    >
+                </div>
+
+                <div class="max-w-xs">
                     <label class="block text-sm font-medium mb-1">Trabajador</label>
                     <select wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todos</option>
@@ -79,6 +89,16 @@
                     </select>
                 </div>
 
+                <div>
+                    <label class="block text-sm font-medium mb-1">Mostrar en ranking</label>
+                    <select wire:model.live="top" class="rounded-md border-gray-300 dark:bg-gray-800">
+                        <option value="0">Todos</option>
+                        <option value="5">Top 5</option>
+                        <option value="10">Top 10</option>
+                        <option value="20">Top 20</option>
+                    </select>
+                </div>
+
                 <div class="flex items-center gap-2 pb-2">
                     <input type="checkbox" wire:model.live="soloConDescuento" id="soloConDescuento" class="rounded border-gray-300">
                     <label for="soloConDescuento" class="text-sm">Solo motivos con descuento</label>
@@ -87,6 +107,41 @@
                 <button type="button" wire:click="limpiarFiltros" class="text-xs text-ocean-600 hover:text-ocean-900 underline pb-2">
                     Limpiar filtros
                 </button>
+            </div>
+        </div>
+
+        {{-- ============================= RESUMEN EN TARJETAS ============================= --}}
+        @php
+            $fmtHoras = fn (int $min) => intdiv($min, 60).'h '.str_pad($min % 60, 2, '0', STR_PAD_LEFT).'m';
+            $mayor = $resumen->first();
+        @endphp
+        <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="glass-card p-4">
+                <p class="text-xs uppercase text-gray-500">Trabajadores</p>
+                <p class="text-2xl font-bold text-ocean-950 dark:text-white">{{ $resumen->count() }}</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="text-xs uppercase text-gray-500">Papeletas cerradas</p>
+                <p class="text-2xl font-bold text-ocean-950 dark:text-white">{{ $resumen->sum('papeletas') }}</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="text-xs uppercase text-gray-500">Horas fuera de sede</p>
+                <p class="text-2xl font-bold text-ocean-950 dark:text-white">{{ $fmtHoras((int) $resumen->sum('minutos_totales')) }}</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="text-xs uppercase text-gray-500">Horas con descuento</p>
+                <p class="text-2xl font-bold {{ $resumen->sum('minutos_con_descuento') > 0 ? 'text-red-600' : 'text-gray-400' }}">
+                    {{ $fmtHoras((int) $resumen->sum('minutos_con_descuento')) }}
+                </p>
+            </div>
+            <div class="glass-card p-4 col-span-2 lg:col-span-1">
+                <p class="text-xs uppercase text-gray-500">Salió más</p>
+                @if ($mayor)
+                    <p class="text-sm font-bold text-ocean-950 dark:text-white truncate" title="{{ $mayor['trabajador'] }}">{{ $mayor['trabajador'] }}</p>
+                    <p class="text-xs text-gray-500">{{ $fmtHoras((int) $mayor['minutos_totales']) }}</p>
+                @else
+                    <p class="text-sm text-gray-400">—</p>
+                @endif
             </div>
         </div>
 
@@ -113,7 +168,7 @@
             <div class="glass-card overflow-x-auto">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80">
-                        Ranking del mes por trabajador ({{ $resumen->count() }})
+                        {{ $top > 0 ? "Top {$top} del mes por trabajador" : 'Ranking del mes por trabajador' }} ({{ $top > 0 ? min($top, $resumen->count()) : $resumen->count() }} de {{ $resumen->count() }})
                     </h3>
                 </div>
 
@@ -130,15 +185,19 @@
                                 <th class="px-4 py-2 text-right">Papeletas</th>
                                 <th class="px-4 py-2 text-right">Horas totales</th>
                                 <th class="px-4 py-2 text-right">Horas con descuento</th>
+                                <th class="px-4 py-2 print:hidden">Adjuntos</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
-                            @foreach ($resumen as $fila)
+                            @foreach ($top > 0 ? $resumen->take($top) : $resumen as $fila)
                                 <tr wire:key="resumen-{{ $fila['trabajador_id'] }}">
                                     <td class="px-4 py-3 text-sm text-gray-500 font-semibold">
                                         {{ ['🥇', '🥈', '🥉'][$loop->index] ?? $loop->iteration }}
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">{{ $fila['trabajador'] }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">
+                                        {{ $fila['trabajador'] }}
+                                        <span class="block text-xs text-gray-400 font-normal">DNI {{ $fila['dni'] ?? '—' }}</span>
+                                    </td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['sede'] ?? '—' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['unidad_organica'] ?? '—' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 text-right">{{ $fila['papeletas'] }}</td>
@@ -148,6 +207,11 @@
                                     <td class="px-4 py-3 text-sm text-right {{ $fila['minutos_con_descuento'] > 0 ? 'text-red-600 font-semibold' : 'text-gray-400' }}">
                                         {{ intdiv($fila['minutos_con_descuento'], 60) }}h {{ str_pad($fila['minutos_con_descuento'] % 60, 2, '0', STR_PAD_LEFT) }}m
                                         <span class="text-xs text-gray-400">({{ $fila['papeletas_con_descuento'] }})</span>
+                                    </td>
+                                    <td class="px-4 py-3 text-sm print:hidden">
+                                        <a href="{{ route('reportes.sustentos', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-ocean-600 hover:text-ocean-900 underline">Ver adjuntos</a>
+                                        <span class="text-gray-300 mx-1">·</span>
+                                        <a href="{{ route('reportes.trabajador-historial') }}" class="text-ocean-600 hover:text-ocean-900 underline" title="Buscar su ficha completa">Ficha</a>
                                     </td>
                                 </tr>
                             @endforeach

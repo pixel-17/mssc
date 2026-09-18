@@ -36,6 +36,12 @@ class HorasAcumuladasIndex extends Component
 
     public ?int $trabajadorId = null;
 
+    /** Búsqueda libre por nombre, apellido o DNI. */
+    public string $buscar = '';
+
+    /** Cuántos mostrar en el ranking: 0 = todos (solo afecta la pantalla, no el Excel). */
+    public int $top = 0;
+
     public ?int $sedeId = null;
 
     public ?int $unidadOrganicaId = null;
@@ -59,6 +65,7 @@ class HorasAcumuladasIndex extends Component
     {
         return [
             'trabajador_id' => $this->trabajadorId,
+            'buscar' => $this->buscar,
             'sede_id' => $this->sedeId,
             'unidad_organica_id' => $this->unidadOrganicaId,
             'motivo_id' => $this->motivoId,
@@ -69,7 +76,7 @@ class HorasAcumuladasIndex extends Component
 
     public function limpiarFiltros(): void
     {
-        $this->reset(['trabajadorId', 'sedeId', 'unidadOrganicaId', 'motivoId', 'regimen', 'soloConDescuento']);
+        $this->reset(['trabajadorId', 'buscar', 'top', 'sedeId', 'unidadOrganicaId', 'motivoId', 'regimen', 'soloConDescuento']);
     }
 
     /**

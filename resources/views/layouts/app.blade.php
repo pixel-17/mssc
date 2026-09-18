@@ -106,6 +106,27 @@
                 $secciones[] = ['label' => 'Bandejas', 'items' => $bandejas];
             }
 
+            $turnosJefe = [];
+
+            if ($esJefe) {
+                $turnosJefe[] = ['label' => 'Calendario del equipo', 'route' => route('turnos.calendario.equipo'), 'active' => request()->routeIs('turnos.calendario.equipo'), 'icon' => 'calendar'];
+                $turnosJefe[] = ['label' => 'Programar horarios', 'route' => route('turnos.programacion.equipo'), 'active' => request()->routeIs('turnos.programacion.*'), 'icon' => 'clock'];
+            }
+
+            if ($turnosJefe) {
+                $secciones[] = ['label' => 'Turnos', 'items' => $turnosJefe];
+            }
+
+            // Reportes: mismo criterio de acceso que las rutas (admin, RR. HH. o
+            // jefe). Cada componente ya recorta los datos al alcance del usuario.
+            $reportes = [
+                ['label' => 'Horas acumuladas', 'route' => route('reportes.horas-acumuladas'), 'active' => request()->routeIs('reportes.horas-acumuladas'), 'icon' => 'chart'],
+                ['label' => 'Ficha de trabajador', 'route' => route('reportes.trabajador-historial'), 'active' => request()->routeIs('reportes.trabajador-historial'), 'icon' => 'user-circle'],
+                ['label' => 'Sustentos', 'route' => route('reportes.sustentos'), 'active' => request()->routeIs('reportes.sustentos'), 'icon' => 'clipboard'],
+            ];
+
+            $secciones[] = ['label' => 'Reportes', 'items' => $reportes];
+
             $personas = [];
 
             if ($puedeAltaUsuarios) {

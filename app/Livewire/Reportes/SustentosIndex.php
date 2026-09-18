@@ -8,6 +8,7 @@ use App\Services\ReporteSustentosService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -22,8 +23,16 @@ class SustentosIndex extends Component
 {
     use RestringeAReportes, WithPagination;
 
+    // #[Url] permite llegar aquí ya filtrado desde otros reportes
+    // (p. ej. "Ver adjuntos" en el ranking de horas acumuladas).
+    #[Url]
     public ?int $trabajadorId = null;
 
+    /** Búsqueda libre por nombre, apellido o DNI. */
+    #[Url]
+    public string $buscar = '';
+
+    #[Url]
     public string $estado = '';
 
     public ?string $desde = null;
@@ -36,6 +45,11 @@ class SustentosIndex extends Component
     }
 
     public function updatingTrabajadorId(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatingBuscar(): void
     {
         $this->resetPage();
     }
@@ -57,7 +71,7 @@ class SustentosIndex extends Component
 
     public function limpiarFiltros(): void
     {
-        $this->reset(['trabajadorId', 'estado', 'desde', 'hasta']);
+        $this->reset(['trabajadorId', 'buscar', 'estado', 'desde', 'hasta']);
         $this->resetPage();
     }
 
@@ -68,6 +82,7 @@ class SustentosIndex extends Component
 
         $filtros = [
             'trabajador_id' => $this->trabajadorId,
+            'buscar' => $this->buscar,
             'estado' => $this->estado,
             'desde' => $this->desde,
             'hasta' => $this->hasta,

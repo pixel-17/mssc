@@ -27,7 +27,7 @@ use Illuminate\Support\Collection;
 class ReporteHorasAcumuladasService
 {
     /**
-     * @param  array{trabajador_id?: int|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
+     * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
      */
     public function query(User $usuario, string $mes, array $filtros = []): Builder
     {
@@ -47,6 +47,17 @@ class ReporteHorasAcumuladasService
 
         if (! empty($filtros['trabajador_id'])) {
             $query->where('trabajador_id', $filtros['trabajador_id']);
+        }
+
+        // Búsqueda libre por nombre, apellido o DNI del trabajador.
+        if (! empty($filtros['buscar'])) {
+            $buscar = trim($filtros['buscar']);
+
+            $query->whereHas('trabajador', fn (Builder $q) => $q->where(function (Builder $q2) use ($buscar) {
+                $q2->where('name', 'like', "%{$buscar}%")
+                    ->orWhere('apellido', 'like', "%{$buscar}%")
+                    ->orWhere('dni', 'like', "%{$buscar}%");
+            }));
         }
 
         if (! empty($filtros['sede_id'])) {
@@ -83,6 +94,7 @@ class ReporteHorasAcumuladasService
             'papeleta_id' => $p->id,
             'trabajador_id' => $p->trabajador_id,
             'trabajador' => $p->trabajador->nombre_completo,
+            'dni' => $p->trabajador->dni,
             'sede' => $p->trabajador->sede?->nombre,
             'unidad_organica' => $p->trabajador->unidadOrganica?->nombre,
             'dia' => $p->dia_operativo->format('Y-m-d'),
@@ -116,6 +128,7 @@ class ReporteHorasAcumuladasService
                 return [
                     'trabajador_id' => $filas->first()['trabajador_id'],
                     'trabajador' => $filas->first()['trabajador'],
+                    'dni' => $filas->first()['dni'],
                     'sede' => $filas->first()['sede'],
                     'unidad_organica' => $filas->first()['unidad_organica'],
                     'papeletas' => $filas->count(),

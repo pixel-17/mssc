@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ReporteSustentosService
 {
     /**
-     * @param  array{trabajador_id?: int|null, estado?: string|null, desde?: string|null, hasta?: string|null}  $filtros
+     * @param  array{trabajador_id?: int|null, buscar?: string|null, estado?: string|null, desde?: string|null, hasta?: string|null}  $filtros
      */
     public function query(User $usuario, array $filtros = []): Builder
     {
@@ -32,6 +32,17 @@ class ReporteSustentosService
 
         if (! empty($filtros['trabajador_id'])) {
             $query->whereHas('papeleta', fn (Builder $q) => $q->where('trabajador_id', $filtros['trabajador_id']));
+        }
+
+        // Búsqueda libre por nombre, apellido o DNI del trabajador.
+        if (! empty($filtros['buscar'])) {
+            $buscar = trim($filtros['buscar']);
+
+            $query->whereHas('papeleta.trabajador', fn (Builder $q) => $q->where(function (Builder $q2) use ($buscar) {
+                $q2->where('name', 'like', "%{$buscar}%")
+                    ->orWhere('apellido', 'like', "%{$buscar}%")
+                    ->orWhere('dni', 'like', "%{$buscar}%");
+            }));
         }
 
         if (! empty($filtros['estado'])) {

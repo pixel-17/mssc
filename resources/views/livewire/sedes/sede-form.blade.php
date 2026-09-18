@@ -1,7 +1,7 @@
 @php
-    // Lima por defecto para una sede nueva (sin ubicación aún).
-    $lat = $latitud ?? -12.0464;
-    $lng = $longitud ?? -77.0428;
+    // Santiago (Cusco) por defecto para una sede nueva (sin ubicación aún).
+    $lat = $latitud ?? -13.5415;
+    $lng = $longitud ?? -71.9840;
 @endphp
 
 <div>
@@ -30,7 +30,7 @@
                         lat: {{ $lat }},
                         lng: {{ $lng }},
                         radio: {{ $radioMetros }},
-                        zoom: {{ $latitud ? 16 : 12 }},
+                        zoom: {{ $latitud ? 16 : 14 }},
                     })" x-init="init()">
                     <x-label value="Ubicación (haz clic en el mapa o arrastra el marcador)" />
                     <div x-ref="mapa" style="height: 320px;" class="mt-1 rounded-lg border border-gray-300 dark:border-gray-600"></div>
