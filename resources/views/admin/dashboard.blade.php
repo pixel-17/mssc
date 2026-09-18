@@ -6,7 +6,7 @@
     {{-- ---------- Contadores generales ---------- --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4 stagger">
         <div class="glass-card p-4 flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white shrink-0 shadow-glass">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-azul-400 to-azul-600 flex items-center justify-center text-white shrink-0 shadow-glass">
                 <x-icon name="users" class="w-5 h-5" />
             </div>
             <div>
@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="glass-card p-4 flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white shrink-0 shadow-glass">
+            <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-morado-400 to-morado-600 flex items-center justify-center text-white shrink-0 shadow-glass">
                 <x-icon name="building" class="w-5 h-5" />
             </div>
             <div>
@@ -37,7 +37,7 @@
     {{-- ---------- KPIs del mes ---------- --}}
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 stagger">
         <div class="glass-card p-4 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
+            <div class="w-9 h-9 rounded-lg bg-azul-50 flex items-center justify-center text-azul-600 shrink-0">
                 <x-icon name="document" class="w-4 h-4" />
             </div>
             <div>
@@ -46,18 +46,18 @@
             </div>
         </div>
         <div class="glass-card p-4 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg {{ $kpis['tasa_rechazo_mes'] > 15 ? 'bg-accent-50 text-accent-600' : 'bg-brand-50 text-brand-600' }} flex items-center justify-center shrink-0">
+            <div class="w-9 h-9 rounded-lg {{ $kpis['tasa_rechazo_mes'] > 15 ? 'bg-alarma-50 text-alarma-600' : 'bg-ambar-50 text-ambar-600' }} flex items-center justify-center shrink-0">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-8.25 3.75h.008v.008h-.008v-.008z" /></svg>
             </div>
             <div>
                 <p class="text-xs text-gray-500 mb-0.5">Tasa de rechazo/vencidas (mes)</p>
-                <p class="text-2xl font-extrabold {{ $kpis['tasa_rechazo_mes'] > 15 ? 'text-accent-600' : 'text-gray-800' }}">
+                <p class="text-2xl font-extrabold {{ $kpis['tasa_rechazo_mes'] > 15 ? 'text-alarma-600' : 'text-gray-800' }}">
                     {{ $kpis['tasa_rechazo_mes'] }}%
                 </p>
             </div>
         </div>
         <div class="glass-card p-4 flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
+            <div class="w-9 h-9 rounded-lg bg-verde-50 flex items-center justify-center text-verde-600 shrink-0">
                 <x-icon name="clock" class="w-4 h-4" />
             </div>
             <div>
@@ -111,31 +111,31 @@
     {{-- ---------- Accesos rápidos ---------- --}}
     <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 stagger">
         <a href="{{ route('users.index') }}" class="glass-card p-4 text-center">
-            <x-icon name="users" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="users" class="w-6 h-6 mx-auto mb-1 text-azul-600" />
             <span class="text-sm text-gray-700 font-semibold">Usuarios</span>
         </a>
         <a href="{{ route('areas.index') }}" class="glass-card p-4 text-center">
-            <x-icon name="building" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="building" class="w-6 h-6 mx-auto mb-1 text-morado-600" />
             <span class="text-sm text-gray-700 font-semibold">Áreas</span>
         </a>
         <a href="{{ route('cargos.index') }}" class="glass-card p-4 text-center">
-            <x-icon name="briefcase" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="briefcase" class="w-6 h-6 mx-auto mb-1 text-ambar-600" />
             <span class="text-sm text-gray-700 font-semibold">Cargos</span>
         </a>
         <a href="{{ route('sedes.index') }}" class="glass-card p-4 text-center">
-            <x-icon name="map-pin" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="map-pin" class="w-6 h-6 mx-auto mb-1 text-verde-600" />
             <span class="text-sm text-gray-700 font-semibold">Sedes</span>
         </a>
         <a href="{{ route('motivos.index') }}" class="glass-card p-4 text-center">
-            <x-icon name="clipboard" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="clipboard" class="w-6 h-6 mx-auto mb-1 text-sello-600" />
             <span class="text-sm text-gray-700 font-semibold">Motivos</span>
         </a>
         <a href="{{ route('papeletas.index') }}" class="glass-card p-4 text-center">
-            <x-icon name="document" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="document" class="w-6 h-6 mx-auto mb-1 text-tinta-600" />
             <span class="text-sm text-gray-700 font-semibold">Papeletas</span>
         </a>
         <a href="{{ route('admin.auditoria') }}" class="glass-card p-4 text-center">
-            <x-icon name="shield" class="w-6 h-6 mx-auto mb-1 text-brand-600" />
+            <x-icon name="shield" class="w-6 h-6 mx-auto mb-1 text-alarma-600" />
             <span class="text-sm text-gray-700 font-semibold">Auditoría</span>
         </a>
     </div>
@@ -156,8 +156,8 @@
                         datasets: [{
                             label: 'Papeletas',
                             data: tendencia.map(d => d.total),
-                            borderColor: '#2c5480',
-                            backgroundColor: 'rgba(44, 84, 128, 0.12)',
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.15)',
                             tension: 0.35,
                             fill: true,
                             pointRadius: 3,
@@ -176,7 +176,7 @@
                         datasets: [{
                             label: 'Papeletas',
                             data: motivos.map(m => m.total),
-                            backgroundColor: '#d4652f',
+                            backgroundColor: '#f59e0b',
                             borderRadius: 6,
                         }],
                     },

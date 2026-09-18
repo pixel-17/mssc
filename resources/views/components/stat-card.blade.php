@@ -7,6 +7,11 @@
         'red' => 'bg-red-500/15 text-red-700 dark:text-red-300',
         'emerald' => 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
         'purple' => 'bg-purple-500/15 text-purple-700 dark:text-purple-300',
+        'azul' => 'bg-azul-500/15 text-azul-700 dark:text-azul-300',
+        'verde' => 'bg-verde-500/15 text-verde-700 dark:text-verde-300',
+        'morado' => 'bg-morado-500/15 text-morado-700 dark:text-morado-300',
+        'ambar' => 'bg-ambar-500/15 text-ambar-700 dark:text-ambar-300',
+        'sello' => 'bg-sello-500/15 text-sello-700 dark:text-sello-300',
     ];
     $tonoClases = $tonos[$tono] ?? $tonos['ocean'];
 @endphp

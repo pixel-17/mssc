@@ -7,7 +7,7 @@
                 @click="$store.notificaciones.marcarTodas(); window.location.reload()"
                 x-show="$store.notificaciones.noLeidas > 0"
                 x-cloak
-                class="text-sm font-semibold text-brand-600 hover:text-accent-600 transition"
+                class="text-sm font-semibold text-azul-600 hover:text-sello-600 transition"
             >
                 Marcar todas leídas
             </button>
@@ -21,9 +21,9 @@
                 @if(! $notificacion->leida_at)
                     onclick="fetch('{{ route('notificaciones.leida', $notificacion) }}', {method:'POST', headers:{'X-CSRF-TOKEN':'{{ csrf_token() }}'}})"
                 @endif
-                class="glass-card flex items-start gap-3 p-4 {{ $notificacion->leida_at ? '' : 'border-l-4 !border-l-accent-500' }}"
+                class="glass-card flex items-start gap-3 p-4 {{ $notificacion->leida_at ? '' : 'border-l-4 !border-l-sello-500' }}"
             >
-                <div class="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 shrink-0">
+                <div class="w-9 h-9 rounded-xl bg-azul-50 flex items-center justify-center text-azul-600 shrink-0">
                     <x-icon name="bell" class="w-4 h-4" />
                 </div>
                 <div class="min-w-0 flex-1">
@@ -32,7 +32,7 @@
                     <p class="text-[11px] text-gray-400 mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
                 </div>
                 @if(! $notificacion->leida_at)
-                    <span class="w-2 h-2 rounded-full bg-accent-500 shrink-0 mt-1.5"></span>
+                    <span class="w-2 h-2 rounded-full bg-sello-500 shrink-0 mt-1.5"></span>
                 @endif
             </a>
         @empty
