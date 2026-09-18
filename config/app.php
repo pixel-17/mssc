@@ -65,7 +65,17 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // Raíz real del bug de "el valor debe ser igual o posterior": con
+    // 'UTC' aquí, cada now() del backend queda 5 horas adelantado
+    // respecto al reloj físico de Lima. Eso rompe no solo el min/max
+    // del <input datetime-local> (comparado contra la hora LOCAL del
+    // navegador) y la regla 'after:now' de StorePapeletaRequest, sino
+    // también HorarioOrdinarioService::estaDentroDeVentana()/yaTerminoElDia()
+    // y Turno::vigenteParaUsuario(), que comparan now()->format('H:i')
+    // directo contra horarios tipo 06:00-14:00 pensados en hora de
+    // Lima. Perú no tiene horario de verano, así que un offset fijo
+    // es seguro y no requiere manejo de DST.
+    'timezone' => env('APP_TIMEZONE', 'America/Lima'),
 
     /*
     |--------------------------------------------------------------------------

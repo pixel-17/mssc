@@ -69,13 +69,35 @@
                         <span class="font-display text-sello-500 dark:text-sello-300 font-semibold shrink-0">3</span>
                         <div class="w-full space-y-1.5">
                             <x-label for="hora_retorno_estimado" value="Hora de retorno estimada (opcional)" />
+                            {{--
+                                BUG: min/max se calculaban con now() en el
+                                servidor (config('app.timezone') = UTC), pero
+                                el <input type="datetime-local"> los compara
+                                contra la hora LOCAL del navegador. Con Perú
+                                en UTC-5, el min quedaba 5 horas adelantado
+                                respecto al reloj real del trabajador, así
+                                que cualquier hora "de ahora" que intentaba
+                                elegir caía antes del min y el navegador
+                                bloqueaba con "El valor debe ser igual o
+                                posterior a...". Se calcula ahora en JS con
+                                la hora local real del dispositivo.
+                            --}}
                             <input
                                 type="datetime-local"
                                 id="hora_retorno_estimado"
                                 name="hora_retorno_estimado"
                                 value="{{ old('hora_retorno_estimado') }}"
-                                min="{{ now()->format('Y-m-d\TH:i') }}"
-                                max="{{ (auth()->user()->regimen === '728' ? now()->addDay() : now())->endOfDay()->format('Y-m-d\TH:i') }}"
+                                x-data="{ regimen: '{{ auth()->user()->regimen }}' }"
+                                x-init="
+                                    const pad = (n) => String(n).padStart(2, '0');
+                                    const aFormatoLocal = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+                                    const ahora = new Date();
+                                    $el.min = aFormatoLocal(ahora);
+                                    const limite = new Date(ahora);
+                                    if (regimen === '728') limite.setDate(limite.getDate() + 1);
+                                    limite.setHours(23, 59, 0, 0);
+                                    $el.max = aFormatoLocal(limite);
+                                "
                                 class="input-glass @error('hora_retorno_estimado') !border-alarma-500 @enderror"
                             >
                             <p class="text-xs text-gray-400 dark:text-tinta-100/40">Solo informativa, para que tu jefe sepa cuándo esperarte.</p>

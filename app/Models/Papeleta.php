@@ -93,6 +93,37 @@ class Papeleta extends Model
         ];
     }
 
+    protected static function booted(): void
+    {
+        // BUG: slot_normal_activo / slot_emergencia_activo se ponían en
+        // true al crear (CrearPapeletaAction) para la regla de
+        // exclusividad, pero ninguna Action que cierra el ciclo
+        // (Cancelar, Rechazar, MarcarRetorno, Vencida por el comando de
+        // reloj, etc.) los volvía a null. Resultado: una vez resuelta
+        // la papeleta, el trabajador quedaba bloqueado para siempre
+        // ("Ya tienes una papeleta activa...") aunque ya no viera nada
+        // activo en su bandeja. Se centraliza aquí en vez de repetir el
+        // reset en cada Action: apenas el estado entra a uno terminal
+        // (esTerminal() === true), se libera el carril correspondiente.
+        static::saving(function (self $papeleta) {
+            if (! $papeleta->isDirty('estado')) {
+                return;
+            }
+
+            if (! $papeleta->estado->esTerminal()) {
+                return;
+            }
+
+            if ($papeleta->slot_normal_activo) {
+                $papeleta->slot_normal_activo = null;
+            }
+
+            if ($papeleta->slot_emergencia_activo) {
+                $papeleta->slot_emergencia_activo = null;
+            }
+        });
+    }
+
     public function trabajador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trabajador_id');
