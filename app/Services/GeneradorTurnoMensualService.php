@@ -144,6 +144,7 @@ class GeneradorTurnoMensualService
                 'fecha' => $dia->toDateString(),
                 'sede_id' => $trabajador->sede_id,
                 'es_descanso' => $esDescanso,
+                'turno' => $esDescanso ? null : $config->turno,
                 'hora_inicio' => $esDescanso ? null : $horaInicio,
                 'hora_fin' => $esDescanso ? null : $horaFin,
                 'created_at' => $ahora,
@@ -162,7 +163,7 @@ class GeneradorTurnoMensualService
         Turno::upsert(
             $filas,
             ['user_id', 'fecha'],
-            ['sede_id', 'es_descanso', 'hora_inicio', 'hora_fin', 'updated_at']
+            ['sede_id', 'es_descanso', 'turno', 'hora_inicio', 'hora_fin', 'updated_at']
         );
 
         CargaTurnoMensual::updateOrCreate(
@@ -230,7 +231,7 @@ class GeneradorTurnoMensualService
      *
      * @return array{0: string, 1: string} [hora_inicio, hora_fin] en H:i
      */
-    private function horasDe(string $turno): array
+    public function horasDe(string $turno): array
     {
         return match ($turno) {
             'MANANA' => [

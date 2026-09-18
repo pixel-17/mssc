@@ -76,6 +76,9 @@ class TurnoForm extends Component
             'sede_id' => $datos['sedeId'],
             'fecha' => $datos['fecha'],
             'es_descanso' => $datos['esDescanso'],
+            // Horas cargadas a mano: el tipo se deduce por las horas
+            // (ver Turno::codigo), no debe quedar un código anterior.
+            'turno' => null,
             'hora_inicio' => $datos['esDescanso'] ? null : $datos['horaInicio'],
             'hora_fin' => $datos['esDescanso'] ? null : $datos['horaFin'],
         ];

@@ -30,6 +30,7 @@ class Turno extends Model
         'hora_inicio',
         'hora_fin',
         'es_descanso',
+        'turno',
     ];
 
     protected function casts(): array
@@ -97,22 +98,42 @@ class Turno extends Model
     }
 
     /**
-     * Etiqueta corta para la vista calendario (equipo/individual):
-     * 'D' para descanso, 'M'/'T'/'N' para régimen 728 (comparando
-     * hora_inicio contra las horas vigentes de cada turno en
-     * `configuraciones`) y 'DIA' para régimen 276. Solo para pintar la
-     * grilla — nunca se usa para validar ni bloquear nada.
+     * Código del tipo de turno: 'DESCANSO', 'MANANA', 'TARDE', 'NOCHE'
+     * o 'DIA' (276). Usa la columna `turno` cuando existe; para filas
+     * antiguas (NULL) lo deduce comparando hora_inicio contra las horas
+     * vigentes de cada turno en `configuraciones`.
      */
-    public function etiqueta(): string
+    public function codigo(): string
     {
         if ($this->es_descanso || ! $this->hora_inicio) {
-            return 'D';
+            return 'DESCANSO';
+        }
+
+        if ($this->turno) {
+            return $this->turno;
         }
 
         return match ((string) $this->hora_inicio) {
-            (string) Configuracion::valorDe('TURNO_MANANA_HORA_INICIO', '06:00') => 'M',
-            (string) Configuracion::valorDe('TURNO_TARDE_HORA_INICIO', '14:00') => 'T',
-            (string) Configuracion::valorDe('TURNO_NOCHE_HORA_INICIO', '22:00') => 'N',
+            (string) Configuracion::valorDe('TURNO_MANANA_HORA_INICIO', '06:00') => 'MANANA',
+            (string) Configuracion::valorDe('TURNO_TARDE_HORA_INICIO', '14:00') => 'TARDE',
+            (string) Configuracion::valorDe('TURNO_NOCHE_HORA_INICIO', '22:00') => 'NOCHE',
+            default => 'DIA',
+        };
+    }
+
+    /**
+     * Etiqueta corta para la vista calendario (equipo/individual):
+     * 'D' descanso, 'M'/'T'/'N' para régimen 728 y 'DIA' para 276.
+     * Solo para pintar la grilla — nunca se usa para validar ni
+     * bloquear nada.
+     */
+    public function etiqueta(): string
+    {
+        return match ($this->codigo()) {
+            'DESCANSO' => 'D',
+            'MANANA' => 'M',
+            'TARDE' => 'T',
+            'NOCHE' => 'N',
             default => 'DIA',
         };
     }

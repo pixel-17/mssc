@@ -6,6 +6,9 @@
             </h2>
 
             <div class="flex items-center gap-2">
+                <a href="{{ route('turnos.programacion.equipo') }}" class="px-3 py-1.5 rounded-md bg-ocean-800 text-white text-sm mr-2">
+                    Programar equipo (728)
+                </a>
                 <button type="button" wire:click="mesAnterior" class="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     &larr; Anterior
                 </button>
@@ -122,6 +125,11 @@
                                 <a href="{{ route('turnos.configuracion', $trabajador) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline hover:no-underline">
                                     Crear/editar horario
                                 </a>
+                                @if ($trabajador->regimen === '728')
+                                    <a href="{{ route('turnos.programacion', $trabajador) }}" class="ml-3 text-sm text-ocean-700 dark:text-ocean-300 underline hover:no-underline">
+                                        Programar por día
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                     @empty

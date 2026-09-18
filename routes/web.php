@@ -101,6 +101,10 @@ Route::middleware([
 ])->prefix('turnos')->name('turnos.')->group(function () {
     Route::get('/configuracion/{trabajador}', \App\Livewire\Turnos\ConfiguracionTurnoForm::class)->name('configuracion');
 
+    // Programación día por día (solo 728): la autorización fina vive en el componente.
+    Route::get('/programacion/{trabajador}', \App\Livewire\Turnos\ProgramacionMensual::class)->name('programacion');
+    Route::get('/programacion-equipo', \App\Livewire\Turnos\ProgramacionEquipo::class)->name('programacion.equipo');
+
     Route::get('/calendario', \App\Livewire\Turnos\CalendarioEquipoIndex::class)->name('calendario.equipo');
     Route::get('/calendario/mio', \App\Livewire\Turnos\CalendarioIndividualIndex::class)->name('calendario.individual');
     Route::get('/calendario/{trabajador}', \App\Livewire\Turnos\CalendarioIndividualIndex::class)->name('calendario.individual-de');

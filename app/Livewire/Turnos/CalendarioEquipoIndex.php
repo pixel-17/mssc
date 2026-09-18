@@ -4,10 +4,9 @@ namespace App\Livewire\Turnos;
 
 use App\Models\Configuracion;
 use App\Models\Turno;
-use App\Models\User;
+use App\Services\EquipoDelJefeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -58,36 +57,9 @@ class CalendarioEquipoIndex extends Component
         $this->mes = now()->month;
     }
 
-    /**
-     * IDs de todas las unidades (encabezadas + sub-unidades) donde el
-     * usuario autenticado es Jefe de Área. Vacío si solo es Jefe
-     * Inmediato. Calcado de UsuarioController::subtreeIdsDeAreasQueEncabeza.
-     */
-    private function subtreeIdsDeAreasQueEncabeza(User $user): Collection
-    {
-        $ids = collect();
-
-        foreach ($user->unidadesQueEncabeza as $unidad) {
-            $ids->push($unidad->id);
-            $ids = $ids->merge($unidad->descendantIds());
-        }
-
-        return $ids->unique()->values();
-    }
-
     public function render(): View
     {
-        $user = auth()->user();
-        $unidadIds = $this->subtreeIdsDeAreasQueEncabeza($user);
-        $esJefeDeArea = $unidadIds->isNotEmpty();
-
-        $trabajadores = $esJefeDeArea
-            ? User::whereIn('unidad_organica_id', $unidadIds)->orderBy('name')->get()
-            : $user->trabajadoresComoJefeInmediato()
-                ->push($user)
-                ->unique('id')
-                ->sortBy('name')
-                ->values();
+        [$trabajadores, $esJefeDeArea] = app(EquipoDelJefeService::class)->para(auth()->user());
 
         $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
