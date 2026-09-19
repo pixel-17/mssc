@@ -1,6 +1,6 @@
 <div>
     <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+        <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
             Horario de RRHH
         </h2>
 

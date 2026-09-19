@@ -1,7 +1,7 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
                 Usuarios
             </h2>
 
@@ -74,7 +74,7 @@
                                 <button
                                     type="button"
                                     wire:click="eliminar({{ $usuario->id }})"
-                                    wire:confirm="¿Eliminar este usuario?"
+                                    wire:confirm="¿Eliminar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})?"
                                     class="text-sm text-red-600 dark:text-red-400 underline"
                                 >
                                     Eliminar

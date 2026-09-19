@@ -1,7 +1,7 @@
 <div>
     <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
                 Feriados
             </h2>
 
@@ -37,7 +37,7 @@
                                 <button
                                     type="button"
                                     wire:click="eliminar({{ $feriado->id }})"
-                                    wire:confirm="¿Eliminar este feriado?"
+                                    wire:confirm="¿Eliminar el feriado &quot;{{ $feriado->descripcion }}&quot; ({{ $feriado->fecha?->format('d/m/Y') }})?"
                                     class="text-sm text-red-600 dark:text-red-400 underline"
                                 >
                                     Eliminar
