@@ -55,4 +55,11 @@ class HistorialPapeleta extends Model
     {
         return $this->belongsTo(Motivo::class, 'motivo_nuevo_id');
     }
+
+    protected static function booted(): void
+    {
+        // El historial se crea junto al cambio de estado; avisar aquí
+        // garantiza que la línea de tiempo ya esté al refrescar.
+        static::created(fn (self $evento) => \App\Events\PapeletaActualizada::notificar($evento->papeleta_id));
+    }
 }

@@ -30,6 +30,8 @@ class TurnoIndex extends Component
     {
         $turno->delete();
 
+        \App\Events\HorarioActualizado::notificar($turno->user_id);
+
         session()->flash('mensaje', 'Turno eliminado.');
     }
 

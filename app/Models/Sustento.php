@@ -41,4 +41,11 @@ class Sustento extends Model
     {
         return $this->belongsTo(User::class, 'revisado_por_id');
     }
+
+    protected static function booted(): void
+    {
+        // El sustento cambia lo que ven trabajador, jefe y RRHH de la
+        // papeleta (presentado, aprobado, observado...): avisar en vivo.
+        static::saved(fn (self $sustento) => \App\Events\PapeletaActualizada::notificar($sustento->papeleta_id));
+    }
 }

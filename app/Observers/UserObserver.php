@@ -62,5 +62,7 @@ class UserObserver
         \App\Models\Turno::where('user_id', $user->id)
             ->where('fecha', '>=', now()->toDateString())
             ->update(['sede_id' => $user->sede_id]);
+
+        \App\Events\HorarioActualizado::notificar($user->id);
     }
 }

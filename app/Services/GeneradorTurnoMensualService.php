@@ -174,6 +174,8 @@ class GeneradorTurnoMensualService
                 'generado_por_id' => $actor?->id,
             ]
         );
+
+        \App\Events\HorarioActualizado::notificar($trabajador->id);
     }
 
     /**

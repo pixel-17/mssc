@@ -83,9 +83,14 @@ class TurnoForm extends Component
             'hora_fin' => $datos['esDescanso'] ? null : $datos['horaFin'],
         ];
 
+        // Si el turno se reasigna a otro trabajador, avisar a ambos.
+        $antes = $this->turno?->user_id;
+
         $this->turno
             ? $this->turno->update($atributos)
             : Turno::create($atributos);
+
+        \App\Events\HorarioActualizado::notificar(...array_filter([(int) $datos['userId'], $antes]));
 
         session()->flash('mensaje', $this->turno ? 'Turno actualizado.' : 'Turno creado.');
 

@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Events\HorarioActualizado;
 use App\Models\CargaTurnoMensual;
 use App\Models\Turno;
 use App\Models\User;
 use App\Services\ProgramacionTurnoService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
@@ -21,6 +23,22 @@ class ProgramacionTurnoServiceTest extends TestCase
         $admin->assignRole(Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']));
 
         return $admin;
+    }
+
+    public function test_avisa_en_tiempo_real_al_trabajador_cuando_cambia_su_horario(): void
+    {
+        Event::fake([HorarioActualizado::class]);
+
+        $trabajador = User::factory()->create(['regimen' => '728', 'activo' => true]);
+
+        app(ProgramacionTurnoService::class)->guardarMes($trabajador, 2026, 10, [
+            '2026-10-01' => 'MANANA',
+        ], $this->admin());
+
+        Event::assertDispatched(
+            HorarioActualizado::class,
+            fn (HorarioActualizado $evento) => $evento->userId === $trabajador->id
+        );
     }
 
     public function test_guarda_el_mes_y_lo_marca_como_manual(): void

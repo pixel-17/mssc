@@ -28,6 +28,12 @@ class NotificationBell extends Component
 
     public int $porMostrar = 8;
 
+    /** La campana ya se actualiza con las notificaciones; los cambios de estado no la afectan. */
+    protected function escuchaCambiosDeEstado(): bool
+    {
+        return false;
+    }
+
     public function marcarComoLeida(string $id): void
     {
         $notificacion = Auth::user()->notifications()->whereKey($id)->first();

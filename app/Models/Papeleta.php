@@ -105,6 +105,10 @@ class Papeleta extends Model
         // activo en su bandeja. Se centraliza aquí en vez de repetir el
         // reset en cada Action: apenas el estado entra a uno terminal
         // (esTerminal() === true), se libera el carril correspondiente.
+        // Tiempo real: cualquier cambio de la papeleta (estado, retorno,
+        // observaciones...) se publica por Reverb, ver PapeletaActualizada.
+        static::saved(fn (self $papeleta) => \App\Events\PapeletaActualizada::notificar($papeleta->id));
+
         static::saving(function (self $papeleta) {
             if (! $papeleta->isDirty('estado')) {
                 return;

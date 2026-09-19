@@ -20,12 +20,16 @@
             <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
-            <x-estado-papeleta :estado="$papeleta->estado" class="text-sm" />
+            <span data-en-vivo-estado><x-estado-papeleta :estado="$papeleta->estado" class="text-sm" /></span>
         </div>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+            <x-papeleta-en-vivo :papeleta="$papeleta" />
+        </div>
+
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6" data-en-vivo-contenido>
             @include('papeletas._info', ['papeleta' => $papeleta])
 
             @if ($puedeDecidir)

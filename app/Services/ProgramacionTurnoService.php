@@ -100,6 +100,8 @@ class ProgramacionTurnoService
                 ]
             );
         });
+
+        \App\Events\HorarioActualizado::notificar($trabajador->id);
     }
 
     /**

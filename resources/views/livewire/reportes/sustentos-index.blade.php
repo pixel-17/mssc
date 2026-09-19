@@ -93,15 +93,9 @@
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->fecha_limite?->format('d/m/Y H:i') }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm">
-                                    @php
-                                        $colores = [
-                                            'pendiente' => 'bg-amber-100 text-amber-800',
-                                            'presentado' => 'bg-ocean-100 text-ocean-800',
-                                            'aprobado' => 'bg-emerald-100 text-emerald-800',
-                                        ];
-                                    @endphp
-                                    <span class="px-2 py-1 rounded-full text-xs font-medium {{ $colores[$sustento->estado] ?? 'bg-gray-100 text-gray-700' }}">
-                                        {{ ucfirst($sustento->estado) }}
+                                    @php [$etiquetaSustento, $clasesSustento] = \App\Support\SustentoEstadoPresentacion::para($sustento->estado); @endphp
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold ring-1 ring-inset {{ $clasesSustento }}">
+                                        {{ $etiquetaSustento }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->revisadoPor?->nombre_completo ?? '—' }}</td>

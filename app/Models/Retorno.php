@@ -44,4 +44,9 @@ class Retorno extends Model
     {
         return $this->belongsTo(User::class, 'marcado_manual_por_id');
     }
+
+    protected static function booted(): void
+    {
+        static::saved(fn (self $retorno) => \App\Events\PapeletaActualizada::notificar($retorno->papeleta_id));
+    }
 }

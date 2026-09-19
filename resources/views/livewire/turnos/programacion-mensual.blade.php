@@ -26,12 +26,7 @@
                 errorPatron: '',
                 claves: { M: 'MANANA', T: 'TARDE', N: 'NOCHE', D: 'DESCANSO' },
                 siglas: { MANANA: 'M', TARDE: 'T', NOCHE: 'N', DESCANSO: 'D' },
-                clases: {
-                    MANANA: 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
-                    TARDE: 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
-                    NOCHE: 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30',
-                    DESCANSO: 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20'
-                },
+                clases: @js(\App\Support\TurnoColores::porCodigo()),
                 init() { this.original = this.firma(); },
                 firma() { return JSON.stringify(Object.entries(this.dias).sort()); },
                 get sucio() { return this.firma() !== this.original; },

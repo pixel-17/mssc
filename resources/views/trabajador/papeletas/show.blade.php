@@ -19,7 +19,9 @@
 @endphp
 
 <x-trabajador-layout titulo="Detalle de papeleta" :volver-a="route('trabajador.papeletas.index')">
-    <div class="space-y-5">
+    <x-papeleta-en-vivo :papeleta="$papeleta" />
+
+    <div class="space-y-5" data-en-vivo-contenido>
         <x-flash-messages />
 
         {{-- Ticket grande --}}
@@ -29,7 +31,7 @@
                     <p class="font-mono text-xs text-tinta-400 dark:text-tinta-300/60">N.° {{ str_pad($papeleta->id, 4, '0', STR_PAD_LEFT) }}</p>
                     <p class="font-display font-semibold text-lg text-tinta-950 dark:text-white leading-snug mt-0.5">{{ $papeleta->motivo->nombre }}</p>
                 </div>
-                <x-estado-papeleta :estado="$papeleta->estado" class="shrink-0 whitespace-nowrap" />
+                <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" class="whitespace-nowrap" /></span>
             </div>
 
             <div class="mx-5 border-t border-dashed border-ocean-200/70 dark:border-white/15"></div>

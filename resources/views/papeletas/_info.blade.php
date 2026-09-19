@@ -100,8 +100,9 @@
                             · <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="text-ocean-600 dark:text-ocean-300 hover:text-ocean-700 dark:hover:text-ocean-100 underline">Ver archivo</a>
                         @endif
                     </span>
-                    <span class="text-xs px-2 py-0.5 rounded-full {{ $sustento->estado === 'aprobado' ? 'bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-300' : ($sustento->estado === 'observado' ? 'bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300' : 'bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-ocean-100/60') }}">
-                        {{ ucfirst($sustento->estado) }}
+                    @php [$etiquetaSustento, $clasesSustento] = \App\Support\SustentoEstadoPresentacion::para($sustento->estado); @endphp
+                    <span class="inline-flex items-center text-xs px-2 py-0.5 rounded-full font-semibold ring-1 ring-inset {{ $clasesSustento }}">
+                        {{ $etiquetaSustento }}
                     </span>
                 </li>
             @endforeach

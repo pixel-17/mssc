@@ -1,4 +1,7 @@
-<div>
+{{-- Respaldo del tiempo real: si Reverb está caído o el canal no aplica
+     (Admin viendo a otro trabajador), se refresca cada 30 s solo mientras
+     la vista está visible. --}}
+<div wire:poll.30s.visible>
     <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-3">
             <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
@@ -30,13 +33,7 @@
         <div class="flex flex-wrap items-center gap-2">
             @foreach (['M' => 'Mañana', 'T' => 'Tarde', 'N' => 'Noche', 'D' => 'Descanso', 'DIA' => 'Horario ordinario (276)'] as $sigla => $nombre)
                 <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium
-                    {{ match ($sigla) {
-                        'M' => 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/30',
-                        'T' => 'bg-orange-100 text-orange-800 border-orange-200 dark:bg-orange-500/15 dark:text-orange-300 dark:border-orange-500/30',
-                        'N' => 'bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-300 dark:border-indigo-500/30',
-                        'D' => 'bg-gray-100 text-gray-500 border-gray-200 dark:bg-gray-500/10 dark:text-gray-400 dark:border-gray-500/20',
-                        default => 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/30',
-                    } }}">
+                    {{ \App\Support\TurnoColores::para($sigla) }}">
                     <span class="font-bold">{{ $sigla }}</span> · {{ $nombre }}
                 </span>
             @endforeach

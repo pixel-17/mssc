@@ -41,6 +41,28 @@ class CalendarioIndividualIndex extends Component
         $this->mes = now()->month;
     }
 
+    /**
+     * Tiempo real: cuando alguien guarda el horario de este trabajador,
+     * HorarioActualizado llega por Reverb a su canal privado y Livewire
+     * vuelve a renderizar el calendario. Solo se suscribe el propio
+     * trabajador: el canal App.Models.User.{id} solo lo autoriza a él
+     * (routes/channels.php). Admin viendo el calendario de otro se
+     * apoya en el refresco periódico de la vista (wire:poll).
+     */
+    public function getListeners(): array
+    {
+        if (auth()->id() !== $this->trabajador->id) {
+            return [];
+        }
+
+        return [
+            "echo-private:App.Models.User.{$this->trabajador->id},HorarioActualizado" => 'refrescar',
+        ];
+    }
+
+    /** Sin cuerpo a propósito: la petición de Livewire ya vuelve a ejecutar render(). */
+    public function refrescar(): void {}
+
     public function mesAnterior(): void
     {
         $fecha = Carbon::create($this->anio, $this->mes, 1)->subMonthNoOverflow();

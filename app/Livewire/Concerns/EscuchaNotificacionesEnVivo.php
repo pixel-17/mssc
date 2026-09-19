@@ -31,10 +31,29 @@ trait EscuchaNotificacionesEnVivo
     {
         $id = Auth::id();
 
-        return [
+        $escuchas = [
             "echo-notification:App.Models.User.{$id}" => 'refrescarPorNotificacionEnVivo',
         ];
+
+        // Además de las notificaciones (que solo llegan a quien
+        // corresponde), cada cambio de una papeleta que este usuario ve
+        // (ver PapeletaActualizada) vuelve a renderizar la bandeja: así
+        // el estado se ve en vivo aunque nadie haya sido notificado.
+        if ($this->escuchaCambiosDeEstado()) {
+            $escuchas["echo-private:App.Models.User.{$id},PapeletaActualizada"] = 'refrescarPorCambioDeEstado';
+        }
+
+        return $escuchas;
     }
+
+    /** Los componentes que no muestran estados (la campana) lo sobrescriben en false. */
+    protected function escuchaCambiosDeEstado(): bool
+    {
+        return true;
+    }
+
+    /** Sin cuerpo a propósito: la petición de Livewire ya vuelve a ejecutar render(). */
+    public function refrescarPorCambioDeEstado(): void {}
 
     public function refrescarPorNotificacionEnVivo(): void
     {
