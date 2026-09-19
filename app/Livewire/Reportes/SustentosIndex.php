@@ -90,7 +90,7 @@ class SustentosIndex extends Component
 
         $trabajadoresDisponibles = ($user->hasRole('admin') || $user->hasRole('rrhh'))
             ? User::role('trabajador')->orderBy('name')->get(['id', 'name', 'apellido'])
-            : collect($user->trabajadoresComoJefeInmediato())->sortBy('name')->values();
+            : $user->trabajadoresParaReportes()->sortBy('name')->values();
 
         return view('livewire.reportes.sustentos-index', [
             'sustentos' => $service->query($user, $filtros)->paginate(20),

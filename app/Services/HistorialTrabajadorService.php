@@ -19,7 +19,7 @@ class HistorialTrabajadorService
     /**
      * Trabajadores que $usuario puede buscar: admin/RRHH a cualquiera,
      * jefe solo a quienes ya ve en su propio equipo (automáticos +
-     * adicionales, ver User::trabajadoresComoJefeInmediato()).
+     * adicionales, ver User::trabajadoresParaReportes()).
      */
     public function trabajadoresVisibles(User $usuario, string $buscar = ''): Collection
     {
@@ -35,7 +35,7 @@ class HistorialTrabajadorService
                 ->get(['id', 'name', 'apellido', 'dni']);
         }
 
-        $equipo = collect($usuario->trabajadoresComoJefeInmediato());
+        $equipo = $usuario->trabajadoresParaReportes();
 
         if ($buscar === '') {
             return $equipo->sortBy('name')->take(15)->values();

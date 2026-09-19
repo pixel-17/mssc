@@ -25,6 +25,7 @@ class HorasAcumuladasResumenSheet implements FromCollection, WithHeadings, WithM
     {
         return [
             'Trabajador',
+            'DNI',
             'Sede',
             'Unidad orgánica',
             'Papeletas',
@@ -41,6 +42,7 @@ class HorasAcumuladasResumenSheet implements FromCollection, WithHeadings, WithM
     {
         return [
             $fila['trabajador'],
+            $fila['dni'],
             $fila['sede'],
             $fila['unidad_organica'],
             $fila['papeletas'],

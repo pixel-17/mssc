@@ -8,6 +8,7 @@ use App\Services\HistorialTrabajadorService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 
 /**
@@ -23,6 +24,9 @@ class TrabajadorHistorialIndex extends Component
 
     public string $buscar = '';
 
+    // #[Url]: permite abrir la ficha ya con el trabajador elegido desde
+    // otros reportes. render() valida puedeVer() antes de mostrar nada.
+    #[Url]
     public ?int $trabajadorId = null;
 
     public function mount(): void

@@ -211,7 +211,7 @@
                                     <td class="px-4 py-3 text-sm print:hidden">
                                         <a href="{{ route('reportes.sustentos', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-ocean-600 hover:text-ocean-900 underline">Ver adjuntos</a>
                                         <span class="text-gray-300 mx-1">·</span>
-                                        <a href="{{ route('reportes.trabajador-historial') }}" class="text-ocean-600 hover:text-ocean-900 underline" title="Buscar su ficha completa">Ficha</a>
+                                        <a href="{{ route('reportes.trabajador-historial', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-ocean-600 hover:text-ocean-900 underline" title="Ver su ficha completa">Ficha</a>
                                     </td>
                                 </tr>
                             @endforeach

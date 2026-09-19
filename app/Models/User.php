@@ -172,6 +172,26 @@ class User extends Authenticatable
     }
 
     /**
+     * Trabajadores que este usuario puede elegir/buscar en los reportes.
+     * Mismo alcance que las consultas de reportes, que filtran por las
+     * columnas fotografiadas jefe_inmediato_id / jefe_area_id: quien es
+     * jefe de una unidad ve a su gente Y a la de las unidades hijas
+     * (para ellas es Jefe de Área), más los adicionales asignados a mano.
+     * trabajadoresComoJefeInmediato() se queda corto aquí: no incluye a
+     * los trabajadores de las unidades hijas.
+     */
+    public function trabajadoresParaReportes(): \Illuminate\Support\Collection
+    {
+        return User::where(fn ($q) => $q
+            ->where('jefe_inmediato_id', $this->id)
+            ->orWhere('jefe_area_id', $this->id))
+            ->get()
+            ->merge($this->trabajadoresAdicionales)
+            ->unique('id')
+            ->values();
+    }
+
+    /**
      * ¿Es este usuario jefe inmediato del trabajador dado, ya sea de
      * forma automática (por unidad orgánica) o adicional (asignado a
      * mano)? Cualquiera de los dos habilita a decidir sus papeletas.

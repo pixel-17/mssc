@@ -106,7 +106,7 @@ class HorasAcumuladasIndex extends Component
 
         $trabajadoresDisponibles = ($esAdmin || $esRrhh)
             ? User::role('trabajador')->orderBy('name')->get(['id', 'name', 'apellido'])
-            : collect($user->trabajadoresComoJefeInmediato())->sortBy('name')->values();
+            : $user->trabajadoresParaReportes()->sortBy('name')->values();
 
         // Admin/RRHH filtran contra toda la organización (catálogo
         // completo). Un jefe solo debería poder filtrar por sedes y
