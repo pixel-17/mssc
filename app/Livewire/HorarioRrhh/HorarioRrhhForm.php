@@ -5,6 +5,8 @@ namespace App\Livewire\HorarioRrhh;
 use App\Models\HorarioRrhh;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -16,6 +18,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class HorarioRrhhForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public HorarioRrhh $horario;
 
     public string $horaInicio = '';
@@ -43,6 +48,8 @@ class HorarioRrhhForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         $this->horario->update([

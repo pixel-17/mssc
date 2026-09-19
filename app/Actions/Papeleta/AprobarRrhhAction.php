@@ -40,7 +40,7 @@ class AprobarRrhhAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            $actual->estado = new AutorizadaYCorriendo($actual);
+            $actual->transicionarA(AutorizadaYCorriendo::class);
             $actual->resuelto_por_rrhh_id = $rrhh->id;
             $actual->rrhh_resuelto_at = now();
             $actual->hora_salida_real = now();

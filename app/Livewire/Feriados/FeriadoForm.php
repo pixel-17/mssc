@@ -6,6 +6,8 @@ use App\Models\Feriado;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -16,6 +18,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class FeriadoForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public ?Feriado $feriado = null;
 
     public string $fecha = '';
@@ -45,6 +50,8 @@ class FeriadoForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         $this->feriado

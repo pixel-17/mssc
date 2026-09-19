@@ -115,7 +115,7 @@ class MarcarRetornoAction
             $actual->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($actual, $retorno->hora_servidor);
 
             if ($actual->motivo->requiere_sustento_en_retorno) {
-                $actual->estado = new RetornoPendienteSustento($actual);
+                $actual->transicionarA(RetornoPendienteSustento::class);
 
                 $horasHabiles = (int) Configuracion::valorDe('SUSTENTO_HORAS_HABILES', 48);
                 Sustento::create([
@@ -125,7 +125,7 @@ class MarcarRetornoAction
                     'estado' => 'pendiente',
                 ]);
             } else {
-                $actual->estado = new Cerrada($actual);
+                $actual->transicionarA(Cerrada::class);
             }
 
             $actual->save();
@@ -168,7 +168,7 @@ class MarcarRetornoAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            $actual->estado = new FinalizadoSinRetorno($actual);
+            $actual->transicionarA(FinalizadoSinRetorno::class);
             $actual->causa_finalizacion_sin_retorno = 'comision_servicio_campo';
             $actual->save();
 

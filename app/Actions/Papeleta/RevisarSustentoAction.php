@@ -60,7 +60,7 @@ class RevisarSustentoAction
             // hasta que venza (job de vencimiento) o el trabajador vuelva
             // a presentar antes de la fecha_limite.
             if ($resultado === 'aprobado') {
-                $papeleta->estado = new Cerrada($papeleta);
+                $papeleta->transicionarA(Cerrada::class);
                 $papeleta->save();
             } else {
                 $sustento->estado = 'pendiente'; // reabre para que puedan volver a subir

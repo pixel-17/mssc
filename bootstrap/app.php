@@ -68,6 +68,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // final del grupo 'web' porque necesita que Auth ya esté
         // resuelto; internamente solo actúa si corresponde.
         $middleware->web(append: [
+            \App\Http\Middleware\EnsureUsuarioActivo::class,
             \App\Http\Middleware\RedirigirSiDebeActualizarPassword::class,
         ]);
     })

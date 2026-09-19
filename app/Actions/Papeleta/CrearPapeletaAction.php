@@ -42,6 +42,10 @@ class CrearPapeletaAction
 
     public function ejecutar(User $trabajador, Motivo $motivo, array $datos): Papeleta
     {
+        if (! $motivo->activo) {
+            throw new PapeletaException("El motivo {$motivo->nombre} ya no está disponible.");
+        }
+
         if ($motivo->adjunto === 'obligatorio' && empty($datos['justificacion'] ?? null)) {
             throw new PapeletaException("La justificación es obligatoria para el motivo {$motivo->nombre}.");
         }

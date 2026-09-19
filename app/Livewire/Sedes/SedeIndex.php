@@ -4,7 +4,9 @@ namespace App\Livewire\Sedes;
 
 use App\Models\Sede;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**
@@ -15,11 +17,24 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class SedeIndex extends Component
 {
+    use RequiereAdmin;
+
     public function eliminar(Sede $sede): void
     {
-        $sede->delete();
+        $this->autorizarAdmin();
 
-        session()->flash('mensaje', 'Sede eliminada.');
+        try {
+            $sede->delete();
+            session()->flash('mensaje', 'Sede eliminada.');
+        } catch (QueryException $e) {
+            // FK (papeletas, usuarios, hijos...): no se pierde historial, se desactiva.
+            if (! str_starts_with((string) $e->getCode(), '23')) {
+                throw $e;
+            }
+
+            $sede->forceFill(['activo' => false])->save();
+            session()->flash('mensaje', 'Sede desactivada: tiene usuarios o papeletas asociados y no puede borrarse.');
+        }
     }
 
     public function render(): View

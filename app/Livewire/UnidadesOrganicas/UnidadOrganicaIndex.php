@@ -4,7 +4,9 @@ namespace App\Livewire\UnidadesOrganicas;
 
 use App\Models\UnidadOrganica;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**
@@ -15,11 +17,24 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class UnidadOrganicaIndex extends Component
 {
+    use RequiereAdmin;
+
     public function eliminar(UnidadOrganica $unidad): void
     {
-        $unidad->delete();
+        $this->autorizarAdmin();
 
-        session()->flash('mensaje', 'Unidad orgánica eliminada.');
+        try {
+            $unidad->delete();
+            session()->flash('mensaje', 'Unidad orgánica eliminada.');
+        } catch (QueryException $e) {
+            // FK (papeletas, usuarios, hijos...): no se pierde historial, se desactiva.
+            if (! str_starts_with((string) $e->getCode(), '23')) {
+                throw $e;
+            }
+
+            $unidad->forceFill(['activo' => false])->save();
+            session()->flash('mensaje', 'Unidad desactivada: tiene usuarios o sub-unidades asociados y no puede borrarse.');
+        }
     }
 
     public function render(): View

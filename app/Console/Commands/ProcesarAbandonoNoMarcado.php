@@ -12,6 +12,7 @@ use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\FinalizadoSinRetorno;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Paso 5: "Turno vence sin marcación -> FINALIZADO_SIN_RETORNO
@@ -45,33 +46,55 @@ class ProcesarAbandonoNoMarcado extends Command
 
         Papeleta::whereState('estado', AutorizadaYCorriendo::class)
             ->whereDoesntHave('retorno')
-            ->each(function (Papeleta $papeleta) use ($finDeTurno, $diasHabiles, $horasVentana, $notificar) {
-                if (! $finDeTurno->yaTermino($papeleta)) {
-                    return;
+            ->chunkById(100, function ($lote) use ($finDeTurno, $diasHabiles, $horasVentana, $notificar) {
+                foreach ($lote as $candidata) {
+                    if (! $finDeTurno->yaTermino($candidata)) {
+                        continue;
+                    }
+
+                    try {
+                        $papeleta = DB::transaction(function () use ($candidata, $finDeTurno, $diasHabiles, $horasVentana) {
+                            // Relectura bajo lock: si el trabajador marcó retorno
+                            // (o el jefe lo hizo manual) mientras corría el lote,
+                            // ya no es abandono.
+                            $actual = Papeleta::whereKey($candidata->id)->lockForUpdate()->first();
+
+                            if (! $actual
+                                || ! $actual->estado->equals(AutorizadaYCorriendo::class)
+                                || $actual->retorno()->exists()
+                                || ! $finDeTurno->yaTermino($actual)) {
+                                return null;
+                            }
+
+                            $estadoAnterior = class_basename($actual->estado);
+
+                            $actual->transicionarA(FinalizadoSinRetorno::class);
+                            $actual->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
+                            $actual->requiere_visto_bueno = true;
+                            $actual->regularizacion_fecha_limite = $diasHabiles->agregarHorasHabiles(now(), $horasVentana);
+                            $actual->save();
+
+                            HistorialPapeleta::create([
+                                'papeleta_id' => $actual->id,
+                                'actor_id' => null,
+                                'actor_tipo' => 'sistema',
+                                'estado_anterior' => $estadoAnterior,
+                                'estado_nuevo' => class_basename($actual->estado),
+                                'justificacion' => 'Abandono no marcado: turno/día terminó sin registro de retorno. Notificado a jefe y RRHH.',
+                            ]);
+
+                            return $actual;
+                        });
+
+                        // Notificación web push + in-app a jefe_inmediato_id y a
+                        // RRHH, fuera de la transacción (ver NotificarPapeletaService).
+                        if ($papeleta) {
+                            $notificar->abandonoNoMarcado($papeleta);
+                        }
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
                 }
-
-                DB::transaction(function () use ($papeleta, $diasHabiles, $horasVentana) {
-                    $estadoAnterior = class_basename($papeleta->estado);
-
-                    $papeleta->estado = new FinalizadoSinRetorno($papeleta);
-                    $papeleta->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
-                    $papeleta->requiere_visto_bueno = true;
-                    $papeleta->regularizacion_fecha_limite = $diasHabiles->agregarHorasHabiles(now(), $horasVentana);
-                    $papeleta->save();
-
-                    HistorialPapeleta::create([
-                        'papeleta_id' => $papeleta->id,
-                        'actor_id' => null,
-                        'actor_tipo' => 'sistema',
-                        'estado_anterior' => $estadoAnterior,
-                        'estado_nuevo' => class_basename($papeleta->estado),
-                        'justificacion' => 'Abandono no marcado: turno/día terminó sin registro de retorno. Notificado a jefe y RRHH.',
-                    ]);
-                });
-
-                // Notificación web push + in-app a jefe_inmediato_id y a
-                // RRHH, fuera de la transacción (ver NotificarPapeletaService).
-                $notificar->abandonoNoMarcado($papeleta);
             });
 
         return self::SUCCESS;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Usuario;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -24,11 +25,26 @@ class CrearUsuarioRequest extends FormRequest
         $unidadesDisponibles = $this->unidadesDisponibles();
         $esJefeDeArea = $unidadesDisponibles->isNotEmpty();
 
+        // Un DNI que coincide con alguien ya desactivado no es una alta
+        // nueva, es un reingreso (ver CrearUsuarioAction::ejecutar()): se
+        // ignora esa fila propia tanto para el unique de dni (solo se
+        // compara contra activos) como para el de email (por si
+        // reingresa con el mismo correo que ya tenía).
+        $existenteInactivo = User::where('dni', $this->input('dni'))
+            ->where('activo', false)
+            ->first();
+
         return [
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
-            'dni' => ['required', 'string', 'size:8', 'unique:users,dni'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'dni' => [
+                'required', 'string', 'size:8',
+                Rule::unique('users', 'dni')->where(fn ($q) => $q->where('activo', true)),
+            ],
+            'email' => [
+                'required', 'string', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($existenteInactivo?->id),
+            ],
             'regimen' => ['required', Rule::in(['276', '728'])],
             'sede_id' => ['nullable', 'exists:sedes,id'],
             'tipo' => $esJefeDeArea
@@ -44,7 +60,8 @@ class CrearUsuarioRequest extends FormRequest
     {
         return [
             'dni.size' => 'El DNI debe tener 8 dígitos.',
-            'dni.unique' => 'Ya existe un usuario con ese DNI.',
+            'dni.unique' => 'Ya existe un usuario activo con ese DNI.',
+            'email.unique' => 'Ese correo ya está en uso por otro usuario.',
             'unidad_organica_id.in' => 'Esa unidad no pertenece a tu área.',
         ];
     }

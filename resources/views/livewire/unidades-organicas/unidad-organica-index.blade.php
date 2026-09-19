@@ -16,6 +16,12 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="glass-card p-4 text-sm text-red-700 dark:text-red-400">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="glass-card overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>

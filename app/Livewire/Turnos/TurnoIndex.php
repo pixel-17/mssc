@@ -6,6 +6,7 @@ use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -17,6 +18,8 @@ use Livewire\WithPagination;
 #[Layout('layouts.app')]
 class TurnoIndex extends Component
 {
+    use RequiereAdmin;
+
     use WithPagination;
 
     public ?int $userId = null;
@@ -28,6 +31,8 @@ class TurnoIndex extends Component
 
     public function eliminar(Turno $turno): void
     {
+        $this->autorizarAdmin();
+
         // Turno::booted() ya notifica al eliminar (evento 'deleted').
         $turno->delete();
 

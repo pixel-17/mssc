@@ -10,10 +10,9 @@ use Illuminate\Support\Collection;
  * turnos (calendario de equipo y programación de equipo), para no
  * mantener dos criterios de alcance distintos.
  *
- * Jefe de Área: todos los usuarios de su unidad y de TODAS las
- * sub-unidades debajo (mismo criterio que UsuarioController::index).
- * Jefe Inmediato: sus trabajadores directos (automáticos o adicionales)
- * más él mismo, para que pueda gestionar su propio turno.
+ * Delegado en User::equipoDe() (única definición de "mi equipo"):
+ * trabajadores directos, adicionales y unidades que encabeza, más él
+ * mismo para que pueda gestionar su propio turno.
  */
 class EquipoDelJefeService
 {
@@ -25,13 +24,13 @@ class EquipoDelJefeService
         $unidadIds = $this->subtreeIdsDeAreasQueEncabeza($user);
         $esJefeDeArea = $unidadIds->isNotEmpty();
 
-        $trabajadores = $esJefeDeArea
-            ? User::whereIn('unidad_organica_id', $unidadIds)->orderBy('name')->get()
-            : $user->trabajadoresComoJefeInmediato()
-                ->push($user)
-                ->unique('id')
-                ->sortBy('name')
-                ->values();
+        // Misma definición de equipo que reportes/dashboard (User::equipoDe);
+        // aquí se suma el propio jefe para que gestione su turno.
+        $trabajadores = $user->equipo()
+            ->push($user)
+            ->unique('id')
+            ->sortBy('name')
+            ->values();
 
         return [$trabajadores, $esJefeDeArea];
     }

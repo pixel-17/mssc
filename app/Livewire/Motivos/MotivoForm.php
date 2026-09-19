@@ -5,6 +5,8 @@ namespace App\Livewire\Motivos;
 use App\Models\Motivo;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -19,6 +21,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class MotivoForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public ?Motivo $motivo = null;
 
     public string $codigo = '';
@@ -81,6 +86,8 @@ class MotivoForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         $atributos = [

@@ -49,30 +49,44 @@ class CrearUsuarioAction
     public function ejecutar(User $creador, array $datos, bool $esJefeDeArea): User
     {
         return DB::transaction(function () use ($creador, $datos, $esJefeDeArea) {
-            $nuevo = User::create([
+            // Reingreso: si el DNI corresponde a alguien ya desactivado
+            // (ver UsuarioAdminIndex::eliminar(), que desactiva en vez de
+            // borrar), reactivamos esa misma fila en vez de crear una
+            // nueva — conserva su historial de papeletas bajo el mismo
+            // id. CrearUsuarioRequest ya garantiza que si existe un
+            // usuario ACTIVO con ese DNI, ni siquiera llegamos aquí.
+            $existente = User::where('dni', $datos['dni'])->first();
+
+            $atributos = [
                 'name' => $datos['name'],
                 'apellido' => $datos['apellido'],
                 'dni' => $datos['dni'],
                 'email' => $datos['email'],
                 'password' => Hash::make($datos['dni']),
                 'debe_actualizar_password' => true,
+                'activo' => true,
                 'regimen' => $datos['regimen'],
                 'sede_id' => $esJefeDeArea ? ($datos['sede_id'] ?? null) : $creador->sede_id,
                 'unidad_organica_id' => $esJefeDeArea ? $datos['unidad_organica_id'] : $creador->unidad_organica_id,
-            ]);
+            ];
 
-            $nuevo->assignRole('trabajador');
+            $nuevo = $existente ? tap($existente)->update($atributos) : User::create($atributos);
+
+            if (! $nuevo->hasRole('trabajador')) {
+                $nuevo->assignRole('trabajador');
+            }
 
             if ($esJefeDeArea && $datos['tipo'] === 'jefe_inmediato') {
                 $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id']);
             }
 
             if (! $esJefeDeArea) {
-                // Jefe Inmediato creando trabajador propio: se asigna a sí
-                // mismo directo, sin pasar por el flujo de confirmación
-                // (no puede "ya tener jefe" porque recién se crea).
-                $nuevo->jefesInmediatosAdicionales()->attach($creador->id, [
-                    'asignado_por_id' => $creador->id,
+                // Jefe Inmediato creando (o reingresando a) un trabajador
+                // propio: se asigna a sí mismo directo. syncWithoutDetaching
+                // en vez de attach() para no romper si la relación ya
+                // existía de una asignación anterior al reingreso.
+                $nuevo->jefesInmediatosAdicionales()->syncWithoutDetaching([
+                    $creador->id => ['asignado_por_id' => $creador->id],
                 ]);
             }
 

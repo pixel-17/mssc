@@ -5,6 +5,8 @@ namespace App\Livewire\Configuraciones;
 use App\Models\Configuracion;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -17,6 +19,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ConfiguracionForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public Configuracion $configuracion;
 
     public string $valor = '';
@@ -38,6 +43,8 @@ class ConfiguracionForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         $this->configuracion->update($datos);

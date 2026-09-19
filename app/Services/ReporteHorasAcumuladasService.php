@@ -39,10 +39,7 @@ class ReporteHorasAcumuladasService
             ->whereBetween('dia_operativo', [$inicio->toDateString(), $fin->toDateString()]);
 
         if (! $usuario->hasRole('admin') && ! $usuario->hasRole('rrhh')) {
-            $query->where(function (Builder $q) use ($usuario) {
-                $q->where('jefe_inmediato_id', $usuario->id)
-                    ->orWhere('jefe_area_id', $usuario->id);
-            });
+            $query->deEquipoDe($usuario);
         }
 
         if (! empty($filtros['trabajador_id'])) {
@@ -102,9 +99,13 @@ class ReporteHorasAcumuladasService
             'suma_descuento' => (bool) $p->motivo->suma_descuento,
             'salida' => $p->hora_salida_real,
             'retorno' => $p->retorno->hora_servidor,
-            'minutos' => $p->hora_salida_real && $p->retorno->hora_servidor
+            'minutos_brutos' => $minutosBrutos = $p->hora_salida_real && $p->retorno->hora_servidor
                 ? $p->hora_salida_real->diffInMinutes($p->retorno->hora_servidor)
                 : 0,
+            'minutos_refrigerio' => (int) $p->descuento_refrigerio_minutos,
+            // Lo que va a planilla: el bloque de almuerzo dentro de la
+            // ausencia no es tiempo laborable, se resta (ver MarcarRetornoAction).
+            'minutos' => max(0, $minutosBrutos - (int) $p->descuento_refrigerio_minutos),
         ]);
     }
 
@@ -170,6 +171,12 @@ class ReporteHorasAcumuladasService
      */
     public function rangoDelMes(string $mes): array
     {
+        // `mes` llega del cliente (propiedad Livewire): un valor mal formado
+        // lanzaba una excepción de Carbon (500). Se degrada al mes actual.
+        if (! preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $mes)) {
+            $mes = now()->format('Y-m');
+        }
+
         $inicio = \Carbon\Carbon::createFromFormat('Y-m-d', "{$mes}-01")->startOfMonth();
 
         return [$inicio->copy(), $inicio->copy()->endOfMonth()];

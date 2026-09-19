@@ -4,6 +4,9 @@ namespace App\States\Papeleta;
 
 class Vencida extends PapeletaState
 {
+    /** Valor persistido en `papeletas.estado`: desacopla la BD del nombre/namespace de la clase. */
+    public static ?string $name = 'vencida';
+
     public function esTerminal(): bool
     {
         return true;

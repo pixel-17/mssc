@@ -10,6 +10,7 @@ use App\Services\ProgramacionTurnoService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -25,6 +26,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ProgramacionMensual extends Component
 {
+    #[Locked]
     public User $trabajador;
 
     public int $anio;
@@ -32,11 +34,14 @@ class ProgramacionMensual extends Component
     public int $mes;
 
     /** Se incrementa al cambiar de mes o guardar para reiniciar el estado Alpine de la grilla. */
+    #[Locked]
     public int $version = 0;
 
     /** @var array<int, string> */
+    #[Locked]
     public array $advertencias = [];
 
+    #[Locked]
     public ?string $mensaje = null;
 
     public function mount(User $trabajador): void

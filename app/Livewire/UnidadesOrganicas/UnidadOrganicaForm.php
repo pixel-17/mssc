@@ -6,6 +6,8 @@ use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -18,6 +20,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class UnidadOrganicaForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public ?UnidadOrganica $unidad = null;
 
     public string $nombre = '';
@@ -66,6 +71,8 @@ class UnidadOrganicaForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         // No puede ser su propio padre ni el de ninguno de sus

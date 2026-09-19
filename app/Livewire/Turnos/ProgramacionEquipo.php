@@ -12,6 +12,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -34,11 +35,14 @@ class ProgramacionEquipo extends Component
     public int $mes;
 
     /** Se incrementa al cambiar de mes o guardar para reiniciar el estado Alpine de la grilla. */
+    #[Locked]
     public int $version = 0;
 
     /** @var array<int, string> */
+    #[Locked]
     public array $advertencias = [];
 
+    #[Locked]
     public ?string $mensaje = null;
 
     public function mount(): void

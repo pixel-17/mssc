@@ -24,7 +24,7 @@ class RrhhIndex extends Component
 
     public function render(): View
     {
-        $porDecidir = Papeleta::where('estado', PendienteRrhh::class)
+        $porDecidir = Papeleta::whereState('estado', PendienteRrhh::class)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
@@ -35,7 +35,7 @@ class RrhhIndex extends Component
             ->latest()
             ->get();
 
-        $sustentosPorRevisar = Papeleta::where('estado', RetornoPendienteSustento::class)
+        $sustentosPorRevisar = Papeleta::whereState('estado', RetornoPendienteSustento::class)
             ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
             ->with(['trabajador', 'motivo', 'sustentos'])
             ->latest()

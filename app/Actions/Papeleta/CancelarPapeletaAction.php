@@ -39,7 +39,7 @@ class CancelarPapeletaAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            $actual->estado = new Cancelada($actual);
+            $actual->transicionarA(Cancelada::class);
             $actual->cancelada_at = now();
             $actual->save();
 

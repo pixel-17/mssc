@@ -3,12 +3,15 @@
 namespace App\Console\Commands;
 
 use App\Actions\Papeleta\ReclasificarAParticularAction;
+use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
+use App\Models\Papeleta;
 use App\Models\Sustento;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Paso 5, motivo Salud. Corre cada minuto (ver routes/console.php),
@@ -48,18 +51,29 @@ class ProcesarVencimientoSustentos extends Command
             ->where('fecha_limite', '<=', now())
             ->whereHas('papeleta', fn ($q) => $q->whereState('estado', RetornoPendienteSustento::class))
             ->with('papeleta')
-            ->each(function (Sustento $sustento) use ($reclasificar) {
-                DB::transaction(function () use ($sustento, $reclasificar) {
-                    $sustento->estado = 'vencido';
-                    $sustento->save();
+            ->chunkById(100, function ($lote) use ($reclasificar) {
+                foreach ($lote as $sustento) {
+                    try {
+                        DB::transaction(function () use ($sustento, $reclasificar) {
+                            $sustento->estado = 'vencido';
+                            $sustento->save();
 
-                    $reclasificar->ejecutar(
-                        $sustento->papeleta,
-                        actorId: null,
-                        actorTipo: 'sistema',
-                        justificacion: 'Reclasificado automáticamente: sustento de Salud vencido sin presentar (48h hábiles).',
-                    );
-                });
+                            // Relee y bloquea la papeleta; si ya no está en
+                            // RetornoPendienteSustento lanza PapeletaException y
+                            // el rollback deja el sustento como estaba.
+                            $reclasificar->ejecutar(
+                                $sustento->papeleta,
+                                actorId: null,
+                                actorTipo: 'sistema',
+                                justificacion: 'Reclasificado automáticamente: sustento de Salud vencido sin presentar (48h hábiles).',
+                            );
+                        });
+                    } catch (PapeletaException) {
+                        // Ya la resolvió un humano: se omite.
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
+                }
             });
 
         Sustento::where('estado', 'presentado')
@@ -67,25 +81,40 @@ class ProcesarVencimientoSustentos extends Command
             ->whereHas('papeleta', fn ($q) => $q->where('requiere_visto_bueno', false)
                 ->whereState('estado', RetornoPendienteSustento::class))
             ->with('papeleta')
-            ->each(function (Sustento $sustento) use ($notificar) {
-                $papeleta = DB::transaction(function () use ($sustento) {
-                    $papeleta = $sustento->papeleta;
-                    $papeleta->requiere_visto_bueno = true;
-                    $papeleta->save();
+            ->chunkById(100, function ($lote) use ($notificar) {
+                foreach ($lote as $sustento) {
+                    try {
+                        $papeleta = DB::transaction(function () use ($sustento) {
+                            $papeleta = Papeleta::whereKey($sustento->papeleta_id)->lockForUpdate()->first();
 
-                    HistorialPapeleta::create([
-                        'papeleta_id' => $papeleta->id,
-                        'actor_id' => null,
-                        'actor_tipo' => 'sistema',
-                        'estado_anterior' => class_basename($papeleta->estado),
-                        'estado_nuevo' => class_basename($papeleta->estado),
-                        'justificacion' => 'Sustento presentado sin revisar: venció el plazo de 48h hábiles sin decisión humana.',
-                    ]);
+                            if (! $papeleta
+                                || $papeleta->requiere_visto_bueno
+                                || ! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
+                                return null;
+                            }
 
-                    return $papeleta;
-                });
+                            $papeleta->requiere_visto_bueno = true;
+                            $papeleta->save();
 
-                $notificar->sustentoSinRevisar($papeleta);
+                            HistorialPapeleta::create([
+                                'papeleta_id' => $papeleta->id,
+                                'actor_id' => null,
+                                'actor_tipo' => 'sistema',
+                                'estado_anterior' => class_basename($papeleta->estado),
+                                'estado_nuevo' => class_basename($papeleta->estado),
+                                'justificacion' => 'Sustento presentado sin revisar: venció el plazo de 48h hábiles sin decisión humana.',
+                            ]);
+
+                            return $papeleta;
+                        });
+
+                        if ($papeleta) {
+                            $notificar->sustentoSinRevisar($papeleta);
+                        }
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
+                }
             });
 
         return self::SUCCESS;

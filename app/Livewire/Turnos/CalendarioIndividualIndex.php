@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -20,6 +21,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class CalendarioIndividualIndex extends Component
 {
+    #[Locked]
     public User $trabajador;
 
     public int $anio;

@@ -11,6 +11,8 @@ use App\Models\Motivo;
 use App\Models\Papeleta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 use Illuminate\View\View;
 
 /**
@@ -53,12 +55,26 @@ class PapeletaController extends Controller
                 'hora_retorno_estimado' => $request->input('hora_retorno_estimado'),
             ]);
         } catch (PapeletaException $e) {
+            $this->descartarAdjunto($adjuntoPath);
+
             return back()->withInput()->with('error', $e->getMessage());
+        } catch (Throwable $e) {
+            $this->descartarAdjunto($adjuntoPath);
+
+            throw $e;
         }
 
         return redirect()
             ->route('trabajador.papeletas.show', $papeleta)
             ->with('success', 'Papeleta creada correctamente.');
+    }
+
+    /** Si la Action falla el archivo ya está en disco: se borra para no dejarlo huérfano. */
+    private function descartarAdjunto(?string $path): void
+    {
+        if ($path) {
+            Storage::disk('local')->delete($path);
+        }
     }
 
     public function show(Papeleta $papeleta): View

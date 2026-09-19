@@ -9,6 +9,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
@@ -35,6 +37,9 @@ use Spatie\Permission\Models\Role;
 #[Layout('layouts.app')]
 class UsuarioAdminForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public ?User $usuario = null;
 
     public string $name = '';
@@ -102,6 +107,8 @@ class UsuarioAdminForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         $atributos = [

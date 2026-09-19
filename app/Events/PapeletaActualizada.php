@@ -92,10 +92,25 @@ class PapeletaActualizada implements ShouldBroadcastNow
 
         self::$pendientes[$papeletaId] = true;
 
+        // Si la transacción hace rollback el afterCommit nunca corre y la
+        // marca quedaba viva: en comandos (un solo proceso, muchas
+        // papeletas) esa papeleta no volvía a notificar jamás.
+        DB::afterRollBack(function () use ($papeletaId) {
+            unset(self::$pendientes[$papeletaId]);
+        });
+
         DB::afterCommit(function () use ($papeletaId) {
             unset(self::$pendientes[$papeletaId]);
 
             try {
+                // Antes del broadcast: quien re-renderiza por el aviso debe leer datos frescos.
+                // Aislado: si la caché falla igual se emite el evento.
+                try {
+                    \App\Services\DashboardMetricsService::invalidar();
+                } catch (Throwable $e) {
+                    report($e);
+                }
+
                 $papeleta = Papeleta::with('trabajador.jefesInmediatosAdicionales')->find($papeletaId);
 
                 if (! $papeleta) {

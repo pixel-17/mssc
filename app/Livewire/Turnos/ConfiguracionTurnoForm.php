@@ -8,6 +8,7 @@ use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -21,6 +22,7 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class ConfiguracionTurnoForm extends Component
 {
+    #[Locked]
     public User $trabajador;
 
     public string $turno = '';

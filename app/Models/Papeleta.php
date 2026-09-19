@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Exceptions\PapeletaException;
 use App\States\Papeleta\PapeletaState;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 use Spatie\ModelStates\HasStates;
 
 /**
@@ -126,6 +129,51 @@ class Papeleta extends Model
                 $papeleta->slot_emergencia_activo = null;
             }
         });
+    }
+
+    /**
+     * Único punto de cambio de estado. Valida contra
+     * PapeletaState::config() (antes las Actions asignaban
+     * `->estado = new X(...)` y ninguna transición inválida se bloqueaba).
+     * No guarda: el llamador sigue haciendo save() dentro de su transacción.
+     *
+     * @param  class-string<PapeletaState>  $destino
+     */
+    public function transicionarA(string $destino): void
+    {
+        if (! $this->estado->canTransitionTo($destino)) {
+            throw new PapeletaException(sprintf(
+                'Transición de estado no permitida: %s -> %s.',
+                class_basename($this->estado),
+                class_basename($destino),
+            ));
+        }
+
+        $this->estado = new $destino($this);
+    }
+
+    /** Papeletas que el usuario decide como jefe inmediato (automático o adicional). */
+    public function scopeDeJefeInmediato(Builder $query, User $jefe): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('papeletas.jefe_inmediato_id', $jefe->id)
+            ->orWhereIn('papeletas.trabajador_id', DB::table('jefes_inmediatos_adicionales')
+                ->where('jefe_inmediato_id', $jefe->id)
+                ->select('trabajador_id')));
+    }
+
+    /**
+     * Fuente única de "papeletas de mi equipo" para reportes y dashboards.
+     * Une las columnas fotografiadas (historial estable si cambia el
+     * organigrama) con el equipo vivo, que sí incluye a los trabajadores
+     * asignados como jefe adicional y a las unidades hijas.
+     */
+    public function scopeDeEquipoDe(Builder $query, User $jefe): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('papeletas.jefe_inmediato_id', $jefe->id)
+            ->orWhere('papeletas.jefe_area_id', $jefe->id)
+            ->orWhereIn('papeletas.trabajador_id', User::equipoDe($jefe)->select('users.id')));
     }
 
     public function trabajador(): BelongsTo

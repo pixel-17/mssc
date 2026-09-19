@@ -50,9 +50,9 @@ class AprobarJefeAction
             $actual->jefe_resuelto_at = now();
 
             if ($rrhhEnHorario) {
-                $actual->estado = new PendienteRrhh($actual);
+                $actual->transicionarA(PendienteRrhh::class);
             } else {
-                $actual->estado = new AutorizadaYCorriendo($actual);
+                $actual->transicionarA(AutorizadaYCorriendo::class);
                 $actual->autorizado_con_rrhh_fuera_horario = true;
                 $actual->hora_salida_real = now();
                 $actual->revision_posthoc_estado = 'pendiente'; // Paso 4: obligatoria al día siguiente

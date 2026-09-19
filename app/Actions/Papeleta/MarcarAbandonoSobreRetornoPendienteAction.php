@@ -39,7 +39,7 @@ class MarcarAbandonoSobreRetornoPendienteAction
         $papeleta = DB::transaction(function () use ($papeleta, $quienDecide, $justificacion) {
             $estadoAnterior = class_basename($papeleta->estado);
 
-            $papeleta->estado = new FinalizadoSinRetorno($papeleta);
+            $papeleta->transicionarA(FinalizadoSinRetorno::class);
             $papeleta->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
             $papeleta->requiere_visto_bueno = false; // la decisión humana ya se tomó acá
             $papeleta->save();

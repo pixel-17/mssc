@@ -14,6 +14,7 @@ use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\Vencida;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 /**
  * Corre cada minuto (ver routes/console.php). Cubre la parte del flujo
@@ -57,37 +58,65 @@ class ProcesarVencimientosPapeletas extends Command
     {
         $slaMinutos = (int) Configuracion::valorDe('SLA_JEFE_MINUTOS', 5);
 
+        // chunkById (no each()): each() pagina por OFFSET y este conjunto
+        // se va vaciando mientras se procesa, así que saltaba filas.
+        // Cargar jefeArea evita un User::find() repetido por papeleta.
         Papeleta::whereState('estado', PendienteJefe::class)
             ->whereNull('escalado_jefe_area_at')
             ->whereNull('jefe_resuelto_at')
             ->where('created_at', '<=', now()->subMinutes($slaMinutos))
             ->whereNotNull('jefe_area_id')
-            // Varias papeletas suelen escalar al mismo Jefe de Área: cargar
-            // la relación evita un User::find() repetido por papeleta
-            // (Eloquent deduplica el fetch por FK al hacer eager load).
             ->with('jefeArea')
-            ->each(function (Papeleta $papeleta) {
-                if ($this->actorEstaEnHorario($papeleta->jefeArea)) {
-                    DB::transaction(function () use ($papeleta) {
-                        $papeleta->escalado_jefe_area_at = now();
-                        $papeleta->save();
-
-                        HistorialPapeleta::create([
-                            'papeleta_id' => $papeleta->id,
-                            'actor_id' => null,
-                            'actor_tipo' => 'sistema',
-                            'estado_anterior' => class_basename($papeleta->estado),
-                            'estado_nuevo' => class_basename($papeleta->estado), // no cambia de estado, solo de responsable
-                            'justificacion' => 'Escalado automático: Jefe Inmediato no respondió dentro del SLA.',
-                        ]);
-                    });
-
-                    $this->notificar->escaladaAJefeDeArea($papeleta);
+            ->chunkById(100, function ($lote) {
+                foreach ($lote as $candidata) {
+                    // Un fallo en una papeleta no debe tumbar el resto del ciclo.
+                    try {
+                        $this->escalar($candidata);
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
                 }
-                // Si el Jefe de Área NO está en horario: no se hace nada.
-                // La papeleta sigue en PENDIENTE_JEFE, esperando, sin alerta
-                // adicional, tal como se definió en el flujo.
             });
+    }
+
+    private function escalar(Papeleta $candidata): void
+    {
+        // Si el Jefe de Área NO está en horario no se hace nada: la
+        // papeleta sigue en PENDIENTE_JEFE esperando, sin alerta extra.
+        if (! $this->actorEstaEnHorario($candidata->jefeArea)) {
+            return;
+        }
+
+        $papeleta = DB::transaction(function () use ($candidata) {
+            // Se relee bajo lock: entre la lectura del lote y aquí el jefe
+            // pudo decidir, o la papeleta pudo cancelarse.
+            $actual = Papeleta::whereKey($candidata->id)->lockForUpdate()->first();
+
+            if (! $actual
+                || ! $actual->estado->equals(PendienteJefe::class)
+                || $actual->escalado_jefe_area_at !== null
+                || $actual->jefe_resuelto_at !== null) {
+                return null;
+            }
+
+            $actual->escalado_jefe_area_at = now();
+            $actual->save();
+
+            HistorialPapeleta::create([
+                'papeleta_id' => $actual->id,
+                'actor_id' => null,
+                'actor_tipo' => 'sistema',
+                'estado_anterior' => class_basename($actual->estado),
+                'estado_nuevo' => class_basename($actual->estado), // no cambia de estado, solo de responsable
+                'justificacion' => 'Escalado automático: Jefe Inmediato no respondió dentro del SLA.',
+            ]);
+
+            return $actual;
+        });
+
+        if ($papeleta) {
+            $this->notificar->escaladaAJefeDeArea($papeleta);
+        }
     }
 
     /**
@@ -124,28 +153,55 @@ class ProcesarVencimientosPapeletas extends Command
     private function vencerPapeletasSinTurnoVigente(): void
     {
         Papeleta::whereState('estado', $this->estadosNoTerminalesPreAutorizacion())
-            ->each(function (Papeleta $papeleta) {
-                if ($this->finDeTurno->yaTermino($papeleta)) {
-                    DB::transaction(function () use ($papeleta) {
-                        $estadoAnterior = class_basename($papeleta->estado);
+            ->chunkById(100, function ($lote) {
+                foreach ($lote as $candidata) {
+                    if (! $this->finDeTurno->yaTermino($candidata)) {
+                        continue;
+                    }
 
-                        $papeleta->estado = new Vencida($papeleta);
-                        $papeleta->vencida_at = now();
-                        $papeleta->save();
-
-                        HistorialPapeleta::create([
-                            'papeleta_id' => $papeleta->id,
-                            'actor_id' => null,
-                            'actor_tipo' => 'sistema',
-                            'estado_anterior' => $estadoAnterior,
-                            'estado_nuevo' => class_basename($papeleta->estado),
-                            'justificacion' => 'Vencida automáticamente: fin de turno/día sin decisión.',
-                        ]);
-                    });
-
-                    $this->notificar->vencida($papeleta);
+                    try {
+                        $this->vencer($candidata);
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
                 }
             });
+    }
+
+    private function vencer(Papeleta $candidata): void
+    {
+        $papeleta = DB::transaction(function () use ($candidata) {
+            // Sin esta relectura, un jefe que aprobaba entre la lectura y
+            // el guardado quedaba pisado como Vencida.
+            $actual = Papeleta::whereKey($candidata->id)->lockForUpdate()->first();
+
+            if (! $actual
+                || ! $actual->estado->equals(...$this->estadosNoTerminalesPreAutorizacion())
+                || ! $this->finDeTurno->yaTermino($actual)) {
+                return null;
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->transicionarA(Vencida::class);
+            $actual->vencida_at = now();
+            $actual->save();
+
+            HistorialPapeleta::create([
+                'papeleta_id' => $actual->id,
+                'actor_id' => null,
+                'actor_tipo' => 'sistema',
+                'estado_anterior' => $estadoAnterior,
+                'estado_nuevo' => class_basename($actual->estado),
+                'justificacion' => 'Vencida automáticamente: fin de turno/día sin decisión.',
+            ]);
+
+            return $actual;
+        });
+
+        if ($papeleta) {
+            $this->notificar->vencida($papeleta);
+        }
     }
 
     /**

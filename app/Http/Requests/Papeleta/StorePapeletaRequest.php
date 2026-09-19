@@ -4,6 +4,7 @@ namespace App\Http\Requests\Papeleta;
 
 use App\Models\Motivo;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 /**
  * Paso 1: creación. La validación de "justificación obligatoria si
@@ -31,7 +32,7 @@ class StorePapeletaRequest extends FormRequest
             : now()->endOfDay();
 
         return [
-            'motivo_id' => ['required', 'integer', 'exists:motivos,id'],
+            'motivo_id' => ['required', 'integer', Rule::exists('motivos', 'id')->where('activo', true)],
             'justificacion' => ['nullable', 'string', 'max:2000'],
             'adjunto_inicial_path' => ['nullable', 'file', 'max:10240', 'mimes:pdf,jpg,jpeg,png'],
             // Solo informativa (no bloquea el flujo de retorno real):

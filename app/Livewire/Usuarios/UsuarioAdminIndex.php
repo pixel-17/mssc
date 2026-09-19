@@ -5,6 +5,7 @@ namespace App\Livewire\Usuarios;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
@@ -22,6 +23,8 @@ use Spatie\Permission\Models\Role;
 #[Layout('layouts.app')]
 class UsuarioAdminIndex extends Component
 {
+    use RequiereAdmin;
+
     use WithPagination;
 
     public string $buscar = '';
@@ -47,6 +50,8 @@ class UsuarioAdminIndex extends Component
 
     public function eliminar(User $usuario): void
     {
+        $this->autorizarAdmin();
+
         $usuario->delete();
 
         session()->flash('mensaje', 'Usuario eliminado.');

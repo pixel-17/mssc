@@ -28,7 +28,7 @@ class ReconocerObservacionRrhhAction
         return DB::transaction(function () use ($papeleta, $jefe, $comentario, $actorTipo) {
             $estadoAnterior = class_basename($papeleta->estado);
 
-            $papeleta->estado = new PendienteJefe($papeleta);
+            $papeleta->transicionarA(PendienteJefe::class);
             $papeleta->jefe_resuelto_at = null;
             $papeleta->escalado_jefe_area_at = null;
             $papeleta->save();

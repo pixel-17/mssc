@@ -47,11 +47,11 @@ class ObservarRrhhAction
             $actual->contador_observaciones_rrhh++;
 
             if ($actual->contador_observaciones_rrhh >= $tope) {
-                $actual->estado = new Rechazada($actual);
+                $actual->transicionarA(Rechazada::class);
                 $actual->rechazada_por_id = $rrhh->id;
                 $actual->motivo_rechazo = "Tope de {$tope} observaciones de RRHH alcanzado.";
             } else {
-                $actual->estado = new ObservadaPorRrhh($actual);
+                $actual->transicionarA(ObservadaPorRrhh::class);
             }
 
             $actual->save();

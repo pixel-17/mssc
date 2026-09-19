@@ -52,6 +52,7 @@
                         <th class="px-4 py-3">Régimen</th>
                         <th class="px-4 py-3">Unidad</th>
                         <th class="px-4 py-3">Rol(es)</th>
+                        <th class="px-4 py-3">Estado</th>
                         <th class="px-4 py-3"></th>
                     </tr>
                 </thead>
@@ -64,6 +65,17 @@
                             <td class="px-4 py-3">{{ $usuario->regimen }}</td>
                             <td class="px-4 py-3">{{ $usuario->unidadOrganica?->nombre ?? '—' }}</td>
                             <td class="px-4 py-3">{{ $usuario->roles->pluck('name')->join(', ') }}</td>
+                            <td class="px-4 py-3">
+                                @if ($usuario->activo)
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                        Activo
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300">
+                                        Inactivo
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 text-right space-x-3">
                                 <a href="{{ route('turnos.calendario.individual-de', $usuario) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
                                     Calendario
@@ -71,19 +83,30 @@
                                 <a href="{{ route('usuarios-admin.editar', $usuario) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
                                     Editar
                                 </a>
-                                <button
-                                    type="button"
-                                    wire:click="eliminar({{ $usuario->id }})"
-                                    wire:confirm="¿Eliminar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})?"
-                                    class="text-sm text-red-600 dark:text-red-400 underline"
-                                >
-                                    Eliminar
-                                </button>
+                                @if ($usuario->activo)
+                                    <button
+                                        type="button"
+                                        wire:click="eliminar({{ $usuario->id }})"
+                                        wire:confirm="¿Desactivar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})? No podrá iniciar sesión hasta que lo reactives."
+                                        class="text-sm text-red-600 dark:text-red-400 underline"
+                                    >
+                                        Desactivar
+                                    </button>
+                                @else
+                                    <button
+                                        type="button"
+                                        wire:click="reactivar({{ $usuario->id }})"
+                                        wire:confirm="¿Reactivar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})?"
+                                        class="text-sm text-green-700 dark:text-green-400 underline"
+                                    >
+                                        Reactivar
+                                    </button>
+                                @endif
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="8" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 No se encontraron usuarios.
                             </td>
                         </tr>

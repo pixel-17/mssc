@@ -47,11 +47,11 @@ class ObservarJefeAction
             $actual->contador_observaciones_jefe++;
 
             if ($actual->contador_observaciones_jefe >= $tope) {
-                $actual->estado = new Rechazada($actual);
+                $actual->transicionarA(Rechazada::class);
                 $actual->rechazada_por_id = $jefe->id;
                 $actual->motivo_rechazo = "Tope de {$tope} observaciones alcanzado.";
             } else {
-                $actual->estado = new ObservadaPorJefe($actual);
+                $actual->transicionarA(ObservadaPorJefe::class);
             }
 
             $actual->save();

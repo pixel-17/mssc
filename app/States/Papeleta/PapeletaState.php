@@ -27,6 +27,11 @@ abstract class PapeletaState extends State
 
             ->allowTransition(ObservadaPorJefe::class, PendienteJefe::class) // visto bueno explícito, reinicia reloj
             ->allowTransition(ObservadaPorJefe::class, Rechazada::class) // tope de 3 observaciones
+            // AprobarJefeAction acepta ObservadaPorJefe como origen (el jefe da su
+            // visto bueno directo sin pasar antes por PendienteJefe): ambas ramas
+            // de destino deben existir aquí o transicionarA() las rechazaría.
+            ->allowTransition(ObservadaPorJefe::class, PendienteRrhh::class)
+            ->allowTransition(ObservadaPorJefe::class, AutorizadaYCorriendo::class)
             ->allowTransition(ObservadaPorJefe::class, Vencida::class)
 
             ->allowTransition(PendienteRrhh::class, ObservadaPorRrhh::class)

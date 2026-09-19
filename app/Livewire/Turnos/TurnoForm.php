@@ -8,6 +8,8 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
+use App\Livewire\Concerns\RequiereAdmin;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 /**
@@ -18,6 +20,9 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class TurnoForm extends Component
 {
+    use RequiereAdmin;
+
+    #[Locked]
     public ?Turno $turno = null;
 
     public ?int $userId = null;
@@ -69,6 +74,8 @@ class TurnoForm extends Component
 
     public function guardar(): void
     {
+        $this->autorizarAdmin();
+
         $datos = $this->validate();
 
         $atributos = [

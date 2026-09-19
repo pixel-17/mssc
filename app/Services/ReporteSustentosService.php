@@ -24,10 +24,7 @@ class ReporteSustentosService
             ->with(['papeleta.trabajador.sede', 'papeleta.motivo', 'revisadoPor']);
 
         if (! $usuario->hasRole('admin') && ! $usuario->hasRole('rrhh')) {
-            $query->whereHas('papeleta', fn (Builder $q) => $q->where(function (Builder $q2) use ($usuario) {
-                $q2->where('jefe_inmediato_id', $usuario->id)
-                    ->orWhere('jefe_area_id', $usuario->id);
-            }));
+            $query->whereHas('papeleta', fn (Builder $q) => $q->deEquipoDe($usuario));
         }
 
         if (! empty($filtros['trabajador_id'])) {

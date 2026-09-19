@@ -61,7 +61,7 @@ class HistorialTrabajadorService
             return true;
         }
 
-        return $usuario->esJefeInmediatoDe($trabajador) || $trabajador->jefe_area_id === $usuario->id;
+        return User::equipoDe($usuario)->whereKey($trabajador->id)->exists();
     }
 
     /**

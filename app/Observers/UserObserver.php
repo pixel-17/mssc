@@ -37,6 +37,17 @@ class UserObserver
             ? \App\Models\UnidadOrganica::find($user->unidad_organica_id)
             : null;
 
+        if ($unidad && $unidad->jefe_id === $user->id) {
+            // Es el propio jefe de esta unidad (jefe que además es
+            // miembro de la unidad que encabeza). Su jefe inmediato NO
+            // puede ser él mismo: sube un nivel al jefe de la unidad
+            // padre, y su jefe de área al de la unidad abuela.
+            $user->jefe_inmediato_id = $unidad->padre?->jefe_id;
+            $user->jefe_area_id = $unidad->padre?->padre?->jefe_id;
+
+            return;
+        }
+
         $user->jefe_inmediato_id = $unidad?->jefeInmediato()?->id;
         $user->jefe_area_id = $unidad?->jefeArea()?->id;
     }

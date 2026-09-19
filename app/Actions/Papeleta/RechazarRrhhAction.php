@@ -32,7 +32,7 @@ class RechazarRrhhAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            $actual->estado = new Rechazada($actual);
+            $actual->transicionarA(Rechazada::class);
             $actual->rechazada_por_id = $rrhh->id;
             $actual->motivo_rechazo = $motivo;
             $actual->save();

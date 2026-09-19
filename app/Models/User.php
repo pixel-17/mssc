@@ -158,37 +158,50 @@ class User extends Authenticatable
     }
 
     /**
-     * Todos los trabajadores que este usuario ve como Jefe Inmediato:
-     * los automáticos (jefe_inmediato_id de la unidad orgánica) más
-     * los adicionales asignados a mano. Para bandejas y visibilidad.
+     * Fuente ÚNICA de "mi equipo": trabajadores cuyo jefe inmediato o de
+     * área (columnas explícitas) soy yo, los asignados a mano como jefe
+     * adicional y todos los de las unidades que encabezo (y sus
+     * sub-unidades). Antes había tres definiciones distintas
+     * (trabajadoresComoJefeInmediato, trabajadoresParaReportes y
+     * EquipoDelJefeService) y un jefe adicional veía al trabajador en un
+     * lado pero no en otro.
      */
-    public function trabajadoresComoJefeInmediato(): \Illuminate\Support\Collection
+    public function scopeEquipoDe(\Illuminate\Database\Eloquent\Builder $query, User $jefe): \Illuminate\Database\Eloquent\Builder
     {
-        return User::where('jefe_inmediato_id', $this->id)
-            ->get()
-            ->merge($this->trabajadoresAdicionales)
-            ->unique('id')
+        $unidadIds = $jefe->unidadesQueEncabeza
+            ->flatMap(fn ($u) => collect([$u->id])->merge($u->descendantIds()))
+            ->unique()
             ->values();
+
+        return $query->where(function ($q) use ($jefe, $unidadIds) {
+            $q->where('users.jefe_inmediato_id', $jefe->id)
+                ->orWhere('users.jefe_area_id', $jefe->id)
+                ->orWhereIn('users.id', \Illuminate\Support\Facades\DB::table('jefes_inmediatos_adicionales')
+                    ->where('jefe_inmediato_id', $jefe->id)
+                    ->select('trabajador_id'));
+
+            if ($unidadIds->isNotEmpty()) {
+                $q->orWhereIn('users.unidad_organica_id', $unidadIds);
+            }
+        });
     }
 
-    /**
-     * Trabajadores que este usuario puede elegir/buscar en los reportes.
-     * Mismo alcance que las consultas de reportes, que filtran por las
-     * columnas fotografiadas jefe_inmediato_id / jefe_area_id: quien es
-     * jefe de una unidad ve a su gente Y a la de las unidades hijas
-     * (para ellas es Jefe de Área), más los adicionales asignados a mano.
-     * trabajadoresComoJefeInmediato() se queda corto aquí: no incluye a
-     * los trabajadores de las unidades hijas.
-     */
+    /** Equipo del jefe como colección (para selects/buscadores). */
+    public function equipo(): \Illuminate\Support\Collection
+    {
+        return User::equipoDe($this)->orderBy('name')->get();
+    }
+
+    /** @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad. */
+    public function trabajadoresComoJefeInmediato(): \Illuminate\Support\Collection
+    {
+        return $this->equipo();
+    }
+
+    /** @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad. */
     public function trabajadoresParaReportes(): \Illuminate\Support\Collection
     {
-        return User::where(fn ($q) => $q
-            ->where('jefe_inmediato_id', $this->id)
-            ->orWhere('jefe_area_id', $this->id))
-            ->get()
-            ->merge($this->trabajadoresAdicionales)
-            ->unique('id')
-            ->values();
+        return $this->equipo();
     }
 
     /**
@@ -202,10 +215,20 @@ class User extends Authenticatable
             return true;
         }
 
-        return $trabajador->jefesInmediatosAdicionales()
+        // Con la relación ya cargada (with('trabajador.jefesInmediatosAdicionales'))
+        // no hay query; si no, se memoiza por instancia para no repetirla
+        // en listados/policies que llaman esto una vez por fila.
+        if ($trabajador->relationLoaded('jefesInmediatosAdicionales')) {
+            return $trabajador->jefesInmediatosAdicionales->contains('id', $this->id);
+        }
+
+        return $this->esAdicionalDe[$trabajador->id] ??= $trabajador->jefesInmediatosAdicionales()
             ->where('users.id', $this->id)
             ->exists();
     }
+
+    /** @var array<int, bool> */
+    private array $esAdicionalDe = [];
 
     public function turnos(): \Illuminate\Database\Eloquent\Relations\HasMany
     {

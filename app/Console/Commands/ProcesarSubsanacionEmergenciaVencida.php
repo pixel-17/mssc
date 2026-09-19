@@ -3,10 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Actions\Papeleta\ReclasificarAParticularAction;
+use App\Exceptions\PapeletaException;
 use App\Models\Papeleta;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
 use Illuminate\Console\Command;
+use Throwable;
 
 /**
  * Paso 6: si jefe y/o RRHH observaron una Emergencia y el trabajador no
@@ -34,13 +36,22 @@ class ProcesarSubsanacionEmergenciaVencida extends Command
                 $q->where('visto_bueno_jefe_emergencia', 'observado')
                     ->orWhere('visto_bueno_rrhh_emergencia', 'observado');
             })
-            ->each(function (Papeleta $papeleta) use ($reclasificar) {
-                $reclasificar->ejecutar(
-                    $papeleta,
-                    actorId: null,
-                    actorTipo: 'sistema',
-                    justificacion: 'Reclasificado automáticamente: subsanación de Emergencia no resuelta dentro del plazo de días hábiles configurado.',
-                );
+            ->chunkById(100, function ($lote) use ($reclasificar) {
+                foreach ($lote as $papeleta) {
+                    try {
+                        $reclasificar->ejecutar(
+                            $papeleta,
+                            actorId: null,
+                            actorTipo: 'sistema',
+                            justificacion: 'Reclasificado automáticamente: subsanación de Emergencia no resuelta dentro del plazo de días hábiles configurado.',
+                            exigirSubsanacionEmergenciaVencida: true,
+                        );
+                    } catch (PapeletaException) {
+                        // Alguien la resolvió entre la lectura y el lock: no es un error.
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
+                }
             });
 
         return self::SUCCESS;

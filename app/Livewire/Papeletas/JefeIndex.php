@@ -32,29 +32,26 @@ class JefeIndex extends Component
     {
         $user = Auth::user();
 
-        $porDecidir = Papeleta::where('estado', PendienteJefe::class)
-            ->where(function ($q) use ($user) {
-                $q->where('jefe_inmediato_id', $user->id)
-                    ->orWhere('jefe_area_id', $user->id);
-            })
+        $porDecidir = Papeleta::whereState('estado', PendienteJefe::class)
+            ->where(fn ($q) => $q->deJefeInmediato($user)->orWhere('papeletas.jefe_area_id', $user->id))
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
-        $observacionesRrhh = Papeleta::where('estado', ObservadaPorRrhh::class)
-            ->where('jefe_inmediato_id', $user->id)
+        $observacionesRrhh = Papeleta::whereState('estado', ObservadaPorRrhh::class)
+            ->deJefeInmediato($user)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
-        $enCurso = Papeleta::where('estado', AutorizadaYCorriendo::class)
-            ->where('jefe_inmediato_id', $user->id)
+        $enCurso = Papeleta::whereState('estado', AutorizadaYCorriendo::class)
+            ->deJefeInmediato($user)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
-        $sustentosPorRevisar = Papeleta::where('estado', RetornoPendienteSustento::class)
-            ->where('jefe_inmediato_id', $user->id)
+        $sustentosPorRevisar = Papeleta::whereState('estado', RetornoPendienteSustento::class)
+            ->deJefeInmediato($user)
             ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
             ->with(['trabajador', 'motivo', 'sustentos'])
             ->latest()
