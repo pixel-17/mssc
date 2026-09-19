@@ -28,9 +28,8 @@ class TurnoIndex extends Component
 
     public function eliminar(Turno $turno): void
     {
+        // Turno::booted() ya notifica al eliminar (evento 'deleted').
         $turno->delete();
-
-        \App\Events\HorarioActualizado::notificar($turno->user_id);
 
         session()->flash('mensaje', 'Turno eliminado.');
     }

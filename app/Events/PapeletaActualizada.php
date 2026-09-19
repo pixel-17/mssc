@@ -36,6 +36,17 @@ class PapeletaActualizada implements ShouldBroadcastNow
     /** Reverb/Pusher aceptan hasta 100 canales por publicación. */
     private const CANALES_POR_ENVIO = 50;
 
+    /**
+     * Papeletas con un afterCommit ya agendado en este ciclo. Una sola
+     * acción de negocio suele tocar Papeleta + HistorialPapeleta (o
+     * Retorno/Sustento) a la vez, y cada modelo llama notificar() por
+     * su cuenta: sin esto, se dispararía el evento (y sus queries) dos
+     * veces por el mismo cambio.
+     *
+     * @var array<int, true>
+     */
+    private static array $pendientes = [];
+
     /** @param  array<int, int>  $userIds */
     public function __construct(
         public int $papeletaId,
@@ -75,7 +86,15 @@ class PapeletaActualizada implements ShouldBroadcastNow
      */
     public static function notificar(int $papeletaId): void
     {
+        if (isset(self::$pendientes[$papeletaId])) {
+            return;
+        }
+
+        self::$pendientes[$papeletaId] = true;
+
         DB::afterCommit(function () use ($papeletaId) {
+            unset(self::$pendientes[$papeletaId]);
+
             try {
                 $papeleta = Papeleta::with('trabajador.jefesInmediatosAdicionales')->find($papeletaId);
 

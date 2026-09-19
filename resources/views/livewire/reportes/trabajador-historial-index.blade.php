@@ -106,7 +106,7 @@
                                         @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['sede'] ?? '—' }}</td>
-                                    <td class="px-4 py-3 text-sm"><x-estado-papeleta :estado="'App\\States\\Papeleta\\'.$fila['estado']" /></td>
+                                    <td class="px-4 py-3 text-sm"><x-estado-papeleta :estado="$fila['estado_fqcn']" /></td>
                                     <td class="px-4 py-3 text-sm text-right {{ $fila['suma_descuento'] && $fila['minutos'] ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
                                         @if ($fila['minutos'] !== null)
                                             {{ intdiv($fila['minutos'], 60) }}h {{ str_pad($fila['minutos'] % 60, 2, '0', STR_PAD_LEFT) }}m

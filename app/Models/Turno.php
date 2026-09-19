@@ -23,6 +23,26 @@ use Illuminate\Support\Carbon;
  */
 class Turno extends Model
 {
+    protected static function booted(): void
+    {
+        // Tiempo real para altas/ediciones/bajas individuales (formulario
+        // de turno, botón eliminar): centralizado acá para que cualquier
+        // escritura futura de un solo turno lo avise sin acordarse.
+        //
+        // OJO: esto NO cubre Turno::upsert() ni bajas por query — son
+        // consultas masivas (ProgramacionTurnoService, GeneradorTurno-
+        // MensualService, por rendimiento con cientos de trabajadores) y
+        // Eloquent no dispara eventos de modelo para ellas. Esos dos
+        // servicios siguen notificando a mano después de escribir.
+        static::saved(function (self $turno) {
+            $antes = $turno->wasChanged('user_id') ? (int) $turno->getOriginal('user_id') : null;
+
+            \App\Events\HorarioActualizado::notificar(...array_filter([$turno->user_id, $antes]));
+        });
+
+        static::deleted(fn (self $turno) => \App\Events\HorarioActualizado::notificar($turno->user_id));
+    }
+
     protected $fillable = [
         'user_id',
         'sede_id',

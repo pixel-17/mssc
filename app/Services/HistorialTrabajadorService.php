@@ -80,6 +80,10 @@ class HistorialTrabajadorService
                 'motivo' => $p->motivo->nombre,
                 'sede' => $p->sede?->nombre,
                 'estado' => class_basename($p->estado),
+                // FQCN completo para <x-estado-papeleta>: evita que la vista
+                // tenga que rearmar 'App\States\Papeleta\'.$fila['estado'],
+                // que se rompe en silencio si cambia el formato de arriba.
+                'estado_fqcn' => get_class($p->estado),
                 'es_emergencia' => $p->es_emergencia,
                 'salida' => $p->hora_salida_real,
                 'retorno' => $p->retorno?->hora_servidor,

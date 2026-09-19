@@ -83,14 +83,12 @@ class TurnoForm extends Component
             'hora_fin' => $datos['esDescanso'] ? null : $datos['horaFin'],
         ];
 
-        // Si el turno se reasigna a otro trabajador, avisar a ambos.
-        $antes = $this->turno?->user_id;
-
+        // Avisa por Reverb solo: Turno::booted() ya notifica al guardar,
+        // y si se reasigna a otro trabajador captura ambos ids (ver el
+        // hook 'saved' del modelo).
         $this->turno
             ? $this->turno->update($atributos)
             : Turno::create($atributos);
-
-        \App\Events\HorarioActualizado::notificar(...array_filter([(int) $datos['userId'], $antes]));
 
         session()->flash('mensaje', $this->turno ? 'Turno actualizado.' : 'Turno creado.');
 
