@@ -64,7 +64,9 @@ class ProcesarVencimientosPapeletas extends Command
         Papeleta::whereState('estado', PendienteJefe::class)
             ->whereNull('escalado_jefe_area_at')
             ->whereNull('jefe_resuelto_at')
-            ->where('created_at', '<=', now()->subMinutes($slaMinutos))
+            // El reloj arranca en created_at, o en reloj_jefe_at si la papeleta se
+            // reabrió (subsanación del trabajador, observación de RRHH reconocida).
+            ->whereRaw('COALESCE(reloj_jefe_at, created_at) <= ?', [now()->subMinutes($slaMinutos)])
             ->whereNotNull('jefe_area_id')
             ->with('jefeArea')
             ->chunkById(100, function ($lote) {

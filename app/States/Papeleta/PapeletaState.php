@@ -33,6 +33,7 @@ abstract class PapeletaState extends State
             ->allowTransition(ObservadaPorJefe::class, PendienteRrhh::class)
             ->allowTransition(ObservadaPorJefe::class, AutorizadaYCorriendo::class)
             ->allowTransition(ObservadaPorJefe::class, Vencida::class)
+            ->allowTransition(ObservadaPorJefe::class, Cancelada::class) // el trabajador desiste tras la observación
 
             ->allowTransition(PendienteRrhh::class, ObservadaPorRrhh::class)
             ->allowTransition(PendienteRrhh::class, Rechazada::class)

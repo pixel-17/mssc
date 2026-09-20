@@ -17,8 +17,15 @@ use Illuminate\Support\Facades\DB;
 /**
  * Observación del Jefe Inmediato. Tope configurable en `configuraciones`
  * (clave TOPE_OBSERVACIONES) -> al alcanzarlo, rechazo automático.
- * El trabajador debe subir sustento Y el jefe debe dar visto bueno
- * explícito para volver a PENDIENTE_JEFE con el reloj reiniciado.
+ *
+ * El trabajador SIEMPRE debe responder la observación por escrito
+ * (SubsanarObservacionAction); al observar, el jefe decide además si
+ * exige un adjunto:
+ * - requiereAdjunto = true  -> respuesta escrita + archivo.
+ * - requiereAdjunto = false -> solo respuesta escrita.
+ * Al responder, la papeleta vuelve a PENDIENTE_JEFE con el reloj
+ * reiniciado. Mientras espera la respuesta el jefe solo puede
+ * rechazarla (o el trabajador cancelarla).
  *
  * La fila se relee con lockForUpdate() dentro de la transacción (mismo
  * criterio que CancelarPapeletaAction). Además de proteger la
@@ -34,9 +41,9 @@ class ObservarJefeAction
 
     public function __construct(private NotificarPapeletaService $notificar) {}
 
-    public function ejecutar(Papeleta $papeleta, User $jefe, string $comentario, string $actorTipo = 'jefe_inmediato'): Papeleta
+    public function ejecutar(Papeleta $papeleta, User $jefe, string $comentario, string $actorTipo = 'jefe_inmediato', bool $requiereAdjunto = false): Papeleta
     {
-        $papeleta = DB::transaction(function () use ($papeleta, $jefe, $comentario, $actorTipo) {
+        $papeleta = DB::transaction(function () use ($papeleta, $jefe, $comentario, $actorTipo, $requiereAdjunto) {
             /** @var Papeleta $actual */
             $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
@@ -57,6 +64,9 @@ class ObservarJefeAction
                 $actual->motivo_rechazo = "Tope de {$tope} observaciones alcanzado.";
             } else {
                 $actual->transicionarA(ObservadaPorJefe::class);
+                $actual->observacion_requiere_adjunto = $requiereAdjunto;
+                $actual->observacion_respuesta = null;
+                $actual->observacion_subsanada_at = null;
             }
 
             $actual->save();

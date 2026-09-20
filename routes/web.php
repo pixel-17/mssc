@@ -282,7 +282,7 @@ Route::middleware([
      * PapeletaPolicy::view (PapeletaArchivoController).
      */
     Route::get('/papeletas/{papeleta}/archivo/{tipo}', [PapeletaArchivoController::class, 'show'])
-        ->whereIn('tipo', ['adjunto-inicial', 'retorno-foto'])
+        ->whereIn('tipo', ['adjunto-inicial', 'retorno-foto', 'justificacion-observacion'])
         ->name('papeletas.archivo');
 
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
@@ -293,6 +293,7 @@ Route::middleware([
         Route::get('/{papeleta}', [TrabajadorPapeletaController::class, 'show'])->name('show');
         Route::delete('/{papeleta}', [TrabajadorPapeletaController::class, 'cancelar'])->name('cancelar');
 
+        Route::post('/{papeleta}/subsanar', [TrabajadorPapeletaController::class, 'subsanar'])->name('subsanar');
         Route::post('/{papeleta}/retorno', [TrabajadorRetornoController::class, 'store'])->name('retorno.store');
         Route::post('/sustentos/{sustento}', [TrabajadorSustentoController::class, 'store'])->name('sustento.store');
     });

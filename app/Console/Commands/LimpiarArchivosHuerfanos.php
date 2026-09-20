@@ -36,6 +36,7 @@ class LimpiarArchivosHuerfanos extends Command
     private const CARPETAS = [
         'papeletas/adjuntos-iniciales',
         'papeletas/retornos',
+        'papeletas/subsanaciones',
         'papeletas/sustentos',
     ];
 
@@ -48,6 +49,7 @@ class LimpiarArchivosHuerfanos extends Command
 
         $referenciados = array_flip(array_merge(
             Papeleta::whereNotNull('adjunto_inicial_path')->pluck('adjunto_inicial_path')->all(),
+            Papeleta::whereNotNull('observacion_adjunto_path')->pluck('observacion_adjunto_path')->all(),
             Retorno::whereNotNull('foto_path')->pluck('foto_path')->all(),
             Sustento::whereNotNull('archivo_path')->pluck('archivo_path')->all(),
         ));

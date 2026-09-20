@@ -38,6 +38,12 @@
                 <dd class="text-gray-900 dark:text-white">{{ $papeleta->justificacion }}</dd>
             </div>
         @endif
+        @if ($papeleta->observacion_subsanada_at)
+            <div class="sm:col-span-2">
+                <dt class="text-gray-500 dark:text-tinta-100/50">Respuesta del trabajador a la observación ({{ $papeleta->observacion_subsanada_at->format('d/m/Y H:i') }})</dt>
+                <dd class="text-gray-900 dark:text-white">{{ $papeleta->observacion_respuesta }}</dd>
+            </div>
+        @endif
         @if ($papeleta->motivo_rechazo)
             <div class="sm:col-span-2">
                 <dt class="text-gray-500 dark:text-tinta-100/50">Motivo de rechazo</dt>

@@ -58,6 +58,11 @@ class Papeleta extends Model
         'motivo_original_id',
         'justificacion',
         'adjunto_inicial_path',
+        'observacion_requiere_adjunto',
+        'observacion_respuesta',
+        'observacion_adjunto_path',
+        'observacion_subsanada_at',
+        'reloj_jefe_at',
     ];
 
     protected function casts(): array
@@ -76,6 +81,9 @@ class Papeleta extends Model
             'vencida_at' => 'datetime',
             'requiere_visto_bueno' => 'boolean',
             'regularizacion_fecha_limite' => 'datetime',
+            'observacion_requiere_adjunto' => 'boolean',
+            'observacion_subsanada_at' => 'datetime',
+            'reloj_jefe_at' => 'datetime',
         ];
     }
 

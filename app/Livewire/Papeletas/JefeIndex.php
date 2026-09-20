@@ -5,6 +5,7 @@ namespace App\Livewire\Papeletas;
 use App\Livewire\Concerns\EscuchaNotificacionesEnVivo;
 use App\Models\Papeleta;
 use App\States\Papeleta\AutorizadaYCorriendo;
+use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\RetornoPendienteSustento;
@@ -40,6 +41,13 @@ class JefeIndex extends Component
             ->latest()
             ->get();
 
+        // Las que yo observé: esperan la respuesta del trabajador.
+        $observadasPorMi = Papeleta::whereState('estado', ObservadaPorJefe::class)
+            ->where(fn ($q) => $q->deJefeInmediato($user)->orWhere('papeletas.jefe_area_id', $user->id))
+            ->with(['trabajador', 'motivo'])
+            ->latest()
+            ->get();
+
         $observacionesRrhh = Papeleta::whereState('estado', ObservadaPorRrhh::class)
             ->deJefeInmediato($user)
             ->with(['trabajador', 'motivo'])
@@ -61,6 +69,7 @@ class JefeIndex extends Component
 
         return view('livewire.papeletas.jefe-index', compact(
             'porDecidir',
+            'observadasPorMi',
             'observacionesRrhh',
             'enCurso',
             'sustentosPorRevisar',

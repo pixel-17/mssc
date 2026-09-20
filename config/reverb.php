@@ -39,6 +39,11 @@ return [
                     'timeout' => env('REDIS_TIMEOUT', 60),
                 ],
             ],
+            // reverb:start lee estas dos claves sin valor por defecto: si faltan
+            // (config publicada con una versión anterior de Reverb) falla con
+            // "Undefined array key pulse_ingest_interval".
+            'pulse_ingest_interval' => env('REVERB_PULSE_INGEST_INTERVAL', 15),
+            'telescope_ingest_interval' => env('REVERB_TELESCOPE_INGEST_INTERVAL', 15),
         ],
 
     ],

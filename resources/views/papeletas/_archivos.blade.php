@@ -9,6 +9,7 @@
     $archivosPapeleta = array_filter([
         'adjunto-inicial' => $papeleta->adjunto_inicial_path ? 'Adjunto inicial' : null,
         'retorno-foto' => $papeleta->retorno?->foto_path ? 'Foto del retorno' : null,
+        'justificacion-observacion' => $papeleta->observacion_adjunto_path ? 'Adjunto de la respuesta a la observación' : null,
     ]);
 @endphp
 

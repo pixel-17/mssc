@@ -6,6 +6,10 @@
     'minlength' => 5,
     'placeholder' => 'Escribe un comentario (mínimo :min caracteres)...',
     'confirmText' => null,
+    // Casilla opcional (nombre del campo y texto) que viaja junto al comentario.
+    'opcion' => null,
+    'opcionLabel' => null,
+    'opcionMarcada' => true,
 ])
 
 @php
@@ -73,6 +77,14 @@
                         <span x-text="texto.trim().length"></span>/{{ (int) $minlength }} caracteres mínimos
                     </p>
                 </div>
+
+                @if ($opcion)
+                    <label class="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-200">
+                        <input type="checkbox" name="{{ $opcion }}" value="1" @checked($opcionMarcada)
+                               class="mt-0.5 rounded border-gray-300 dark:border-white/15 dark:bg-white/5 text-tinta-600 focus:ring-tinta-500">
+                        <span>{{ $opcionLabel }}</span>
+                    </label>
+                @endif
 
                 <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                     <button type="button" @click="open = false"

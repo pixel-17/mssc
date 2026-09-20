@@ -48,6 +48,12 @@ class AprobarJefeAction
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
             }
 
+            // Observó: el trabajador debe responder primero (la papeleta vuelve
+            // a PENDIENTE_JEFE al hacerlo). Mientras tanto solo puede rechazar.
+            if ($actual->estado->equals(ObservadaPorJefe::class)) {
+                throw new PapeletaException('Esta papeleta espera la respuesta del trabajador a tu observación: aprueba cuando responda o recházala.');
+            }
+
             $estadoAnterior = class_basename($actual->estado);
             $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 

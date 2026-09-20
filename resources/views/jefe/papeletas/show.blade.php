@@ -1,10 +1,16 @@
 @php
+    use App\States\Papeleta\ObservadaPorJefe;
     use App\States\Papeleta\PendienteJefe;
     use App\States\Papeleta\ObservadaPorRrhh;
     use App\States\Papeleta\AutorizadaYCorriendo;
     use App\States\Papeleta\RetornoPendienteSustento;
 
-    $puedeDecidir = $papeleta->estado->equals(PendienteJefe::class)
+    $estaPendiente = $papeleta->estado->equals(PendienteJefe::class);
+    $estaObservada = $papeleta->estado->equals(ObservadaPorJefe::class);
+
+    // Tras observar, mientras el trabajador no responda el jefe solo puede rechazar
+    // (al responder, la papeleta vuelve a PENDIENTE_JEFE y decide como siempre).
+    $puedeDecidir = ($estaPendiente || $estaObservada)
         && (($papeleta->escalado_jefe_area_at !== null && $papeleta->jefe_area_id === auth()->id())
             || ($papeleta->escalado_jefe_area_at === null && $papeleta->jefe_inmediato_id === auth()->id()));
 
@@ -38,15 +44,27 @@
             @if ($puedeDecidir)
                 <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisión</h3>
+
+                    @if ($estaObservada)
+                        <p class="text-sm text-gray-600 mb-3">
+                            Observaste esta papeleta. Espera la respuesta escrita del trabajador{{ $papeleta->observacion_requiere_adjunto ? ' (con archivo adjunto)' : '' }}:
+                            volverá a tu bandeja para que decidas. Mientras tanto solo puedes rechazarla.
+                        </p>
+                    @endif
+
                     <div class="flex items-center gap-3 flex-wrap">
-                        <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}" x-data="{ enviando: false }" @submit="enviando = true">
-                            @csrf
-                            <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
-                                <span x-show="! enviando">Aprobar</span>
-                                <span x-show="enviando" x-cloak>Aprobando…</span>
-                            </button>
-                        </form>
-                        <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" />
+                        @if ($estaPendiente)
+                            <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}" x-data="{ enviando: false }" @submit="enviando = true">
+                                @csrf
+                                <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
+                                    <span x-show="! enviando">Aprobar</span>
+                                    <span x-show="enviando" x-cloak>Aprobando…</span>
+                                </button>
+                            </form>
+                        @endif
+                        @if ($estaPendiente)
+                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" />
+                        @endif
                         <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                     </div>
                     @if ($papeleta->contador_observaciones_jefe > 0)

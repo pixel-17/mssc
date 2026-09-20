@@ -7,13 +7,14 @@ use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\States\Papeleta\Cancelada;
+use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\PendienteJefe;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Paso 1: cancelable solo por el trabajador dueño, solo mientras siga
- * en PENDIENTE_JEFE. Una vez que el tiempo corre (cualquier otro
- * estado) ya no se puede cancelar.
+ * en PENDIENTE_JEFE u OBSERVADA_POR_JEFE (todavía no hay decisión ni
+ * el tiempo corre). En cualquier otro estado ya no se puede cancelar.
  *
  * "Si cancelación y autorización chocan casi al mismo tiempo, gana
  * quien confirme primero en BD": por eso se relee la fila con
@@ -33,7 +34,7 @@ class CancelarPapeletaAction
             /** @var Papeleta $actual */
             $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            if (! $actual->estado->equals(PendienteJefe::class)) {
+            if (! $actual->estado->equals(PendienteJefe::class, ObservadaPorJefe::class)) {
                 throw new PapeletaException('Esta papeleta ya fue resuelta y no se puede cancelar.');
             }
 

@@ -24,7 +24,9 @@ use Illuminate\Support\Facades\Notification;
  *   RRHH que tiene una revisión post-hoc pendiente al iniciar su
  *   jornada.
  * - Al aprobar RRHH: notifica al trabajador que puede salir.
- * - Rechazo u observación del jefe: notifica al trabajador.
+ * - Rechazo u observación del jefe: notifica al trabajador (el mensaje
+ *   dice si además debe adjuntar un archivo).
+ * - El trabajador responde una observación: notifica al Jefe Inmediato.
  * - Observación de RRHH: notifica al Jefe Inmediato (nunca al
  *   trabajador — la observación de RRHH no le llega directo).
  * - Escalamiento a Jefe de Área: notifica al Jefe de Área.
@@ -127,8 +129,27 @@ class NotificarPapeletaService
             $papeleta,
             'observada_jefe',
             'Papeleta observada',
-            'Tu jefe observó tu papeleta. Revisa el comentario y subsana para continuar.',
+            $papeleta->observacion_requiere_adjunto
+                ? 'Tu jefe observó tu papeleta. Responde por escrito y adjunta el archivo que te pide para continuar.'
+                : 'Tu jefe observó tu papeleta. Revisa el comentario y respóndelo por escrito para continuar.',
             $this->urlTrabajador($papeleta),
+        );
+    }
+
+    /** El trabajador respondió la observación: la papeleta vuelve a la decisión del jefe. */
+    public function observacionRespondida(Papeleta $papeleta): void
+    {
+        if (! $papeleta->jefeInmediato) {
+            return;
+        }
+
+        $this->enviarUno(
+            $papeleta->jefeInmediato,
+            $papeleta,
+            'observacion_respondida',
+            'Observación respondida',
+            "{$papeleta->trabajador->nombre_completo} respondió tu observación. La papeleta volvió a tu bandeja.",
+            $this->urlJefe($papeleta),
         );
     }
 

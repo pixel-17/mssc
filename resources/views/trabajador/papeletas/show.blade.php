@@ -1,5 +1,13 @@
 @php
-    $puedeCancelar = $papeleta->trabajador_id === auth()->id() && $papeleta->estado->equals(\App\States\Papeleta\PendienteJefe::class);
+    $observada = $papeleta->estado->equals(\App\States\Papeleta\ObservadaPorJefe::class);
+    $puedeSubsanar = $observada && $papeleta->trabajador_id === auth()->id();
+    $exigeAdjunto = $puedeSubsanar && $papeleta->observacion_requiere_adjunto;
+    $ultimaObservacion = $observada
+        ? $papeleta->historial->where('estado_nuevo', 'ObservadaPorJefe')->sortByDesc('id')->first()
+        : null;
+
+    $puedeCancelar = $papeleta->trabajador_id === auth()->id()
+        && $papeleta->estado->equals(\App\States\Papeleta\PendienteJefe::class, \App\States\Papeleta\ObservadaPorJefe::class);
     $puedeMarcarRetorno = $papeleta->trabajador_id === auth()->id() && $papeleta->estado->equals(\App\States\Papeleta\AutorizadaYCorriendo::class) && ! $papeleta->retorno;
     $sustentoPendiente = $papeleta->sustentos->firstWhere('estado', 'pendiente');
 
@@ -56,6 +64,56 @@
                 </div>
             @endif
         </div>
+
+        {{-- Papeleta observada por el jefe: qué dijo y qué se espera del trabajador --}}
+        @if ($observada)
+            <div class="glass-card p-5 border border-orange-300/70 dark:border-orange-400/30">
+                <h3 class="text-sm font-semibold text-orange-800 dark:text-orange-300 mb-1">Tu jefe observó esta papeleta</h3>
+
+                @if ($ultimaObservacion?->justificacion)
+                    <p class="text-sm text-tinta-950 dark:text-white/90 italic mb-3">"{{ $ultimaObservacion->justificacion }}"</p>
+                @endif
+
+                @if ($puedeSubsanar)
+                    <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-3">
+                        Responde por escrito{{ $exigeAdjunto ? ' y adjunta el archivo que te pide' : '' }} para que tu jefe vuelva a decidir sobre la papeleta.
+                        Si ya no la necesitas, puedes cancelarla.
+                    </p>
+                    <form method="POST" action="{{ route('trabajador.papeletas.subsanar', $papeleta) }}" enctype="multipart/form-data" class="space-y-3"
+                          x-data="{ archivo: null }">
+                        @csrf
+
+                        <div>
+                            <textarea name="respuesta" rows="4" required minlength="5" maxlength="2000" aria-label="Tu respuesta a la observación"
+                                      placeholder="Escribe tu respuesta (mínimo 5 caracteres)..."
+                                      class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white">{{ old('respuesta') }}</textarea>
+                            @error('respuesta')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        @if ($exigeAdjunto)
+                            <label for="archivo-respuesta"
+                                   class="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-tinta-200 dark:border-white/15 bg-white/40 dark:bg-white/5 py-4 text-center cursor-pointer hover:border-tinta-400 dark:hover:border-tinta-400/60 transition">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-tinta-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                                </svg>
+                                <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Adjuntar archivo (PDF, JPG o PNG)'"></span>
+                            </label>
+                            <input type="file" id="archivo-respuesta" name="archivo" accept=".pdf,.jpg,.jpeg,.png" required class="hidden"
+                                   @change="archivo = $event.target.files[0]?.name ?? null">
+                            @error('archivo')
+                                <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        @endif
+
+                        <button type="submit" class="btn-primary w-full text-sm py-3">
+                            Enviar respuesta
+                        </button>
+                    </form>
+                @endif
+            </div>
+        @endif
 
         {{-- Salida autorizada / en curso: banner animado con la hora de retorno estimada --}}
         @if ($papeleta->estado->equals(\App\States\Papeleta\AutorizadaYCorriendo::class) && ! $papeleta->retorno)

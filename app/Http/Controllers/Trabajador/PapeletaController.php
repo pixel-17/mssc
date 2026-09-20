@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Trabajador;
 
 use App\Actions\Papeleta\CancelarPapeletaAction;
 use App\Actions\Papeleta\CrearPapeletaAction;
+use App\Actions\Papeleta\SubsanarObservacionAction;
 use App\Exceptions\PapeletaException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\StorePapeletaRequest;
+use App\Http\Requests\Papeleta\SubsanarObservacionRequest;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use Illuminate\Http\RedirectResponse;
@@ -17,7 +19,9 @@ use Illuminate\View\View;
 
 /**
  * Bandeja del Trabajador (Paso 1 del flujo): crear, ver el estado de
- * sus propias papeletas y cancelar mientras siga en PENDIENTE_JEFE.
+ * sus propias papeletas, cancelar mientras siga en PENDIENTE_JEFE u
+ * OBSERVADA_POR_JEFE y responder por escrito (con adjunto si el jefe lo
+ * exige) a las observaciones del jefe.
  */
 class PapeletaController extends Controller
 {
@@ -84,6 +88,35 @@ class PapeletaController extends Controller
         $papeleta->load(['motivo', 'sede', 'retorno', 'sustentos', 'historial.actor', 'jefeInmediato', 'jefeArea']);
 
         return view('trabajador.papeletas.show', compact('papeleta'));
+    }
+
+    /**
+     * Responde a una observación del jefe: siempre por escrito, con
+     * adjunto si el jefe lo exigió. Igual que en SustentoController, un
+     * archivo nunca debe quedar suelto en disco si la Action no llegó a
+     * referenciarlo.
+     */
+    public function subsanar(SubsanarObservacionRequest $request, Papeleta $papeleta, SubsanarObservacionAction $action): RedirectResponse
+    {
+        $archivoPath = $request->hasFile('archivo')
+            ? $request->file('archivo')->store('papeletas/subsanaciones', 'local')
+            : null;
+
+        try {
+            $action->ejecutar($papeleta, Auth::user(), $request->input('respuesta'), $archivoPath);
+        } catch (PapeletaException $e) {
+            $this->descartarAdjunto($archivoPath);
+
+            return back()->withInput()->with('error', $e->getMessage());
+        } catch (Throwable $e) {
+            $this->descartarAdjunto($archivoPath);
+
+            throw $e;
+        }
+
+        return redirect()
+            ->route('trabajador.papeletas.show', $papeleta)
+            ->with('success', 'Respuesta enviada. Tu jefe volverá a decidir sobre la papeleta.');
     }
 
     public function cancelar(Papeleta $papeleta, CancelarPapeletaAction $action): RedirectResponse

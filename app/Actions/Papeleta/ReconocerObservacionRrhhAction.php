@@ -41,6 +41,7 @@ class ReconocerObservacionRrhhAction
             $actual->transicionarA(PendienteJefe::class);
             $actual->jefe_resuelto_at = null;
             $actual->escalado_jefe_area_at = null;
+            $actual->reloj_jefe_at = now();
             $actual->save();
 
             HistorialPapeleta::create([

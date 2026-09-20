@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
@@ -58,7 +59,14 @@ class PapeletaPolicy
     public function cancelar(User $user, Papeleta $papeleta): bool
     {
         return $papeleta->trabajador_id === $user->id
-            && $papeleta->estado->equals(PendienteJefe::class);
+            && $papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class);
+    }
+
+    /** El trabajador responde por escrito (y con adjunto si se lo exigieron) a la observación del jefe. */
+    public function subsanarObservacion(User $user, Papeleta $papeleta): bool
+    {
+        return $papeleta->trabajador_id === $user->id
+            && $papeleta->estado->equals(ObservadaPorJefe::class);
     }
 
     /**
@@ -66,6 +74,11 @@ class PapeletaPolicy
      * decide mientras la papeleta no haya escalado; una vez escalada
      * (escalado_jefe_area_at no nulo), solo el Jefe de Área puede
      * actuar — el inmediato ya perdió la ventana.
+     *
+     * También puede rechazar una papeleta que él mismo observó
+     * (OBSERVADA_POR_JEFE) sin esperar la respuesta; aprobar u observar
+     * de nuevo solo procede desde PENDIENTE_JEFE (lo vigilan
+     * AprobarJefeAction y ObservarJefeAction).
      */
     public function decidirComoJefe(User $user, Papeleta $papeleta): bool
     {
@@ -73,7 +86,7 @@ class PapeletaPolicy
             return false;
         }
 
-        if (! $papeleta->estado->equals(PendienteJefe::class)) {
+        if (! $papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class)) {
             return false;
         }
 
