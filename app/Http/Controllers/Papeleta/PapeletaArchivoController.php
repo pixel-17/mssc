@@ -31,6 +31,7 @@ class PapeletaArchivoController extends Controller
 
         abort_unless($path && Storage::disk('local')->exists($path), 404, 'El archivo no existe.');
 
-        return Storage::disk('local')->response($path);
+        // nosniff: el navegador no debe reinterpretar un archivo subido por un usuario.
+        return Storage::disk('local')->response($path, null, ['X-Content-Type-Options' => 'nosniff']);
     }
 }

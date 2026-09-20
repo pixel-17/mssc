@@ -56,8 +56,11 @@ class CrearPapeletaAction
 
         $unidad = $trabajador->unidadOrganica;
 
+        // Misma regla que UserObserver: quien encabeza su unidad NO es su propio jefe.
+        [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador) : [null, null];
+
         try {
-            $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $bypassAprobacion, $turno, $unidad) {
+            $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $bypassAprobacion, $turno, $jefeInmediatoId, $jefeAreaId) {
                 $this->verificarExclusividad($trabajador, $motivo);
 
                 $papeleta = Papeleta::create([
@@ -70,8 +73,8 @@ class CrearPapeletaAction
                     'es_emergencia' => $bypassAprobacion,
                     'slot_normal_activo' => $motivo->participa_regla_exclusividad ? true : null,
                     'slot_emergencia_activo' => $motivo->participa_regla_exclusividad ? null : true,
-                    'jefe_inmediato_id' => $unidad?->jefeInmediato()?->id,
-                    'jefe_area_id' => $unidad?->jefeArea()?->id,
+                    'jefe_inmediato_id' => $jefeInmediatoId,
+                    'jefe_area_id' => $jefeAreaId,
                     'hora_salida_real' => $bypassAprobacion ? now() : null,
                     'hora_retorno_estimado' => $datos['hora_retorno_estimado'] ?? null,
                     'justificacion' => $datos['justificacion'] ?? null,

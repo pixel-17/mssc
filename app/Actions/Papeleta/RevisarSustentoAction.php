@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
@@ -23,6 +24,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RevisarSustentoAction
 {
+    use ExigeDecisorAjeno;
+
     public function __construct(private NotificarPapeletaService $notificar) {}
 
     public function aprobar(Sustento $sustento, User $revisor): Papeleta
@@ -37,46 +40,53 @@ class RevisarSustentoAction
 
     private function resolver(Sustento $sustento, User $revisor, string $resultado, ?string $comentario = null): Papeleta
     {
-        $papeleta = $sustento->papeleta;
+        $papeleta = DB::transaction(function () use ($sustento, $revisor, $resultado, $comentario) {
+            // Orden de locks: primero la papeleta, luego el sustento (el mismo
+            // que usan los jobs de vencimiento), para no provocar deadlocks.
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($sustento->papeleta_id)->lockForUpdate()->firstOrFail();
+            /** @var Sustento $sustentoActual */
+            $sustentoActual = Sustento::whereKey($sustento->id)->lockForUpdate()->firstOrFail();
 
-        if (! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
-            throw new PapeletaException('Esta papeleta ya no está esperando sustento.');
-        }
+            $this->exigirDecisorAjeno($actual, $revisor);
 
-        if ($sustento->estado !== 'presentado') {
-            throw new PapeletaException('Este sustento todavía no tiene un archivo presentado para revisar.');
-        }
+            if (! $actual->estado->equals(RetornoPendienteSustento::class)) {
+                throw new PapeletaException('Esta papeleta ya no está esperando sustento.');
+            }
 
-        $papeleta = DB::transaction(function () use ($papeleta, $sustento, $revisor, $resultado, $comentario) {
-            $sustento->estado = $resultado;
-            $sustento->revisado_por_id = $revisor->id;
-            $sustento->revisado_at = now();
-            $sustento->save();
+            if ($sustentoActual->estado !== 'presentado') {
+                throw new PapeletaException('Este sustento todavía no tiene un archivo presentado para revisar.');
+            }
 
-            $estadoAnterior = class_basename($papeleta->estado);
+            $sustentoActual->estado = $resultado;
+            $sustentoActual->revisado_por_id = $revisor->id;
+            $sustentoActual->revisado_at = now();
+            $sustentoActual->save();
+
+            $estadoAnterior = class_basename($actual->estado);
 
             // Aprobado -> cierra. Observado -> el sustento sigue pendiente
             // de un nuevo archivo, la papeleta se queda en el mismo estado
             // hasta que venza (job de vencimiento) o el trabajador vuelva
             // a presentar antes de la fecha_limite.
             if ($resultado === 'aprobado') {
-                $papeleta->transicionarA(Cerrada::class);
-                $papeleta->save();
+                $actual->transicionarA(Cerrada::class);
+                $actual->save();
             } else {
-                $sustento->estado = 'pendiente'; // reabre para que puedan volver a subir
-                $sustento->save();
+                $sustentoActual->estado = 'pendiente'; // reabre para que puedan volver a subir
+                $sustentoActual->save();
             }
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $revisor->id,
                 'actor_tipo' => $revisor->hasRole('rrhh') ? 'rrhh' : 'jefe_inmediato',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $comentario ?? "Sustento {$resultado}.",
             ]);
 
-            return $papeleta;
+            return $actual;
         });
 
         if ($resultado === 'observado') {

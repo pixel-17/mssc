@@ -16,6 +16,12 @@
             </div>
         @endif
 
+        @if (session('error'))
+            <div class="glass-card p-4 text-sm text-red-700 dark:text-red-400" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <div class="flex flex-wrap gap-4">
             <div class="max-w-xs flex-1">
                 <label class="block text-sm font-medium mb-1">Buscar</label>
@@ -86,7 +92,7 @@
                                 @if ($usuario->activo)
                                     <button
                                         type="button"
-                                        wire:click="eliminar({{ $usuario->id }})"
+                                        wire:click="desactivar({{ $usuario->id }})"
                                         wire:confirm="¿Desactivar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})? No podrá iniciar sesión hasta que lo reactives."
                                         class="text-sm text-red-600 dark:text-red-400 underline"
                                     >

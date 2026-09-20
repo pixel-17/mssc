@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
@@ -19,30 +20,39 @@ use Illuminate\Support\Facades\DB;
  */
 class ReconocerObservacionRrhhAction
 {
+    use ExigeDecisorAjeno;
+
     public function ejecutar(Papeleta $papeleta, User $jefe, string $comentario, string $actorTipo = 'jefe_inmediato'): Papeleta
     {
-        if (! $papeleta->estado->equals(ObservadaPorRrhh::class)) {
-            throw new PapeletaException('Esta papeleta no tiene una observación de RRHH pendiente de reconocer.');
-        }
-
         return DB::transaction(function () use ($papeleta, $jefe, $comentario, $actorTipo) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            // Relectura bajo lock: sin ella, una observación ya reconocida
+            // por otro jefe (o vencida por el job) se podía pisar.
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->transicionarA(PendienteJefe::class);
-            $papeleta->jefe_resuelto_at = null;
-            $papeleta->escalado_jefe_area_at = null;
-            $papeleta->save();
+            $this->exigirDecisorAjeno($actual, $jefe);
+
+            if (! $actual->estado->equals(ObservadaPorRrhh::class)) {
+                throw new PapeletaException('Esta papeleta no tiene una observación de RRHH pendiente de reconocer.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->transicionarA(PendienteJefe::class);
+            $actual->jefe_resuelto_at = null;
+            $actual->escalado_jefe_area_at = null;
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $jefe->id,
                 'actor_tipo' => $actorTipo,
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $comentario,
             ]);
 
-            return $papeleta;
+            return $actual;
         });
     }
 }

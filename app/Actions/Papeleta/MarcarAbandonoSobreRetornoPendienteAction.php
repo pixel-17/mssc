@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
@@ -24,36 +25,46 @@ use Illuminate\Support\Facades\DB;
  */
 class MarcarAbandonoSobreRetornoPendienteAction
 {
+    use ExigeDecisorAjeno;
+
     public function __construct(private NotificarPapeletaService $notificar) {}
 
     public function ejecutar(Papeleta $papeleta, User $quienDecide, string $justificacion): Papeleta
     {
-        if (! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
-            throw new PapeletaException('Esta acción solo aplica a papeletas en espera de sustento.');
-        }
-
         if (trim($justificacion) === '') {
             throw new PapeletaException('La justificación es obligatoria para marcar abandono sobre un retorno ya registrado.');
         }
 
         $papeleta = DB::transaction(function () use ($papeleta, $quienDecide, $justificacion) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            // Relectura bajo lock (mismo criterio que AprobarJefeAction): el
+            // $papeleta que llega puede estar desactualizado si otro
+            // proceso (el trabajador subiendo sustento, un job) lo movió.
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            $papeleta->transicionarA(FinalizadoSinRetorno::class);
-            $papeleta->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
-            $papeleta->requiere_visto_bueno = false; // la decisión humana ya se tomó acá
-            $papeleta->save();
+            $this->exigirDecisorAjeno($actual, $quienDecide);
+
+            if (! $actual->estado->equals(RetornoPendienteSustento::class)) {
+                throw new PapeletaException('Esta acción solo aplica a papeletas en espera de sustento.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->transicionarA(FinalizadoSinRetorno::class);
+            $actual->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
+            $actual->requiere_visto_bueno = false; // la decisión humana ya se tomó acá
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $quienDecide->id,
                 'actor_tipo' => $quienDecide->hasRole('rrhh') ? 'rrhh' : 'jefe_inmediato',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $justificacion,
             ]);
 
-            return $papeleta;
+            return $actual;
         });
 
         $this->notificar->abandonoNoMarcado($papeleta);

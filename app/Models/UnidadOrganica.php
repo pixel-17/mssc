@@ -76,6 +76,37 @@ class UnidadOrganica extends Model
     }
 
     /**
+     * [jefe_inmediato_id, jefe_area_id] de $usuario como miembro de esta
+     * unidad. Es la ÚNICA fuente de verdad de esta regla: la usan
+     * UserObserver (columnas vigentes en `users`), CrearPapeletaAction
+     * (fotografía en la papeleta) y el comando jefaturas:recalcular,
+     * para que nunca diverjan.
+     *
+     * Quien encabeza la unidad también es miembro de ella, pero NO puede
+     * ser su propio jefe: su superior está un nivel arriba (jefe
+     * inmediato = jefe de la unidad padre; jefe de área = jefe de la
+     * unidad abuela). Si no hay unidad padre, ese nivel queda en null.
+     *
+     * @return array{0: ?int, 1: ?int}
+     */
+    public function jefaturasDe(User $usuario): array
+    {
+        $padre = $this->padre;
+
+        if ($usuario->id !== null && (int) $this->jefe_id === (int) $usuario->id) {
+            return [
+                $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
+                $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
+            ];
+        }
+
+        return [
+            $this->jefe_id !== null ? (int) $this->jefe_id : null,
+            $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
+        ];
+    }
+
+    /**
      * IDs de todos los descendientes (hijos, nietos, etc). Se usa para
      * impedir que al editar una unidad se le asigne como padre a sí misma
      * o a cualquiera de sus propios descendientes, lo que crearía un

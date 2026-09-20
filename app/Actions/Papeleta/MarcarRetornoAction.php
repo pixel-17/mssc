@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
@@ -41,6 +42,8 @@ use Illuminate\Support\Facades\DB;
  */
 class MarcarRetornoAction
 {
+    use ExigeDecisorAjeno;
+
     public function normal(Papeleta $papeleta, User $trabajador, array $datos): Papeleta
     {
         if ($papeleta->trabajador_id !== $trabajador->id) {
@@ -65,6 +68,8 @@ class MarcarRetornoAction
      */
     public function manual(Papeleta $papeleta, User $jefe, string $justificacion): Papeleta
     {
+        $this->exigirDecisorAjeno($papeleta, $jefe);
+
         if (! $jefe->esJefeInmediatoDe($papeleta->trabajador)) {
             throw new PapeletaException('Solo un jefe inmediato del trabajador puede marcar un retorno manual por falla de conectividad.');
         }
@@ -157,6 +162,8 @@ class MarcarRetornoAction
         return DB::transaction(function () use ($papeleta, $quienConfirma) {
             /** @var Papeleta $actual */
             $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
+
+            $this->exigirDecisorAjeno($actual, $quienConfirma);
 
             if (! $actual->estado->equals(AutorizadaYCorriendo::class)) {
                 throw new PapeletaException('Esta papeleta no está en curso.');

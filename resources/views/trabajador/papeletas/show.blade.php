@@ -243,6 +243,8 @@
             </div>
         @endif
 
+        @include('papeletas._archivos', ['papeleta' => $papeleta])
+
         @include('trabajador.papeletas._timeline', ['papeleta' => $papeleta])
     </div>
 </x-trabajador-layout>

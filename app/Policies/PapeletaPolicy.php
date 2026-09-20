@@ -28,6 +28,20 @@ use App\States\Papeleta\PendienteRrhh;
  */
 class PapeletaPolicy
 {
+    /**
+     * Regla transversal: nadie decide, revisa ni cierra su PROPIA
+     * papeleta (Actions\Papeleta\Concerns\ExigeDecisorAjeno la repite
+     * en la capa de dominio). Las habilidades que se resuelven por rol
+     * (RRHH) necesitan esta guarda explícita; las de jefe ya excluyen a
+     * la propia persona porque un jefe no es su propio jefe inmediato
+     * (ver UnidadOrganica::jefaturasDe). Se mantiene igual como defensa
+     * en profundidad.
+     */
+    private function esPropia(User $user, Papeleta $papeleta): bool
+    {
+        return (int) $papeleta->trabajador_id === (int) $user->id;
+    }
+
     public function view(User $user, Papeleta $papeleta): bool
     {
         return $user->hasRole('rrhh')
@@ -55,6 +69,10 @@ class PapeletaPolicy
      */
     public function decidirComoJefe(User $user, Papeleta $papeleta): bool
     {
+        if ($this->esPropia($user, $papeleta)) {
+            return false;
+        }
+
         if (! $papeleta->estado->equals(PendienteJefe::class)) {
             return false;
         }
@@ -74,12 +92,14 @@ class PapeletaPolicy
     public function reconocerObservacionRrhh(User $user, Papeleta $papeleta): bool
     {
         return $papeleta->estado->equals(ObservadaPorRrhh::class)
+            && ! $this->esPropia($user, $papeleta)
             && $user->esJefeInmediatoDe($papeleta->trabajador);
     }
 
     public function decidirComoRrhh(User $user, Papeleta $papeleta): bool
     {
         return $user->hasRole('rrhh')
+            && ! $this->esPropia($user, $papeleta)
             && $papeleta->estado->equals(PendienteRrhh::class);
     }
 
@@ -90,7 +110,7 @@ class PapeletaPolicy
      */
     public function revisarPosthoc(User $user, Papeleta $papeleta): bool
     {
-        return $user->hasRole('rrhh');
+        return $user->hasRole('rrhh') && ! $this->esPropia($user, $papeleta);
     }
 
     public function marcarRetorno(User $user, Papeleta $papeleta): bool
@@ -104,7 +124,8 @@ class PapeletaPolicy
      */
     public function marcarRetornoManual(User $user, Papeleta $papeleta): bool
     {
-        return $user->esJefeInmediatoDe($papeleta->trabajador);
+        return ! $this->esPropia($user, $papeleta)
+            && $user->esJefeInmediatoDe($papeleta->trabajador);
     }
 
     /**
@@ -113,7 +134,8 @@ class PapeletaPolicy
      */
     public function cerrarSinRetorno(User $user, Papeleta $papeleta): bool
     {
-        return $user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh');
+        return ! $this->esPropia($user, $papeleta)
+            && ($user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh'));
     }
 
     /**
@@ -122,7 +144,8 @@ class PapeletaPolicy
      */
     public function marcarAbandono(User $user, Papeleta $papeleta): bool
     {
-        return $user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh');
+        return ! $this->esPropia($user, $papeleta)
+            && ($user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh'));
     }
 
     /**
@@ -131,7 +154,8 @@ class PapeletaPolicy
      */
     public function revisarSustento(User $user, \App\Models\Sustento $sustento): bool
     {
-        return $user->esJefeInmediatoDe($sustento->papeleta->trabajador) || $user->hasRole('rrhh');
+        return ! $this->esPropia($user, $sustento->papeleta)
+            && ($user->esJefeInmediatoDe($sustento->papeleta->trabajador) || $user->hasRole('rrhh'));
     }
 
     /**

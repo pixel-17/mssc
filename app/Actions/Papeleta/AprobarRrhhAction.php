@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\DB;
  */
 class AprobarRrhhAction
 {
+    use ExigeDecisorAjeno;
+
     public function __construct(private NotificarPapeletaService $notificar) {}
 
     public function ejecutar(Papeleta $papeleta, User $rrhh): Papeleta
@@ -33,6 +36,8 @@ class AprobarRrhhAction
         $papeleta = DB::transaction(function () use ($papeleta, $rrhh) {
             /** @var Papeleta $actual */
             $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
+
+            $this->exigirDecisorAjeno($actual, $rrhh);
 
             if (! $actual->estado->equals(PendienteRrhh::class)) {
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');

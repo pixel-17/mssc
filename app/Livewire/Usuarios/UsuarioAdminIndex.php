@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Usuarios;
 
+use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
-use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
@@ -24,7 +24,6 @@ use Spatie\Permission\Models\Role;
 class UsuarioAdminIndex extends Component
 {
     use RequiereAdmin;
-
     use WithPagination;
 
     public string $buscar = '';
@@ -48,13 +47,35 @@ class UsuarioAdminIndex extends Component
         $this->resetPage();
     }
 
-    public function eliminar(User $usuario): void
+    /**
+     * NUNCA se borra un usuario: papeletas.trabajador_id tiene
+     * cascadeOnDelete y borrarlo se llevaría su historial de papeletas,
+     * retornos y sustentos (registro de RR. HH. y de planilla). Se
+     * desactiva; EnsureUsuarioActivo y el login ya lo dejan afuera.
+     */
+    public function desactivar(User $usuario): void
     {
         $this->autorizarAdmin();
 
-        $usuario->delete();
+        if ($usuario->is(auth()->user())) { // evita quedarse sin ningún admin activo
+            session()->flash('error', 'No puedes desactivar tu propia cuenta.');
 
-        session()->flash('mensaje', 'Usuario eliminado.');
+            return;
+        }
+
+        $usuario->forceFill(['activo' => false])->save();
+        $usuario->tokens()->delete();
+
+        session()->flash('mensaje', 'Usuario desactivado: ya no podrá iniciar sesión.');
+    }
+
+    public function reactivar(User $usuario): void
+    {
+        $this->autorizarAdmin();
+
+        $usuario->forceFill(['activo' => true])->save();
+
+        session()->flash('mensaje', 'Usuario reactivado.');
     }
 
     public function render(): View

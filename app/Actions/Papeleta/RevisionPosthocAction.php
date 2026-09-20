@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
@@ -21,6 +22,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RevisionPosthocAction
 {
+    use ExigeDecisorAjeno;
+
     public function aprobar(Papeleta $papeleta, User $rrhh): Papeleta
     {
         return $this->resolver($papeleta, $rrhh, 'aprobada');
@@ -33,30 +36,37 @@ class RevisionPosthocAction
 
     private function resolver(Papeleta $papeleta, User $rrhh, string $resultado, ?string $comentario = null): Papeleta
     {
-        if (! $papeleta->autorizado_con_rrhh_fuera_horario) {
-            throw new PapeletaException('Esta papeleta no requiere revisión post-hoc de RRHH.');
-        }
-
-        if ($papeleta->revision_posthoc_estado !== 'pendiente') {
-            throw new PapeletaException('Esta papeleta ya tiene una revisión post-hoc registrada.');
-        }
-
         return DB::transaction(function () use ($papeleta, $rrhh, $resultado, $comentario) {
-            $papeleta->revision_posthoc_estado = $resultado;
-            $papeleta->revision_posthoc_por_id = $rrhh->id;
-            $papeleta->revision_posthoc_at = now();
-            $papeleta->save();
+            // Relectura bajo lock: dos revisores de RRHH casi simultáneos ya
+            // no pueden pasar ambos el chequeo de "sigue pendiente".
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
+
+            $this->exigirDecisorAjeno($actual, $rrhh);
+
+            if (! $actual->autorizado_con_rrhh_fuera_horario) {
+                throw new PapeletaException('Esta papeleta no requiere revisión post-hoc de RRHH.');
+            }
+
+            if ($actual->revision_posthoc_estado !== 'pendiente') {
+                throw new PapeletaException('Esta papeleta ya tiene una revisión post-hoc registrada.');
+            }
+
+            $actual->revision_posthoc_estado = $resultado;
+            $actual->revision_posthoc_por_id = $rrhh->id;
+            $actual->revision_posthoc_at = now();
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $rrhh->id,
                 'actor_tipo' => 'rrhh',
-                'estado_anterior' => class_basename($papeleta->estado),
-                'estado_nuevo' => class_basename($papeleta->estado), // no cambia: revisión post-hoc es un carril aparte
+                'estado_anterior' => class_basename($actual->estado),
+                'estado_nuevo' => class_basename($actual->estado), // no cambia: revisión post-hoc es un carril aparte
                 'justificacion' => $comentario ?? 'Revisión post-hoc: autorización de jefe fuera de horario RRHH.',
             ]);
 
-            return $papeleta;
+            return $actual;
         });
     }
 }

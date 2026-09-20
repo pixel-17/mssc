@@ -50,12 +50,16 @@ class CrearUsuarioAction
     {
         return DB::transaction(function () use ($creador, $datos, $esJefeDeArea) {
             // Reingreso: si el DNI corresponde a alguien ya desactivado
-            // (ver UsuarioAdminIndex::eliminar(), que desactiva en vez de
+            // (ver UsuarioAdminIndex::desactivar(), que desactiva en vez de
             // borrar), reactivamos esa misma fila en vez de crear una
             // nueva — conserva su historial de papeletas bajo el mismo
             // id. CrearUsuarioRequest ya garantiza que si existe un
             // usuario ACTIVO con ese DNI, ni siquiera llegamos aquí.
-            $existente = User::where('dni', $datos['dni'])->first();
+            $existente = User::where('dni', $datos['dni'])->lockForUpdate()->first();
+
+            if ($existente) {
+                $this->validarReingreso($existente);
+            }
 
             $atributos = [
                 'name' => $datos['name'],
@@ -70,7 +74,20 @@ class CrearUsuarioAction
                 'unidad_organica_id' => $esJefeDeArea ? $datos['unidad_organica_id'] : $creador->unidad_organica_id,
             ];
 
-            $nuevo = $existente ? tap($existente)->update($atributos) : User::create($atributos);
+            if ($existente) {
+                // Reingreso: la persona vuelve con contraseña = DNI y, posiblemente,
+                // otro correo; el segundo factor de la cuenta anterior ya no
+                // corresponde a nadie y se descarta.
+                $existente->forceFill([
+                    'two_factor_secret' => null,
+                    'two_factor_recovery_codes' => null,
+                    'two_factor_confirmed_at' => null,
+                ])->fill($atributos)->save();
+
+                $nuevo = $existente;
+            } else {
+                $nuevo = User::create($atributos);
+            }
 
             if (! $nuevo->hasRole('trabajador')) {
                 $nuevo->assignRole('trabajador');
@@ -92,6 +109,34 @@ class CrearUsuarioAction
 
             return $nuevo->fresh();
         });
+    }
+
+    /**
+     * Un reingreso REEMPLAZA correo y contraseña (= DNI, que no es un
+     * secreto) de una cuenta existente. Por eso solo se acepta cuando es
+     * inocuo: la cuenta está desactivada y no tiene más permisos que
+     * "trabajador". Sin esto, un Jefe podía "dar de alta" el DNI de un
+     * ex-administrador o ex-RR. HH., poner su propio correo y entrar con
+     * esos roles intactos. Esas cuentas las reactiva solo el admin, desde
+     * UsuarioAdminIndex::reactivar().
+     *
+     * También es una defensa por si esta Action se llama sin pasar por
+     * CrearUsuarioRequest: nunca pisa a un usuario activo.
+     */
+    private function validarReingreso(User $existente): void
+    {
+        if ($existente->activo) {
+            throw new UsuarioException('Ya existe un usuario activo con ese DNI.');
+        }
+
+        $rolesEspeciales = $existente->getRoleNames()->diff(['trabajador']);
+
+        if ($rolesEspeciales->isNotEmpty()) {
+            throw new UsuarioException(
+                'Ese DNI corresponde a una cuenta desactivada con permisos especiales (administración o RR. HH.). '.
+                'Solo un administrador puede reactivarla desde Usuarios.'
+            );
+        }
     }
 
     private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId): void

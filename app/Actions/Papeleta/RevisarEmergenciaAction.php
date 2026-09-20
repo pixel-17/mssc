@@ -2,6 +2,7 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
@@ -24,6 +25,8 @@ use Illuminate\Support\Facades\DB;
  */
 class RevisarEmergenciaAction
 {
+    use ExigeDecisorAjeno;
+
     public function __construct(
         private NotificarPapeletaService $notificar,
         private CalculadorDiasHabiles $diasHabiles,
@@ -41,44 +44,52 @@ class RevisarEmergenciaAction
 
     private function resolver(Papeleta $papeleta, User $revisor, string $resultado, ?string $comentario = null): Papeleta
     {
-        if (! $papeleta->es_emergencia) {
-            throw new PapeletaException('Esta papeleta no es de Emergencia, no tiene revisión post-hoc doble.');
-        }
+        [$papeleta, $rol] = DB::transaction(function () use ($papeleta, $revisor, $resultado, $comentario) {
+            // Relectura bajo lock: jefe y RRHH revisan EN PARALELO la misma
+            // fila; sin lock, el segundo guardado pisaba las columnas del
+            // primero (visto bueno, plazo de subsanación) con datos viejos.
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-        $rol = $this->rolDe($papeleta, $revisor);
-        $columnaEstado = "visto_bueno_{$rol}_emergencia";
+            $this->exigirDecisorAjeno($actual, $revisor);
 
-        if ($papeleta->{$columnaEstado} !== 'pendiente') {
-            throw new PapeletaException('Ya diste tu visto bueno sobre esta Emergencia.');
-        }
+            if (! $actual->es_emergencia) {
+                throw new PapeletaException('Esta papeleta no es de Emergencia, no tiene revisión post-hoc doble.');
+            }
 
-        $papeleta = DB::transaction(function () use ($papeleta, $revisor, $resultado, $comentario, $rol, $columnaEstado) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            $rol = $this->rolDe($actual, $revisor);
+            $columnaEstado = "visto_bueno_{$rol}_emergencia";
 
-            $papeleta->{$columnaEstado} = $resultado;
-            $papeleta->{"visto_bueno_{$rol}_emergencia_por_id"} = $revisor->id;
-            $papeleta->{"visto_bueno_{$rol}_emergencia_at"} = now();
+            if ($actual->{$columnaEstado} !== 'pendiente') {
+                throw new PapeletaException('Ya diste tu visto bueno sobre esta Emergencia.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->{$columnaEstado} = $resultado;
+            $actual->{"visto_bueno_{$rol}_emergencia_por_id"} = $revisor->id;
+            $actual->{"visto_bueno_{$rol}_emergencia_at"} = now();
 
             // El plazo se fija en la PRIMERA observación (jefe o RRHH,
             // lo que ocurra antes) y no se reinicia si el otro observa
             // después — un solo reloj de subsanación por papeleta.
-            if ($resultado === 'observado' && ! $papeleta->subsanacion_emergencia_fecha_limite) {
+            if ($resultado === 'observado' && ! $actual->subsanacion_emergencia_fecha_limite) {
                 $dias = (int) Configuracion::valorDe('SUBSANACION_EMERGENCIA_DIAS_HABILES', 15);
-                $papeleta->subsanacion_emergencia_fecha_limite = $this->diasHabiles->agregarDiasHabiles(now(), $dias);
+                $actual->subsanacion_emergencia_fecha_limite = $this->diasHabiles->agregarDiasHabiles(now(), $dias);
             }
 
-            $papeleta->save();
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $revisor->id,
                 'actor_tipo' => $rol === 'rrhh' ? 'rrhh' : 'jefe_inmediato',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado), // no cambia, ver docblock
+                'estado_nuevo' => class_basename($actual->estado), // no cambia, ver docblock
                 'justificacion' => $comentario ?? "Visto bueno de Emergencia ({$rol}): {$resultado}.",
             ]);
 
-            return $papeleta;
+            return [$actual, $rol];
         });
 
         if ($resultado === 'observado') {

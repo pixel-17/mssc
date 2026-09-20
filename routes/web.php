@@ -4,6 +4,7 @@ use App\Http\Controllers\Jefe\DecisionController as JefeDecisionController;
 use App\Http\Controllers\Jefe\PapeletaController as JefePapeletaController;
 use App\Http\Controllers\Jefe\SustentoController as JefeSustentoController;
 use App\Http\Controllers\Papeleta\EmergenciaController;
+use App\Http\Controllers\Papeleta\PapeletaArchivoController;
 use App\Http\Controllers\Papeleta\SustentoArchivoController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\Rrhh\DecisionController as RrhhDecisionController;
@@ -282,6 +283,16 @@ Route::middleware([
      * (trabajador dueño, jefe inmediato o RRHH).
      */
     Route::get('/papeletas/sustentos/{sustento}/archivo', [SustentoArchivoController::class, 'show'])->name('sustentos.archivo');
+
+    /*
+     * Archivos guardados en la propia papeleta (adjunto inicial, foto del
+     * retorno, adjunto de subsanación de Emergencia): sin middleware de
+     * rol, igual que sustentos.archivo — la autorización real vive en
+     * PapeletaPolicy::view (PapeletaArchivoController).
+     */
+    Route::get('/papeletas/{papeleta}/archivo/{tipo}', [PapeletaArchivoController::class, 'show'])
+        ->whereIn('tipo', ['adjunto-inicial', 'retorno-foto', 'subsanacion'])
+        ->name('papeletas.archivo');
 
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
     Route::prefix('papeletas')->name('trabajador.papeletas.')->middleware('role:trabajador')->group(function () {

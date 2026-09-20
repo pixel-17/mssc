@@ -109,3 +109,5 @@
         </ul>
     </div>
 @endif
+
+@include('papeletas._archivos', ['papeleta' => $papeleta])

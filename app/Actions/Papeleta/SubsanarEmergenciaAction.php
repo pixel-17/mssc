@@ -24,44 +24,50 @@ class SubsanarEmergenciaAction
 
     public function ejecutar(Papeleta $papeleta, User $trabajador, string $justificacion, ?string $adjuntoPath = null): Papeleta
     {
+        // Acción del propio dueño: aquí NO aplica ExigeDecisorAjeno (es al revés).
         if ($papeleta->trabajador_id !== $trabajador->id) {
             throw new PapeletaException('No puedes subsanar una papeleta que no es tuya.');
         }
 
-        if ($papeleta->estado->equals(ReclasificadoAParticular::class)) {
-            throw new PapeletaException('El plazo de subsanación ya venció; esta papeleta fue reclasificada a Particular.');
-        }
+        [$papeleta, $rolesObservados] = DB::transaction(function () use ($papeleta, $trabajador, $justificacion, $adjuntoPath) {
+            // Relectura bajo lock: el job de vencimiento puede haber
+            // reclasificado la papeleta entre la carga y el guardado.
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-        $rolesObservados = collect(['jefe', 'rrhh'])
-            ->filter(fn (string $rol) => $papeleta->{"visto_bueno_{$rol}_emergencia"} === 'observado');
+            if ($actual->estado->equals(ReclasificadoAParticular::class)) {
+                throw new PapeletaException('El plazo de subsanación ya venció; esta papeleta fue reclasificada a Particular.');
+            }
 
-        if ($rolesObservados->isEmpty()) {
-            throw new PapeletaException('Esta Emergencia no tiene ninguna observación pendiente de subsanar.');
-        }
+            $rolesObservados = collect(['jefe', 'rrhh'])
+                ->filter(fn (string $rol) => $actual->{"visto_bueno_{$rol}_emergencia"} === 'observado');
 
-        $papeleta = DB::transaction(function () use ($papeleta, $trabajador, $justificacion, $adjuntoPath, $rolesObservados) {
-            $estadoAnterior = class_basename($papeleta->estado);
+            if ($rolesObservados->isEmpty()) {
+                throw new PapeletaException('Esta Emergencia no tiene ninguna observación pendiente de subsanar.');
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
 
             foreach ($rolesObservados as $rol) {
-                $papeleta->{"visto_bueno_{$rol}_emergencia"} = 'pendiente';
+                $actual->{"visto_bueno_{$rol}_emergencia"} = 'pendiente';
             }
 
             if ($adjuntoPath) {
-                $papeleta->subsanacion_emergencia_adjunto_path = $adjuntoPath;
+                $actual->subsanacion_emergencia_adjunto_path = $adjuntoPath;
             }
 
-            $papeleta->save();
+            $actual->save();
 
             HistorialPapeleta::create([
-                'papeleta_id' => $papeleta->id,
+                'papeleta_id' => $actual->id,
                 'actor_id' => $trabajador->id,
                 'actor_tipo' => 'trabajador',
                 'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($papeleta->estado),
+                'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => $justificacion,
             ]);
 
-            return $papeleta;
+            return [$actual, $rolesObservados];
         });
 
         $this->notificar->emergenciaSubsanada($papeleta, $rolesObservados->all());
