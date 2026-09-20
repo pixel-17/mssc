@@ -19,9 +19,29 @@ use App\Models\User;
  */
 class VincularJefeInmediatoAction
 {
+    /**
+     * A quién puede agregarse un jefe como trabajador de su equipo. Un jefe
+     * de área o un administrador NO se puede añadir al equipo de otro jefe
+     * (quien lo vinculara pasaría a ver y decidir sobre sus papeletas); un
+     * usuario desactivado tampoco tiene sentido en un equipo.
+     */
+    public function esVinculable(User $trabajador): bool
+    {
+        return $trabajador->activo
+            && ! $trabajador->hasRole('admin')
+            && ! $trabajador->esJefeDeArea();
+    }
+
+    /**
+     * Devuelve null tanto si el DNI no existe como si la persona no es
+     * vinculable: así la búsqueda no sirve para averiguar quién es
+     * administrador o jefe de área.
+     */
     public function buscarPorDni(string $dni): ?User
     {
-        return User::where('dni', $dni)->first();
+        $usuario = User::where('dni', $dni)->first();
+
+        return $usuario && $this->esVinculable($usuario) ? $usuario : null;
     }
 
     /**
@@ -44,6 +64,14 @@ class VincularJefeInmediatoAction
 
     public function vincular(User $jefe, User $trabajador, bool $confirmado): void
     {
+        if ($jefe->id === $trabajador->id) {
+            throw new UsuarioException('No puedes agregarte a ti mismo como jefe inmediato.');
+        }
+
+        if (! $this->esVinculable($trabajador)) {
+            throw new UsuarioException('No puedes agregar a tu equipo a un jefe de área, a un administrador ni a un usuario desactivado.');
+        }
+
         if ($jefe->esJefeInmediatoDe($trabajador)) {
             throw new UsuarioException('Ya eres jefe inmediato de este trabajador.');
         }

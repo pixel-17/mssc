@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Support\Minutos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -88,7 +89,7 @@ class HistorialTrabajadorService
                 'salida' => $p->hora_salida_real,
                 'retorno' => $p->retorno?->hora_servidor,
                 'minutos' => ($p->hora_salida_real && $p->retorno)
-                    ? $p->hora_salida_real->diffInMinutes($p->retorno->hora_servidor)
+                    ? Minutos::entre($p->hora_salida_real, $p->retorno->hora_servidor)
                     : null,
                 'suma_descuento' => (bool) $p->motivo->suma_descuento,
                 'sustento_estado' => $p->sustentos->last()?->estado,

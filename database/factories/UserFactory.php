@@ -38,6 +38,11 @@ class UserFactory extends Factory
             // lo cierra como "cuenta desactivada".
             'activo' => true,
             'debe_actualizar_password' => false,
+            // Mismo motivo: defaults de la BD que el modelo de create() no trae
+            // (Profile\DeviceSettingsForm los asigna a propiedades tipadas).
+            'volumen_notificacion' => 80,
+            'permite_gps' => false,
+            'permite_camara' => false,
             'password' => static::$password ??= Hash::make('password'),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,

@@ -127,6 +127,12 @@ class User extends Authenticatable
         return $this->hasMany(UnidadOrganica::class, 'jefe_id');
     }
 
+    /** Jefe de área = encabeza al menos una unidad orgánica del organigrama. */
+    public function esJefeDeArea(): bool
+    {
+        return $this->unidadesQueEncabeza()->exists();
+    }
+
     /**
      * Jefes inmediatos ADICIONALES de este usuario (cuando este usuario
      * es el trabajador), asignados a mano. Aparte de jefeInmediato()

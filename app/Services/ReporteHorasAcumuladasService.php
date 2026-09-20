@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Support\Minutos;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -100,7 +101,7 @@ class ReporteHorasAcumuladasService
             'salida' => $p->hora_salida_real,
             'retorno' => $p->retorno->hora_servidor,
             'minutos_brutos' => $minutosBrutos = $p->hora_salida_real && $p->retorno->hora_servidor
-                ? $p->hora_salida_real->diffInMinutes($p->retorno->hora_servidor)
+                ? Minutos::entre($p->hora_salida_real, $p->retorno->hora_servidor)
                 : 0,
             'minutos_refrigerio' => (int) $p->descuento_refrigerio_minutos,
             // Lo que va a planilla: el bloque de almuerzo dentro de la

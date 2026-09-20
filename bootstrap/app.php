@@ -20,28 +20,32 @@ return Application::configure(basePath: dirname(__DIR__))
         // sustento de salud vencido). Sin registrarlos aquí, existen como
         // comandos pero nadie los ejecuta y ninguna papeleta vence sola.
 
+        // withoutOverlapping(N): N = minutos que dura el candado si el proceso muere
+        // a la mitad (sin N son 1440, es decir, 24 h sin correr). Debe ser mayor que lo
+        // que tarda el comando y menor que el intervalo lo bastante para reponerse.
+
         // Corre contra la ventana activa de turno/día (incluye turnos
         // nocturnos que cruzan medianoche) -> necesita granularidad fina.
         $schedule->command('papeletas:procesar-vencimientos')
             ->everyMinute()
-            ->withoutOverlapping();
+            ->withoutOverlapping(5);
 
         // Detecta fin de turno sin marcación de retorno. No es tan
         // sensible al minuto exacto como el de arriba.
         $schedule->command('papeletas:procesar-abandono-no-marcado')
             ->everyFiveMinutes()
-            ->withoutOverlapping();
+            ->withoutOverlapping(15);
 
         // Ventana de 48h hábiles: basta con revisarlo cada hora.
         $schedule->command('papeletas:procesar-vencimiento-sustentos')
             ->hourly()
-            ->withoutOverlapping();
+            ->withoutOverlapping(30);
 
         // Ventana de días hábiles (config SUBSANACION_EMERGENCIA_DIAS_HABILES,
         // 15 por defecto): tampoco necesita granularidad de minuto.
         $schedule->command('papeletas:procesar-subsanacion-emergencia-vencida')
             ->hourly()
-            ->withoutOverlapping();
+            ->withoutOverlapping(30);
 
         // Día 25: si para esa fecha Admin/Jefe no cargaron el turno
         // del mes siguiente, se genera solo continuando el ciclo
@@ -51,7 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // en el último día.
         $schedule->command('turnos:generar-proximo-mes')
             ->monthlyOn(25, '02:00')
-            ->withoutOverlapping();
+            ->withoutOverlapping(120);
     })
     ->withMiddleware(function (Middleware $middleware): void {
         // Alias de spatie/laravel-permission, usado por 'role:admin' en
@@ -68,6 +72,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // final del grupo 'web' porque necesita que Auth ya esté
         // resuelto; internamente solo actúa si corresponde.
         $middleware->web(append: [
+            \App\Http\Middleware\CabecerasDeSeguridad::class,
             \App\Http\Middleware\EnsureUsuarioActivo::class,
             \App\Http\Middleware\RedirigirSiDebeActualizarPassword::class,
         ]);

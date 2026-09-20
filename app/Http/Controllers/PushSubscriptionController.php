@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Rules\EndpointPushPermitido;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ class PushSubscriptionController extends Controller
     public function store(Request $request): JsonResponse
     {
         $datos = $request->validate([
-            'endpoint' => ['required', 'string', 'max:500'],
+            'endpoint' => ['required', 'string', 'max:500', new EndpointPushPermitido],
             'keys' => ['required', 'array'],
             'keys.p256dh' => ['required', 'string'],
             'keys.auth' => ['required', 'string'],

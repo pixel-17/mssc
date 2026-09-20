@@ -14,6 +14,7 @@ use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\FinalizadoSinRetorno;
 use App\States\Papeleta\RetornoPendienteSustento;
+use App\Support\Minutos;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -254,6 +255,6 @@ class MarcarRetornoAction
             return 0;
         }
 
-        return $solapeInicio->diffInMinutes($solapeFin);
+        return Minutos::entre($solapeInicio, $solapeFin);
     }
 }
