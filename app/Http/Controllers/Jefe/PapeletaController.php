@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers\Rrhh;
+namespace App\Http\Controllers\Jefe;
 
 use App\Http\Controllers\Controller;
 use App\Models\Papeleta;
 use Illuminate\View\View;
 
 /**
- * Acciones de detalle de la bandeja de RRHH. El listado vive en
- * App\Livewire\Papeletas\RrhhIndex (se re-renderiza solo con las
- * notificaciones en vivo); este controller ya solo resuelve la ficha
- * de una papeleta puntual.
+ * Detalle de una papeleta para el Jefe Inmediato / Jefe de Área. El
+ * listado vive en App\Livewire\Papeletas\JefeIndex (se re-renderiza solo
+ * con las notificaciones en vivo); este controller solo resuelve la
+ * ficha de una papeleta puntual.
  */
 class PapeletaController extends Controller
 {
@@ -20,6 +20,6 @@ class PapeletaController extends Controller
 
         $papeleta->load(['motivo', 'sede', 'trabajador', 'retorno', 'sustentos', 'historial.actor', 'jefeInmediato', 'jefeArea']);
 
-        return view('rrhh.papeletas.show', compact('papeleta'));
+        return view('jefe.papeletas.show', compact('papeleta'));
     }
 }
