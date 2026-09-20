@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -20,6 +21,7 @@ use Livewire\Component;
  * lo pise mientras sigan sin tocar esta pantalla.
  */
 #[Layout('layouts.app')]
+#[Title('Configurar turno')]
 class ConfiguracionTurnoForm extends Component
 {
     #[Locked]

@@ -3,10 +3,10 @@
 
         <div class="flex items-center justify-between flex-wrap gap-3 print:hidden">
             <div>
-                <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
+                <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
                     Horas acumuladas
                 </h2>
-                <p class="text-sm text-gray-500 dark:text-ocean-50/70">
+                <p class="text-sm text-gray-500 dark:text-tinta-50/70">
                     Reporte de cierre de mes: tiempo fuera de sede por trabajador, para revisión de descuentos.
                 </p>
             </div>
@@ -26,13 +26,13 @@
         <div class="glass-card p-4 space-y-4 print:hidden">
             <div class="flex flex-wrap gap-4 items-end">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Mes</label>
-                    <input type="month" wire:model.live="mes" class="rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-mes" class="block text-sm font-medium mb-1">Mes</label>
+                    <input id="horas-acumuladas-index-mes" type="month" wire:model.live="mes" class="rounded-md border-gray-300 dark:bg-gray-800">
                 </div>
 
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium mb-1">Buscar por nombre o DNI</label>
-                    <input
+                    <label for="horas-acumuladas-index-buscar" class="block text-sm font-medium mb-1">Buscar por nombre o DNI</label>
+                    <input id="horas-acumuladas-index-buscar"
                         type="search"
                         wire:model.live.debounce.400ms="buscar"
                         placeholder="Nombre, apellido o DNI..."
@@ -41,8 +41,8 @@
                 </div>
 
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium mb-1">Trabajador</label>
-                    <select wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-trabajadorId" class="block text-sm font-medium mb-1">Trabajador</label>
+                    <select id="horas-acumuladas-index-trabajadorId" wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todos</option>
                         @foreach ($trabajadoresDisponibles as $trabajador)
                             <option value="{{ $trabajador->id }}">{{ trim($trabajador->name.' '.$trabajador->apellido) }}</option>
@@ -51,8 +51,8 @@
                 </div>
 
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium mb-1">Sede</label>
-                    <select wire:model.live="sedeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-sedeId" class="block text-sm font-medium mb-1">Sede</label>
+                    <select id="horas-acumuladas-index-sedeId" wire:model.live="sedeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todas</option>
                         @foreach ($sedes as $sede)
                             <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
@@ -61,8 +61,8 @@
                 </div>
 
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium mb-1">Unidad orgánica</label>
-                    <select wire:model.live="unidadOrganicaId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-unidadOrganicaId" class="block text-sm font-medium mb-1">Unidad orgánica</label>
+                    <select id="horas-acumuladas-index-unidadOrganicaId" wire:model.live="unidadOrganicaId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todas</option>
                         @foreach ($unidadesOrganicas as $unidad)
                             <option value="{{ $unidad->id }}">{{ $unidad->nombre }}</option>
@@ -71,8 +71,8 @@
                 </div>
 
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium mb-1">Motivo</label>
-                    <select wire:model.live="motivoId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-motivoId" class="block text-sm font-medium mb-1">Motivo</label>
+                    <select id="horas-acumuladas-index-motivoId" wire:model.live="motivoId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todos</option>
                         @foreach ($motivos as $motivo)
                             <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
@@ -81,8 +81,8 @@
                 </div>
 
                 <div class="max-w-xs">
-                    <label class="block text-sm font-medium mb-1">Régimen</label>
-                    <select wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-regimen" class="block text-sm font-medium mb-1">Régimen</label>
+                    <select id="horas-acumuladas-index-regimen" wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todos</option>
                         <option value="276">276 (día)</option>
                         <option value="728">728 (rotativo)</option>
@@ -90,8 +90,8 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Mostrar en ranking</label>
-                    <select wire:model.live="top" class="rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="horas-acumuladas-index-top" class="block text-sm font-medium mb-1">Mostrar en ranking</label>
+                    <select id="horas-acumuladas-index-top" wire:model.live="top" class="rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="0">Todos</option>
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
@@ -104,7 +104,7 @@
                     <label for="soloConDescuento" class="text-sm">Solo motivos con descuento</label>
                 </div>
 
-                <button type="button" wire:click="limpiarFiltros" class="text-xs text-ocean-600 hover:text-ocean-900 underline pb-2">
+                <button type="button" wire:click="limpiarFiltros" class="text-xs text-tinta-600 hover:text-tinta-900 underline pb-2">
                     Limpiar filtros
                 </button>
             </div>
@@ -118,15 +118,15 @@
         <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <div class="glass-card p-4">
                 <p class="text-xs uppercase text-gray-500">Trabajadores</p>
-                <p class="text-2xl font-bold text-ocean-950 dark:text-white">{{ $resumen->count() }}</p>
+                <p class="text-2xl font-bold text-tinta-950 dark:text-white">{{ $resumen->count() }}</p>
             </div>
             <div class="glass-card p-4">
                 <p class="text-xs uppercase text-gray-500">Papeletas cerradas</p>
-                <p class="text-2xl font-bold text-ocean-950 dark:text-white">{{ $resumen->sum('papeletas') }}</p>
+                <p class="text-2xl font-bold text-tinta-950 dark:text-white">{{ $resumen->sum('papeletas') }}</p>
             </div>
             <div class="glass-card p-4">
                 <p class="text-xs uppercase text-gray-500">Horas fuera de sede</p>
-                <p class="text-2xl font-bold text-ocean-950 dark:text-white">{{ $fmtHoras((int) $resumen->sum('minutos_totales')) }}</p>
+                <p class="text-2xl font-bold text-tinta-950 dark:text-white">{{ $fmtHoras((int) $resumen->sum('minutos_totales')) }}</p>
             </div>
             <div class="glass-card p-4">
                 <p class="text-xs uppercase text-gray-500">Horas con descuento</p>
@@ -137,7 +137,7 @@
             <div class="glass-card p-4 col-span-2 lg:col-span-1">
                 <p class="text-xs uppercase text-gray-500">Salió más</p>
                 @if ($mayor)
-                    <p class="text-sm font-bold text-ocean-950 dark:text-white truncate" title="{{ $mayor['trabajador'] }}">{{ $mayor['trabajador'] }}</p>
+                    <p class="text-sm font-bold text-tinta-950 dark:text-white truncate" title="{{ $mayor['trabajador'] }}">{{ $mayor['trabajador'] }}</p>
                     <p class="text-xs text-gray-500">{{ $fmtHoras((int) $mayor['minutos_totales']) }}</p>
                 @else
                     <p class="text-sm text-gray-400">—</p>
@@ -150,14 +150,14 @@
             <button
                 type="button"
                 wire:click="$set('vista', 'resumen')"
-                class="px-3 py-1.5 text-sm font-medium rounded-md {{ $vista === 'resumen' ? 'bg-ocean-800 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' }}"
+                class="px-3 py-1.5 text-sm font-medium rounded-md {{ $vista === 'resumen' ? 'bg-tinta-800 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' }}"
             >
                 Resumen del mes
             </button>
             <button
                 type="button"
                 wire:click="$set('vista', 'diario')"
-                class="px-3 py-1.5 text-sm font-medium rounded-md {{ $vista === 'diario' ? 'bg-ocean-800 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' }}"
+                class="px-3 py-1.5 text-sm font-medium rounded-md {{ $vista === 'diario' ? 'bg-tinta-800 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300' }}"
             >
                 Detalle por día
             </button>
@@ -167,7 +167,7 @@
         @if ($vista === 'resumen')
             <div class="glass-card overflow-x-auto">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">
                         {{ $top > 0 ? "Top {$top} del mes por trabajador" : 'Ranking del mes por trabajador' }} ({{ $top > 0 ? min($top, $resumen->count()) : $resumen->count() }} de {{ $resumen->count() }})
                     </h3>
                 </div>
@@ -176,16 +176,16 @@
                     <p class="p-4 text-sm text-gray-500">No hay papeletas cerradas con retorno en este mes con los filtros elegidos.</p>
                 @else
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-ocean-50/70 dark:bg-gray-800">
+                        <thead class="bg-tinta-50/70 dark:bg-gray-800">
                             <tr class="text-left text-xs font-medium text-gray-500 uppercase">
-                                <th class="px-4 py-2">#</th>
-                                <th class="px-4 py-2">Trabajador</th>
-                                <th class="px-4 py-2">Sede</th>
-                                <th class="px-4 py-2">Unidad orgánica</th>
-                                <th class="px-4 py-2 text-right">Papeletas</th>
-                                <th class="px-4 py-2 text-right">Horas totales</th>
-                                <th class="px-4 py-2 text-right">Horas con descuento</th>
-                                <th class="px-4 py-2 print:hidden">Adjuntos</th>
+                                <th scope="col" class="px-4 py-2">#</th>
+                                <th scope="col" class="px-4 py-2">Trabajador</th>
+                                <th scope="col" class="px-4 py-2">Sede</th>
+                                <th scope="col" class="px-4 py-2">Unidad orgánica</th>
+                                <th scope="col" class="px-4 py-2 text-right">Papeletas</th>
+                                <th scope="col" class="px-4 py-2 text-right">Horas totales</th>
+                                <th scope="col" class="px-4 py-2 text-right">Horas con descuento</th>
+                                <th scope="col" class="px-4 py-2 print:hidden">Adjuntos</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
@@ -209,9 +209,9 @@
                                         <span class="text-xs text-gray-400">({{ $fila['papeletas_con_descuento'] }})</span>
                                     </td>
                                     <td class="px-4 py-3 text-sm print:hidden">
-                                        <a href="{{ route('reportes.sustentos', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-ocean-600 hover:text-ocean-900 underline">Ver adjuntos</a>
+                                        <a href="{{ route('reportes.sustentos', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-tinta-600 hover:text-tinta-900 underline">Ver adjuntos</a>
                                         <span class="text-gray-300 mx-1">·</span>
-                                        <a href="{{ route('reportes.trabajador-historial', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-ocean-600 hover:text-ocean-900 underline" title="Ver su ficha completa">Ficha</a>
+                                        <a href="{{ route('reportes.trabajador-historial', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-tinta-600 hover:text-tinta-900 underline" title="Ver su ficha completa">Ficha</a>
                                     </td>
                                 </tr>
                             @endforeach
@@ -225,7 +225,7 @@
         @if ($vista === 'diario')
             <div class="glass-card overflow-x-auto">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">
                         Horas por día y trabajador ({{ $detalleDiario->count() }})
                     </h3>
                 </div>
@@ -234,12 +234,12 @@
                     <p class="p-4 text-sm text-gray-500">No hay papeletas cerradas con retorno en este mes con los filtros elegidos.</p>
                 @else
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-ocean-50/70 dark:bg-gray-800">
+                        <thead class="bg-tinta-50/70 dark:bg-gray-800">
                             <tr class="text-left text-xs font-medium text-gray-500 uppercase">
-                                <th class="px-4 py-2">Día</th>
-                                <th class="px-4 py-2">Trabajador</th>
-                                <th class="px-4 py-2">Motivo(s)</th>
-                                <th class="px-4 py-2 text-right">Horas del día</th>
+                                <th scope="col" class="px-4 py-2">Día</th>
+                                <th scope="col" class="px-4 py-2">Trabajador</th>
+                                <th scope="col" class="px-4 py-2">Motivo(s)</th>
+                                <th scope="col" class="px-4 py-2 text-right">Horas del día</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">

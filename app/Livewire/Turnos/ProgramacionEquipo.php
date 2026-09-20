@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -28,6 +29,7 @@ use Livewire\Component;
  * equipo: un id ajeno al alcance del jefe se rechaza.
  */
 #[Layout('layouts.app')]
+#[Title('Programar turnos — mi equipo (728)')]
 class ProgramacionEquipo extends Component
 {
     public int $anio;

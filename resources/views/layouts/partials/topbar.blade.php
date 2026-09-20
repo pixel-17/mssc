@@ -17,8 +17,8 @@
         </button>
 
         <div class="min-w-0">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-ocean-500 dark:text-ocean-300">{{ $rolLabel }}</p>
-            <p class="truncate text-sm font-bold text-ocean-950 dark:text-white">{{ $usuario->name }} {{ $usuario->apellido }}</p>
+            <p class="text-[11px] font-semibold uppercase tracking-wide text-tinta-500 dark:text-tinta-300">{{ $rolLabel }}</p>
+            <p class="truncate text-sm font-bold text-tinta-950 dark:text-white">{{ $usuario->name }} {{ $usuario->apellido }}</p>
         </div>
     </div>
 

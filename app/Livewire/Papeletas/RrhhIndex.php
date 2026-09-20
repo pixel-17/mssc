@@ -8,6 +8,7 @@ use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
  * pendiente, un post-hoc, etc.
  */
 #[Layout('layouts.app')]
+#[Title('Bandeja de RRHH')]
 class RrhhIndex extends Component
 {
     use EscuchaNotificacionesEnVivo;

@@ -8,6 +8,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -16,6 +17,7 @@ use Livewire\Component;
  * y los 15 días hábiles de subsanación de Emergencia.
  */
 #[Layout('layouts.app')]
+#[Title('Feriado')]
 class FeriadoForm extends Component
 {
     use RequiereAdmin;

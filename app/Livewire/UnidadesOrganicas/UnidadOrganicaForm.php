@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
  * escalamiento de papeletas.
  */
 #[Layout('layouts.app')]
+#[Title('Unidad orgánica')]
 class UnidadOrganicaForm extends Component
 {
     use RequiereAdmin;

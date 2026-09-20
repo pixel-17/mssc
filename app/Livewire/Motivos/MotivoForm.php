@@ -7,6 +7,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -19,6 +20,7 @@ use Livewire\Component;
  * — nunca hardcodear por código en base al nombre/código del motivo.
  */
 #[Layout('layouts.app')]
+#[Title('Motivo')]
 class MotivoForm extends Component
 {
     use RequiereAdmin;

@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+        <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
             Confirmar vínculo
         </h2>
     </x-slot>
@@ -42,7 +42,7 @@
 
                     <div class="flex items-center justify-end gap-3">
                         <a href="{{ route('usuarios.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancelar</a>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-ocean-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-ocean-700">
+                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-tinta-700">
                             Confirmar vínculo
                         </button>
                     </div>

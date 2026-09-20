@@ -12,6 +12,7 @@ use App\Services\ReporteHorasAcumuladasService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -28,6 +29,7 @@ use Maatwebsite\Excel\Facades\Excel;
  * frontera real la aplica ReporteHorasAcumuladasService::query().
  */
 #[Layout('layouts.app')]
+#[Title('Horas acumuladas')]
 class HorasAcumuladasIndex extends Component
 {
     use RestringeAReportes;

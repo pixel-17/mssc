@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -19,6 +20,7 @@ use Livewire\Component;
  * equipo (Jefe) — nunca desde aquí.
  */
 #[Layout('layouts.app')]
+#[Title('Calendario de turnos')]
 class CalendarioIndividualIndex extends Component
 {
     #[Locked]

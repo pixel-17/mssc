@@ -12,10 +12,11 @@
              menú (msscPushToggle); aquí solo el volumen del sonido
              in-app. --}}
         <div class="col-span-6 sm:col-span-4" x-data="msscVolumenNotificacion(@js($volumen))">
-            <x-label value="{{ __('Volumen de sonido de notificación') }}" />
+            <x-label for="volumen-notificacion" value="{{ __('Volumen de sonido de notificación') }}" />
 
             <div class="flex items-center gap-3 mt-1">
                 <input
+                    id="volumen-notificacion"
                     type="range"
                     min="0"
                     max="100"
@@ -30,7 +31,7 @@
             <button
                 type="button"
                 x-on:click="probar()"
-                class="mt-2 text-sm text-ocean-700 dark:text-ocean-300 underline"
+                class="mt-2 text-sm text-tinta-700 dark:text-tinta-300 underline"
             >
                 {{ __('Probar sonido') }}
             </button>
@@ -54,7 +55,7 @@
                 type="button"
                 x-on:click="pedirPermiso()"
                 x-show="estado !== 'Permiso concedido'"
-                class="mt-1 text-sm text-ocean-700 dark:text-ocean-300 underline"
+                class="mt-1 text-sm text-tinta-700 dark:text-tinta-300 underline"
             >
                 {{ __('Solicitar permiso al navegador') }}
             </button>
@@ -76,7 +77,7 @@
                 type="button"
                 x-on:click="pedirPermiso()"
                 x-show="estado !== 'Permiso concedido'"
-                class="mt-1 text-sm text-ocean-700 dark:text-ocean-300 underline"
+                class="mt-1 text-sm text-tinta-700 dark:text-tinta-300 underline"
             >
                 {{ __('Solicitar permiso al navegador') }}
             </button>
@@ -92,7 +93,7 @@
             <button
                 type="button"
                 x-on:click="instalar()"
-                class="mt-2 inline-flex items-center px-4 py-2 bg-ocean-800 text-white rounded-md text-sm"
+                class="mt-2 inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm"
             >
                 {{ __('Instalar app') }}
             </button>

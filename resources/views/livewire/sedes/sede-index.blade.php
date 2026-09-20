@@ -1,11 +1,11 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
                 Sedes
             </h2>
 
-            <a href="{{ route('sedes.crear') }}" class="inline-flex items-center px-4 py-2 bg-ocean-800 text-white rounded-md text-sm">
+            <a href="{{ route('sedes.crear') }}" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
                 + Nueva sede
             </a>
         </div>
@@ -20,12 +20,12 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                     <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th class="px-4 py-3">Nombre</th>
-                        <th class="px-4 py-3">Dirección</th>
-                        <th class="px-4 py-3">Radio (m)</th>
-                        <th class="px-4 py-3">Trabajadores</th>
-                        <th class="px-4 py-3">Activa</th>
-                        <th class="px-4 py-3"></th>
+                        <th scope="col" class="px-4 py-3">Nombre</th>
+                        <th scope="col" class="px-4 py-3">Dirección</th>
+                        <th scope="col" class="px-4 py-3">Radio (m)</th>
+                        <th scope="col" class="px-4 py-3">Trabajadores</th>
+                        <th scope="col" class="px-4 py-3">Activa</th>
+                        <th scope="col" class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -37,7 +37,7 @@
                             <td class="px-4 py-3">{{ $sede->usuarios_count }}</td>
                             <td class="px-4 py-3">{{ $sede->activo ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('sedes.editar', $sede) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
+                                <a href="{{ route('sedes.editar', $sede) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
                                     Editar
                                 </a>
                                 <button

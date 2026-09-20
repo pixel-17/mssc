@@ -19,11 +19,11 @@
                 <a href="{{ $volverA }}" class="icon-btn shrink-0" aria-label="Volver">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" /></svg>
                 </a>
-                <p class="font-display font-semibold text-lg leading-tight text-ocean-950 dark:text-white truncate">{{ $titulo }}</p>
+                <p class="font-display font-semibold text-lg leading-tight text-tinta-950 dark:text-white truncate">{{ $titulo }}</p>
             </div>
         @else
-            <p class="text-xs text-ocean-500 dark:text-ocean-300">Hola,</p>
-            <p class="truncate text-lg font-display font-semibold leading-tight text-ocean-950 dark:text-white">
+            <p class="text-xs text-tinta-500 dark:text-tinta-300">Hola,</p>
+            <p class="truncate text-lg font-display font-semibold leading-tight text-tinta-950 dark:text-white">
                 {{ $titulo ?: ($usuario ? explode(' ', $usuario->name)[0] : 'Bienvenido') }}
             </p>
         @endif

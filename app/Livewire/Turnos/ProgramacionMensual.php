@@ -11,6 +11,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -24,6 +25,7 @@ use Livewire\Component;
  * regla de escritura y las advertencias.
  */
 #[Layout('layouts.app')]
+#[Title('Programar turnos')]
 class ProgramacionMensual extends Component
 {
     #[Locked]

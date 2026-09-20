@@ -8,6 +8,7 @@ use App\Services\EquipoDelJefeService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -25,6 +26,7 @@ use Livewire\Component;
  * jefatura).
  */
 #[Layout('layouts.app')]
+#[Title('Calendario de turnos — mi equipo')]
 class CalendarioEquipoIndex extends Component
 {
     public int $anio;

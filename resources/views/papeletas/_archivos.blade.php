@@ -15,8 +15,8 @@
 
 @if ($archivosPapeleta)
     <div class="glass-card p-6">
-        <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80 mb-3">Archivos adjuntos</h3>
-        <ul class="text-sm text-gray-700 dark:text-ocean-100/70 space-y-1">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Archivos adjuntos</h3>
+        <ul class="text-sm text-gray-700 dark:text-tinta-100/70 space-y-1">
             @foreach ($archivosPapeleta as $tipoArchivo => $etiquetaArchivo)
                 <li>
                     <a href="{{ route('papeletas.archivo', ['papeleta' => $papeleta, 'tipo' => $tipoArchivo]) }}"

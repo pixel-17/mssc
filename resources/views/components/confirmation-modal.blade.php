@@ -10,7 +10,7 @@
             </div>
 
             <div class="mt-3 text-center sm:mt-0 sm:ms-4 sm:text-start">
-                <h3 class="text-lg font-bold text-ocean-950">
+                <h3 class="text-lg font-bold text-tinta-950">
                     {{ $title }}
                 </h3>
 
@@ -21,7 +21,7 @@
         </div>
     </div>
 
-    <div class="flex flex-row justify-end gap-2 px-6 py-4 bg-ocean-50/70 text-end">
+    <div class="flex flex-row justify-end gap-2 px-6 py-4 bg-tinta-50/70 text-end">
         {{ $footer }}
     </div>
 </x-modal>

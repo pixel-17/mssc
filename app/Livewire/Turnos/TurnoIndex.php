@@ -6,6 +6,7 @@ use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -16,6 +17,7 @@ use Livewire\WithPagination;
  * para crear/editar. Patrón calcado de App\Livewire\Sedes.
  */
 #[Layout('layouts.app')]
+#[Title('Turnos')]
 class TurnoIndex extends Component
 {
     use RequiereAdmin;

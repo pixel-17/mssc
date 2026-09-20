@@ -5,6 +5,7 @@ namespace App\Livewire\HorarioRrhh;
 use App\Models\HorarioRrhh;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -14,6 +15,7 @@ use Livewire\Component;
  * aquí, solo edición (ver HorarioRrhhForm).
  */
 #[Layout('layouts.app')]
+#[Title('Horario de RRHH')]
 class HorarioRrhhIndex extends Component
 {
     public const DIAS = [

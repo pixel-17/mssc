@@ -66,9 +66,9 @@
                 <h3 id="{{ $id }}-titulo" class="text-base font-semibold text-gray-800">{{ $label }}</h3>
 
                 <div>
-                    <textarea name="{{ $field }}" x-model="texto" rows="4" required minlength="{{ (int) $minlength }}" maxlength="2000"
+                    <textarea name="{{ $field }}" aria-labelledby="{{ $id }}-titulo" x-model="texto" rows="4" required minlength="{{ (int) $minlength }}" maxlength="2000"
                               placeholder="{{ $placeholder }}"
-                              class="block w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-ocean-500 focus:ring-ocean-500"></textarea>
+                              class="block w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500"></textarea>
                     <p class="mt-1 text-xs text-gray-400">
                         <span x-text="texto.trim().length"></span>/{{ (int) $minlength }} caracteres mínimos
                     </p>

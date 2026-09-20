@@ -11,6 +11,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
@@ -35,6 +36,7 @@ use Spatie\Permission\Models\Role;
  * debe_actualizar_password para ese usuario.
  */
 #[Layout('layouts.app')]
+#[Title('Usuario')]
 class UsuarioAdminForm extends Component
 {
     use RequiereAdmin;

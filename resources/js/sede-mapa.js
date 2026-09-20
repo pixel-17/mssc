@@ -1,20 +1,3 @@
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-
-// Los iconos por defecto de Leaflet se rompen con el bundling de Vite
-// (referencian rutas relativas que no existen tras el build); se
-// reemplazan por los mismos assets pero resueltos por Vite.
-import iconRetina from 'leaflet/dist/images/marker-icon-2x.png';
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconSombra from 'leaflet/dist/images/marker-shadow.png';
-
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-    iconRetinaUrl: iconRetina,
-    iconUrl: icon,
-    shadowUrl: iconSombra,
-});
-
 /**
  * Selector de ubicación en mapa para el formulario de Sede
  * (resources/views/livewire/sedes/sede-form.blade.php).
@@ -23,6 +6,11 @@ L.Icon.Default.mergeOptions({
  * el lugar/zona haciendo clic o arrastrando el marcador, y este
  * componente llena `latitud`/`longitud` directamente en el
  * componente Livewire (App\Livewire\Sedes\SedeForm) vía $wire.set().
+ *
+ * Leaflet (JS + CSS + iconos, ~150 kB) NO va en el bundle general: solo
+ * el formulario de Sede lo usa, así que se descarga con import() dinámico
+ * cuando el mapa aparece (ver ./sede-mapa-leaflet.js). Este archivo solo
+ * define la fábrica de Alpine y pesa casi nada.
  *
  * El radio (radioMetros) se sigue escribiendo en su propio input
  * numérico normal (wire:model.live); acá solo se observa para que el
@@ -34,7 +22,15 @@ window.msscMapaSede = function (config) {
         marcador: null,
         circulo: null,
 
-        init() {
+        async init() {
+            const { default: L } = await import('./sede-mapa-leaflet');
+
+            // Si el usuario navegó a otra página mientras se descargaba Leaflet,
+            // el contenedor ya no existe.
+            if (! this.$refs.mapa?.isConnected) {
+                return;
+            }
+
             this.mapa = L.map(this.$refs.mapa).setView([config.lat, config.lng], config.zoom);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -61,6 +57,11 @@ window.msscMapaSede = function (config) {
                     this.circulo.setRadius(Number(valor));
                 }
             });
+        },
+
+        destroy() {
+            this.mapa?.remove();
+            this.mapa = null;
         },
 
         moverA(latlng) {

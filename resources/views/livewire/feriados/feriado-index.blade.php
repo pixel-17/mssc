@@ -1,11 +1,11 @@
 <div>
     <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
                 Feriados
             </h2>
 
-            <a href="{{ route('feriados.crear') }}" class="inline-flex items-center px-4 py-2 bg-ocean-800 text-white rounded-md text-sm">
+            <a href="{{ route('feriados.crear') }}" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
                 + Nuevo feriado
             </a>
         </div>
@@ -20,9 +20,9 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                     <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th class="px-4 py-3">Fecha</th>
-                        <th class="px-4 py-3">Descripción</th>
-                        <th class="px-4 py-3"></th>
+                        <th scope="col" class="px-4 py-3">Fecha</th>
+                        <th scope="col" class="px-4 py-3">Descripción</th>
+                        <th scope="col" class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -31,7 +31,7 @@
                             <td class="px-4 py-3">{{ $feriado->fecha?->format('d/m/Y') }}</td>
                             <td class="px-4 py-3">{{ $feriado->descripcion }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('feriados.editar', $feriado) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
+                                <a href="{{ route('feriados.editar', $feriado) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
                                     Editar
                                 </a>
                                 <button

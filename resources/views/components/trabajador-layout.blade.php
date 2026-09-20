@@ -7,43 +7,27 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
-        <meta name="theme-color" content="#0f1c2e">
         <link rel="manifest" href="/manifest.json">
 
-        {{-- Anti-parpadeo de modo oscuro — ver resources/js/theme.js para el toggle en vivo. --}}
-        <script>
-            (function () {
-                var modo = localStorage.getItem('mssc-theme');
-                var oscuro = modo === 'dark' || (modo === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                document.documentElement.classList.toggle('dark', oscuro);
-            })();
-        </script>
+        @include('layouts.partials.tema')
 
-        <title>{{ $titulo ? $titulo.' — ' : '' }}{{ config('app.name', 'MSSC') }}</title>
-
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|fraunces:500,600,700,800&display=swap" rel="stylesheet" />
+        @php
+            $tituloPagina = \App\Support\TituloDePagina::resolver($title ?? null, $titulo);
+        @endphp
+        <title>{{ $tituloPagina ? $tituloPagina.' — ' : '' }}{{ config('app.name', 'MSSC') }}</title>
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
     <body class="font-sans antialiased">
+        <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-tinta-900 focus:shadow-glass-lg">Saltar al contenido</a>
         <x-banner />
 
         <div class="min-h-screen bg-institucional flex flex-col">
-            @php
-                $navItems = [
-                    ['label' => 'Papeletas', 'route' => route('trabajador.papeletas.index'), 'active' => request()->routeIs('trabajador.papeletas.index', 'trabajador.papeletas.show'), 'icon' => 'document'],
-                    ['label' => 'Nueva', 'route' => route('trabajador.papeletas.create'), 'active' => request()->routeIs('trabajador.papeletas.create'), 'icon' => 'plus-circle'],
-                    ['label' => 'Calendario', 'route' => route('turnos.calendario.individual'), 'active' => request()->routeIs('turnos.calendario.individual'), 'icon' => 'calendar'],
-                    ['label' => 'Perfil', 'route' => route('profile.show'), 'active' => request()->routeIs('profile.show'), 'icon' => 'user-circle'],
-                ];
-            @endphp
-
             @include('layouts.partials.mobile-topbar', ['usuario' => auth()->user()])
 
-            <main class="mobile-content">
+            <main id="contenido" tabindex="-1" class="mobile-content focus:outline-none">
                 {{ $slot }}
             </main>
 

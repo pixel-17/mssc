@@ -4,6 +4,7 @@ namespace App\Livewire\Catalogos;
 
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -17,6 +18,7 @@ use Livewire\Component;
  * HorarioRrhh y Usuarios).
  */
 #[Layout('layouts.app')]
+#[Title('Catálogos')]
 class CatalogoIndex extends Component
 {
     public function render(): View

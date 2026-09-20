@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
  * misma restricción.
  */
 #[Layout('layouts.app')]
+#[Title('Turno')]
 class TurnoForm extends Component
 {
     use RequiereAdmin;

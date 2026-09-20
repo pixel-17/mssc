@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -19,6 +20,7 @@ use Livewire\WithPagination;
  * reportes — la frontera real vive en ReporteSustentosService::query().
  */
 #[Layout('layouts.app')]
+#[Title('Sustentos')]
 class SustentosIndex extends Component
 {
     use RestringeAReportes, WithPagination;

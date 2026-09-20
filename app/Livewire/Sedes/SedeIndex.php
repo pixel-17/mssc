@@ -6,6 +6,7 @@ use App\Models\Sede;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
@@ -15,6 +16,7 @@ use Livewire\Component;
  * para crear/editar.
  */
 #[Layout('layouts.app')]
+#[Title('Sedes')]
 class SedeIndex extends Component
 {
     use RequiereAdmin;

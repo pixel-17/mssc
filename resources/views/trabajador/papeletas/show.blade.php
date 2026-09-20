@@ -34,12 +34,12 @@
                 <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" class="whitespace-nowrap" /></span>
             </div>
 
-            <div class="mx-5 border-t border-dashed border-ocean-200/70 dark:border-white/15"></div>
+            <div class="mx-5 border-t border-dashed border-tinta-200/70 dark:border-white/15"></div>
 
             @if ($papeleta->justificacion)
                 <div class="px-5 py-4">
-                    <p class="text-xs text-gray-500 dark:text-ocean-100/50 mb-1">Justificación</p>
-                    <p class="text-sm text-ocean-950 dark:text-white/90">{{ $papeleta->justificacion }}</p>
+                    <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-1">Justificación</p>
+                    <p class="text-sm text-tinta-950 dark:text-white/90">{{ $papeleta->justificacion }}</p>
                 </div>
             @endif
 
@@ -60,28 +60,28 @@
 
         {{-- Salida autorizada / en curso: banner animado con la hora de retorno estimada --}}
         @if ($papeleta->estado->equals(\App\States\Papeleta\AutorizadaYCorriendo::class) && ! $papeleta->retorno)
-            <div class="glass-card p-5 relative overflow-hidden border border-ocean-300/60 dark:border-ocean-400/30">
+            <div class="glass-card p-5 relative overflow-hidden border border-tinta-300/60 dark:border-tinta-400/30">
                 <div class="flex items-center gap-3">
                     <span class="relative flex size-3 shrink-0">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-ocean-400 opacity-75"></span>
-                        <span class="relative inline-flex size-3 rounded-full bg-ocean-500"></span>
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tinta-400 opacity-75"></span>
+                        <span class="relative inline-flex size-3 rounded-full bg-tinta-500"></span>
                     </span>
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold text-ocean-950 dark:text-white">Salida autorizada, en curso</p>
-                        <p class="text-xs text-gray-500 dark:text-ocean-100/50">
+                        <p class="text-sm font-semibold text-tinta-950 dark:text-white">Salida autorizada, en curso</p>
+                        <p class="text-xs text-gray-500 dark:text-tinta-100/50">
                             Saliste a las {{ $papeleta->hora_salida_real?->format('H:i') ?? '—' }}
                         </p>
                     </div>
                 </div>
 
                 @if ($papeleta->hora_retorno_estimado)
-                    <div class="mt-3 pt-3 border-t border-dashed border-ocean-200/70 dark:border-white/15 flex items-center justify-between gap-3">
-                        <span class="text-xs text-gray-500 dark:text-ocean-100/50">Retorno estimado</span>
+                    <div class="mt-3 pt-3 border-t border-dashed border-tinta-200/70 dark:border-white/15 flex items-center justify-between gap-3">
+                        <span class="text-xs text-gray-500 dark:text-tinta-100/50">Retorno estimado</span>
                         <span
                             @class([
                                 'text-sm font-semibold',
                                 'text-red-600 dark:text-red-400 animate-pulse' => $papeleta->hora_retorno_estimado->isPast(),
-                                'text-ocean-700 dark:text-ocean-200' => ! $papeleta->hora_retorno_estimado->isPast(),
+                                'text-tinta-700 dark:text-tinta-200' => ! $papeleta->hora_retorno_estimado->isPast(),
                             ])
                         >
                             {{ $papeleta->hora_retorno_estimado->format('H:i') }}
@@ -110,19 +110,19 @@
 
         @if ($puedeMarcarRetorno)
             <div class="glass-card p-5" x-data="{ lat: '', lng: '', obteniendo: false, error: '', archivoFoto: null }">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80 mb-3">Marcar retorno</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Marcar retorno</h3>
 
                 <form method="POST" action="{{ route('trabajador.papeletas.retorno.store', $papeleta) }}" enctype="multipart/form-data" class="space-y-4">
                     @csrf
 
                     <label
                         for="foto-retorno"
-                        class="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ocean-200 dark:border-white/15 bg-white/40 dark:bg-white/5 py-4 text-center cursor-pointer hover:border-ocean-400 dark:hover:border-ocean-400/60 transition"
+                        class="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-tinta-200 dark:border-white/15 bg-white/40 dark:bg-white/5 py-4 text-center cursor-pointer hover:border-tinta-400 dark:hover:border-tinta-400/60 transition"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-ocean-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-tinta-500">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.132.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.803-2.169a47.865 47.865 0 00-1.132-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
                         </svg>
-                        <span class="text-sm font-medium text-ocean-700 dark:text-ocean-200" x-text="archivoFoto ?? 'Tomar / adjuntar foto'"></span>
+                        <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivoFoto ?? 'Tomar / adjuntar foto'"></span>
                     </label>
                     <input type="file" id="foto-retorno" name="foto" accept="image/*" required class="hidden"
                            @change="archivoFoto = $event.target.files[0]?.name ?? null">
@@ -151,19 +151,19 @@
 
         @if ($sustentoPendiente)
             <div class="glass-card p-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80 mb-1">Sustento pendiente</h3>
-                <p class="text-xs text-gray-500 dark:text-ocean-100/50 mb-3">
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-1">Sustento pendiente</h3>
+                <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-3">
                     Fecha límite: {{ $sustentoPendiente->fecha_limite?->format('d/m/Y H:i') }}
                 </p>
                 <form method="POST" action="{{ route('trabajador.papeletas.sustento.store', $sustentoPendiente) }}" enctype="multipart/form-data" class="space-y-3"
                       x-data="{ archivo: null }">
                     @csrf
                     <label for="archivo-sustento"
-                           class="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-ocean-200 dark:border-white/15 bg-white/40 dark:bg-white/5 py-4 text-center cursor-pointer hover:border-ocean-400 dark:hover:border-ocean-400/60 transition">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-ocean-500">
+                           class="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-tinta-200 dark:border-white/15 bg-white/40 dark:bg-white/5 py-4 text-center cursor-pointer hover:border-tinta-400 dark:hover:border-tinta-400/60 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-tinta-500">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                         </svg>
-                        <span class="text-sm font-medium text-ocean-700 dark:text-ocean-200" x-text="archivo ?? 'Adjuntar sustento'"></span>
+                        <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Adjuntar sustento'"></span>
                     </label>
                     <input type="file" id="archivo-sustento" name="archivo" required class="hidden"
                            @change="archivo = $event.target.files[0]?.name ?? null">
@@ -176,11 +176,11 @@
         @endif
 
         {{-- Detalle --}}
-        <div class="glass-card divide-y divide-ocean-100/70 dark:divide-white/10">
+        <div class="glass-card divide-y divide-tinta-100/70 dark:divide-white/10">
             @foreach ($filas as [$etiqueta, $valor])
                 <div class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
-                    <span class="text-gray-500 dark:text-ocean-100/50">{{ $etiqueta }}</span>
-                    <span class="font-medium text-ocean-950 dark:text-white text-right">{{ $valor ?? '—' }}</span>
+                    <span class="text-gray-500 dark:text-tinta-100/50">{{ $etiqueta }}</span>
+                    <span class="font-medium text-tinta-950 dark:text-white text-right">{{ $valor ?? '—' }}</span>
                 </div>
             @endforeach
         </div>
@@ -188,28 +188,28 @@
         {{-- Retorno registrado --}}
         @if ($papeleta->retorno)
             <div class="glass-card p-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80 mb-3">Retorno registrado</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Retorno registrado</h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex items-center justify-between">
-                        <span class="text-gray-500 dark:text-ocean-100/50">Hora del servidor</span>
-                        <span class="font-medium text-ocean-950 dark:text-white">{{ $papeleta->retorno->hora_servidor->format('d/m/Y H:i') }}</span>
+                        <span class="text-gray-500 dark:text-tinta-100/50">Hora del servidor</span>
+                        <span class="font-medium text-tinta-950 dark:text-white">{{ $papeleta->retorno->hora_servidor->format('d/m/Y H:i') }}</span>
                     </div>
                     <div class="flex items-center justify-between">
-                        <span class="text-gray-500 dark:text-ocean-100/50">Dentro de radio de sede</span>
-                        <span class="font-medium text-ocean-950 dark:text-white">
+                        <span class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</span>
+                        <span class="font-medium text-tinta-950 dark:text-white">
                             @if(is_null($papeleta->retorno->dentro_de_radio)) — @else {{ $papeleta->retorno->dentro_de_radio ? 'Sí' : 'No' }} @endif
                         </span>
                     </div>
                     @if ($papeleta->retorno->marcado_manual)
-                        <div class="pt-2 border-t border-ocean-100/70 dark:border-white/10">
-                            <p class="text-gray-500 dark:text-ocean-100/50">Marcado manual por falla de conectividad</p>
-                            <p class="font-medium text-ocean-950 dark:text-white">{{ $papeleta->retorno->marcadoManualPor?->nombre_completo }} — {{ $papeleta->retorno->justificacion_manual }}</p>
+                        <div class="pt-2 border-t border-tinta-100/70 dark:border-white/10">
+                            <p class="text-gray-500 dark:text-tinta-100/50">Marcado manual por falla de conectividad</p>
+                            <p class="font-medium text-tinta-950 dark:text-white">{{ $papeleta->retorno->marcadoManualPor?->nombre_completo }} — {{ $papeleta->retorno->justificacion_manual }}</p>
                         </div>
                     @endif
                     @if ($papeleta->descuento_refrigerio_minutos)
                         <div class="flex items-center justify-between">
-                            <span class="text-gray-500 dark:text-ocean-100/50">Descuento de refrigerio</span>
-                            <span class="font-medium text-ocean-950 dark:text-white">{{ $papeleta->descuento_refrigerio_minutos }} min</span>
+                            <span class="text-gray-500 dark:text-tinta-100/50">Descuento de refrigerio</span>
+                            <span class="font-medium text-tinta-950 dark:text-white">{{ $papeleta->descuento_refrigerio_minutos }} min</span>
                         </div>
                     @endif
                 </div>
@@ -219,18 +219,18 @@
         {{-- Sustentos --}}
         @if ($papeleta->sustentos->isNotEmpty())
             <div class="glass-card p-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-ocean-50/80 mb-3">Sustentos</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Sustentos</h3>
                 <ul class="space-y-2">
                     @foreach ($papeleta->sustentos as $sustento)
                         <li class="flex items-center justify-between gap-3 text-sm">
-                            <span class="text-gray-600 dark:text-ocean-100/70">
+                            <span class="text-gray-600 dark:text-tinta-100/70">
                                 {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
                                 · límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
                                 @if ($sustento->archivo_path)
-                                    · <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="underline hover:text-ocean-600 dark:hover:text-ocean-300">ver archivo</a>
+                                    · <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="underline hover:text-tinta-600 dark:hover:text-tinta-300">ver archivo</a>
                                 @endif
                             </span>
-                            <span class="badge-ocean shrink-0 {{ match($sustento->estado) {
+                            <span class="badge-tinta shrink-0 {{ match($sustento->estado) {
                                 'aprobado' => 'bg-emerald-50 text-emerald-800 ring-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/30',
                                 'observado' => 'bg-orange-50 text-orange-800 ring-orange-300 dark:bg-orange-500/15 dark:text-orange-300 dark:ring-orange-400/30',
                                 default => 'bg-gray-100 text-gray-700 ring-gray-300 dark:bg-white/10 dark:text-gray-300 dark:ring-white/15',

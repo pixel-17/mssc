@@ -4,27 +4,31 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <meta name="theme-color" content="#0f1c2e">
 
-        <script>
-            (function () {
-                var modo = localStorage.getItem('mssc-theme');
-                var oscuro = modo === 'dark' || (modo === null && window.matchMedia('(prefers-color-scheme: dark)').matches);
-                document.documentElement.classList.toggle('dark', oscuro);
-            })();
-        </script>
+        @include('layouts.partials.tema')
 
-        <title>{{ config('app.name', 'MSSC') }}</title>
+        @php
+            $tituloPagina = \App\Support\TituloDePagina::resolver($title ?? null) ?? match (true) {
+                request()->routeIs('login') => 'Iniciar sesión',
+                request()->routeIs('password.request') => 'Recuperar contraseña',
+                request()->routeIs('password.reset') => 'Restablecer contraseña',
+                request()->routeIs('two-factor.login') => 'Verificación en dos pasos',
+                request()->routeIs('password.confirm') => 'Confirmar contraseña',
+                default => null,
+            };
+        @endphp
+        <title>{{ $tituloPagina ? $tituloPagina.' — ' : '' }}{{ config('app.name', 'MSSC') }}</title>
 
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800|fraunces:500,600,700,800&display=swap" rel="stylesheet" />
 
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
     </head>
     <body class="font-sans text-gray-900 dark:text-white antialiased">
+        <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-tinta-900 focus:shadow-glass-lg">Saltar al contenido</a>
+        <main id="contenido" tabindex="-1" class="focus:outline-none">
         {{ $slot }}
+        </main>
 
         @livewireScripts
     </body>

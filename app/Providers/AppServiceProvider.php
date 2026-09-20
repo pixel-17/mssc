@@ -8,7 +8,9 @@ use App\Models\User;
 use App\Observers\UnidadOrganicaObserver;
 use App\Observers\UserObserver;
 use App\Policies\PapeletaPolicy;
+use App\View\Composers\NavegacionComposer;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -40,5 +42,8 @@ class AppServiceProvider extends ServiceProvider
          * funcionen de verdad.
          */
         Gate::policy(Sustento::class, PapeletaPolicy::class);
+
+        // Menús del shell (sidebar / barra inferior): ver NavegacionComposer.
+        View::composer(['layouts.app', 'components.trabajador-layout'], NavegacionComposer::class);
     }
 }

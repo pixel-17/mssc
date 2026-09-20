@@ -32,7 +32,7 @@ $width = match ($width) {
             class="absolute z-50 {{ $verticalSpacing }} {{ $width }} rounded-2xl shadow-glass-lg {{ $alignmentClasses }} {{ $dropdownClasses }}"
             style="display: none;"
             @click="open = false">
-        <div class="rounded-2xl ring-1 ring-ocean-900/5 overflow-hidden {{ $contentClasses }}">
+        <div class="rounded-2xl ring-1 ring-tinta-900/5 overflow-hidden {{ $contentClasses }}">
             {{ $content }}
         </div>
     </div>

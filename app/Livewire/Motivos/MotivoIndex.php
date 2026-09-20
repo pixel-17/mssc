@@ -6,6 +6,7 @@ use App\Models\Motivo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
@@ -15,6 +16,7 @@ use Livewire\Component;
  * para crear/editar. Patrón calcado de App\Livewire\Sedes.
  */
 #[Layout('layouts.app')]
+#[Title('Motivos')]
 class MotivoIndex extends Component
 {
     use RequiereAdmin;

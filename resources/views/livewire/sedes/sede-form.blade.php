@@ -6,7 +6,7 @@
 
 <div>
     <div class="max-w-2xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+        <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
             {{ $sede ? 'Editar sede' : 'Crear sede' }}
         </h2>
 

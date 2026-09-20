@@ -1,6 +1,6 @@
 <div>
     <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-ocean-950 dark:text-white leading-tight tracking-tight">
+        <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
             Horario de RRHH
         </h2>
 
@@ -14,11 +14,11 @@
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                     <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th class="px-4 py-3">Día</th>
-                        <th class="px-4 py-3">Inicio</th>
-                        <th class="px-4 py-3">Fin</th>
-                        <th class="px-4 py-3">Activo</th>
-                        <th class="px-4 py-3"></th>
+                        <th scope="col" class="px-4 py-3">Día</th>
+                        <th scope="col" class="px-4 py-3">Inicio</th>
+                        <th scope="col" class="px-4 py-3">Fin</th>
+                        <th scope="col" class="px-4 py-3">Activo</th>
+                        <th scope="col" class="px-4 py-3"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -29,7 +29,7 @@
                             <td class="px-4 py-3">{{ $horario->hora_fin }}</td>
                             <td class="px-4 py-3">{{ $horario->activo ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3 text-right">
-                                <a href="{{ route('horario-rrhh.editar', $horario) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline">
+                                <a href="{{ route('horario-rrhh.editar', $horario) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
                                     Editar
                                 </a>
                             </td>

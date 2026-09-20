@@ -55,11 +55,11 @@
                 <span class="toast-marca" aria-hidden="true"></span>
 
                 <div class="min-w-0 flex-1">
-                    <p class="truncate text-sm font-bold text-ocean-950 dark:text-white" x-text="aviso.titulo"></p>
-                    <p class="mt-0.5 text-sm text-ocean-700 dark:text-ocean-100/80" x-text="aviso.mensaje"></p>
+                    <p class="truncate text-sm font-bold text-tinta-950 dark:text-white" x-text="aviso.titulo"></p>
+                    <p class="mt-0.5 text-sm text-tinta-700 dark:text-tinta-100/80" x-text="aviso.mensaje"></p>
 
                     <template x-if="aviso.url">
-                        <a :href="aviso.url" class="mt-2 inline-block text-sm font-semibold text-terracota-600 hover:text-terracota-700 dark:text-terracota-300">
+                        <a :href="aviso.url" class="mt-2 inline-block text-sm font-semibold text-sello-600 hover:text-sello-700 dark:text-sello-300">
                             Ver papeleta
                         </a>
                     </template>

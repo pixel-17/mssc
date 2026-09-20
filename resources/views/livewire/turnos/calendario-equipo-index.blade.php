@@ -1,18 +1,18 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-3">
-            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
                 Calendario de turnos — mi equipo
             </h2>
 
             <div class="flex items-center gap-2">
-                <a href="{{ route('turnos.programacion.equipo') }}" class="px-3 py-1.5 rounded-md bg-ocean-800 text-white text-sm mr-2">
+                <a href="{{ route('turnos.programacion.equipo') }}" class="px-3 py-1.5 rounded-md bg-tinta-800 text-white text-sm mr-2">
                     Programar equipo (728)
                 </a>
                 <button type="button" wire:click="mesAnterior" class="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                     &larr; Anterior
                 </button>
-                <button type="button" wire:click="irAHoy" class="px-3 py-1.5 rounded-md border text-sm font-semibold text-ocean-700 dark:text-ocean-300 hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors">
+                <button type="button" wire:click="irAHoy" class="px-3 py-1.5 rounded-md border text-sm font-semibold text-tinta-700 dark:text-tinta-300 hover:bg-tinta-50 dark:hover:bg-tinta-500/10 transition-colors">
                     Hoy
                 </button>
                 <span class="text-sm font-semibold w-32 text-center capitalize">
@@ -37,7 +37,7 @@
              "Mi calendario" del Trabajador (Turno::claseColor()). --}}
         <div class="flex flex-wrap items-center gap-2">
             @foreach (['M' => 'Mañana', 'T' => 'Tarde', 'N' => 'Noche', 'D' => 'Descanso', 'DIA' => 'Horario ordinario (276)'] as $sigla => $nombre)
-                <span class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium
+                <span wire:key="calendario-equipo-index-span-{{ $sigla }}" class="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium
                     {{ \App\Support\TurnoColores::para($sigla) }}">
                     <span class="font-bold">{{ $sigla }}</span> · {{ $nombre }}
                 </span>
@@ -66,12 +66,12 @@
             <table class="min-w-full border-separate border-spacing-1 text-sm">
                 <thead>
                     <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900">Trabajador</th>
+                        <th scope="col" class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900">Trabajador</th>
                         @foreach ($dias as $dia)
                             @php($esHoyCol = $inicioMes->copy()->day($dia)->isSameDay($hoy))
-                            <th class="px-1 py-2 text-center {{ $esHoyCol ? 'text-ocean-700 dark:text-ocean-300 font-bold' : '' }}">{{ $dia }}</th>
+                            <th scope="col" class="px-1 py-2 text-center {{ $esHoyCol ? 'text-tinta-700 dark:text-tinta-300 font-bold' : '' }}">{{ $dia }}</th>
                         @endforeach
-                        <th class="px-3 py-2"></th>
+                        <th scope="col" class="px-3 py-2"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -91,7 +91,7 @@
                                         class="relative w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold transition-all
                                             {{ $turno ? $turno->claseColor() : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-300' }}
                                             {{ $turno ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : '' }}
-                                            {{ $esHoyCol ? 'ring-2 ring-ocean-500 dark:ring-ocean-400' : '' }}"
+                                            {{ $esHoyCol ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : '' }}"
                                     >
                                         {{ $turno?->etiqueta() ?? '—' }}
 
@@ -116,11 +116,11 @@
                                 </td>
                             @endforeach
                             <td class="px-3 py-2 text-right whitespace-nowrap align-middle">
-                                <a href="{{ route('turnos.configuracion', $trabajador) }}" class="text-sm text-ocean-700 dark:text-ocean-300 underline hover:no-underline">
+                                <a href="{{ route('turnos.configuracion', $trabajador) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline hover:no-underline">
                                     Crear/editar horario
                                 </a>
                                 @if ($trabajador->regimen === '728')
-                                    <a href="{{ route('turnos.programacion', $trabajador) }}" class="ml-3 text-sm text-ocean-700 dark:text-ocean-300 underline hover:no-underline">
+                                    <a href="{{ route('turnos.programacion', $trabajador) }}" class="ml-3 text-sm text-tinta-700 dark:text-tinta-300 underline hover:no-underline">
                                         Programar por día
                                     </a>
                                 @endif

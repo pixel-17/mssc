@@ -5,6 +5,7 @@ namespace App\Livewire\Feriados;
 use App\Models\Feriado;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
@@ -14,6 +15,7 @@ use Livewire\Component;
  * para crear/editar.
  */
 #[Layout('layouts.app')]
+#[Title('Feriados')]
 class FeriadoIndex extends Component
 {
     use RequiereAdmin;

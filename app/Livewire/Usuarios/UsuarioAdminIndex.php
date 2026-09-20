@@ -6,6 +6,7 @@ use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
@@ -21,6 +22,7 @@ use Spatie\Permission\Models\Role;
  * Este módulo vive en 'usuarios-admin.*' para no pisar esas rutas.
  */
 #[Layout('layouts.app')]
+#[Title('Usuarios')]
 class UsuarioAdminIndex extends Component
 {
     use RequiereAdmin;

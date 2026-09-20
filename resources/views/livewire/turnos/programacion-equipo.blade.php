@@ -1,7 +1,7 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div>
-            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
                 Programar turnos — mi equipo (728)
             </h2>
             <p class="mt-1 text-sm text-gray-500">
@@ -89,7 +89,7 @@
             <div class="flex items-center justify-between flex-wrap gap-3">
                 <div class="flex items-center gap-2">
                     <button type="button" @click="navegar('mesAnterior')" class="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" aria-label="Mes anterior">&larr; Anterior</button>
-                    <button type="button" @click="navegar('irAHoy')" class="px-3 py-1.5 rounded-md border text-sm font-semibold text-ocean-700 dark:text-ocean-300 hover:bg-ocean-50 dark:hover:bg-ocean-500/10 transition-colors">Hoy</button>
+                    <button type="button" @click="navegar('irAHoy')" class="px-3 py-1.5 rounded-md border text-sm font-semibold text-tinta-700 dark:text-tinta-300 hover:bg-tinta-50 dark:hover:bg-tinta-500/10 transition-colors">Hoy</button>
                     <span class="text-sm font-semibold w-32 text-center capitalize">{{ $inicioMes->translatedFormat('F Y') }}</span>
                     <button type="button" @click="navegar('mesSiguiente')" class="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" aria-label="Mes siguiente">Siguiente &rarr;</button>
                 </div>
@@ -117,7 +117,7 @@
                             <button
                                 type="button"
                                 @click="pincel = '{{ $codigo }}'"
-                                :class="[pincel === '{{ $codigo }}' ? 'ring-2 ring-ocean-500 dark:ring-ocean-400 shadow' : 'opacity-80 hover:opacity-100', '{{ $codigo }}' === 'BORRAR' ? 'bg-white dark:bg-gray-900 text-gray-500 border-gray-300 dark:border-gray-700' : clase('{{ $codigo }}')]"
+                                :class="[pincel === '{{ $codigo }}' ? 'ring-2 ring-tinta-500 dark:ring-tinta-400 shadow' : 'opacity-80 hover:opacity-100', '{{ $codigo }}' === 'BORRAR' ? 'bg-white dark:bg-gray-900 text-gray-500 border-gray-300 dark:border-gray-700' : clase('{{ $codigo }}')]"
                                 class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition"
                             >
                                 <span class="font-bold">{{ $sigla }}</span> · {{ $nombre }}
@@ -130,16 +130,16 @@
 
                     <div class="flex flex-wrap items-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-800">
                         <div>
-                            <label class="block text-xs font-medium mb-1">Repetir patrón</label>
-                            <input type="text" x-model="patron" class="w-52 rounded-md border-gray-300 dark:bg-gray-800 text-sm" placeholder="M M T T N D">
+                            <label for="programacion-equipo-patron" class="block text-xs font-medium mb-1">Repetir patrón</label>
+                            <input id="programacion-equipo-patron" type="text" x-model="patron" class="w-52 rounded-md border-gray-300 dark:bg-gray-800 text-sm" placeholder="M M T T N D">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium mb-1">desde el</label>
-                            <input type="date" x-model="desde" :min="fechas[0]" :max="fechas[fechas.length - 1]" class="rounded-md border-gray-300 dark:bg-gray-800 text-sm">
+                            <label for="programacion-equipo-desde" class="block text-xs font-medium mb-1">desde el</label>
+                            <input id="programacion-equipo-desde" type="date" x-model="desde" :min="fechas[0]" :max="fechas[fechas.length - 1]" class="rounded-md border-gray-300 dark:bg-gray-800 text-sm">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium mb-1" title="Cada trabajador de la lista arranca el patrón este número de días después del anterior">Escalonar (días)</label>
-                            <input type="number" min="-30" max="30" x-model="desfase" class="w-20 rounded-md border-gray-300 dark:bg-gray-800 text-sm">
+                            <label for="programacion-equipo-desfase" class="block text-xs font-medium mb-1" title="Cada trabajador de la lista arranca el patrón este número de días después del anterior">Escalonar (días)</label>
+                            <input id="programacion-equipo-desfase" type="number" min="-30" max="30" x-model="desfase" class="w-20 rounded-md border-gray-300 dark:bg-gray-800 text-sm">
                         </div>
                         <button type="button" @click="aplicarPatron()" class="px-3 py-2 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800">
                             Aplicar a <span x-text="seleccion.length ? seleccion.length + ' marcado(s)' : 'todos'"></span>
@@ -158,7 +158,7 @@
                     <table class="min-w-full border-separate border-spacing-1 text-sm">
                         <thead>
                             <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                                <th class="px-3 py-2 sticky left-0 z-10 bg-white dark:bg-gray-900">
+                                <th scope="col" class="px-3 py-2 sticky left-0 z-10 bg-white dark:bg-gray-900">
                                     <label class="inline-flex items-center gap-2 normal-case">
                                         <input type="checkbox" class="rounded border-gray-300"
                                             :checked="seleccion.length === uids.length"
@@ -167,7 +167,7 @@
                                     </label>
                                 </th>
                                 @foreach ($fechas as $fecha)
-                                    <th class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy ? 'text-ocean-700 dark:text-ocean-300 font-bold' : ($fecha->isWeekend() ? 'text-rose-500' : '') }}">
+                                    <th wire:key="programacion-equipo-th-{{ $loop->index }}" scope="col" class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy ? 'text-tinta-700 dark:text-tinta-300 font-bold' : ($fecha->isWeekend() ? 'text-rose-500' : '') }}">
                                         <div>{{ $fecha->day }}</div>
                                         <div class="text-[10px] normal-case opacity-70">{{ mb_substr($fecha->translatedFormat('D'), 0, 1) }}</div>
                                     </th>
@@ -186,7 +186,7 @@
                                             <input type="checkbox" class="rounded border-gray-300" value="{{ $trabajador->id }}" x-model="seleccion">
                                             {{ $trabajador->nombre_completo }}
                                         </label>
-                                        <a href="{{ route('turnos.programacion', $trabajador) }}" class="ml-2 text-xs text-ocean-700 dark:text-ocean-300 underline hover:no-underline" title="Programar solo a esta persona">vista individual</a>
+                                        <a href="{{ route('turnos.programacion', $trabajador) }}" class="ml-2 text-xs text-tinta-700 dark:text-tinta-300 underline hover:no-underline" title="Programar solo a esta persona">vista individual</a>
                                     </td>
                                     @foreach ($fechas as $fecha)
                                         @php($f = $fecha->toDateString())
@@ -196,7 +196,7 @@
                                                 data-u="{{ $trabajador->id }}"
                                                 data-f="{{ $f }}"
                                                 :class="clase(dias['{{ $trabajador->id }}']['{{ $f }}'])"
-                                                class="w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold select-none cursor-pointer transition-colors {{ $f === $hoy ? 'ring-2 ring-ocean-500 dark:ring-ocean-400' : '' }}"
+                                                class="w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold select-none cursor-pointer transition-colors {{ $f === $hoy ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : '' }}"
                                                 aria-label="{{ $trabajador->nombre_completo }}, {{ $fecha->translatedFormat('l j') }}"
                                             ><span x-text="sigla(dias['{{ $trabajador->id }}']['{{ $f }}'])"></span></button>
                                         </td>
@@ -207,10 +207,10 @@
                         <tfoot>
                             {{-- Cobertura: cuántas personas hay en cada turno cada día --}}
                             @foreach (['MANANA' => 'M', 'TARDE' => 'T', 'NOCHE' => 'N'] as $codigo => $sigla)
-                                <tr class="text-center text-xs">
+                                <tr wire:key="programacion-equipo-tr-{{ $codigo }}" class="text-center text-xs">
                                     <td class="px-3 py-1 sticky left-0 z-10 bg-white dark:bg-gray-900 text-left text-gray-500 whitespace-nowrap">Cubren {{ $sigla }}</td>
                                     @foreach ($fechas as $fecha)
-                                        <td
+                                        <td wire:key="programacion-equipo-td-{{ $loop->index }}"
                                             x-text="cobertura('{{ $fecha->toDateString() }}', '{{ $codigo }}')"
                                             :class="cobertura('{{ $fecha->toDateString() }}', '{{ $codigo }}') === 0 ? 'text-gray-300 dark:text-gray-600' : 'font-semibold text-gray-700 dark:text-gray-200'"
                                         ></td>
@@ -233,7 +233,7 @@
                         <p class="text-sm font-semibold text-amber-800 dark:text-amber-300">Revisa antes de guardar:</p>
                         <ul class="list-disc pl-5 text-sm text-amber-800 dark:text-amber-200 space-y-1">
                             @foreach ($advertencias as $advertencia)
-                                <li>{{ $advertencia }}</li>
+                                <li wire:key="programacion-equipo-li-{{ $loop->index }}">{{ $advertencia }}</li>
                             @endforeach
                         </ul>
                         <div class="flex items-center gap-3">
@@ -249,7 +249,7 @@
                         type="button"
                         @click="$wire.guardar(cambios)"
                         wire:loading.attr="disabled"
-                        class="inline-flex items-center px-4 py-2 bg-ocean-800 text-white rounded-md text-sm disabled:opacity-50"
+                        class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm disabled:opacity-50"
                     >
                         Guardar programación del mes
                     </button>

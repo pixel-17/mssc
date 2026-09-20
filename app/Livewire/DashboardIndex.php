@@ -8,6 +8,7 @@ use App\Services\DashboardMetricsService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -20,6 +21,7 @@ use Livewire\Component;
  * dashboard y sigue yendo directo a su bandeja.
  */
 #[Layout('layouts.app')]
+#[Title('Inicio')]
 class DashboardIndex extends Component
 {
     use EscuchaNotificacionesEnVivo;

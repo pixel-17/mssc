@@ -1,6 +1,6 @@
 {{--
-    Sidebar institucional (ocean) para los roles que gestionan a otros.
-    Recibe $secciones y $rolLabel armados en layouts/app.blade.php, y
+    Sidebar institucional (tinta) para los roles que gestionan a otros.
+    Recibe $secciones y $rolLabel armados por App\View\Composers\NavegacionComposer, y
     comparte el x-data del shell (sidebarAbierto) para el drawer en móvil.
     Los estilos viven en resources/css/app.css: .app-sidebar, .sidebar-link,
     .sidebar-badge, etc.
@@ -11,14 +11,14 @@
             <x-application-mark class="h-9 w-9 shrink-0" />
             <span class="min-w-0">
                 <span class="block truncate text-sm font-display font-semibold tracking-tight text-white">MSSC</span>
-                <span class="-mt-0.5 block truncate text-[11px] font-medium text-ocean-200">{{ $rolLabel }}</span>
+                <span class="-mt-0.5 block truncate text-[11px] font-medium text-tinta-200">{{ $rolLabel }}</span>
             </span>
         </a>
 
         <button
             type="button"
             @click="sidebarAbierto = false"
-            class="ms-auto rounded-lg p-1.5 text-ocean-200 hover:bg-white/10 hover:text-white lg:hidden"
+            class="ms-auto rounded-lg p-1.5 text-tinta-200 hover:bg-white/10 hover:text-white lg:hidden"
             aria-label="Cerrar menú"
         >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-5">
@@ -43,8 +43,8 @@
                         <x-icon :name="$item['icon']" class="sidebar-icon" />
                         <span class="truncate">{{ $item['label'] }}</span>
 
-                        @if (($item['badge'] ?? 0) > 0)
-                            <span class="sidebar-badge">{{ $item['badge'] > 99 ? '99+' : $item['badge'] }}</span>
+                        @if (! empty($item['bandeja']))
+                            <livewire:navegacion.insignia-bandeja :bandeja="$item['bandeja']" :key="'insignia-'.$item['bandeja']" />
                         @endif
                     </a>
                 @endforeach

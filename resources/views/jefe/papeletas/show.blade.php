@@ -20,7 +20,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
             <span data-en-vivo-estado><x-estado-papeleta :estado="$papeleta->estado" class="text-sm" /></span>
@@ -104,10 +104,10 @@
                                 <input type="radio" name="resultado" value="observado" x-model="resultado"> Observar
                             </label>
                         </div>
-                        <textarea name="comentario" rows="2" maxlength="2000" x-show="resultado === 'observado'"
+                        <textarea name="comentario" aria-label="Motivo de la observación" rows="2" maxlength="2000" x-show="resultado === 'observado'"
                                   placeholder="Motivo de la observación (mínimo 5 caracteres)..."
-                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-ocean-500 focus:ring-ocean-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
-                        <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-ocean-600 hover:bg-ocean-700">
+                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
+                        <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-tinta-600 hover:bg-tinta-700">
                             <span x-show="! enviando">Confirmar revisión</span>
                             <span x-show="enviando" x-cloak>Enviando…</span>
                         </button>

@@ -5,6 +5,7 @@ namespace App\Livewire\Configuraciones;
 use App\Models\Configuracion;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -14,6 +15,7 @@ use Livewire\Component;
  * aquí, solo edición del valor (ver ConfiguracionForm).
  */
 #[Layout('layouts.app')]
+#[Title('Configuraciones')]
 class ConfiguracionIndex extends Component
 {
     public function render(): View

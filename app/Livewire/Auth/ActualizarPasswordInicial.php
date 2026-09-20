@@ -6,6 +6,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -19,6 +20,7 @@ use Livewire\Component;
  * traerlo aquí.
  */
 #[Layout('layouts.app')]
+#[Title('Actualiza tu contraseña')]
 class ActualizarPasswordInicial extends Component
 {
     public string $password = '';

@@ -1,3 +1,14 @@
+/*
+ * Fuentes autoalojadas (antes venían de fonts.bunny.net en cada página:
+ * una petición externa que bloquea el primer pintado y no existe sin
+ * conexión). Son variables (un archivo cubre todos los pesos) y traen
+ * `unicode-range`: el navegador solo descarga el subconjunto que la
+ * página usa (latin para español). Los nombres de familia están en
+ * tailwind.config.js (fontFamily).
+ */
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource-variable/fraunces/index.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -194,40 +205,40 @@ body.app-bg {
     color: #71717a;
 }
 
-/* Familia `ocean-*` (texto/fondo/borde): se usa en ~60 vistas para
+/* Familia `tinta-*` (texto/fondo/borde): se usa en ~60 vistas para
    títulos, etiquetas y bordes de input, pero nunca tuvo variante dark: 
    propia — a diferencia de gray-* y white arriba, se quedaba con el
    mismo tono oscuro/claro fijo en ambos temas. En modo oscuro eso
-   volvía casi ilegibles los títulos (ocean-950 es casi negro) y
-   dejaba tarjetas bg-ocean-50 brillando blancas sobre fondo oscuro.
+   volvía casi ilegibles los títulos (tinta-950 es casi negro) y
+   dejaba tarjetas bg-tinta-50 brillando blancas sobre fondo oscuro.
    Mismo criterio que el resto del archivo: un solo lugar que arregla
    todas las vistas, sin tocar cada Blade una por una. */
 
-.dark .text-ocean-950,
-.dark .text-ocean-900 {
+.dark .text-tinta-950,
+.dark .text-tinta-900 {
     color: #f3f5f4;
 }
 
-.dark .text-ocean-800 {
+.dark .text-tinta-800 {
     color: #c3d0ce;
 }
 
-.dark .text-ocean-700 {
+.dark .text-tinta-700 {
     color: #98adab;
 }
 
-.dark .text-ocean-600 {
+.dark .text-tinta-600 {
     color: #647d7d;
 }
 
-.dark .bg-ocean-50,
-.dark .bg-ocean-50\/50,
-.dark .bg-ocean-100 {
+.dark .bg-tinta-50,
+.dark .bg-tinta-50\/50,
+.dark .bg-tinta-100 {
     background-color: rgba(100, 125, 125, 0.14);
 }
 
-.dark .border-ocean-100,
-.dark .border-ocean-200 {
+.dark .border-tinta-100,
+.dark .border-tinta-200 {
     border-color: rgba(255, 255, 255, 0.08);
 }
 
@@ -288,7 +299,7 @@ body.app-bg {
    rotación, como si estuviera estampado a mano — el color (bg/text/
    ring por estado) lo aporta PapeletaEstadoPresentacion::para() en
    cada uso, ya con sus propias variantes dark:. */
-.badge-ocean {
+.badge-tinta {
     @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-xs font-semibold ring-1 ring-inset;
     transform: rotate(-1.5deg);
     letter-spacing: 0.01em;

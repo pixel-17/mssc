@@ -7,6 +7,7 @@ use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -17,6 +18,7 @@ use Livewire\Component;
  * exige un registro existente (no admite modo "crear").
  */
 #[Layout('layouts.app')]
+#[Title('Editar configuración')]
 class ConfiguracionForm extends Component
 {
     use RequiereAdmin;

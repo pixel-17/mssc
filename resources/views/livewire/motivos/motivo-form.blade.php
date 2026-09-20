@@ -1,26 +1,26 @@
 <div>
     <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-ocean-950 leading-tight tracking-tight">
+        <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
             {{ $motivo ? 'Editar motivo' : 'Nuevo motivo' }}
         </h2>
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium mb-1">Código</label>
-                    <input type="text" wire:model="codigo" class="w-full rounded-md border-gray-300 dark:bg-gray-800" placeholder="ej. PARTICULAR, SALUD, COMISION, EMERGENCIA">
+                    <label for="motivo-form-codigo" class="block text-sm font-medium mb-1">Código</label>
+                    <input id="motivo-form-codigo" type="text" wire:model="codigo" class="w-full rounded-md border-gray-300 dark:bg-gray-800" placeholder="ej. PARTICULAR, SALUD, COMISION, EMERGENCIA">
                     @error('codigo') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Nombre</label>
-                    <input type="text" wire:model="nombre" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="motivo-form-nombre" class="block text-sm font-medium mb-1">Nombre</label>
+                    <input id="motivo-form-nombre" type="text" wire:model="nombre" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                     @error('nombre') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium mb-1">Adjunto</label>
-                    <select wire:model="adjunto" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <label for="motivo-form-adjunto" class="block text-sm font-medium mb-1">Adjunto</label>
+                    <select id="motivo-form-adjunto" wire:model="adjunto" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="no">No lleva adjunto</option>
                         <option value="opcional">Opcional</option>
                         <option value="flexible">Flexible (puede o no traerlo)</option>
@@ -73,7 +73,7 @@
 
             <div class="flex items-center justify-end gap-3">
                 <a href="{{ route('motivos.index') }}" class="text-sm text-gray-500">Cancelar</a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-ocean-800 text-white rounded-md text-sm">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
                     Guardar
                 </button>
             </div>

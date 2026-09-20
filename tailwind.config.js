@@ -9,12 +9,8 @@ import typography from '@tailwindcss/typography';
 // físico —la papeleta de permiso, con folio y sello— así que la
 // paleta nace de ahí: papel frío + una sola tinta de sello cálida.
 //
-// `tinta` y `sello` son los nombres nuevos. `ocean` y `terracota`
-// quedan como ALIAS de los mismos valores (no como paleta aparte):
-// así, sin tocar las ~130 vistas que ya usan `text-ocean-950` o
-// `bg-terracota-500`, todo el sistema hereda la nueva identidad de
-// una sola vez. Las vistas nuevas o reescritas usan `tinta-*`/`sello-*`
-// directamente; el resto migra de a poco, sin urgencia ni riesgo.
+// `tinta` y `sello` son los nombres de la paleta. Los alias históricos
+// `ocean-*` y `terracota-*` ya no existen: todas las vistas migraron.
 // ------------------------------------------------------------------
 const tinta = {
     50: '#f3f5f4',
@@ -128,11 +124,11 @@ export default {
                 // navegación, texto de cuerpo). Legible a tamaños chicos en
                 // pantallas de gama baja, que es como muchos trabajadores
                 // entran al sistema desde la calle.
-                sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                sans: ['"Inter Variable"', 'Inter', ...defaultTheme.fontFamily.sans],
                 // Fraunces: la identidad (folios, títulos, cifras grandes
                 // del dashboard, wordmark). Con carácter propio de
                 // documento/registro oficial, no de plantilla genérica.
-                display: ['Fraunces', ...defaultTheme.fontFamily.serif],
+                display: ['"Fraunces Variable"', 'Fraunces', ...defaultTheme.fontFamily.serif],
                 // Para el número de folio (dato tabular tipo "N.° 0042"),
                 // no como recurso decorativo repartido por la interfaz.
                 mono: ['JetBrains Mono', ...defaultTheme.fontFamily.mono],
@@ -141,10 +137,6 @@ export default {
             colors: {
                 tinta,
                 sello,
-                // Alias históricos — mismos valores, para no romper el
-                // resto del sistema mientras se migra vista por vista.
-                ocean: tinta,
-                terracota: sello,
                 // Estados del registro: aprobar (verde-registro) y
                 // rechazar/vencer (rojo-sello). Tonos apagados de tinta
                 // de sello, no semáforo saturado.
@@ -173,7 +165,7 @@ export default {
             boxShadow: {
                 glass: '0 4px 14px -4px rgba(27, 43, 52, 0.35)',
                 'glass-lg': '0 16px 40px -12px rgba(16, 20, 22, 0.28)',
-                'ocean-glow': '0 12px 32px -10px rgba(41, 63, 67, 0.55)',
+                'tinta-glow': '0 12px 32px -10px rgba(41, 63, 67, 0.55)',
                 'andino-glow': '0 10px 24px -6px rgba(184, 121, 47, 0.55)',
             },
         },

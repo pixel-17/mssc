@@ -1,8 +1,8 @@
-@props(['label', 'value', 'hint' => null, 'href' => null, 'icon' => null, 'tono' => 'ocean'])
+@props(['label', 'value', 'hint' => null, 'href' => null, 'icon' => null, 'tono' => 'tinta'])
 
 @php
     $tonos = [
-        'ocean' => 'bg-ocean-500/15 text-ocean-700 dark:text-ocean-300',
+        'tinta' => 'bg-tinta-500/15 text-tinta-700 dark:text-tinta-300',
         'amber' => 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
         'red' => 'bg-red-500/15 text-red-700 dark:text-red-300',
         'emerald' => 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300',
@@ -13,7 +13,7 @@
         'ambar' => 'bg-ambar-500/15 text-ambar-700 dark:text-ambar-300',
         'sello' => 'bg-sello-500/15 text-sello-700 dark:text-sello-300',
     ];
-    $tonoClases = $tonos[$tono] ?? $tonos['ocean'];
+    $tonoClases = $tonos[$tono] ?? $tonos['tinta'];
 @endphp
 
 <div {{ $attributes->merge(['class' => 'stat-card relative '.($href ? 'hover:shadow-glass-lg transition-shadow duration-150' : '')]) }}>
@@ -25,7 +25,7 @@
         <p class="stat-card-label">{{ $label }}</p>
         <p class="stat-card-value mt-1">{{ $value ?? '—' }}</p>
         @if ($hint)
-            <p class="text-xs text-gray-500 dark:text-ocean-100/50 mt-1">{{ $hint }}</p>
+            <p class="text-xs text-gray-500 dark:text-tinta-100/50 mt-1">{{ $hint }}</p>
         @endif
     </div>
 

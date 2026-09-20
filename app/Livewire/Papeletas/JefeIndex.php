@@ -11,6 +11,7 @@ use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -24,6 +25,7 @@ use Livewire\Component;
  * Controller original vía <form>; solo el listado necesitaba vivo.
  */
 #[Layout('layouts.app')]
+#[Title('Bandeja de Jefe')]
 class JefeIndex extends Component
 {
     use EscuchaNotificacionesEnVivo;

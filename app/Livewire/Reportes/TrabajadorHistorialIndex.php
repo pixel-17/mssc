@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
@@ -18,6 +19,7 @@ use Livewire\Component;
  * solo, todo el tiempo — para revisar un caso puntual a fondo.
  */
 #[Layout('layouts.app')]
+#[Title('Historial por trabajador')]
 class TrabajadorHistorialIndex extends Component
 {
     use RestringeAReportes;

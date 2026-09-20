@@ -6,6 +6,7 @@ use App\Livewire\Concerns\EscuchaNotificacionesEnVivo;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -21,6 +22,7 @@ use Livewire\WithPagination;
  * solo el listado (index) necesitaba tiempo real.
  */
 #[Layout('components.trabajador-layout')]
+#[Title('Mis papeletas')]
 class TrabajadorIndex extends Component
 {
     use EscuchaNotificacionesEnVivo, WithPagination;

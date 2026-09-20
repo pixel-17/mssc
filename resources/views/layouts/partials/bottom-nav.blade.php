@@ -1,7 +1,7 @@
 {{--
     Navegación inferior del shell móvil. Recibe $items desde
     layouts/app.blade.php. Estilos: .bottom-nav, .bottom-nav-item,
-    .nav-badge en resources/css/app.css (activo en terracota).
+    .nav-badge en resources/css/app.css (activo en sello).
 --}}
 <nav class="bottom-nav" aria-label="Navegación principal">
     @foreach ($items as $item)

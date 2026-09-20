@@ -32,6 +32,12 @@ class UserFactory extends Factory
             'dni' => fake()->unique()->numerify('########'),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
+            // La BD los tiene por defecto (activo = true, debe_actualizar = false), pero
+            // el modelo que devuelve create() NO los trae: sin estos valores,
+            // actingAs() usa un User con activo = null y EnsureUsuarioActivo
+            // lo cierra como "cuenta desactivada".
+            'activo' => true,
+            'debe_actualizar_password' => false,
             'password' => static::$password ??= Hash::make('password'),
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
