@@ -9,7 +9,6 @@ use Carbon\Carbon;
  * Calcula plazos saltando sábados, domingos y feriados cargados por el
  * admin en /admin/feriados. Usado por:
  * - Sustento de Salud: fecha_limite = hora del retorno + 48h hábiles.
- * - Subsanación de Emergencia observada: 15 días hábiles.
  * Sin este servicio, la tabla `feriados` no tiene ningún efecto real.
  */
 class CalculadorDiasHabiles
@@ -26,8 +25,7 @@ class CalculadorDiasHabiles
 
     /**
      * Suma N días hábiles completos a partir de una fecha, saltando
-     * fines de semana y feriados. Usado para la subsanación de
-     * Emergencia (15 días hábiles).
+     * fines de semana y feriados.
      */
     public function agregarDiasHabiles(Carbon $desde, int $dias): Carbon
     {

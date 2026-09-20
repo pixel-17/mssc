@@ -6,8 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Catálogo de feriados. Necesario para calcular correctamente los plazos
- * en "días/horas hábiles" (48h hábiles de sustento, 15 días hábiles de
- * subsanación de Emergencia).
+ * en "días/horas hábiles" (48h hábiles de sustento).
  */
 class Feriado extends Model
 {

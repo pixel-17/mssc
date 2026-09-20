@@ -15,7 +15,7 @@ use Livewire\Component;
  * Motivos ahora vive acá, en Blade + Livewire puro (ver rutas
  * 'motivos.*' en routes/web.php, middleware role:admin).
  *
- * Las banderas de reglas de negocio (suma_descuento, bypass, etc.)
+ * Las banderas de reglas de negocio (suma_descuento, cierre sin retorno, etc.)
  * son la única fuente de verdad que consultan las Actions del flujo
  * — nunca hardcodear por código en base al nombre/código del motivo.
  */
@@ -38,13 +38,9 @@ class MotivoForm extends Component
 
     public bool $sumaDescuento = false;
 
-    public bool $permiteBypassAprobacion = false;
-
     public bool $permiteCierreSinRetorno = false;
 
     public bool $requiereSustentoEnRetorno = false;
-
-    public bool $participaReglaExclusividad = true;
 
     public bool $esDestinoReclasificacion = false;
 
@@ -57,10 +53,8 @@ class MotivoForm extends Component
             $this->adjunto = $motivo->adjunto;
             $this->activo = $motivo->activo;
             $this->sumaDescuento = $motivo->suma_descuento;
-            $this->permiteBypassAprobacion = $motivo->permite_bypass_aprobacion;
             $this->permiteCierreSinRetorno = $motivo->permite_cierre_sin_retorno;
             $this->requiereSustentoEnRetorno = $motivo->requiere_sustento_en_retorno;
-            $this->participaReglaExclusividad = $motivo->participa_regla_exclusividad;
             $this->esDestinoReclasificacion = $motivo->es_destino_reclasificacion;
         }
     }
@@ -78,10 +72,8 @@ class MotivoForm extends Component
             'adjunto' => ['required', 'in:no,opcional,flexible,obligatorio'],
             'activo' => ['boolean'],
             'sumaDescuento' => ['boolean'],
-            'permiteBypassAprobacion' => ['boolean'],
             'permiteCierreSinRetorno' => ['boolean'],
             'requiereSustentoEnRetorno' => ['boolean'],
-            'participaReglaExclusividad' => ['boolean'],
             'esDestinoReclasificacion' => ['boolean'],
         ];
     }
@@ -98,10 +90,8 @@ class MotivoForm extends Component
             'adjunto' => $datos['adjunto'],
             'activo' => $datos['activo'],
             'suma_descuento' => $datos['sumaDescuento'],
-            'permite_bypass_aprobacion' => $datos['permiteBypassAprobacion'],
             'permite_cierre_sin_retorno' => $datos['permiteCierreSinRetorno'],
             'requiere_sustento_en_retorno' => $datos['requiereSustentoEnRetorno'],
-            'participa_regla_exclusividad' => $datos['participaReglaExclusividad'],
             'es_destino_reclasificacion' => $datos['esDestinoReclasificacion'],
         ];
 

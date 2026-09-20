@@ -13,8 +13,7 @@ use Livewire\Component;
 
 /**
  * Reemplaza a FeriadoResource::form() de Filament. Este catálogo lo
- * usa CalculadorDiasHabiles para las 48h hábiles de sustento (Salud)
- * y los 15 días hábiles de subsanación de Emergencia.
+ * usa CalculadorDiasHabiles para las 48h hábiles de sustento (Salud).
  */
 #[Layout('layouts.app')]
 #[Title('Feriado')]

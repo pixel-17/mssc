@@ -26,10 +26,6 @@
             <dt class="text-gray-500 dark:text-tinta-100/50">Hora de salida real</dt>
             <dd class="text-gray-900 dark:text-white">{{ $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—' }}</dd>
         </div>
-        <div>
-            <dt class="text-gray-500 dark:text-tinta-100/50">Es emergencia</dt>
-            <dd class="text-gray-900 dark:text-white">{{ $papeleta->es_emergencia ? 'Sí' : 'No' }}</dd>
-        </div>
         @if ($papeleta->autorizado_con_rrhh_fuera_horario)
             <div>
                 <dt class="text-gray-500 dark:text-tinta-100/50">Revisión post-hoc RRHH</dt>

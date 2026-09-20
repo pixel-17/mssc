@@ -38,15 +38,6 @@
                         </x-stat-card>
 
                         <x-stat-card
-                            label="Emergencias activas"
-                            :value="$admin['emergencias_activas']"
-                            hint="Bypass de aprobación en curso"
-                            tono="red"
-                        >
-                            <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" /></svg></x-slot:icon>
-                        </x-stat-card>
-
-                        <x-stat-card
                             label="Retornos manuales (30 días)"
                             :value="$admin['retornos_manuales_periodo']"
                             hint="Marcados sin foto/GPS por falla de conectividad"
@@ -99,12 +90,6 @@
                             :value="$rrhh['sustentos_por_revisar']"
                             href="{{ route('rrhh.papeletas.index') }}"
                             tono="purple"
-                        />
-
-                        <x-stat-card
-                            label="Emergencias activas"
-                            :value="$rrhh['emergencias_activas']"
-                            tono="red"
                         />
 
                         <x-stat-card

@@ -4,10 +4,8 @@ namespace Tests\Feature\Papeletas;
 
 use App\Actions\Papeleta\MarcarAbandonoSobreRetornoPendienteAction;
 use App\Actions\Papeleta\ReconocerObservacionRrhhAction;
-use App\Actions\Papeleta\RevisarEmergenciaAction;
 use App\Actions\Papeleta\RevisarSustentoAction;
 use App\Actions\Papeleta\RevisionPosthocAction;
-use App\Actions\Papeleta\SubsanarEmergenciaAction;
 use App\Exceptions\PapeletaException;
 use App\Models\Papeleta;
 use App\Models\Sustento;
@@ -60,7 +58,7 @@ class LockRelecturaTest extends TestCase
     public function test_marcar_abandono_no_pisa_una_papeleta_que_ya_se_cerro(): void
     {
         $obsoleta = $this->papeletaDePrueba($this->trabajador, RetornoPendienteSustento::class);
-        $this->cambiarEnBd($obsoleta, ['estado' => 'cerrada', 'slot_normal_activo' => null]);
+        $this->cambiarEnBd($obsoleta, ['estado' => 'cerrada']);
 
         $this->assertThrows(
             fn () => app(MarcarAbandonoSobreRetornoPendienteAction::class)->ejecutar($obsoleta, $this->jefe, 'No volvió'),
@@ -112,7 +110,7 @@ class LockRelecturaTest extends TestCase
         ]);
         $sustento->load('papeleta'); // relación precargada = dato viejo en memoria
 
-        $this->cambiarEnBd($papeleta, ['estado' => 'cerrada', 'slot_normal_activo' => null]);
+        $this->cambiarEnBd($papeleta, ['estado' => 'cerrada']);
 
         $this->assertThrows(
             fn () => app(RevisarSustentoAction::class)->aprobar($sustento, $this->jefe),
@@ -158,55 +156,5 @@ class LockRelecturaTest extends TestCase
         );
 
         $this->assertSame('presentado', $sustento->fresh()->estado);
-    }
-
-    public function test_subsanar_emergencia_rechaza_si_otra_peticion_ya_la_subsano(): void
-    {
-        $obsoleta = $this->papeletaDePrueba($this->trabajador, AutorizadaYCorriendo::class, [
-            'slot_normal_activo' => null,
-            'slot_emergencia_activo' => true,
-            'es_emergencia' => true,
-            'visto_bueno_jefe_emergencia' => 'observado',
-        ]);
-        $this->cambiarEnBd($obsoleta, ['visto_bueno_jefe_emergencia' => 'pendiente']);
-
-        $this->assertThrows(
-            fn () => app(SubsanarEmergenciaAction::class)->ejecutar($obsoleta, $this->trabajador, 'Adjunto corregido'),
-            PapeletaException::class,
-            'Esta Emergencia no tiene ninguna observación pendiente de subsanar.',
-        );
-    }
-
-    public function test_revisar_emergencia_no_permite_dar_el_visto_bueno_dos_veces(): void
-    {
-        $obsoleta = $this->papeletaDePrueba($this->trabajador, AutorizadaYCorriendo::class, [
-            'slot_normal_activo' => null,
-            'slot_emergencia_activo' => true,
-            'es_emergencia' => true,
-            'visto_bueno_jefe_emergencia' => 'pendiente',
-        ]);
-        $this->cambiarEnBd($obsoleta, ['visto_bueno_jefe_emergencia' => 'aprobado']);
-
-        $this->assertThrows(
-            fn () => app(RevisarEmergenciaAction::class)->aprobar($obsoleta, $this->jefe),
-            PapeletaException::class,
-            'Ya diste tu visto bueno sobre esta Emergencia.',
-        );
-    }
-
-    public function test_revisar_emergencia_registra_el_visto_bueno_del_jefe(): void
-    {
-        $papeleta = $this->papeletaDePrueba($this->trabajador, AutorizadaYCorriendo::class, [
-            'slot_normal_activo' => null,
-            'slot_emergencia_activo' => true,
-            'es_emergencia' => true,
-            'visto_bueno_jefe_emergencia' => 'pendiente',
-        ]);
-
-        app(RevisarEmergenciaAction::class)->aprobar($papeleta, $this->jefe);
-
-        $fresca = $papeleta->fresh();
-        $this->assertSame('aprobado', $fresca->visto_bueno_jefe_emergencia);
-        $this->assertSame($this->jefe->id, $fresca->visto_bueno_jefe_emergencia_por_id);
     }
 }

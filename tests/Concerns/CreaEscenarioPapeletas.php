@@ -74,7 +74,6 @@ trait CreaEscenarioPapeletas
             'regimen' => $trabajador->regimen ?? '728',
             'dia_operativo' => now()->toDateString(),
             'estado' => $estado,
-            'slot_normal_activo' => true,
             'jefe_inmediato_id' => $trabajador->jefe_inmediato_id,
             'jefe_area_id' => $trabajador->jefe_area_id,
             ...$atributos,

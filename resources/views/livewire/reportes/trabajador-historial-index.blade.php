@@ -58,7 +58,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
                 <x-stat-card label="Papeletas (histórico)" :value="$resumen['papeletas_total']" />
                 <x-stat-card
                     label="Horas acumuladas"
@@ -71,7 +71,6 @@
                 />
                 <x-stat-card label="Rechazadas" :value="$resumen['rechazadas']" tono="red" />
                 <x-stat-card label="Vencidas" :value="$resumen['vencidas']" tono="amber" />
-                <x-stat-card label="Emergencias" :value="$resumen['emergencias']" tono="purple" />
             </div>
 
             <div class="glass-card overflow-x-auto">
@@ -101,9 +100,6 @@
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['dia']->format('d/m/Y') }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
                                         {{ $fila['motivo'] }}
-                                        @if ($fila['es_emergencia'])
-                                            <span class="text-xs text-red-600 font-semibold">· Emergencia</span>
-                                        @endif
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['sede'] ?? '—' }}</td>
                                     <td class="px-4 py-3 text-sm"><x-estado-papeleta :estado="$fila['estado_fqcn']" /></td>

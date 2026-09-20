@@ -36,7 +36,6 @@
                             <template x-if="motivoId">
                                 <template x-for="m in motivos.filter(m => m.id == motivoId)" :key="m.id">
                                     <ul class="text-xs text-gray-500 dark:text-tinta-100/60 space-y-1 pt-2">
-                                        <li x-show="m.permite_bypass_aprobacion">Salida inmediata, sin aprobación previa (requiere justificación).</li>
                                         <li x-show="m.adjunto === 'obligatorio'">Este motivo exige adjuntar sustento.</li>
                                         <li x-show="m.requiere_sustento_en_retorno">Al retornar deberás presentar sustento dentro del plazo configurado.</li>
                                     </ul>

@@ -10,7 +10,6 @@
         ['Jefe de área', $papeleta->jefeArea?->nombre_completo ? $papeleta->jefeArea->nombre_completo.($papeleta->escalado_jefe_area_at ? ' (escalado)' : '') : '—'],
         ['Hora de salida real', $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—'],
         ['Retorno estimado', $papeleta->hora_retorno_estimado?->format('d/m/Y H:i') ?? '—'],
-        ['Es emergencia', $papeleta->es_emergencia ? 'Sí' : 'No'],
     ]);
 
     if ($papeleta->autorizado_con_rrhh_fuera_horario) {

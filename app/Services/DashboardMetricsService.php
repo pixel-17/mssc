@@ -90,9 +90,6 @@ class DashboardMetricsService
             'unidades_organicas' => UnidadOrganica::where('activo', true)->count(),
             'papeletas_activas' => Papeleta::whereNotState('estado', $this->estadosTerminales())->count(),
             'papeletas_periodo' => Papeleta::where('created_at', '>=', $desde)->count(),
-            'emergencias_activas' => Papeleta::where('es_emergencia', true)
-                ->whereNotState('estado', $this->estadosTerminales())
-                ->count(),
             'retornos_manuales_periodo' => Retorno::where('marcado_manual', true)
                 ->where('created_at', '>=', $desde)
                 ->count(),
@@ -127,9 +124,6 @@ class DashboardMetricsService
                 ->count(),
             'sustentos_por_revisar' => Papeleta::whereState('estado', RetornoPendienteSustento::class)
                 ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
-                ->count(),
-            'emergencias_activas' => Papeleta::where('es_emergencia', true)
-                ->whereNotState('estado', $this->estadosTerminales())
                 ->count(),
             'promedio_resolucion_minutos' => $promedioMinutos,
             'papeletas_por_motivo' => Papeleta::where('papeletas.created_at', '>=', $desde)

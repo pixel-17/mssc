@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * Particular, Salud, Comisión de Servicio o Emergencia. Las reglas de
- * negocio de cada uno (adjuntos, bypass de aprobación, exclusividad,
- * sustento, cierre sin retorno) viven como banderas en la fila, no
+ * Particular, Salud o Comisión de Servicio. Las reglas de
+ * negocio de cada uno (adjuntos, suma a descuento, sustento, cierre
+ * sin retorno) viven como banderas en la fila, no
  * hardcodeadas por código -> nunca comparar $motivo->codigo === 'SALUD'
  * para decidir lógica, siempre usar las banderas.
  */
@@ -19,10 +19,8 @@ class Motivo extends Model
         'nombre',
         'adjunto',
         'suma_descuento',
-        'permite_bypass_aprobacion',
         'permite_cierre_sin_retorno',
         'requiere_sustento_en_retorno',
-        'participa_regla_exclusividad',
         'es_destino_reclasificacion',
         'activo',
     ];
@@ -31,10 +29,8 @@ class Motivo extends Model
     {
         return [
             'suma_descuento' => 'boolean',
-            'permite_bypass_aprobacion' => 'boolean',
             'permite_cierre_sin_retorno' => 'boolean',
             'requiere_sustento_en_retorno' => 'boolean',
-            'participa_regla_exclusividad' => 'boolean',
             'es_destino_reclasificacion' => 'boolean',
             'activo' => 'boolean',
         ];

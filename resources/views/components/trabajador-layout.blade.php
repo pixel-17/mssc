@@ -20,7 +20,7 @@
 
         @livewireStyles
     </head>
-    <body class="font-sans antialiased">
+    <body class="app-bg font-sans antialiased">
         <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-tinta-900 focus:shadow-glass-lg">Saltar al contenido</a>
         <x-banner />
 

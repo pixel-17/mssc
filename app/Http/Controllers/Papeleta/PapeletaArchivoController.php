@@ -9,8 +9,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Sirve los archivos de una papeleta que se guardaban pero nadie podía
- * ver: adjunto inicial, foto del retorno y adjunto de subsanación de
- * Emergencia (el de sustentos ya lo sirve SustentoArchivoController).
+ * ver: adjunto inicial y foto del retorno (el de sustentos ya lo sirve
+ * SustentoArchivoController).
  *
  * Autorización: la misma PapeletaPolicy::view que el detalle (dueño,
  * jefe inmediato/adicional, jefe de área o RRHH). Disco 'local' privado,
@@ -25,7 +25,6 @@ class PapeletaArchivoController extends Controller
         $path = match ($tipo) {
             'adjunto-inicial' => $papeleta->adjunto_inicial_path,
             'retorno-foto' => $papeleta->retorno?->foto_path,
-            'subsanacion' => $papeleta->subsanacion_emergencia_adjunto_path,
             default => abort(404),
         };
 

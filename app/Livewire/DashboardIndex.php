@@ -13,7 +13,7 @@ use Livewire\Component;
 
 /**
  * Migrado de App\Http\Controllers\DashboardController@index a Livewire
- * puro para que los contadores (pendientes, en curso, emergencias...)
+ * puro para que los contadores (pendientes, en curso...)
  * se actualicen solos en tiempo real — ver EscuchaNotificacionesEnVivo.
  *
  * Mismo criterio de acceso que el Controller original: admin/RRHH/jefe

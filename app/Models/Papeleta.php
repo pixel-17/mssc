@@ -32,9 +32,6 @@ class Papeleta extends Model
         'regimen',
         'dia_operativo',
         'estado',
-        'es_emergencia',
-        'slot_normal_activo',
-        'slot_emergencia_activo',
         'jefe_inmediato_id',
         'resuelto_por_jefe_id',
         'jefe_resuelto_at',
@@ -61,14 +58,6 @@ class Papeleta extends Model
         'motivo_original_id',
         'justificacion',
         'adjunto_inicial_path',
-        'visto_bueno_jefe_emergencia',
-        'visto_bueno_jefe_emergencia_por_id',
-        'visto_bueno_jefe_emergencia_at',
-        'visto_bueno_rrhh_emergencia',
-        'visto_bueno_rrhh_emergencia_por_id',
-        'visto_bueno_rrhh_emergencia_at',
-        'subsanacion_emergencia_fecha_limite',
-        'subsanacion_emergencia_adjunto_path',
     ];
 
     protected function casts(): array
@@ -76,9 +65,6 @@ class Papeleta extends Model
         return [
             'estado' => PapeletaState::class,
             'dia_operativo' => 'date',
-            'es_emergencia' => 'boolean',
-            'slot_normal_activo' => 'boolean',
-            'slot_emergencia_activo' => 'boolean',
             'jefe_resuelto_at' => 'datetime',
             'escalado_jefe_area_at' => 'datetime',
             'rrhh_resuelto_at' => 'datetime',
@@ -90,45 +76,14 @@ class Papeleta extends Model
             'vencida_at' => 'datetime',
             'requiere_visto_bueno' => 'boolean',
             'regularizacion_fecha_limite' => 'datetime',
-            'visto_bueno_jefe_emergencia_at' => 'datetime',
-            'visto_bueno_rrhh_emergencia_at' => 'datetime',
-            'subsanacion_emergencia_fecha_limite' => 'datetime',
         ];
     }
 
     protected static function booted(): void
     {
-        // BUG: slot_normal_activo / slot_emergencia_activo se ponían en
-        // true al crear (CrearPapeletaAction) para la regla de
-        // exclusividad, pero ninguna Action que cierra el ciclo
-        // (Cancelar, Rechazar, MarcarRetorno, Vencida por el comando de
-        // reloj, etc.) los volvía a null. Resultado: una vez resuelta
-        // la papeleta, el trabajador quedaba bloqueado para siempre
-        // ("Ya tienes una papeleta activa...") aunque ya no viera nada
-        // activo en su bandeja. Se centraliza aquí en vez de repetir el
-        // reset en cada Action: apenas el estado entra a uno terminal
-        // (esTerminal() === true), se libera el carril correspondiente.
         // Tiempo real: cualquier cambio de la papeleta (estado, retorno,
         // observaciones...) se publica por Reverb, ver PapeletaActualizada.
         static::saved(fn (self $papeleta) => \App\Events\PapeletaActualizada::notificar($papeleta->id));
-
-        static::saving(function (self $papeleta) {
-            if (! $papeleta->isDirty('estado')) {
-                return;
-            }
-
-            if (! $papeleta->estado->esTerminal()) {
-                return;
-            }
-
-            if ($papeleta->slot_normal_activo) {
-                $papeleta->slot_normal_activo = null;
-            }
-
-            if ($papeleta->slot_emergencia_activo) {
-                $papeleta->slot_emergencia_activo = null;
-            }
-        });
     }
 
     /**
@@ -219,16 +174,6 @@ class Papeleta extends Model
     public function revisionPosthocPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revision_posthoc_por_id');
-    }
-
-    public function vistoBuenoJefeEmergenciaPor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'visto_bueno_jefe_emergencia_por_id');
-    }
-
-    public function vistoBuenoRrhhEmergenciaPor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'visto_bueno_rrhh_emergencia_por_id');
     }
 
     public function rechazadaPor(): BelongsTo

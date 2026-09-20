@@ -37,14 +37,14 @@
                             <td class="px-4 py-3">{{ $sede->usuarios_count }}</td>
                             <td class="px-4 py-3">{{ $sede->activo ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('sedes.editar', $sede) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
+                                <a href="{{ route('sedes.editar', $sede) }}" class="btn-row">
                                     Editar
                                 </a>
                                 <button
                                     type="button"
                                     wire:click="eliminar({{ $sede->id }})"
                                     wire:confirm="¿Eliminar la sede &quot;{{ $sede->nombre }}&quot;?"
-                                    class="text-sm text-red-600 dark:text-red-400 underline"
+                                    class="btn-row-danger"
                                 >
                                     Eliminar
                                 </button>

@@ -17,9 +17,7 @@ use Illuminate\Support\Facades\Notification;
  *
  * Reglas de destinatario tal como están documentadas en el diseño del
  * flujo:
- * - Al crear: notifica al Jefe Inmediato. Si el motivo es Emergencia
- *   (bypass de aprobación), notifica en simultáneo a Jefe Inmediato y
- *   RRHH (ambos dejan visto bueno independiente desde el minuto uno).
+ * - Al crear: notifica al Jefe Inmediato.
  * - Al aprobar el jefe: si RRHH está en horario, se notifica a RRHH
  *   (papeleta pendiente de su decisión); si RRHH está fuera de
  *   horario, se notifica directo al trabajador que puede salir, y a
@@ -44,19 +42,6 @@ class NotificarPapeletaService
 {
     public function creada(Papeleta $papeleta): void
     {
-        if ($papeleta->es_emergencia) {
-            $this->enviar(
-                $this->destinatariosEmergencia($papeleta),
-                $papeleta,
-                'emergencia_creada',
-                'Papeleta de emergencia registrada',
-                "{$papeleta->trabajador->nombre_completo} registró una papeleta de Emergencia. Requiere tu visto bueno.",
-                fn (User $u) => $this->urlSegunRol($papeleta, $u),
-            );
-
-            return;
-        }
-
         if (! $papeleta->jefeInmediato) {
             return;
         }
@@ -200,57 +185,13 @@ class NotificarPapeletaService
 
     public function reclasificadaAParticular(Papeleta $papeleta): void
     {
-        $mensaje = $papeleta->es_emergencia
-            ? 'El plazo para subsanar la observación de tu Emergencia venció sin resolverse. Tu papeleta se reclasificó a Particular.'
-            : 'El plazo para presentar sustento de Salud venció sin nada presentado. Tu papeleta se reclasificó a Particular.';
-
         $this->enviarUno(
             $papeleta->trabajador,
             $papeleta,
             'reclasificada_particular',
             'Papeleta reclasificada a Particular',
-            $mensaje,
+            'El plazo para presentar sustento de Salud venció sin nada presentado. Tu papeleta se reclasificó a Particular.',
             $this->urlTrabajador($papeleta),
-        );
-    }
-
-    public function emergenciaObservada(Papeleta $papeleta, string $rol): void
-    {
-        $quien = $rol === 'rrhh' ? 'RRHH' : 'tu Jefe Inmediato';
-
-        $this->enviarUno(
-            $papeleta->trabajador,
-            $papeleta,
-            'emergencia_observada',
-            'Emergencia observada',
-            "{$quien} observó la justificación de tu Emergencia. Tienes plazo para subsanar antes de que se reclasifique a Particular.",
-            $this->urlTrabajador($papeleta),
-        );
-    }
-
-    /**
-     * @param  array<int, string>  $roles  'jefe' y/o 'rrhh' — a quién
-     *         le toca volver a revisar tras la subsanación.
-     */
-    public function emergenciaSubsanada(Papeleta $papeleta, array $roles): void
-    {
-        $destinatarios = collect();
-
-        if (in_array('jefe', $roles, true) && $papeleta->jefeInmediato) {
-            $destinatarios->push($papeleta->jefeInmediato);
-        }
-
-        if (in_array('rrhh', $roles, true)) {
-            $destinatarios = $destinatarios->merge($this->usuariosRrhh());
-        }
-
-        $this->enviar(
-            $destinatarios,
-            $papeleta,
-            'emergencia_subsanada',
-            'Emergencia subsanada, pendiente de tu revisión',
-            "{$papeleta->trabajador->nombre_completo} subsanó la observación de su Emergencia. Vuelve a revisarla.",
-            fn (User $u) => $this->urlSegunRol($papeleta, $u),
         );
     }
 
@@ -282,20 +223,6 @@ class NotificarPapeletaService
             'El sustento que presentaste fue observado. Vuelve a subir un archivo antes de que venza el plazo.',
             $this->urlTrabajador($papeleta),
         );
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    private function destinatariosEmergencia(Papeleta $papeleta): Collection
-    {
-        $destinatarios = $this->usuariosRrhh();
-
-        if ($papeleta->jefeInmediato) {
-            $destinatarios->push($papeleta->jefeInmediato);
-        }
-
-        return $destinatarios;
     }
 
     /**

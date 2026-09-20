@@ -372,6 +372,63 @@ body.app-bg {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Acciones de fila (tablas de administración: Editar / Eliminar)      */
+/* ------------------------------------------------------------------ */
+
+/* Antes eran enlaces de texto subrayados, sin borde ni fondo — poco
+   visibles como acción y sin affordance de botón. Ahora son "chips"
+   pequeños con borde, coherentes con .btn-secondary/.btn-danger pero
+   a escala de fila de tabla. */
+
+.btn-row {
+    @apply inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold
+           transition-all duration-150 select-none;
+    color: #436164;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+}
+
+.btn-row:hover {
+    background: var(--surface-muted);
+    border-color: #cbcbd1;
+}
+
+.btn-row:active {
+    transform: scale(0.97);
+}
+
+.dark .btn-row {
+    color: #98adab;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .btn-row:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.16);
+}
+
+.btn-row-danger {
+    @apply btn-row;
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.25);
+}
+
+.btn-row-danger:hover {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.4);
+}
+
+.dark .btn-row-danger {
+    color: #f87171;
+    border-color: rgba(248, 113, 113, 0.3);
+}
+
+.dark .btn-row-danger:hover {
+    background: rgba(248, 113, 113, 0.1);
+    border-color: rgba(248, 113, 113, 0.45);
+}
+
+/* ------------------------------------------------------------------ */
 /*  Tarjetas de estadística (dashboard)                                 */
 /* ------------------------------------------------------------------ */
 

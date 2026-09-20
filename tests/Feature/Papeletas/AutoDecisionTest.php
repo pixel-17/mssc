@@ -84,7 +84,7 @@ class AutoDecisionTest extends TestCase
     {
         $papeleta = app(CrearPapeletaAction::class)->ejecutar(
             $this->jefeOficina,
-            $this->motivoDe('EMERGENCIA'), // bypass: no depende del horario ni del turno
+            $this->motivoDe(), // 728 sin MODO_ESTRICTO_728: no depende del horario ni del turno
             ['justificacion' => 'Urgencia familiar'],
         );
 

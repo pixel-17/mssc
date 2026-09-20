@@ -1,7 +1,7 @@
 {{--
     Archivos que la papeleta guarda en el disco privado y que hasta ahora
-    nadie podía abrir: adjunto inicial, foto del retorno y adjunto de la
-    subsanación de Emergencia. Los sirve PapeletaArchivoController con la
+    nadie podía abrir: adjunto inicial y foto del retorno. Los sirve
+    PapeletaArchivoController con la
     misma PapeletaPolicy::view que el detalle (dueño, jefe, jefe de área,
     RR. HH.). El archivo de un sustento sigue en su propio enlace.
 --}}
@@ -9,7 +9,6 @@
     $archivosPapeleta = array_filter([
         'adjunto-inicial' => $papeleta->adjunto_inicial_path ? 'Adjunto inicial' : null,
         'retorno-foto' => $papeleta->retorno?->foto_path ? 'Foto del retorno' : null,
-        'subsanacion' => $papeleta->subsanacion_emergencia_adjunto_path ? 'Adjunto de la subsanación (Emergencia)' : null,
     ]);
 @endphp
 

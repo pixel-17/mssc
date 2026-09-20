@@ -43,14 +43,14 @@
                             <td class="px-4 py-3">{{ $unidad->jefe?->name }}</td>
                             <td class="px-4 py-3">{{ $unidad->activo ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('unidades-organicas.editar', $unidad) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
+                                <a href="{{ route('unidades-organicas.editar', $unidad) }}" class="btn-row">
                                     Editar
                                 </a>
                                 <button
                                     type="button"
                                     wire:click="eliminar({{ $unidad->id }})"
                                     wire:confirm="¿Eliminar la unidad orgánica &quot;{{ $unidad->nombre }}&quot;?"
-                                    class="text-sm text-red-600 dark:text-red-400 underline"
+                                    class="btn-row-danger"
                                 >
                                     Eliminar
                                 </button>

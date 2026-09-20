@@ -85,7 +85,6 @@ class HistorialTrabajadorService
                 // tenga que rearmar 'App\States\Papeleta\'.$fila['estado'],
                 // que se rompe en silencio si cambia el formato de arriba.
                 'estado_fqcn' => get_class($p->estado),
-                'es_emergencia' => $p->es_emergencia,
                 'salida' => $p->hora_salida_real,
                 'retorno' => $p->retorno?->hora_servidor,
                 'minutos' => ($p->hora_salida_real && $p->retorno)
@@ -112,7 +111,6 @@ class HistorialTrabajadorService
             'papeletas_total' => $historial->count(),
             'rechazadas' => $historial->where('estado', 'Rechazada')->count(),
             'vencidas' => $historial->where('estado', 'Vencida')->count(),
-            'emergencias' => $historial->where('es_emergencia', true)->count(),
             'minutos_totales' => $conHoras->sum('minutos'),
             'minutos_con_descuento' => $conHoras->where('suma_descuento', true)->sum('minutos'),
         ];

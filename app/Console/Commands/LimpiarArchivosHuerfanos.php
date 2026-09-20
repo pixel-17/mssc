@@ -37,7 +37,6 @@ class LimpiarArchivosHuerfanos extends Command
         'papeletas/adjuntos-iniciales',
         'papeletas/retornos',
         'papeletas/sustentos',
-        'papeletas/subsanaciones',
     ];
 
     public function handle(): int
@@ -49,7 +48,6 @@ class LimpiarArchivosHuerfanos extends Command
 
         $referenciados = array_flip(array_merge(
             Papeleta::whereNotNull('adjunto_inicial_path')->pluck('adjunto_inicial_path')->all(),
-            Papeleta::whereNotNull('subsanacion_emergencia_adjunto_path')->pluck('subsanacion_emergencia_adjunto_path')->all(),
             Retorno::whereNotNull('foto_path')->pluck('foto_path')->all(),
             Sustento::whereNotNull('archivo_path')->pluck('archivo_path')->all(),
         ));

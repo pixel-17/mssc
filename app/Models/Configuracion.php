@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Cache;
 
 /**
  * Parámetros clave-valor: reloj del jefe (minutos), tope de observaciones,
- * bloque de almuerzo, horas hábiles de sustento, días hábiles de
- * subsanación de Emergencia. Nunca hardcodear estos números en el código.
+ * bloque de almuerzo, horas hábiles de sustento. Nunca hardcodear
+ * estos números en el código.
  */
 class Configuracion extends Model
 {

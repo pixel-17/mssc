@@ -10,8 +10,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Ver/descargar el archivo que el trabajador adjuntó como sustento
- * (Paso 5, motivo Salud). Sin middleware de rol a propósito, igual
- * que EmergenciaController — la autorización real vive en
+ * (Paso 5, motivo Salud). Sin middleware de rol a propósito (igual
+ * que las rutas de jefes-adicionales) — la autorización real vive en
  * PapeletaPolicy::verSustento (trabajador dueño, jefe inmediato o
  * RRHH). El archivo se sirve siempre desde el disco 'local' (privado,
  * fuera de /public), nunca por URL directa.

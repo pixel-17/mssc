@@ -8,7 +8,7 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="motivo-form-codigo" class="block text-sm font-medium mb-1">Código</label>
-                    <input id="motivo-form-codigo" type="text" wire:model="codigo" class="w-full rounded-md border-gray-300 dark:bg-gray-800" placeholder="ej. PARTICULAR, SALUD, COMISION, EMERGENCIA">
+                    <input id="motivo-form-codigo" type="text" wire:model="codigo" class="w-full rounded-md border-gray-300 dark:bg-gray-800" placeholder="ej. PARTICULAR, SALUD, COMISION">
                     @error('codigo') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                 </div>
 
@@ -46,11 +46,6 @@
                 </label>
 
                 <label class="flex items-center gap-2">
-                    <input type="checkbox" wire:model="permiteBypassAprobacion" class="rounded">
-                    <span class="text-sm">Permite bypass total de aprobación (nace autorizada)</span>
-                </label>
-
-                <label class="flex items-center gap-2">
                     <input type="checkbox" wire:model="permiteCierreSinRetorno" class="rounded">
                     <span class="text-sm">Permite cerrar sin retorno físico</span>
                 </label>
@@ -58,11 +53,6 @@
                 <label class="flex items-center gap-2">
                     <input type="checkbox" wire:model="requiereSustentoEnRetorno" class="rounded">
                     <span class="text-sm">Requiere sustento al retorno (48h hábiles)</span>
-                </label>
-
-                <label class="flex items-center gap-2">
-                    <input type="checkbox" wire:model="participaReglaExclusividad" class="rounded">
-                    <span class="text-sm">Participa en la regla de exclusividad (carril normal)</span>
                 </label>
 
                 <label class="flex items-center gap-2">

@@ -49,14 +49,14 @@
                             <td class="px-4 py-3">{{ $turno->hora_fin }}</td>
                             <td class="px-4 py-3">{{ $turno->es_descanso ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('turnos.editar', $turno) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
+                                <a href="{{ route('turnos.editar', $turno) }}" class="btn-row">
                                     Editar
                                 </a>
                                 <button
                                     type="button"
                                     wire:click="eliminar({{ $turno->id }})"
                                     wire:confirm="¿Eliminar el turno de {{ $turno->usuario?->name }} del {{ $turno->fecha?->format('d/m/Y') }}?"
-                                    class="text-sm text-red-600 dark:text-red-400 underline"
+                                    class="btn-row-danger"
                                 >
                                     Eliminar
                                 </button>

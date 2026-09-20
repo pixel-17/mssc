@@ -31,14 +31,14 @@
                             <td class="px-4 py-3">{{ $feriado->fecha?->format('d/m/Y') }}</td>
                             <td class="px-4 py-3">{{ $feriado->descripcion }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('feriados.editar', $feriado) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
+                                <a href="{{ route('feriados.editar', $feriado) }}" class="btn-row">
                                     Editar
                                 </a>
                                 <button
                                     type="button"
                                     wire:click="eliminar({{ $feriado->id }})"
                                     wire:confirm="¿Eliminar el feriado &quot;{{ $feriado->descripcion }}&quot; ({{ $feriado->fecha?->format('d/m/Y') }})?"
-                                    class="text-sm text-red-600 dark:text-red-400 underline"
+                                    class="btn-row-danger"
                                 >
                                     Eliminar
                                 </button>

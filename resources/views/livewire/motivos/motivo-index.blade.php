@@ -23,7 +23,6 @@
                         <th scope="col" class="px-4 py-3">Código</th>
                         <th scope="col" class="px-4 py-3">Nombre</th>
                         <th scope="col" class="px-4 py-3">Adjunto</th>
-                        <th scope="col" class="px-4 py-3">Bypass</th>
                         <th scope="col" class="px-4 py-3">Sustento</th>
                         <th scope="col" class="px-4 py-3">Cierre s/retorno</th>
                         <th scope="col" class="px-4 py-3">Activo</th>
@@ -36,7 +35,6 @@
                             <td class="px-4 py-3">{{ $motivo->codigo }}</td>
                             <td class="px-4 py-3">{{ $motivo->nombre }}</td>
                             <td class="px-4 py-3">{{ $motivo->adjunto }}</td>
-                            <td class="px-4 py-3">{{ $motivo->permite_bypass_aprobacion ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3">{{ $motivo->requiere_sustento_en_retorno ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3">{{ $motivo->permite_cierre_sin_retorno ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3">{{ $motivo->activo ? 'Sí' : 'No' }}</td>

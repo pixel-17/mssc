@@ -41,12 +41,6 @@ return Application::configure(basePath: dirname(__DIR__))
             ->hourly()
             ->withoutOverlapping(30);
 
-        // Ventana de días hábiles (config SUBSANACION_EMERGENCIA_DIAS_HABILES,
-        // 15 por defecto): tampoco necesita granularidad de minuto.
-        $schedule->command('papeletas:procesar-subsanacion-emergencia-vencida')
-            ->hourly()
-            ->withoutOverlapping(30);
-
         // Día 25: si para esa fecha Admin/Jefe no cargaron el turno
         // del mes siguiente, se genera solo continuando el ciclo
         // vigente (ver GeneradorTurnoMensualService). Corre antes de

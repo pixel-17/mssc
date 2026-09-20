@@ -28,7 +28,7 @@ use Throwable;
  *    sin que nadie decidiera -> VENCIDA. El sistema nunca autoriza por
  *    inacción (Paso 2).
  *
- * Los pasos 3 (RRHH), 5 (sustento 48h) y 6 (subsanación Emergencia) usan
+ * Los pasos 3 (RRHH) y 5 (sustento 48h) usan
  * la misma idea pero se implementan en comandos aparte para no mezclar
  * ventanas de tiempo distintas en un solo método gigante.
  */
