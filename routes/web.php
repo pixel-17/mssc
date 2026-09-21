@@ -156,21 +156,6 @@ Route::middleware([
 });
 
 /*
- * Horario de RRHH: séptimo recurso migrado — Blade + Livewire puro
- * (App\Livewire\HorarioRrhh\*). Sin ruta de creación: son filas fijas
- * por día de semana sembradas por HorarioRrhhSeeder, solo se editan.
- */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('horario-rrhh')->name('horario-rrhh.')->group(function () {
-    Route::get('/', \App\Livewire\HorarioRrhh\HorarioRrhhIndex::class)->name('index');
-    Route::get('/{horario}/editar', \App\Livewire\HorarioRrhh\HorarioRrhhForm::class)->name('editar');
-});
-
-/*
  * Usuarios (gestión de admin): octavo y último recurso migrado —
  * Blade + Livewire puro (App\Livewire\Usuarios\*). Prefijo
  * 'usuarios-admin' (no 'usuarios') para no chocar con las rutas

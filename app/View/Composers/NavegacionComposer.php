@@ -139,7 +139,6 @@ class NavegacionComposer
 
             $secciones[] = ['label' => 'Sistema', 'items' => [
                 ['label' => 'Configuraciones', 'route' => route('configuraciones.index'), 'active' => request()->routeIs('configuraciones.*'), 'icon' => 'cog'],
-                ['label' => 'Horario de RR. HH.', 'route' => route('horario-rrhh.index'), 'active' => request()->routeIs('horario-rrhh.*'), 'icon' => 'clock'],
             ]];
         }
 

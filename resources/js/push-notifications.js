@@ -68,7 +68,7 @@ async function suscribir() {
         applicationServerKey: base64UrlAUint8Array(clavePublica),
     });
 
-    await fetch('/push-subscriptions', {
+    const respuesta = await fetch('/push-subscriptions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -77,6 +77,16 @@ async function suscribir() {
         },
         body: JSON.stringify(suscripcion.toJSON()),
     });
+
+    // Si el servidor no la guardó (p. ej. 422 por un endpoint que no es de un
+    // servicio de push conocido, o 419/500), NO se deja el navegador suscrito:
+    // el botón diría "Desactivar" y nunca llegaría ninguna notificación.
+    if (!respuesta.ok) {
+        console.warn('El servidor rechazó la suscripción push (HTTP ' + respuesta.status + ').');
+        await suscripcion.unsubscribe();
+
+        return false;
+    }
 
     return true;
 }
@@ -133,8 +143,15 @@ window.msscPushToggle = function () {
                 await desuscribir();
                 this.etiqueta = 'Activar notificaciones push';
             } else {
-                const activado = await suscribir();
-                this.etiqueta = activado ? 'Desactivar notificaciones push' : 'Activar notificaciones push';
+                let activado = false;
+
+                try {
+                    activado = await suscribir();
+                } catch (error) {
+                    console.warn('No se pudo activar push:', error);
+                }
+
+                this.etiqueta = activado ? 'Desactivar notificaciones push' : 'No se pudo activar. Reintentar';
             }
         },
     };

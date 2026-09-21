@@ -55,14 +55,31 @@ class ProcesarVencimientoSustentos extends Command
                 foreach ($lote as $sustento) {
                     try {
                         DB::transaction(function () use ($sustento, $reclasificar) {
-                            $sustento->estado = 'vencido';
-                            $sustento->save();
+                            // Mismo orden de locks que RevisarSustentoAction: primero la
+                            // papeleta y luego el sustento. Al revés (como estaba: escribir
+                            // el sustento y recién después bloquear la papeleta) un revisor
+                            // y este job podían quedar en deadlock.
+                            $papeleta = Papeleta::whereKey($sustento->papeleta_id)->lockForUpdate()->first();
+                            $actual = Sustento::whereKey($sustento->id)->lockForUpdate()->first();
 
-                            // Relee y bloquea la papeleta; si ya no está en
-                            // RetornoPendienteSustento lanza PapeletaException y
-                            // el rollback deja el sustento como estaba.
+                            // Se relee todo: entre la lectura del lote y este punto el
+                            // trabajador pudo presentar el archivo a tiempo (antes se le
+                            // pisaba su 'presentado' con 'vencido') o un humano resolver.
+                            if (! $papeleta
+                                || ! $actual
+                                || $actual->estado !== 'pendiente'
+                                || $actual->fecha_limite->isFuture()
+                                || ! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
+                                return;
+                            }
+
+                            $actual->estado = 'vencido';
+                            $actual->save();
+
+                            // Si un humano la resuelve justo ahora lanza PapeletaException y el
+                            // rollback deja el sustento como estaba.
                             $reclasificar->ejecutar(
-                                $sustento->papeleta,
+                                $papeleta,
                                 actorId: null,
                                 actorTipo: 'sistema',
                                 justificacion: 'Reclasificado automáticamente: sustento de Salud vencido sin presentar (48h hábiles).',

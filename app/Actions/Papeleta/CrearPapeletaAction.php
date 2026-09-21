@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\PendienteJefe;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,7 +30,10 @@ use Illuminate\Support\Facades\DB;
  *   es_descanso) NO puede crear papeleta.
  * - Un trabajador puede tener varias papeletas al mismo tiempo: no hay
  *   regla de exclusividad ni columnas "slot" a nivel de BD.
- * - Sede/regimen/dia_operativo quedan fijados como fotografía inmutable.
+ * - Sede/regimen/dia_operativo/fin_turno_at quedan fijados como fotografía
+ *   inmutable. fin_turno_at es el instante real en que termina el turno
+ *   (728, con cruce de medianoche) o el horario ordinario (276): los jobs
+ *   de vencimiento y de abandono comparan contra él.
  */
 class CrearPapeletaAction
 {
@@ -47,18 +51,21 @@ class CrearPapeletaAction
 
         $turno = $this->resolverTurnoActivo($trabajador);
 
+        $finTurno = $this->resolverFinDeTurno($trabajador, $turno);
+
         $unidad = $trabajador->unidadOrganica;
 
         // Misma regla que UserObserver: quien encabeza su unidad NO es su propio jefe.
         [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador) : [null, null];
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $jefeInmediatoId, $jefeAreaId) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId) {
             $papeleta = Papeleta::create([
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
                 'sede_id' => $trabajador->sede_id,
                 'regimen' => $trabajador->regimen,
                 'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
+                'fin_turno_at' => $finTurno,
                 'estado' => PendienteJefe::class,
                 'jefe_inmediato_id' => $jefeInmediatoId,
                 'jefe_area_id' => $jefeAreaId,
@@ -116,6 +123,21 @@ class CrearPapeletaAction
         }
 
         return null;
+    }
+
+    /**
+     * Instante en que termina el turno de esta papeleta. 728: fin del
+     * turno vigente (Turno::finReal resuelve el cruce de medianoche del
+     * turno Noche); sin turno vigente se cae al cierre del día (mismo
+     * criterio que antes). 276: fin del horario ordinario de hoy.
+     */
+    private function resolverFinDeTurno(User $trabajador, ?Turno $turno): Carbon
+    {
+        if ($trabajador->regimen === '728') {
+            return $turno?->finReal() ?? now()->endOfDay();
+        }
+
+        return app(HorarioOrdinarioService::class)->finDelDia(now());
     }
 
     /**

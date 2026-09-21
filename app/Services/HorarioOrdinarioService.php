@@ -22,6 +22,23 @@ use Illuminate\Support\Carbon;
  */
 class HorarioOrdinarioService
 {
+    /**
+     * Valores por defecto ÚNICOS del horario ordinario (mismos que siembra
+     * ConfiguracionSeeder). Antes cada servicio tenía su propio fallback
+     * (17:00 aquí, 16:15 en RrhhHorarioService) y, si faltaba la clave en
+     * `configuraciones`, la ventana de creación y el criterio de RRHH
+     * quedaban desalineados.
+     */
+    public const HORA_INICIO_DEFECTO = '07:45';
+
+    public const HORA_FIN_DEFECTO = '16:15';
+
+    /**
+     * ¿El momento cae en día laborable y entre la hora de inicio y el fin
+     * (ambos inclusive, minuto completo)? Compara instantes, no strings
+     * H:i: con strings, un valor sin cero inicial en Configuraciones
+     * ("8:00") rompía la comparación silenciosamente.
+     */
     public function estaDentroDeVentana(?Carbon $momento = null): bool
     {
         $momento ??= now();
@@ -30,9 +47,23 @@ class HorarioOrdinarioService
             return false;
         }
 
-        [$horaInicio, $horaFin] = $this->ventanaDeHoy();
+        [$horaInicio] = $this->ventanaDeHoy();
 
-        return $momento->format('H:i') >= $horaInicio && $momento->format('H:i') <= $horaFin;
+        $inicio = $momento->copy()->setTimeFromTimeString($horaInicio)->startOfMinute();
+
+        return $momento->greaterThanOrEqualTo($inicio) && $momento->lessThanOrEqualTo($this->finDelDia($momento));
+    }
+
+    /**
+     * Instante en que termina el horario ordinario en la fecha dada. Se
+     * incluye todo el minuto de HORA_FIN (hasta :59), igual que
+     * estaDentroDeVentana(), que compara solo H:i con <=.
+     */
+    public function finDelDia(Carbon $fecha): Carbon
+    {
+        [, $horaFin] = $this->ventanaDeHoy();
+
+        return $fecha->copy()->setTimeFromTimeString($horaFin)->endOfMinute();
     }
 
     /**
@@ -41,19 +72,7 @@ class HorarioOrdinarioService
      */
     public function yaTerminoElDia(Carbon $fecha): bool
     {
-        $hoy = now();
-
-        if ($hoy->toDateString() > $fecha->toDateString()) {
-            return true;
-        }
-
-        if ($hoy->toDateString() < $fecha->toDateString()) {
-            return false;
-        }
-
-        [, $horaFin] = $this->ventanaDeHoy();
-
-        return $hoy->format('H:i') > $horaFin;
+        return now()->greaterThan($this->finDelDia($fecha));
     }
 
     private function esDiaLaborable(Carbon $momento): bool
@@ -72,8 +91,8 @@ class HorarioOrdinarioService
     private function ventanaDeHoy(): array
     {
         return [
-            (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_INICIO', '08:00'),
-            (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_FIN', '17:00'),
+            (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_INICIO', self::HORA_INICIO_DEFECTO),
+            (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_FIN', self::HORA_FIN_DEFECTO),
         ];
     }
 }

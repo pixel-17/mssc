@@ -36,10 +36,43 @@ class ConfiguracionForm extends Component
 
     protected function rules(): array
     {
+        return ['valor' => self::reglasParaClave($this->configuracion->clave)];
+    }
+
+    /**
+     * Las horas se comparan como texto "H:i" (ver HorarioOrdinarioService), así
+     * que "8:00", "25:99" o "8am" no dan un error: dejan el horario roto en
+     * silencio. Cada tipo de clave se valida con su formato.
+     *
+     * @return array<int, string>
+     */
+    public static function reglasParaClave(string $clave): array
+    {
+        if ($clave === 'MODO_ESTRICTO_728') {
+            return ['required', 'string', 'in:0,1'];
+        }
+
+        if (preg_match('/(_HORA_(INICIO|FIN)|^BLOQUE_ALMUERZO_(INICIO|FIN))$/', $clave)) {
+            return ['required', 'string', 'date_format:H:i'];
+        }
+
+        if ($clave === 'HORARIO_ORDINARIO_DIAS_LABORABLES') {
+            return ['required', 'string', 'regex:/^[1-7](,[1-7])*$/'];
+        }
+
+        if (preg_match('/(_MINUTOS|_HORAS_HABILES|_DIAS_HABILES|^TOPE_)/', $clave)) {
+            return ['required', 'integer', 'min:1', 'max:100000'];
+        }
+
+        return ['required', 'string', 'max:255'];
+    }
+
+    /** @return array<string, string> */
+    protected function messages(): array
+    {
         return [
-            'valor' => $this->configuracion->clave === 'MODO_ESTRICTO_728'
-                ? ['required', 'string', 'in:0,1']
-                : ['required', 'string', 'max:255'],
+            'valor.date_format' => 'Usa el formato de hora HH:MM de 24 horas, por ejemplo 07:45.',
+            'valor.regex' => 'Usa los números de día del 1 (lunes) al 7 (domingo) separados por coma, por ejemplo 1,2,3,4,5.',
         ];
     }
 

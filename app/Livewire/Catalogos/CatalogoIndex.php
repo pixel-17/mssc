@@ -12,10 +12,11 @@ use Livewire\Component;
  * reemplazo del panel de Filament (/admin), que ya fue retirado del
  * proyecto.
  *
- * Los 8 catálogos ya viven en Blade + Livewire puro, uno por uno,
+ * Los 7 catálogos ya viven en Blade + Livewire puro, uno por uno,
  * cada uno con su propio par Index/Form (ver App\Livewire\Sedes,
- * Motivos, Turnos, Feriados, UnidadesOrganicas, Configuraciones,
- * HorarioRrhh y Usuarios).
+ * Motivos, Turnos, Feriados, UnidadesOrganicas, Configuraciones y
+ * Usuarios). El horario de RRHH ya no es un catálogo: se deriva del
+ * horario ordinario de Configuraciones (ver RrhhHorarioService).
  */
 #[Layout('layouts.app')]
 #[Title('Catálogos')]
@@ -31,7 +32,6 @@ class CatalogoIndex extends Component
                 ['nombre' => 'Feriados', 'listo' => true, 'ruta' => route('feriados.index')],
                 ['nombre' => 'Unidades orgánicas', 'listo' => true, 'ruta' => route('unidades-organicas.index')],
                 ['nombre' => 'Configuraciones', 'listo' => true, 'ruta' => route('configuraciones.index')],
-                ['nombre' => 'Horario de RRHH', 'listo' => true, 'ruta' => route('horario-rrhh.index')],
                 ['nombre' => 'Usuarios', 'listo' => true, 'ruta' => route('usuarios-admin.index')],
             ],
         ]);

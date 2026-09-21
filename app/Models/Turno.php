@@ -83,8 +83,38 @@ class Turno extends Model
      */
     public function cubre(Carbon $momento): bool
     {
-        if ($this->es_descanso || ! $this->hora_inicio || ! $this->hora_fin) {
+        $limites = $this->limites();
+
+        if ($limites === null) {
             return false;
+        }
+
+        [$inicio, $fin] = $limites;
+
+        return $momento->greaterThanOrEqualTo($inicio) && $momento->lessThanOrEqualTo($fin);
+    }
+
+    /**
+     * Instante real en que termina el turno, con el cruce de medianoche
+     * resuelto (Noche 22:00-06:00 termina a las 06:00 del día siguiente
+     * a `fecha`). Null si es descanso o no tiene horas cargadas.
+     *
+     * Es el único lugar donde se calcula el fin: lo usan cubre(),
+     * CrearPapeletaAction (para fijar papeletas.fin_turno_at) y, a
+     * través de ese campo, los jobs de vencimiento y de abandono.
+     */
+    public function finReal(): ?Carbon
+    {
+        return $this->limites()[1] ?? null;
+    }
+
+    /**
+     * @return array{0: Carbon, 1: Carbon}|null [inicio, fin] absolutos
+     */
+    private function limites(): ?array
+    {
+        if ($this->es_descanso || ! $this->hora_inicio || ! $this->hora_fin) {
+            return null;
         }
 
         $inicio = $this->fecha->copy()->setTimeFromTimeString($this->hora_inicio);
@@ -94,7 +124,7 @@ class Turno extends Model
             $fin->addDay();
         }
 
-        return $momento->greaterThanOrEqualTo($inicio) && $momento->lessThanOrEqualTo($fin);
+        return [$inicio, $fin];
     }
 
     /**

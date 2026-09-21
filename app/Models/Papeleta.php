@@ -31,6 +31,7 @@ class Papeleta extends Model
         'sede_id',
         'regimen',
         'dia_operativo',
+        'fin_turno_at',
         'estado',
         'jefe_inmediato_id',
         'resuelto_por_jefe_id',
@@ -70,6 +71,7 @@ class Papeleta extends Model
         return [
             'estado' => PapeletaState::class,
             'dia_operativo' => 'date',
+            'fin_turno_at' => 'datetime',
             'jefe_resuelto_at' => 'datetime',
             'escalado_jefe_area_at' => 'datetime',
             'rrhh_resuelto_at' => 'datetime',

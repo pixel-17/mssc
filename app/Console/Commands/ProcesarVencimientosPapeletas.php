@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Papeleta\RrhhHorarioService;
 use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
@@ -10,7 +11,9 @@ use App\Models\User;
 use App\Services\DeterminadorFinDeTurno;
 use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
+use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteJefe;
+use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Vencida;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -20,28 +23,34 @@ use Throwable;
  * Corre cada minuto (ver routes/console.php). Cubre la parte del flujo
  * que NO depende de que un humano haga clic:
  *
- * 1) Escalamiento: papeletas en PENDIENTE_JEFE cuyo reloj (SLA_JEFE_MINUTOS)
+ * 1) Escalamiento: papeletas en PENDIENTE_JEFE cuyo reloj (RELOJ_JEFE_MINUTOS)
  *    venció sin respuesta -> si el Jefe de Área está en su propio horario
  *    (su fila en `turnos` de hoy), se marca escalado_jefe_area_at. Si no,
  *    NO se escala: la papeleta simplemente sigue esperando.
  * 2) Vencimiento: cualquier papeleta no terminal cuyo turno/día ya terminó
  *    sin que nadie decidiera -> VENCIDA. El sistema nunca autoriza por
  *    inacción (Paso 2).
+ * 3) Cierre de RRHH: papeletas que el jefe ya aprobó y esperan en
+ *    PENDIENTE_RRHH cuando RRHH sale de horario -> AUTORIZADA_Y_CORRIENDO con
+ *    revisión post-hoc pendiente (mismo carril que AprobarJefeAction cuando
+ *    RRHH ya estaba fuera de horario). La decisión de fondo la tomó el jefe;
+ *    lo único que cambia es que RRHH revisa después en vez de antes.
  *
- * Los pasos 3 (RRHH) y 5 (sustento 48h) usan
- * la misma idea pero se implementan en comandos aparte para no mezclar
- * ventanas de tiempo distintas en un solo método gigante.
+ * El paso 5 (sustento 48h) usa la misma idea pero se implementa en un
+ * comando aparte para no mezclar ventanas de tiempo distintas en un solo
+ * método gigante.
  */
 class ProcesarVencimientosPapeletas extends Command
 {
     protected $signature = 'papeletas:procesar-vencimientos';
 
-    protected $description = 'Escala al Jefe de Área las papeletas cuyo SLA de jefe venció, y vence las que ya no tienen turno/día vigente.';
+    protected $description = 'Escala al Jefe de Área las papeletas cuyo reloj de jefe venció, vence las que ya no tienen turno/día vigente y autoriza (con revisión post-hoc) las aprobadas por el jefe que esperan a RRHH cuando RRHH sale de horario.';
 
     public function __construct(
         private DeterminadorFinDeTurno $finDeTurno,
         private NotificarPapeletaService $notificar,
         private HorarioOrdinarioService $horarioOrdinario,
+        private RrhhHorarioService $horarioRrhh,
     ) {
         parent::__construct();
     }
@@ -50,13 +59,19 @@ class ProcesarVencimientosPapeletas extends Command
     {
         $this->escalarAJefeDeArea();
         $this->vencerPapeletasSinTurnoVigente();
+        // Después de vencer: una papeleta cuyo turno ya terminó debe quedar
+        // Vencida, no autorizada.
+        $this->autorizarPendientesDeRrhhFueraDeHorario();
 
         return self::SUCCESS;
     }
 
     private function escalarAJefeDeArea(): void
     {
-        $slaMinutos = (int) Configuracion::valorDe('SLA_JEFE_MINUTOS', 5);
+        // Misma clave que siembra ConfiguracionSeeder y edita el admin en
+        // Configuraciones. Antes se leía SLA_JEFE_MINUTOS, que no existe en
+        // ninguna parte: editar el reloj no tenía efecto.
+        $slaMinutos = (int) Configuracion::valorDe('RELOJ_JEFE_MINUTOS', 5);
 
         // chunkById (no each()): each() pagina por OFFSET y este conjunto
         // se va vaciando mientras se procesa, así que saltaba filas.
@@ -150,6 +165,71 @@ class ProcesarVencimientosPapeletas extends Command
         }
 
         return $this->horarioOrdinario->estaDentroDeVentana();
+    }
+
+    /**
+     * El jefe aprobó cuando RRHH aún contaba como "en horario" (p. ej. a las
+     * 16:15) y RRHH salió antes de decidir: la papeleta quedaba en
+     * PENDIENTE_RRHH sin nadie que la resolviera hasta que vencía. Aquí se
+     * pasa al carril "RRHH fuera de horario": el trabajador puede salir y
+     * RRHH revisa después (post-hoc obligatoria).
+     */
+    private function autorizarPendientesDeRrhhFueraDeHorario(): void
+    {
+        if ($this->horarioRrhh->estaEnHorarioAhora()) {
+            return;
+        }
+
+        Papeleta::whereState('estado', PendienteRrhh::class)
+            ->whereNotNull('jefe_resuelto_at')
+            ->chunkById(100, function ($lote) {
+                foreach ($lote as $candidata) {
+                    try {
+                        $this->autorizarPorCierreDeRrhh($candidata);
+                    } catch (Throwable $e) {
+                        report($e);
+                    }
+                }
+            });
+    }
+
+    private function autorizarPorCierreDeRrhh(Papeleta $candidata): void
+    {
+        $papeleta = DB::transaction(function () use ($candidata) {
+            // Relectura bajo lock: RRHH pudo decidir (aprobar, observar,
+            // rechazar) entre la lectura del lote y aquí.
+            $actual = Papeleta::whereKey($candidata->id)->lockForUpdate()->first();
+
+            if (! $actual
+                || ! $actual->estado->equals(PendienteRrhh::class)
+                || $this->finDeTurno->yaTermino($actual)) {
+                return null;
+            }
+
+            $estadoAnterior = class_basename($actual->estado);
+
+            $actual->transicionarA(AutorizadaYCorriendo::class);
+            $actual->autorizado_con_rrhh_fuera_horario = true;
+            $actual->hora_salida_real = now();
+            $actual->revision_posthoc_estado = 'pendiente';
+            $actual->save();
+
+            HistorialPapeleta::create([
+                'papeleta_id' => $actual->id,
+                'actor_id' => null,
+                'actor_tipo' => 'sistema',
+                'estado_anterior' => $estadoAnterior,
+                'estado_nuevo' => class_basename($actual->estado),
+                'justificacion' => 'RRHH salió de horario con la papeleta ya aprobada por el jefe: se autoriza y queda pendiente de revisión post-hoc.',
+            ]);
+
+            return $actual;
+        });
+
+        if ($papeleta) {
+            $this->notificar->puedeSalir($papeleta);
+            $this->notificar->revisionPosthocPendiente($papeleta);
+        }
     }
 
     private function vencerPapeletasSinTurnoVigente(): void
