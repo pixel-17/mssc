@@ -73,7 +73,7 @@ class ConfiguracionFormTest extends TestCase
 
     public function test_los_valores_numericos_deben_ser_enteros_positivos(): void
     {
-        $this->editar('RELOJ_JEFE_MINUTOS', '5', '10')->assertHasNoErrors();
+        $this->editar('SUSTENTO_HORAS_HABILES', '48', '72')->assertHasNoErrors();
 
         foreach (['abc', '0', '-3', '2.5'] as $malo) {
             Configuracion::where('clave', 'TOPE_OBSERVACIONES')->delete();

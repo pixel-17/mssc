@@ -10,9 +10,7 @@
 
     // Tras observar, mientras el trabajador no responda el jefe solo puede rechazar
     // (al responder, la papeleta vuelve a PENDIENTE_JEFE y decide como siempre).
-    $puedeDecidir = ($estaPendiente || $estaObservada)
-        && (($papeleta->escalado_jefe_area_at !== null && $papeleta->jefe_area_id === auth()->id())
-            || ($papeleta->escalado_jefe_area_at === null && $papeleta->jefe_inmediato_id === auth()->id()));
+    $puedeDecidir = ($estaPendiente || $estaObservada) && $papeleta->jefe_inmediato_id === auth()->id();
 
     $puedeReconocer = $papeleta->estado->equals(ObservadaPorRrhh::class) && $papeleta->jefe_inmediato_id === auth()->id();
 

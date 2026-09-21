@@ -2,30 +2,25 @@
 
 namespace Tests\Feature\Papeletas;
 
-use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\States\Papeleta\AutorizadaYCorriendo;
-use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Vencida;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
 /**
- * 1) Papeleta que el jefe aprobó (PENDIENTE_RRHH) y RRHH sale de horario
- *    antes de decidir: pasa a AUTORIZADA_Y_CORRIENDO con revisión post-hoc.
- * 2) El reloj del jefe se lee de RELOJ_JEFE_MINUTOS (la clave que siembra
- *    el seeder y edita el admin), no de una clave inexistente.
+ * Papeleta que el jefe aprobó (PENDIENTE_RRHH) y RRHH sale de horario
+ * antes de decidir: pasa a AUTORIZADA_Y_CORRIENDO con revisión post-hoc.
  *
  * Horario ordinario sembrado: 07:45-16:15, lunes a viernes. Lunes de
  * referencia: 2026-09-21.
  */
-class CierreDeRrhhYRelojDeJefeTest extends TestCase
+class CierreDeRrhhTest extends TestCase
 {
     use CreaEscenarioPapeletas;
     use RefreshDatabase;
@@ -117,28 +112,5 @@ class CierreDeRrhhYRelojDeJefeTest extends TestCase
         $papeleta = $papeleta->fresh();
         $this->assertTrue($papeleta->estado->equals(Vencida::class));
         $this->assertFalse((bool) $papeleta->autorizado_con_rrhh_fuera_horario);
-    }
-
-    public function test_el_reloj_del_jefe_se_lee_de_reloj_jefe_minutos(): void
-    {
-        $this->ir('2026-09-21 10:00:00');
-
-        $jefeArea = $this->usuarioDePrueba(['regimen' => '276']);
-        $trabajador = $this->usuarioDePrueba();
-        $papeleta = $this->papeletaDePrueba($trabajador, PendienteJefe::class, [
-            'jefe_area_id' => $jefeArea->id,
-            'fin_turno_at' => '2026-09-21 22:00:00',
-        ]);
-        DB::table('papeletas')->where('id', $papeleta->id)->update(['created_at' => now()->subMinutes(7)]);
-
-        // Con 10 minutos, a los 7 todavía no escala.
-        Configuracion::where('clave', 'RELOJ_JEFE_MINUTOS')->first()->update(['valor' => '10']);
-        $this->vencimientos();
-        $this->assertNull($papeleta->fresh()->escalado_jefe_area_at);
-
-        // Con 5 minutos, sí.
-        Configuracion::where('clave', 'RELOJ_JEFE_MINUTOS')->first()->update(['valor' => '5']);
-        $this->vencimientos();
-        $this->assertNotNull($papeleta->fresh()->escalado_jefe_area_at);
     }
 }

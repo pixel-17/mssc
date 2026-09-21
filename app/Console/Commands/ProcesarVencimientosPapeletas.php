@@ -3,16 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Actions\Papeleta\RrhhHorarioService;
-use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
-use App\Models\Turno;
-use App\Models\User;
 use App\Services\DeterminadorFinDeTurno;
-use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
-use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Vencida;
 use Illuminate\Console\Command;
@@ -23,14 +18,12 @@ use Throwable;
  * Corre cada minuto (ver routes/console.php). Cubre la parte del flujo
  * que NO depende de que un humano haga clic:
  *
- * 1) Escalamiento: papeletas en PENDIENTE_JEFE cuyo reloj (RELOJ_JEFE_MINUTOS)
- *    venció sin respuesta -> si el Jefe de Área está en su propio horario
- *    (su fila en `turnos` de hoy), se marca escalado_jefe_area_at. Si no,
- *    NO se escala: la papeleta simplemente sigue esperando.
- * 2) Vencimiento: cualquier papeleta no terminal cuyo turno/día ya terminó
+ * 1) Vencimiento: cualquier papeleta no terminal cuyo turno/día ya terminó
  *    sin que nadie decidiera -> VENCIDA. El sistema nunca autoriza por
- *    inacción (Paso 2).
- * 3) Cierre de RRHH: papeletas que el jefe ya aprobó y esperan en
+ *    inacción (Paso 2). Decidir sigue siendo SIEMPRE responsabilidad del
+ *    Jefe Inmediato: si no decide a tiempo, la papeleta no escala a nadie,
+ *    simplemente espera hasta vencer.
+ * 2) Cierre de RRHH: papeletas que el jefe ya aprobó y esperan en
  *    PENDIENTE_RRHH cuando RRHH sale de horario -> AUTORIZADA_Y_CORRIENDO con
  *    revisión post-hoc pendiente (mismo carril que AprobarJefeAction cuando
  *    RRHH ya estaba fuera de horario). La decisión de fondo la tomó el jefe;
@@ -44,12 +37,11 @@ class ProcesarVencimientosPapeletas extends Command
 {
     protected $signature = 'papeletas:procesar-vencimientos';
 
-    protected $description = 'Escala al Jefe de Área las papeletas cuyo reloj de jefe venció, vence las que ya no tienen turno/día vigente y autoriza (con revisión post-hoc) las aprobadas por el jefe que esperan a RRHH cuando RRHH sale de horario.';
+    protected $description = 'Vence las papeletas que ya no tienen turno/día vigente y autoriza (con revisión post-hoc) las aprobadas por el jefe que esperan a RRHH cuando RRHH sale de horario.';
 
     public function __construct(
         private DeterminadorFinDeTurno $finDeTurno,
         private NotificarPapeletaService $notificar,
-        private HorarioOrdinarioService $horarioOrdinario,
         private RrhhHorarioService $horarioRrhh,
     ) {
         parent::__construct();
@@ -57,122 +49,12 @@ class ProcesarVencimientosPapeletas extends Command
 
     public function handle(): int
     {
-        $this->escalarAJefeDeArea();
         $this->vencerPapeletasSinTurnoVigente();
         // Después de vencer: una papeleta cuyo turno ya terminó debe quedar
         // Vencida, no autorizada.
         $this->autorizarPendientesDeRrhhFueraDeHorario();
 
         return self::SUCCESS;
-    }
-
-    private function escalarAJefeDeArea(): void
-    {
-        // Misma clave que siembra ConfiguracionSeeder y edita el admin en
-        // Configuraciones. Antes se leía SLA_JEFE_MINUTOS, que no existe en
-        // ninguna parte: editar el reloj no tenía efecto.
-        $slaMinutos = (int) Configuracion::valorDe('RELOJ_JEFE_MINUTOS', 5);
-
-        // chunkById (no each()): each() pagina por OFFSET y este conjunto
-        // se va vaciando mientras se procesa, así que saltaba filas.
-        // Cargar jefeArea evita un User::find() repetido por papeleta.
-        Papeleta::whereState('estado', PendienteJefe::class)
-            ->whereNull('escalado_jefe_area_at')
-            ->whereNull('jefe_resuelto_at')
-            // El reloj arranca en created_at, o en reloj_jefe_at si la papeleta se
-            // reabrió (subsanación del trabajador, observación de RRHH reconocida).
-            ->whereRaw('COALESCE(reloj_jefe_at, created_at) <= ?', [now()->subMinutes($slaMinutos)])
-            ->whereNotNull('jefe_area_id')
-            ->with('jefeArea')
-            ->chunkById(100, function ($lote) {
-                foreach ($lote as $candidata) {
-                    // Un fallo en una papeleta no debe tumbar el resto del ciclo.
-                    try {
-                        $this->escalar($candidata);
-                    } catch (Throwable $e) {
-                        report($e);
-                    }
-                }
-            });
-    }
-
-    private function escalar(Papeleta $candidata): void
-    {
-        // Si el Jefe de Área NO está en horario no se hace nada: la
-        // papeleta sigue en PENDIENTE_JEFE esperando, sin alerta extra.
-        if (! $this->actorEstaEnHorario($candidata->jefeArea)) {
-            return;
-        }
-
-        $papeleta = DB::transaction(function () use ($candidata) {
-            // Se relee bajo lock: entre la lectura del lote y aquí el jefe
-            // pudo decidir, o la papeleta pudo cancelarse.
-            $actual = Papeleta::whereKey($candidata->id)->lockForUpdate()->first();
-
-            if (! $actual
-                || ! $actual->estado->equals(PendienteJefe::class)
-                || $actual->escalado_jefe_area_at !== null
-                || $actual->jefe_resuelto_at !== null) {
-                return null;
-            }
-
-            $actual->escalado_jefe_area_at = now();
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => null,
-                'actor_tipo' => 'sistema',
-                'estado_anterior' => class_basename($actual->estado),
-                'estado_nuevo' => class_basename($actual->estado), // no cambia de estado, solo de responsable
-                'justificacion' => 'Escalado automático: Jefe Inmediato no respondió dentro del SLA.',
-            ]);
-
-            return $actual;
-        });
-
-        if ($papeleta) {
-            $this->notificar->escaladaAJefeDeArea($papeleta);
-        }
-    }
-
-    /**
-     * Memoiza por user_id el resultado de "está en su turno vigente"
-     * dentro de esta misma corrida del comando (cada minuto): si el
-     * mismo Jefe de Área tiene varias papeletas escalando a la vez,
-     * evita repetir la consulta a `turnos` para el mismo usuario.
-     *
-     * @var array<int, bool>
-     */
-    private array $cacheEnHorario728 = [];
-
-    /**
-     * "Está en su horario" se valida SIEMPRE contra el propio régimen del
-     * actor — nunca contra el horario de otro actor:
-     * - 276 (ordinario): horario único global (HorarioOrdinarioService),
-     *   igual que para el trabajador que crea la papeleta.
-     * - 728 (rotativo): sigue contra su propia fila de `turnos` de hoy
-     *   (opcional/informativa; si no la cargaron, no se considera "en
-     *   horario" para efectos de escalar).
-     */
-    private function actorEstaEnHorario(?User $actor): bool
-    {
-        // Un jefe desactivado (o borrado) no puede decidir: escalarle la
-        // papeleta le quitaría la decisión al Jefe Inmediato (tras escalar,
-        // PapeletaPolicy::decidirComoJefe solo deja actuar al Jefe de Área)
-        // y quedaría sin nadie que la resuelva hasta que venza.
-        if (! $actor || ! $actor->activo) {
-            return false;
-        }
-
-        if ($actor->regimen === '728') {
-            // Turno::vigenteParaUsuario maneja el cruce de medianoche del
-            // turno Noche (22:00-06:00 del día siguiente); antes, entre
-            // 00:00 y 06:00 esto nunca detectaba al actor como "en turno".
-            return $this->cacheEnHorario728[$actor->id] ??= Turno::vigenteParaUsuario($actor->id, now()) !== null;
-        }
-
-        return $this->horarioOrdinario->estaDentroDeVentana();
     }
 
     /**

@@ -46,6 +46,12 @@ class ObservarRrhhAction
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
             }
 
+            // La observación de RRHH siempre vuelve al jefe (ReconocerObservacionRrhhAction).
+            // Sin jefatura no hay quien la reconozca y quedaría atascada: solo aprobar o rechazar.
+            if ($actual->sinJefatura()) {
+                throw new PapeletaException('Esta papeleta no tiene jefe superior que pueda responder una observación: solo puedes aprobarla o rechazarla.');
+            }
+
             $estadoAnterior = class_basename($actual->estado);
             $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
 

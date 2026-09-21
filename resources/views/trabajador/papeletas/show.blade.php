@@ -15,7 +15,7 @@
         ['Sede', $papeleta->sede->nombre ?? '—'],
         ['Día operativo', $papeleta->dia_operativo?->format('d/m/Y')],
         ['Jefe inmediato', $papeleta->jefeInmediato?->nombre_completo ?? '—'],
-        ['Jefe de área', $papeleta->jefeArea?->nombre_completo ? $papeleta->jefeArea->nombre_completo.($papeleta->escalado_jefe_area_at ? ' (escalado)' : '') : '—'],
+        ['Jefe de área', $papeleta->jefeArea?->nombre_completo ?: '—'],
         ['Hora de salida real', $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—'],
         ['Retorno estimado', $papeleta->hora_retorno_estimado?->format('d/m/Y H:i') ?? '—'],
     ]);

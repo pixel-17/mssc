@@ -70,10 +70,11 @@ class PapeletaPolicy
     }
 
     /**
-     * Cubre aprobar/rechazar/observar como jefe. El Jefe Inmediato
-     * decide mientras la papeleta no haya escalado; una vez escalada
-     * (escalado_jefe_area_at no nulo), solo el Jefe de Área puede
-     * actuar — el inmediato ya perdió la ventana.
+     * Cubre aprobar/rechazar/observar como jefe. Decidir es SIEMPRE
+     * responsabilidad del Jefe Inmediato: no escala a nadie más por
+     * inacción (ni al Jefe de Área ni a nadie), la papeleta simplemente
+     * espera hasta que el job de vencimiento la marca Vencida al
+     * terminar el turno/día.
      *
      * También puede rechazar una papeleta que él mismo observó
      * (OBSERVADA_POR_JEFE) sin esperar la respuesta; aprobar u observar
@@ -88,10 +89,6 @@ class PapeletaPolicy
 
         if (! $papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class)) {
             return false;
-        }
-
-        if ($papeleta->escalado_jefe_area_at !== null) {
-            return $papeleta->jefe_area_id === $user->id;
         }
 
         return $user->esJefeInmediatoDe($papeleta->trabajador);

@@ -29,7 +29,6 @@ use Illuminate\Support\Facades\Notification;
  * - El trabajador responde una observación: notifica al Jefe Inmediato.
  * - Observación de RRHH: notifica al Jefe Inmediato (nunca al
  *   trabajador — la observación de RRHH no le llega directo).
- * - Escalamiento a Jefe de Área: notifica al Jefe de Área.
  * - Vencimiento (fin de turno/día sin decisión): notifica al
  *   trabajador.
  * - Abandono no marcado: notifica a Jefe Inmediato y RRHH.
@@ -54,22 +53,6 @@ class NotificarPapeletaService
             'creada_pendiente_jefe',
             'Nueva papeleta por aprobar',
             "{$papeleta->trabajador->nombre_completo} solicitó una papeleta de {$papeleta->motivo->nombre}.",
-            $this->urlJefe($papeleta),
-        );
-    }
-
-    public function escaladaAJefeDeArea(Papeleta $papeleta): void
-    {
-        if (! $papeleta->jefeArea) {
-            return;
-        }
-
-        $this->enviarUno(
-            $papeleta->jefeArea,
-            $papeleta,
-            'escalada_jefe_area',
-            'Papeleta escalada a tu bandeja',
-            "El Jefe Inmediato de {$papeleta->trabajador->nombre_completo} no respondió a tiempo. La papeleta de {$papeleta->motivo->nombre} pasó a tu bandeja.",
             $this->urlJefe($papeleta),
         );
     }

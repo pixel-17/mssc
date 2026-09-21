@@ -15,7 +15,6 @@ class ConfiguracionSeeder extends Seeder
     public function run(): void
     {
         $configuraciones = [
-            ['clave' => 'RELOJ_JEFE_MINUTOS', 'valor' => '5', 'descripcion' => 'Minutos que tiene el Jefe Inmediato para decidir antes de escalar o vencer.'],
             ['clave' => 'TOPE_OBSERVACIONES', 'valor' => '3', 'descripcion' => 'Tope de observaciones del Jefe antes del rechazo automático.'],
             ['clave' => 'TOPE_OBSERVACIONES_RRHH', 'valor' => '3', 'descripcion' => 'Tope de observaciones de RRHH antes del rechazo automático.'],
             ['clave' => 'BLOQUE_ALMUERZO_INICIO', 'valor' => '13:00', 'descripcion' => 'Inicio del bloque de almuerzo para el descuento de refrigerio (solo 276).'],

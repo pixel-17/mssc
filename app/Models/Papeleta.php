@@ -18,8 +18,14 @@ use Spatie\ModelStates\HasStates;
  * trabajador cambia de sede o de régimen después.
  *
  * La máquina de estados (transiciones válidas, ver PapeletaState::config())
- * vive conectada aquí vía HasStates; el RELOJ de 5 min, el escalamiento,
+ * vive conectada aquí vía HasStates; el vencimiento por fin de turno/día,
  * etc. viven en Actions/Console\Commands, no en el modelo.
+ *
+ * Decidir sobre una papeleta como jefe es SIEMPRE responsabilidad del
+ * Jefe Inmediato (jefe_inmediato_id): no escala a nadie más por
+ * inacción, ni siquiera al Jefe de Área. jefe_area_id se mantiene solo
+ * para reportes/dashboards (scopeDeEquipoDe) y para asignar jefes
+ * inmediatos adicionales (AsignarJefeAdicionalAction).
  */
 class Papeleta extends Model
 {
@@ -38,7 +44,6 @@ class Papeleta extends Model
         'jefe_resuelto_at',
         'contador_observaciones_jefe',
         'jefe_area_id',
-        'escalado_jefe_area_at',
         'resuelto_por_rrhh_id',
         'rrhh_resuelto_at',
         'contador_observaciones_rrhh',
@@ -73,7 +78,6 @@ class Papeleta extends Model
             'dia_operativo' => 'date',
             'fin_turno_at' => 'datetime',
             'jefe_resuelto_at' => 'datetime',
-            'escalado_jefe_area_at' => 'datetime',
             'rrhh_resuelto_at' => 'datetime',
             'autorizado_con_rrhh_fuera_horario' => 'boolean',
             'revision_posthoc_at' => 'datetime',

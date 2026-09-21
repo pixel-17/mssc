@@ -62,7 +62,6 @@ class SubsanarObservacionAction
             $actual->observacion_adjunto_path = $adjuntoPath;
             $actual->observacion_subsanada_at = now();
             $actual->jefe_resuelto_at = null;
-            $actual->escalado_jefe_area_at = null;
             $actual->reloj_jefe_at = now();
             $actual->save();
 

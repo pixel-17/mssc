@@ -98,7 +98,7 @@ class ObservacionJefeTest extends TestCase
     public function test_sin_adjunto_exigido_el_trabajador_responde_solo_con_texto_y_vuelve_al_jefe(): void
     {
         $papeleta = $this->observada(false);
-        $papeleta->update(['escalado_jefe_area_at' => now()->subHour(), 'jefe_resuelto_at' => now()->subHour()]);
+        $papeleta->update(['jefe_resuelto_at' => now()->subHour()]);
 
         $this->responder($papeleta, ['respuesta' => 'Fue por un trámite en la UGEL.'])
             ->assertRedirect(route('trabajador.papeletas.show', $papeleta));
@@ -110,7 +110,6 @@ class ObservacionJefeTest extends TestCase
         $this->assertNull($papeleta->observacion_adjunto_path);
         $this->assertNotNull($papeleta->observacion_subsanada_at);
         $this->assertNotNull($papeleta->reloj_jefe_at);
-        $this->assertNull($papeleta->escalado_jefe_area_at);
         $this->assertNull($papeleta->jefe_resuelto_at);
 
         $evento = $papeleta->historial()->latest('id')->first();

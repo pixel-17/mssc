@@ -20,7 +20,7 @@
         </div>
         <div>
             <dt class="text-gray-500 dark:text-tinta-100/50">Jefe de área</dt>
-            <dd class="text-gray-900 dark:text-white">{{ $papeleta->jefeArea?->nombre_completo ?? '—' }}{{ $papeleta->escalado_jefe_area_at ? ' (escalado)' : '' }}</dd>
+            <dd class="text-gray-900 dark:text-white">{{ $papeleta->jefeArea?->nombre_completo ?? '—' }}</dd>
         </div>
         <div>
             <dt class="text-gray-500 dark:text-tinta-100/50">Hora de salida real</dt>

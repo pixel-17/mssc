@@ -43,7 +43,9 @@
                                 <span x-show="enviando" x-cloak>Aprobando…</span>
                             </button>
                         </form>
-                        <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar (vuelve al jefe)" color="orange" />
+                        @unless ($papeleta->sinJefatura())
+                            <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar (vuelve al jefe)" color="orange" />
+                        @endunless
                         <x-accion-comentario :action="route('rrhh.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                     </div>
                     @if ($papeleta->contador_observaciones_rrhh > 0)

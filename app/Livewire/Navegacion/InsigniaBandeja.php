@@ -61,7 +61,7 @@ class InsigniaBandeja extends Component
 
         return match ($this->bandeja) {
             'jefe' => Papeleta::whereState('estado', PendienteJefe::class)
-                ->where(fn ($q) => $q->deJefeInmediato($usuario)->orWhere('papeletas.jefe_area_id', $usuario->id))
+                ->deJefeInmediato($usuario)
                 ->count(),
             'rrhh' => $usuario->hasRole('rrhh')
                 ? Papeleta::whereState('estado', PendienteRrhh::class)->count()

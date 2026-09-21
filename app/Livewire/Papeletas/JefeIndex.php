@@ -16,8 +16,11 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Bandeja del Jefe Inmediato / Jefe de Área, migrada de
+ * Bandeja del Jefe Inmediato, migrada de
  * App\Http\Controllers\Jefe\PapeletaController@index a Livewire puro.
+ * Decidir es siempre responsabilidad del Jefe Inmediato: no hay
+ * escalamiento a Jefe de Área, así que esta bandeja solo muestra lo
+ * que el jefe autenticado puede decidir (deJefeInmediato).
  * Se re-renderiza sola en cuanto le llega una PapeletaNotification
  * (papeleta nueva por decidir, observación de RRHH, etc.) — ver
  * EscuchaNotificacionesEnVivo.
@@ -36,14 +39,14 @@ class JefeIndex extends Component
         $user = Auth::user();
 
         $porDecidir = Papeleta::whereState('estado', PendienteJefe::class)
-            ->where(fn ($q) => $q->deJefeInmediato($user)->orWhere('papeletas.jefe_area_id', $user->id))
+            ->deJefeInmediato($user)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
         // Las que yo observé: esperan la respuesta del trabajador.
         $observadasPorMi = Papeleta::whereState('estado', ObservadaPorJefe::class)
-            ->where(fn ($q) => $q->deJefeInmediato($user)->orWhere('papeletas.jefe_area_id', $user->id))
+            ->deJefeInmediato($user)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();

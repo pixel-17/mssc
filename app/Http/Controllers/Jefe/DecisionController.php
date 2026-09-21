@@ -30,7 +30,7 @@ class DecisionController extends Controller
         $this->authorize('decidirComoJefe', $papeleta);
 
         try {
-            $action->ejecutar($papeleta, Auth::user(), $this->actorTipo($papeleta));
+            $action->ejecutar($papeleta, Auth::user());
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -43,7 +43,7 @@ class DecisionController extends Controller
         $this->authorize('decidirComoJefe', $papeleta);
 
         try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'), $this->actorTipo($papeleta));
+            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
@@ -60,8 +60,7 @@ class DecisionController extends Controller
                 $papeleta,
                 Auth::user(),
                 $request->input('comentario'),
-                $this->actorTipo($papeleta),
-                $request->boolean('requiere_adjunto'),
+                requiereAdjunto: $request->boolean('requiere_adjunto'),
             );
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
@@ -120,19 +119,5 @@ class DecisionController extends Controller
         }
 
         return back()->with('success', 'Papeleta marcada como abandono no marcado.');
-    }
-
-    /**
-     * Una vez escalada (escalado_jefe_area_at no nulo) quien decide es
-     * el Jefe de Área, aunque siga siendo el mismo modelo User de
-     * "jefe" — el historial necesita saber cuál de los dos actuó.
-     */
-    private function actorTipo(Papeleta $papeleta): string
-    {
-        if ($papeleta->escalado_jefe_area_at !== null && $papeleta->jefe_area_id === Auth::id()) {
-            return 'jefe_area';
-        }
-
-        return 'jefe_inmediato';
     }
 }

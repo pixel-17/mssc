@@ -14,6 +14,7 @@ use App\Services\GeneradorTurnoMensualService;
 use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\PendienteJefe;
+use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -32,6 +33,10 @@ use Illuminate\Support\Facades\DB;
  *   es_descanso) NO puede crear papeleta.
  * - Un trabajador puede tener varias papeletas al mismo tiempo: no hay
  *   regla de exclusividad ni columnas "slot" a nivel de BD.
+ * - Sin jefatura (quien encabeza su unidad y no tiene a nadie arriba: ni jefe
+ *   inmediato, ni jefe de área, ni jefes adicionales): no hay a quién mandarla, así que nace
+ *   directo en PENDIENTE_RRHH. RRHH la decide (aprobar/rechazar) y la regla
+ *   "nadie decide su propia papeleta" (ExigeDecisorAjeno) sigue vigente.
  * - Sede/regimen/dia_operativo/fin_turno_at quedan fijados como fotografía
  *   inmutable. fin_turno_at es el instante real en que termina el turno
  *   (728, con cruce de medianoche) o el horario ordinario (276): los jobs
@@ -60,7 +65,16 @@ class CrearPapeletaAction
         // Misma regla que UserObserver: quien encabeza su unidad NO es su propio jefe.
         [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador) : [null, null];
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId) {
+        // Tope del organigrama: encabeza su unidad y no tiene a nadie arriba.
+        $sinJefatura = $unidad !== null
+            && (int) $unidad->jefe_id === (int) $trabajador->id
+            && $jefeInmediatoId === null
+            && $jefeAreaId === null
+            && ! $trabajador->jefesInmediatosAdicionales()->exists();
+
+        $estadoInicial = $sinJefatura ? PendienteRrhh::class : PendienteJefe::class;
+
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $sinJefatura, $estadoInicial) {
             $papeleta = Papeleta::create([
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
@@ -68,7 +82,7 @@ class CrearPapeletaAction
                 'regimen' => $trabajador->regimen,
                 'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
                 'fin_turno_at' => $finTurno,
-                'estado' => PendienteJefe::class,
+                'estado' => $estadoInicial,
                 'jefe_inmediato_id' => $jefeInmediatoId,
                 'jefe_area_id' => $jefeAreaId,
                 'hora_retorno_estimado' => $datos['hora_retorno_estimado'] ?? null,
@@ -85,13 +99,28 @@ class CrearPapeletaAction
                 'justificacion' => $datos['justificacion'] ?? null,
             ]);
 
+            if ($sinJefatura) {
+                HistorialPapeleta::create([
+                    'papeleta_id' => $papeleta->id,
+                    'actor_id' => null,
+                    'actor_tipo' => 'sistema',
+                    'estado_anterior' => class_basename($papeleta->estado),
+                    'estado_nuevo' => class_basename($papeleta->estado),
+                    'justificacion' => 'Sin jefe superior en el organigrama: la papeleta se envía directo a RRHH.',
+                ]);
+            }
+
             return $papeleta;
         });
 
         // Fuera de la transacción: si algo falla en el envío (push caído,
         // cola no disponible) nunca debe revertir la creación ya
         // confirmada en BD.
-        $this->notificar->creada($papeleta);
+        if ($sinJefatura) {
+            $this->notificar->pendienteDeRrhh($papeleta);
+        } else {
+            $this->notificar->creada($papeleta);
+        }
 
         return $papeleta;
     }
