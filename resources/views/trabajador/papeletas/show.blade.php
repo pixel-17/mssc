@@ -100,7 +100,7 @@
                                 </svg>
                                 <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Adjuntar archivo (PDF, JPG o PNG)'"></span>
                             </label>
-                            <input type="file" id="archivo-respuesta" name="archivo" accept=".pdf,.jpg,.jpeg,.png" required class="hidden"
+                            <input type="file" id="archivo-respuesta" name="archivo" accept=".pdf,.jpg,.jpeg,.png" required class="sr-only"
                                    @change="archivo = $event.target.files[0]?.name ?? null">
                             @error('archivo')
                                 <p class="text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
@@ -181,7 +181,7 @@
                         </svg>
                         <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivoFoto ?? 'Tomar / adjuntar foto'"></span>
                     </label>
-                    <input type="file" id="foto-retorno" name="foto" accept="image/*" required class="hidden"
+                    <input type="file" id="foto-retorno" name="foto" accept="image/*" required class="sr-only"
                            @change="archivoFoto = $event.target.files[0]?.name ?? null">
 
                     <button type="button"
@@ -222,7 +222,7 @@
                         </svg>
                         <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Adjuntar sustento'"></span>
                     </label>
-                    <input type="file" id="archivo-sustento" name="archivo" required class="hidden"
+                    <input type="file" id="archivo-sustento" name="archivo" required class="sr-only"
                            @change="archivo = $event.target.files[0]?.name ?? null">
 
                     <button type="submit" class="btn-primary w-full text-sm py-3">

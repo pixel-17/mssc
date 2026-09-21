@@ -69,10 +69,19 @@ class VincularJefeInmediatoAction
         }
 
         if (! $this->esVinculable($trabajador)) {
-            throw new UsuarioException('No puedes agregar a tu equipo a un jefe de área, a un administrador ni a un usuario desactivado.');
+            throw new UsuarioException('No puedes agregar a tu equipo a un jefe de área, ni a un administrador, ni a un usuario desactivado.');
         }
 
-        if ($jefe->esJefeInmediatoDe($trabajador)) {
+        // Consulta directa (sin pasar por User::esJefeInmediatoDe(), que
+        // memoiza por instancia): aquí mismo vamos a modificar esa
+        // relación con el attach() de abajo, así que cachear su
+        // resultado dejaría, dentro de este mismo request, un "false"
+        // obsoleto para cualquiera que vuelva a preguntar por $jefe.
+        $yaEsAdicional = $trabajador->jefesInmediatosAdicionales()
+            ->where('users.id', $jefe->id)
+            ->exists();
+
+        if ($trabajador->jefe_inmediato_id === $jefe->id || $yaEsAdicional) {
             throw new UsuarioException('Ya eres jefe inmediato de este trabajador.');
         }
 
