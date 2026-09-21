@@ -24,19 +24,19 @@ class RrhhHorarioServiceTest extends TestCase
     {
         $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
 
-        $this->assertTrue((new RrhhHorarioService)->estaEnHorarioAhora());
+        $this->assertTrue(app(RrhhHorarioService::class)->estaEnHorarioAhora());
     }
 
     public function test_no_cuenta_a_las_cuentas_de_rrhh_desactivadas(): void
     {
         $this->usuarioDePrueba(['regimen' => '276', 'activo' => false], ['rrhh']);
 
-        $this->assertFalse((new RrhhHorarioService)->estaEnHorarioAhora());
+        $this->assertFalse(app(RrhhHorarioService::class)->estaEnHorarioAhora());
     }
 
     public function test_sin_personal_de_rrhh_nunca_esta_en_horario(): void
     {
-        $this->assertFalse((new RrhhHorarioService)->estaEnHorarioAhora());
+        $this->assertFalse(app(RrhhHorarioService::class)->estaEnHorarioAhora());
     }
 
     public function test_fuera_de_los_dias_laborables_no_esta_en_horario(): void
@@ -44,6 +44,6 @@ class RrhhHorarioServiceTest extends TestCase
         $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
         $this->travelTo('2026-09-20 10:00:00'); // domingo
 
-        $this->assertFalse((new RrhhHorarioService)->estaEnHorarioAhora());
+        $this->assertFalse(app(RrhhHorarioService::class)->estaEnHorarioAhora());
     }
 }

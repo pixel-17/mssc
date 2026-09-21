@@ -65,6 +65,12 @@ class UsuarioAdminIndex extends Component
             return;
         }
 
+        if ($usuario->esUnicoRrhhActivo()) {
+            session()->flash('error', 'No puedes desactivar al único usuario de RR. HH. activo: sin él, toda papeleta aprobada por el jefe se autorizaría sola. Designa o reactiva primero a otra persona con rol RR. HH.');
+
+            return;
+        }
+
         $usuario->forceFill(['activo' => false])->save();
         $usuario->tokens()->delete();
 

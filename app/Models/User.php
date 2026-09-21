@@ -211,6 +211,19 @@ class User extends Authenticatable
     }
 
     /**
+     * ¿Es este usuario el ÚNICO con rol 'rrhh' que sigue activo? Sin nadie
+     * activo, RrhhHorarioService da a RRHH por "fuera de horario" y toda
+     * papeleta aprobada por el jefe se autoriza sola (revisión post-hoc):
+     * por eso no se permite desactivarlo ni quitarle el rol.
+     */
+    public function esUnicoRrhhActivo(): bool
+    {
+        return $this->activo
+            && $this->hasRole('rrhh')
+            && ! static::role('rrhh')->where('activo', true)->whereKeyNot($this->getKey())->exists();
+    }
+
+    /**
      * ¿Es este usuario jefe inmediato del trabajador dado, ya sea de
      * forma automática (por unidad orgánica) o adicional (asignado a
      * mano)? Cualquiera de los dos habilita a decidir sus papeletas.

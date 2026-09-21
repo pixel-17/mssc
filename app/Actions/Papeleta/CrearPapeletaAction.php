@@ -4,11 +4,13 @@ namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
 use App\Models\Configuracion;
+use App\Models\ConfiguracionTurno;
 use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Turno;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
 use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\PendienteJefe;
@@ -128,16 +130,71 @@ class CrearPapeletaAction
     /**
      * Instante en que termina el turno de esta papeleta. 728: fin del
      * turno vigente (Turno::finReal resuelve el cruce de medianoche del
-     * turno Noche); sin turno vigente se cae al cierre del día (mismo
-     * criterio que antes). 276: fin del horario ordinario de hoy.
+     * turno Noche); si no hay fila de turno cargada pero su ciclo
+     * configurado es Noche y está dentro de esa ventana, el fin de esa
+     * noche (finDeNocheSinTurnoCargado); en cualquier otro caso, el
+     * cierre del día. 276: fin del horario ordinario de hoy.
      */
     private function resolverFinDeTurno(User $trabajador, ?Turno $turno): Carbon
     {
         if ($trabajador->regimen === '728') {
-            return $turno?->finReal() ?? now()->endOfDay();
+            return $turno?->finReal()
+                ?? $this->finDeNocheSinTurnoCargado($trabajador)
+                ?? now()->endOfDay();
         }
 
         return app(HorarioOrdinarioService::class)->finDelDia(now());
+    }
+
+    /**
+     * Sin modo estricto, un 728 puede crear papeleta aunque nadie le haya
+     * cargado el turno. Si su ciclo configurado (configuraciones_turno) es
+     * Noche y la papeleta se crea dentro de la ventana nocturna
+     * (22:00-06:00 por defecto), el turno termina al amanecer y no a las
+     * 23:59: de lo contrario la papeleta vencería (o se marcaría abandono)
+     * a medianoche, en pleno turno. Si hay alguna fila de `turnos` para
+     * hoy o ayer (p. ej. un día de descanso) no se infiere nada: el
+     * trabajador no está de turno.
+     */
+    private function finDeNocheSinTurnoCargado(User $trabajador): ?Carbon
+    {
+        $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
+
+        if ($config?->turno !== 'NOCHE') {
+            return null;
+        }
+
+        $ahora = now();
+
+        $hayFilaReciente = Turno::where('user_id', $trabajador->id)
+            ->whereIn('fecha', [$ahora->toDateString(), $ahora->copy()->subDay()->toDateString()])
+            ->exists();
+
+        if ($hayFilaReciente) {
+            return null;
+        }
+
+        [$horaInicio, $horaFin] = app(GeneradorTurnoMensualService::class)->horasDe('NOCHE');
+
+        $inicioHoy = $ahora->copy()->setTimeFromTimeString($horaInicio);
+        $finHoy = $ahora->copy()->setTimeFromTimeString($horaFin);
+
+        // Solo tiene sentido si la noche cruza medianoche (inicio > fin).
+        if (! $finHoy->lessThan($inicioHoy)) {
+            return null;
+        }
+
+        // Madrugada: la noche empezó ayer y termina hoy.
+        if ($ahora->lessThanOrEqualTo($finHoy)) {
+            return $finHoy;
+        }
+
+        // Tarde-noche: la noche empezó hoy y termina mañana.
+        if ($ahora->greaterThanOrEqualTo($inicioHoy)) {
+            return $finHoy->addDay();
+        }
+
+        return null;
     }
 
     /**

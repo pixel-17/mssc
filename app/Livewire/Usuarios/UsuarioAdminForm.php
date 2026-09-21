@@ -113,6 +113,23 @@ class UsuarioAdminForm extends Component
 
         $datos = $this->validate();
 
+        if ($this->usuario?->esUnicoRrhhActivo()) {
+            $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');
+            $conservaRol = in_array($rolRrhhId, array_map('intval', $datos['rolesSeleccionados']), true);
+
+            if (! $datos['activo']) {
+                $this->addError('activo', 'Es el único usuario de RR. HH. activo: sin él, toda papeleta aprobada por el jefe se autorizaría sola. Designa primero a otra persona con rol RR. HH.');
+
+                return;
+            }
+
+            if (! $conservaRol) {
+                $this->addError('rolesSeleccionados', 'Es el único usuario de RR. HH. activo: no puedes quitarle ese rol hasta designar a otra persona.');
+
+                return;
+            }
+        }
+
         $atributos = [
             'name' => $datos['name'],
             'apellido' => $datos['apellido'],

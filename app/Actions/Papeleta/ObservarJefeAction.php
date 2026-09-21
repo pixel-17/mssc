@@ -66,6 +66,10 @@ class ObservarJefeAction
                 $actual->transicionarA(ObservadaPorJefe::class);
                 $actual->observacion_requiere_adjunto = $requiereAdjunto;
                 $actual->observacion_respuesta = null;
+                // Cada ronda empieza limpia: el adjunto de la ronda anterior no
+                // debe mostrarse como respuesta a esta observación. El archivo
+                // viejo NO se borra del disco (es evidencia de la ronda previa).
+                $actual->observacion_adjunto_path = null;
                 $actual->observacion_subsanada_at = null;
             }
 

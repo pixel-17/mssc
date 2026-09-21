@@ -47,9 +47,19 @@ class VencimientoNocturnoTest extends TestCase
         ]);
     }
 
+    /**
+     * Igual que CrearPapeletaAction: el fin del turno se fija UNA vez, al
+     * crear la papeleta (fin_turno_at). Sin turno cargado queda NULL y
+     * DeterminadorFinDeTurno usa el cierre del día operativo.
+     */
     private function papeleta()
     {
-        return $this->papeletaDePrueba($this->trabajador, PendienteJefe::class, ['dia_operativo' => self::DIA]);
+        $turno = Turno::where('user_id', $this->trabajador->id)->whereDate('fecha', self::DIA)->first();
+
+        return $this->papeletaDePrueba($this->trabajador, PendienteJefe::class, [
+            'dia_operativo' => self::DIA,
+            'fin_turno_at' => $turno?->finReal(),
+        ]);
     }
 
     private function terminado(string $ahora): bool
@@ -77,16 +87,15 @@ class VencimientoNocturnoTest extends TestCase
         $this->assertTrue($this->terminado('2026-09-21 06:01:00'));
     }
 
-    public function test_turno_de_dia_sigue_cerrando_a_medianoche_como_antes(): void
+    public function test_turno_de_dia_termina_a_su_hora_de_fin_no_a_medianoche(): void
     {
         $this->turno('06:00:00', '14:00:00', 'MANANA');
 
-        $this->assertFalse($this->terminado('2026-09-20 20:00:00'), 'no vence al terminar el turno, sino al cerrar el día');
-        $this->assertFalse($this->terminado('2026-09-20 23:59:00'));
-        $this->assertTrue($this->terminado('2026-09-21 00:00:00'));
+        $this->assertFalse($this->terminado('2026-09-20 13:59:00'));
+        $this->assertTrue($this->terminado('2026-09-20 14:01:00'));
     }
 
-    public function test_sin_turno_cargado_se_usa_la_medianoche(): void
+    public function test_sin_turno_cargado_se_usa_la_medianoche_del_dia_operativo(): void
     {
         $this->assertFalse($this->terminado('2026-09-20 23:59:00'));
         $this->assertTrue($this->terminado('2026-09-21 00:00:00'));
@@ -106,17 +115,17 @@ class VencimientoNocturnoTest extends TestCase
         $this->assertTrue($papeleta->fresh()->estado->equals(Vencida::class), 'vence al terminar el turno');
     }
 
-    public function test_turno_finDeTurno_calcula_el_dia_siguiente_solo_si_cruza_medianoche(): void
+    public function test_turno_finReal_calcula_el_dia_siguiente_solo_si_cruza_medianoche(): void
     {
         $this->turno('22:00:00', '06:00:00', 'NOCHE');
         $noche = Turno::where('user_id', $this->trabajador->id)->first();
 
-        $this->assertSame('2026-09-21 06:00:00', $noche->finDeTurno()->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-09-21 06:00:00', $noche->finReal()->format('Y-m-d H:i:s'));
 
         $noche->update(['hora_inicio' => '06:00:00', 'hora_fin' => '14:00:00']);
-        $this->assertSame('2026-09-20 14:00:00', $noche->fresh()->finDeTurno()->format('Y-m-d H:i:s'));
+        $this->assertSame('2026-09-20 14:00:00', $noche->fresh()->finReal()->format('Y-m-d H:i:s'));
 
         $noche->update(['es_descanso' => true]);
-        $this->assertNull($noche->fresh()->finDeTurno());
+        $this->assertNull($noche->fresh()->finReal());
     }
 }

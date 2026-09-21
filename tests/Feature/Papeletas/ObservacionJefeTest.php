@@ -131,6 +131,31 @@ class ObservacionJefeTest extends TestCase
         Storage::disk('local')->assertExists($papeleta->observacion_adjunto_path);
     }
 
+    public function test_una_nueva_observacion_no_arrastra_el_adjunto_de_la_ronda_anterior(): void
+    {
+        $papeleta = $this->observada(true);
+
+        $this->responder($papeleta, ['respuesta' => 'Adjunto la constancia.', 'archivo' => $this->archivo()]);
+
+        $adjuntoPrimeraRonda = $papeleta->fresh()->observacion_adjunto_path;
+        $this->assertNotNull($adjuntoPrimeraRonda);
+
+        // Segunda ronda: el jefe observa otra vez, ahora sin exigir adjunto.
+        $this->actingAs($this->jefe)->post(route('jefe.papeletas.observar', $papeleta), [
+            'comentario' => 'Aclárame la hora de retorno.',
+        ])->assertSessionHas('success');
+
+        $this->assertNull($papeleta->fresh()->observacion_adjunto_path, 'la ronda nueva empieza sin adjunto');
+        Storage::disk('local')->assertExists($adjuntoPrimeraRonda);
+
+        $this->responder($papeleta, ['respuesta' => 'Regreso a las 3 pm.']);
+
+        $papeleta = $papeleta->fresh();
+
+        $this->assertTrue($papeleta->estado->equals(PendienteJefe::class));
+        $this->assertNull($papeleta->observacion_adjunto_path, 'responder sin archivo no debe heredar el anterior');
+    }
+
     public function test_con_adjunto_exigido_no_se_acepta_una_respuesta_sin_archivo(): void
     {
         $papeleta = $this->observada(true);

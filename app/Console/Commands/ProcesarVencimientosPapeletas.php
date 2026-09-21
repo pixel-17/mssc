@@ -157,7 +157,15 @@ class ProcesarVencimientosPapeletas extends Command
      */
     private function actorEstaEnHorario(?User $actor): bool
     {
-        if ($actor?->regimen === '728') {
+        // Un jefe desactivado (o borrado) no puede decidir: escalarle la
+        // papeleta le quitaría la decisión al Jefe Inmediato (tras escalar,
+        // PapeletaPolicy::decidirComoJefe solo deja actuar al Jefe de Área)
+        // y quedaría sin nadie que la resuelva hasta que venza.
+        if (! $actor || ! $actor->activo) {
+            return false;
+        }
+
+        if ($actor->regimen === '728') {
             // Turno::vigenteParaUsuario maneja el cruce de medianoche del
             // turno Noche (22:00-06:00 del día siguiente); antes, entre
             // 00:00 y 06:00 esto nunca detectaba al actor como "en turno".
