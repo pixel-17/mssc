@@ -47,7 +47,7 @@ class PapeletaPolicy
     {
         return $user->hasRole('rrhh')
             || $papeleta->trabajador_id === $user->id
-            || $user->esJefeInmediatoDe($papeleta->trabajador)
+            || $papeleta->tieneComoJefeInmediatoA($user)
             || $papeleta->jefe_area_id === $user->id;
     }
 
@@ -91,7 +91,7 @@ class PapeletaPolicy
             return false;
         }
 
-        return $user->esJefeInmediatoDe($papeleta->trabajador);
+        return $papeleta->tieneComoJefeInmediatoA($user);
     }
 
     /**
@@ -103,7 +103,7 @@ class PapeletaPolicy
     {
         return $papeleta->estado->equals(ObservadaPorRrhh::class)
             && ! $this->esPropia($user, $papeleta)
-            && $user->esJefeInmediatoDe($papeleta->trabajador);
+            && $papeleta->tieneComoJefeInmediatoA($user);
     }
 
     public function decidirComoRrhh(User $user, Papeleta $papeleta): bool
@@ -135,7 +135,7 @@ class PapeletaPolicy
     public function marcarRetornoManual(User $user, Papeleta $papeleta): bool
     {
         return ! $this->esPropia($user, $papeleta)
-            && $user->esJefeInmediatoDe($papeleta->trabajador);
+            && $papeleta->tieneComoJefeInmediatoA($user);
     }
 
     /**
@@ -145,7 +145,7 @@ class PapeletaPolicy
     public function cerrarSinRetorno(User $user, Papeleta $papeleta): bool
     {
         return ! $this->esPropia($user, $papeleta)
-            && ($user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh'));
+            && ($papeleta->tieneComoJefeInmediatoA($user) || $user->hasRole('rrhh'));
     }
 
     /**
@@ -155,7 +155,7 @@ class PapeletaPolicy
     public function marcarAbandono(User $user, Papeleta $papeleta): bool
     {
         return ! $this->esPropia($user, $papeleta)
-            && ($user->esJefeInmediatoDe($papeleta->trabajador) || $user->hasRole('rrhh'));
+            && ($papeleta->tieneComoJefeInmediatoA($user) || $user->hasRole('rrhh'));
     }
 
     /**
@@ -165,7 +165,7 @@ class PapeletaPolicy
     public function revisarSustento(User $user, \App\Models\Sustento $sustento): bool
     {
         return ! $this->esPropia($user, $sustento->papeleta)
-            && ($user->esJefeInmediatoDe($sustento->papeleta->trabajador) || $user->hasRole('rrhh'));
+            && ($sustento->papeleta->tieneComoJefeInmediatoA($user) || $user->hasRole('rrhh'));
     }
 
     /**

@@ -131,7 +131,6 @@ class CrearPapeletaAction
                     'papeleta_id' => $papeleta->id,
                     'actor_id' => null,
                     'actor_tipo' => 'sistema',
-                    'estado_anterior' => class_basename($papeleta->estado),
                     'estado_nuevo' => class_basename($papeleta->estado),
                     'justificacion' => $sinJefatura
                         ? ($autorizaSistema

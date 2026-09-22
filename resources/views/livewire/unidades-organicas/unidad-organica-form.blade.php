@@ -50,6 +50,32 @@
                 <span class="text-sm">Activo</span>
             </label>
 
+            @if ($unidad)
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                    <div>
+                        <h3 class="text-sm font-medium">Jefes por turno (régimen 728)</h3>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Opcional. Si un turno queda sin asignar, el Jefe Inmediato de ese turno sigue siendo
+                            "{{ $jefesDisponibles[$jefeId] ?? 'el jefe de la unidad' }}" (arriba). Solo aplica a
+                            trabajadores de régimen 728 cargados en ese turno.
+                        </p>
+                    </div>
+
+                    @foreach (\App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS as $codigo => $etiqueta)
+                        <div>
+                            <label for="unidad-organica-form-jefe-turno-{{ $codigo }}" class="block text-sm font-medium mb-1">{{ $etiqueta }}</label>
+                            <select id="unidad-organica-form-jefe-turno-{{ $codigo }}" wire:model="jefesPorTurno.{{ $codigo }}" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                                <option value="">— (usar jefe de la unidad) —</option>
+                                @foreach ($jefesDisponibles as $id => $nombreJefe)
+                                    <option value="{{ $id }}">{{ $nombreJefe }}</option>
+                                @endforeach
+                            </select>
+                            @error("jefesPorTurno.{$codigo}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+
             <div class="flex items-center justify-end gap-3">
                 <a href="{{ route('unidades-organicas.index') }}" class="text-sm text-gray-500">Cancelar</a>
                 <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">

@@ -71,7 +71,7 @@ class MarcarRetornoAction
     {
         $this->exigirDecisorAjeno($papeleta, $jefe);
 
-        if (! $jefe->esJefeInmediatoDe($papeleta->trabajador)) {
+        if (! $papeleta->tieneComoJefeInmediatoA($jefe)) {
             throw new PapeletaException('Solo un jefe inmediato del trabajador puede marcar un retorno manual por falla de conectividad.');
         }
 
@@ -183,7 +183,7 @@ class MarcarRetornoAction
             HistorialPapeleta::create([
                 'papeleta_id' => $actual->id,
                 'actor_id' => $quienConfirma->id,
-                'actor_tipo' => $quienConfirma->esJefeInmediatoDe($actual->trabajador) ? 'jefe_inmediato' : 'rrhh',
+                'actor_tipo' => $actual->tieneComoJefeInmediatoA($quienConfirma) ? 'jefe_inmediato' : 'rrhh',
                 'estado_anterior' => $estadoAnterior,
                 'estado_nuevo' => class_basename($actual->estado),
                 'justificacion' => 'Visto bueno humano: comisión de servicio cerrada sin retorno físico.',

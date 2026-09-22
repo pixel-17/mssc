@@ -145,6 +145,21 @@ class Papeleta extends Model
             ->orWhereIn('papeletas.trabajador_id', User::equipoDe($jefe)->select('users.id')));
     }
 
+    /**
+     * ¿Este usuario es el Jefe Inmediato que decide ESTA papeleta? Compara
+     * contra la columna fotografiada (jefe_inmediato_id, resuelta por
+     * turno en CrearPapeletaAction vía jefes_turno) más los adicionales
+     * vigentes — mismo criterio que scopeDeJefeInmediato, para que quien
+     * ve la papeleta en su bandeja sea siempre quien puede decidirla.
+     * No usar User::esJefeInmediatoDe() aquí: esa compara contra
+     * users.jefe_inmediato_id, la columna estática que UserObserver
+     * calcula SIN turno y por lo tanto no refleja jefes_turno.
+     */
+    public function tieneComoJefeInmediatoA(User $user): bool
+    {
+        return static::whereKey($this->id)->deJefeInmediato($user)->exists();
+    }
+
     public function trabajador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trabajador_id');

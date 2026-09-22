@@ -2,9 +2,11 @@
 
 namespace App\Livewire\UnidadesOrganicas;
 
+use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
@@ -17,6 +19,13 @@ use Livewire\Component;
  * la unidad padre es el Jefe de Área (ver UnidadOrganica::jefeInmediato()
  * / jefeArea()). `tipo` es solo decorativo, nunca condiciona el
  * escalamiento de papeletas.
+ *
+ * Jefes por turno (jefes_turno, ver Avance 00.59): asignación manual y
+ * fija del Jefe Inmediato de esta unidad para régimen 728, una por
+ * turno (MANANA/TARDE/NOCHE) — CrearPapeletaAction la usa en vez de
+ * $jefeId cuando hay fila para el turno vigente del trabajador (ver
+ * UnidadOrganica::resolverJefeInmediato()). Solo aplica editando una
+ * unidad ya creada (jefes_turno exige unidad_organica_id).
  */
 #[Layout('layouts.app')]
 #[Title('Unidad orgánica')]
@@ -37,6 +46,13 @@ class UnidadOrganicaForm extends Component
 
     public bool $activo = true;
 
+    /** @var array<string, ?int> turno => jefe_id (null = sin asignar, cae a $jefeId) */
+    public array $jefesPorTurno = [
+        'MANANA' => null,
+        'TARDE' => null,
+        'NOCHE' => null,
+    ];
+
     public const TIPOS = [
         'alta_direccion' => 'Alta dirección',
         'consultivo' => 'Consultivo',
@@ -48,6 +64,12 @@ class UnidadOrganicaForm extends Component
         'linea_3er_nivel' => 'Línea - 3er nivel',
     ];
 
+    public const TURNOS = [
+        'MANANA' => 'Mañana',
+        'TARDE' => 'Tarde',
+        'NOCHE' => 'Noche',
+    ];
+
     public function mount(?UnidadOrganica $unidad = null): void
     {
         if ($unidad?->exists) {
@@ -57,6 +79,10 @@ class UnidadOrganicaForm extends Component
             $this->parentId = $unidad->parent_id;
             $this->jefeId = $unidad->jefe_id;
             $this->activo = $unidad->activo;
+
+            foreach ($unidad->jefesTurno as $jefeTurno) {
+                $this->jefesPorTurno[$jefeTurno->turno] = $jefeTurno->jefe_id;
+            }
         }
     }
 
@@ -68,6 +94,7 @@ class UnidadOrganicaForm extends Component
             'parentId' => ['nullable', 'exists:unidad_organicas,id'],
             'jefeId' => ['nullable', 'exists:users,id'],
             'activo' => ['boolean'],
+            'jefesPorTurno.*' => ['nullable', 'exists:users,id'],
         ];
     }
 
@@ -97,9 +124,26 @@ class UnidadOrganicaForm extends Component
             'activo' => $datos['activo'],
         ];
 
-        $this->unidad
-            ? $this->unidad->update($atributos)
-            : UnidadOrganica::create($atributos);
+        DB::transaction(function () use ($atributos, $datos) {
+            $unidad = $this->unidad
+                ? tap($this->unidad)->update($atributos)
+                : UnidadOrganica::create($atributos);
+
+            if (! $this->unidad) {
+                return; // Crear primero; los jefes por turno se asignan editando.
+            }
+
+            foreach ($datos['jefesPorTurno'] as $turno => $jefeId) {
+                if ($jefeId) {
+                    JefeTurno::updateOrCreate(
+                        ['unidad_organica_id' => $unidad->id, 'turno' => $turno],
+                        ['jefe_id' => $jefeId]
+                    );
+                } else {
+                    JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', $turno)->delete();
+                }
+            }
+        });
 
         session()->flash('mensaje', $this->unidad ? 'Unidad orgánica actualizada.' : 'Unidad orgánica creada.');
 
