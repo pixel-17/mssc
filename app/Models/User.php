@@ -254,6 +254,28 @@ class User extends Authenticatable
         return $this->hasMany(Turno::class);
     }
 
+    /** Ausencias temporales (vacaciones/permiso) registradas para este jefe. */
+    public function ausencias(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(AusenciaJefe::class, 'jefe_id');
+    }
+
+    /**
+     * ¿Está este jefe en ausencia TEMPORAL (vacaciones/permiso) en el
+     * momento dado? No confundir con `activo` (baja permanente): un jefe
+     * ausente sigue `activo`, solo no puede decidir papeletas mientras
+     * dure su ausencia — ver CrearPapeletaAction, que en ese caso busca
+     * un suplente (JefeSuplente) antes de resignarse a dejar la papeleta
+     * pendiente hasta que venza.
+     */
+    public function estaAusente(\Illuminate\Support\Carbon $momento): bool
+    {
+        return $this->ausencias()
+            ->whereDate('fecha_inicio', '<=', $momento->toDateString())
+            ->whereDate('fecha_fin', '>=', $momento->toDateString())
+            ->exists();
+    }
+
     /**
      * Quién puede cargar/actualizar el ciclo de turno (mensual) de un
      * trabajador: Admin (rol Spatie), su Jefe Inmediato (automático o
