@@ -71,6 +71,12 @@ class UsuarioAdminIndex extends Component
             return;
         }
 
+        if ($usuario->esJefeTitularDeAlgunTurno()) {
+            session()->flash('error', 'No puedes desactivar a este usuario: es jefe inmediato titular de un turno (MAÑANA/TARDE/NOCHE) en su unidad. Reasigna primero ese turno a otro jefe.');
+
+            return;
+        }
+
         $usuario->forceFill(['activo' => false])->save();
         $usuario->tokens()->delete();
 

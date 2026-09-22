@@ -254,26 +254,24 @@ class User extends Authenticatable
         return $this->hasMany(Turno::class);
     }
 
-    /** Ausencias temporales (vacaciones/permiso) registradas para este jefe. */
-    public function ausencias(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /** Filas de jefes_turno donde este usuario es el jefe inmediato asignado. */
+    public function turnosQueEncabeza(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(AusenciaJefe::class, 'jefe_id');
+        return $this->hasMany(JefeTurno::class, 'jefe_id');
     }
 
     /**
-     * ¿Está este jefe en ausencia TEMPORAL (vacaciones/permiso) en el
-     * momento dado? No confundir con `activo` (baja permanente): un jefe
-     * ausente sigue `activo`, solo no puede decidir papeletas mientras
-     * dure su ausencia — ver CrearPapeletaAction, que en ese caso busca
-     * un suplente (JefeSuplente) antes de resignarse a dejar la papeleta
-     * pendiente hasta que venza.
+     * ¿Es jefe inmediato titular de algún turno (MANANA/TARDE/NOCHE) de
+     * alguna unidad? Si es así, no se le puede desactivar sin antes
+     * reasignar esa fila a otro jefe — ver UsuarioAdminIndex::desactivar
+     * y UsuarioAdminForm::guardar, que bloquean la desactivación con
+     * este chequeo. Sin este guardrail, esa unidad-turno se quedaría
+     * sin nadie que pueda decidir papeletas (DecisorDisponibleService
+     * ya descarta a los inactivos).
      */
-    public function estaAusente(\Illuminate\Support\Carbon $momento): bool
+    public function esJefeTitularDeAlgunTurno(): bool
     {
-        return $this->ausencias()
-            ->whereDate('fecha_inicio', '<=', $momento->toDateString())
-            ->whereDate('fecha_fin', '>=', $momento->toDateString())
-            ->exists();
+        return $this->turnosQueEncabeza()->exists();
     }
 
     /**

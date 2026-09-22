@@ -3,9 +3,7 @@
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
-use App\Models\ConfiguracionTurno;
 use App\Models\HistorialPapeleta;
-use App\Models\JefeSuplente;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Turno;
@@ -73,7 +71,10 @@ class CrearPapeletaAction
         $unidad = $trabajador->unidadOrganica;
 
         // Misma regla que UserObserver: quien encabeza su unidad NO es su propio jefe.
-        [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador) : [null, null];
+        // El código de turno (MANANA/TARDE/NOCHE, null para 276) resuelve
+        // el jefe inmediato de ESTE turno vía jefes_turno — ver
+        // UnidadOrganica::resolverJefeInmediato().
+        [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador, $turno?->codigo()) : [null, null];
 
         // Tope del organigrama: encabeza su unidad y no tiene a nadie arriba.
         $sinJefatura = $unidad !== null
@@ -86,42 +87,10 @@ class CrearPapeletaAction
         // o si por alguna razón el jefe_inmediato_id no resuelve a un User
         // activo): estar asignado en la BD no implica poder decidir ahora.
         $jefeInmediato = $jefeInmediatoId ? User::find($jefeInmediatoId) : null;
-
-        // Ausencia TEMPORAL del titular (vacaciones/permiso, ver
-        // AusenciaJefe/User::estaAusente): caso aparte del "fuera de
-        // horario" de DecisorDisponibleService, resuelto ANTES de
-        // preguntarle disponibilidad a nadie. Si hay un suplente
-        // disponible para (unidad, turno) se fotografía a él en vez del
-        // titular; si no hay ninguno, la papeleta NO cae al salto a
-        // RRHH/auto-autorización de más abajo — se queda pendiente sobre
-        // el titular ausente hasta que el job de vencimiento la cierre.
-        $ausenciaSinSuplente = false;
-        $suplenteUsado = null;
-
-        if ($jefeInmediato && ! $sinJefatura && $jefeInmediato->estaAusente(now())) {
-            $turnoCodigo = $turno?->codigo() ?? ConfiguracionTurno::TURNO_276;
-
-            $suplente = $unidad
-                ? JefeSuplente::candidatosPara($unidad->id, $turnoCodigo)
-                    ->first(fn (User $candidato) => (int) $candidato->id !== (int) $jefeInmediato->id
-                        && ! $candidato->estaAusente(now())
-                        && $this->decisorDisponible->estaDisponibleAhora($candidato))
-                : null;
-
-            if ($suplente) {
-                $suplenteUsado = $jefeInmediato; // el titular ausente, para el historial
-                $jefeInmediatoId = $suplente->id;
-                $jefeInmediato = $suplente;
-            } else {
-                $ausenciaSinSuplente = true;
-            }
-        }
-
         $jefeDisponible = $this->decisorDisponible->estaDisponibleAhora($jefeInmediato);
         $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 
         $estadoInicial = match (true) {
-            $ausenciaSinSuplente => PendienteJefe::class, // titular ausente sin suplente: espera hasta vencer, nunca escala
             $jefeDisponible => PendienteJefe::class,
             $rrhhEnHorario => PendienteRrhh::class, // jefe no disponible (o sin jefatura): salta directo a RRHH
             default => AutorizadaYCorriendo::class, // nadie disponible: autoriza el sistema, no una persona
@@ -129,7 +98,7 @@ class CrearPapeletaAction
 
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $sinJefatura, $jefeDisponible, $ausenciaSinSuplente, $suplenteUsado, $estadoInicial, $autorizaSistema) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $sinJefatura, $jefeDisponible, $estadoInicial, $autorizaSistema) {
             $papeleta = Papeleta::create([
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
@@ -157,30 +126,7 @@ class CrearPapeletaAction
                 'justificacion' => $datos['justificacion'] ?? null,
             ]);
 
-            if ($suplenteUsado) {
-                HistorialPapeleta::create([
-                    'papeleta_id' => $papeleta->id,
-                    'actor_id' => null,
-                    'actor_tipo' => 'sistema',
-                    'estado_anterior' => class_basename($papeleta->estado),
-                    'estado_nuevo' => class_basename($papeleta->estado),
-                    'justificacion' => "El jefe inmediato titular ({$suplenteUsado->nombre_completo}) está en ausencia ".
-                        'temporal: se fotografió a su suplente disponible en su lugar.',
-                ]);
-            }
-
-            if ($ausenciaSinSuplente) {
-                HistorialPapeleta::create([
-                    'papeleta_id' => $papeleta->id,
-                    'actor_id' => null,
-                    'actor_tipo' => 'sistema',
-                    'estado_anterior' => class_basename($papeleta->estado),
-                    'estado_nuevo' => class_basename($papeleta->estado),
-                    'justificacion' => 'El jefe inmediato titular está en ausencia temporal (vacaciones/permiso) y no hay '.
-                        'ningún jefe suplente disponible para su unidad y turno en este momento: la papeleta queda '.
-                        'pendiente sobre el titular hasta que venza. No escala a RRHH ni se autoautoriza.',
-                ]);
-            } elseif (! $jefeDisponible) {
+            if (! $jefeDisponible) {
                 HistorialPapeleta::create([
                     'papeleta_id' => $papeleta->id,
                     'actor_id' => null,

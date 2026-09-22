@@ -49,6 +49,38 @@ class UnidadOrganica extends Model
         return $this->belongsTo(User::class, 'jefe_id');
     }
 
+    /** Jefes inmediatos de esta unidad, uno por turno (MANANA/TARDE/NOCHE). Asignación manual. */
+    public function jefesTurno(): HasMany
+    {
+        return $this->hasMany(JefeTurno::class, 'unidad_organica_id');
+    }
+
+    public function jefeTurnoPara(?string $turno): ?JefeTurno
+    {
+        if ($turno === null) {
+            return null;
+        }
+
+        return $this->jefesTurno->firstWhere('turno', $turno);
+    }
+
+    /**
+     * Jefe inmediato de esta unidad para el turno dado. Si el turno no
+     * tiene fila propia en jefes_turno (o $turno es null, ej. régimen
+     * 276), cae a `jefe_id` — mismo comportamiento de siempre, para no
+     * romper unidades que todavía no configuraron jefes por turno.
+     */
+    public function resolverJefeInmediato(?string $turno): ?int
+    {
+        $jefeTurno = $this->jefeTurnoPara($turno);
+
+        if ($jefeTurno?->jefe_id) {
+            return (int) $jefeTurno->jefe_id;
+        }
+
+        return $this->jefe_id !== null ? (int) $this->jefe_id : null;
+    }
+
     /** Trabajadores que pertenecen a esta unidad. */
     public function miembros(): HasMany
     {
@@ -87,21 +119,28 @@ class UnidadOrganica extends Model
      * inmediato = jefe de la unidad padre; jefe de área = jefe de la
      * unidad abuela). Si no hay unidad padre, ese nivel queda en null.
      *
+     * $turno (MANANA/TARDE/NOCHE) resuelve el jefe inmediato por turno
+     * vía jefes_turno (ver resolverJefeInmediato); null usa el jefe_id
+     * de la unidad tal cual (lo que siguen usando UserObserver y el
+     * comando jefaturas:recalcular para las columnas fijas de `users`,
+     * que no dependen del turno de hoy). Solo CrearPapeletaAction pasa
+     * el turno vigente al fotografiar la papeleta.
+     *
      * @return array{0: ?int, 1: ?int}
      */
-    public function jefaturasDe(User $usuario): array
+    public function jefaturasDe(User $usuario, ?string $turno = null): array
     {
         $padre = $this->padre;
 
         if ($usuario->id !== null && (int) $this->jefe_id === (int) $usuario->id) {
             return [
-                $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
+                $padre?->resolverJefeInmediato($turno),
                 $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
             ];
         }
 
         return [
-            $this->jefe_id !== null ? (int) $this->jefe_id : null,
+            $this->resolverJefeInmediato($turno),
             $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
         ];
     }

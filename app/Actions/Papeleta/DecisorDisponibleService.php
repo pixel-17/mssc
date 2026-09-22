@@ -19,6 +19,11 @@ use Illuminate\Support\Carbon;
  * está en condición de decidir — mismo criterio que RrhhHorarioService
  * ya aplica para RRHH, ahora reusable para cualquier decisor.
  *
+ * - Decisor inactivo (dado de baja): nunca disponible, sin importar
+ *   régimen — no debería llegar aquí gracias al guardrail de
+ *   desactivación (ver User::esJefeTitularDeAlgunTurno /
+ *   UsuarioAdminIndex::desactivar), pero se chequea igual por si
+ *   queda un jefe_inmediato_id fotografiado de antes de ese guardrail.
  * - Decisor 728 (rotativo): siempre disponible. Mismo criterio que ya
  *   usa CrearPapeletaAction para no bloquear por horario la creación de
  *   papeletas de un 728.
@@ -42,6 +47,10 @@ class DecisorDisponibleService
     public function estaDisponible(?User $decisor, Carbon $momento): bool
     {
         if (! $decisor) {
+            return false;
+        }
+
+        if (! $decisor->activo) {
             return false;
         }
 
