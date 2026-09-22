@@ -14,10 +14,11 @@ use Illuminate\Support\Carbon;
  * editable en Configuraciones), para no obligar al admin a cargar una
  * fila por cada uno de los ~500 trabajadores 276 todos los días.
  *
- * Para 728 (rotativo) sigue existiendo tal como antes: informativa y
- * opcional. El sistema nunca bloquea nada contra ella para ese
- * régimen — se quitó el interruptor MODO_ESTRICTO_728 que antes
- * permitía exigir turno vigente (ver CrearPapeletaAction).
+ * Para 728 (rotativo) sigue existiendo tal como antes, pero ya NO es
+ * opcional: crear una papeleta exige SIEMPRE una fila de turno vigente
+ * (que no sea es_descanso) para hoy. Se quitó el interruptor
+ * MODO_ESTRICTO_728 que antes permitía desactivar esa exigencia: ahora
+ * es la única regla, fija (ver CrearPapeletaAction).
  */
 class Turno extends Model
 {

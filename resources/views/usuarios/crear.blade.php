@@ -11,7 +11,7 @@
 
             <div class="glass-card p-6">
                 <form method="POST" action="{{ route('usuarios.store') }}" class="space-y-6"
-                      x-data="{ tipo: '{{ old('tipo', 'trabajador') }}' }">
+                      x-data="{ tipo: '{{ old('tipo', 'trabajador') }}', regimen: '{{ old('regimen', $regimenCreador) }}' }">
                     @csrf
 
                     @if ($esJefeDeArea)
@@ -65,11 +65,11 @@
                         </div>
                         <div>
                             <x-label for="regimen" value="Régimen" />
-                            <select id="regimen" name="regimen" required
+                            <select id="regimen" name="regimen" x-model="regimen" required
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
                                 <option value="">Selecciona</option>
-                                <option value="276" @selected(old('regimen', $regimenCreador) === '276')>276 (día)</option>
-                                <option value="728" @selected(old('regimen', $regimenCreador) === '728')>728 (rotativo)</option>
+                                <option value="276">276 (día)</option>
+                                <option value="728">728 (rotativo)</option>
                             </select>
                             <x-input-error for="regimen" class="mt-2" />
                         </div>
@@ -79,6 +79,43 @@
                         <x-label for="email" value="Correo" />
                         <x-input id="email" name="email" type="email" value="{{ old('email') }}" required class="mt-1 block w-full" />
                         <x-input-error for="email" class="mt-2" />
+                    </div>
+
+                    <div x-show="regimen === '728'" x-cloak
+                         class="rounded-md border border-dashed border-gray-300 dark:border-white/15 p-4 space-y-4">
+                        <p class="text-sm font-medium">Turno inicial (régimen 728)</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            Un trabajador 728 necesita su horario cargado desde el primer día: sin esto no podrá
+                            crear ninguna papeleta.
+                        </p>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <x-label for="turno" value="Turno" />
+                                <select id="turno" name="turno"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
+                                    <option value="">Selecciona</option>
+                                    <option value="MANANA" @selected(old('turno') === 'MANANA')>MANANA</option>
+                                    <option value="TARDE" @selected(old('turno') === 'TARDE')>TARDE</option>
+                                    <option value="NOCHE" @selected(old('turno') === 'NOCHE')>NOCHE</option>
+                                </select>
+                                <x-input-error for="turno" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="fecha_ancla" value="Empieza su próximo bloque de trabajo" />
+                                <x-input id="fecha_ancla" name="fecha_ancla" type="date" value="{{ old('fecha_ancla', now()->toDateString()) }}" class="mt-1 block w-full" />
+                                <x-input-error for="fecha_ancla" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="dias_trabajo" value="Días de trabajo seguidos" />
+                                <x-input id="dias_trabajo" name="dias_trabajo" type="number" min="1" max="30" value="{{ old('dias_trabajo', 6) }}" class="mt-1 block w-full" />
+                                <x-input-error for="dias_trabajo" class="mt-2" />
+                            </div>
+                            <div>
+                                <x-label for="dias_descanso" value="Días de descanso" />
+                                <x-input id="dias_descanso" name="dias_descanso" type="number" min="1" max="30" value="{{ old('dias_descanso', 1) }}" class="mt-1 block w-full" />
+                                <x-input-error for="dias_descanso" class="mt-2" />
+                            </div>
+                        </div>
                     </div>
 
                     <div class="rounded-md bg-gray-50 dark:bg-gray-800 px-3 py-2">

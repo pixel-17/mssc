@@ -4,6 +4,7 @@ namespace Tests\Feature\Usuarios;
 
 use App\Actions\Usuario\CrearUsuarioAction;
 use App\Exceptions\UsuarioException;
+use App\Models\ConfiguracionTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -46,6 +47,9 @@ class ReingresoUsuarioTest extends TestCase
             'sede_id' => $this->sedeDePrueba()->id,
             'unidad_organica_id' => $this->unidad->id,
             'tipo' => 'trabajador',
+            // 728 siempre exige turno inicial (ver CrearUsuarioAction).
+            'turno' => 'MANANA',
+            'fecha_ancla' => now()->toDateString(),
         ];
     }
 
@@ -62,6 +66,10 @@ class ReingresoUsuarioTest extends TestCase
         $this->assertTrue($nuevo->debe_actualizar_password);
         $this->assertTrue(Hash::check('70112233', $nuevo->password));
         $this->assertTrue($nuevo->hasRole('trabajador'));
+        $this->assertTrue(
+            ConfiguracionTurno::where('user_id', $nuevo->id)->exists(),
+            'un 728 nuevo debe quedar con su turno inicial cargado, no puede quedar sin horario'
+        );
     }
 
     public function test_reingresa_a_un_ex_trabajador_desactivado_conservando_su_id_y_sin_su_2fa(): void

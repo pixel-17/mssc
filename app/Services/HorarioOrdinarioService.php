@@ -14,9 +14,9 @@ use Illuminate\Support\Carbon;
  * inicio/fin) editable desde Configuraciones (Filament), igual para
  * todos los 276.
  *
- * Los 728 (rotativo) NO usan este servicio: siguen con `turnos` como
- * registro opcional/informativo, y ninguna ventana bloquea la
- * creación de papeleta para ese régimen.
+ * Los 728 (rotativo) NO usan este servicio: siguen con `turnos`, pero
+ * ahí la validación no es de ventana horaria sino de existencia de
+ * turno vigente (siempre exigido, ver CrearPapeletaAction).
  */
 class HorarioOrdinarioService
 {

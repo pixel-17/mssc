@@ -2,10 +2,15 @@
 
 namespace App\Livewire\Usuarios;
 
+use App\Models\ConfiguracionTurno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -64,8 +69,18 @@ class UsuarioAdminForm extends Component
 
     public bool $activo = true;
 
+    public string $turno = '';
+
+    public string $fechaAncla = '';
+
+    public int $diasTrabajo = 6;
+
+    public int $diasDescanso = 1;
+
     public function mount(?User $usuario = null): void
     {
+        $this->fechaAncla = now()->toDateString();
+
         if ($usuario?->exists) {
             $this->usuario = $usuario;
             $this->name = $usuario->name;
@@ -77,12 +92,44 @@ class UsuarioAdminForm extends Component
             $this->unidadOrganicaId = $usuario->unidad_organica_id;
             $this->rolesSeleccionados = $usuario->roles->pluck('id')->all();
             $this->activo = $usuario->activo;
+
+            $config = ConfiguracionTurno::where('user_id', $usuario->id)->first();
+
+            if ($config) {
+                $this->turno = $config->turno;
+                $this->fechaAncla = $config->fecha_ancla->toDateString();
+                $this->diasTrabajo = $config->dias_trabajo;
+                $this->diasDescanso = $config->dias_descanso;
+            }
         }
+    }
+
+    /**
+     * Un 728 SIEMPRE necesita su turno vigente para crear una papeleta
+     * (ver CrearPapeletaAction): sin esto, un trabajador recién creado
+     * quedaría bloqueado desde el día uno sin que nadie se diera cuenta,
+     * porque el generador automático mensual (GenerarTurnosProximoMes)
+     * solo CONTINÚA una ConfiguracionTurno que ya existe, nunca crea la
+     * primera. Por eso este formulario la exige en el mismo paso: al
+     * crear siempre, y al editar solo si todavía no tiene ninguna
+     * (para no obligar a re-cargarla cada vez que se edita otra cosa).
+     */
+    protected function requiereConfiguracionTurno(): bool
+    {
+        if ($this->regimen !== '728') {
+            return false;
+        }
+
+        if (! $this->usuario) {
+            return true;
+        }
+
+        return ! ConfiguracionTurno::where('user_id', $this->usuario->id)->exists();
     }
 
     protected function rules(): array
     {
-        return [
+        $reglas = [
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
             'dni' => [
@@ -101,15 +148,26 @@ class UsuarioAdminForm extends Component
             'rolesSeleccionados.*' => ['exists:roles,id'],
             'activo' => ['boolean'],
         ];
+
+        if ($this->requiereConfiguracionTurno()) {
+            $reglas['turno'] = ['required', 'in:'.implode(',', ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen])))];
+            $reglas['fechaAncla'] = ['required', 'date'];
+            $reglas['diasTrabajo'] = ['required', 'integer', 'min:1', 'max:30'];
+            $reglas['diasDescanso'] = ['required', 'integer', 'min:1', 'max:30'];
+        }
+
+        return $reglas;
     }
 
     protected $messages = [
         'dni.digits' => 'El DNI debe tener 8 dígitos.',
     ];
 
-    public function guardar(): void
+    public function guardar(GeneradorTurnoMensualService $generador): void
     {
         $this->autorizarAdmin();
+
+        $requiereTurno = $this->requiereConfiguracionTurno();
 
         $datos = $this->validate();
 
@@ -141,26 +199,39 @@ class UsuarioAdminForm extends Component
             'activo' => $datos['activo'],
         ];
 
-        if ($this->usuario) {
-            // Reseteo manual opcional: si el admin llenó el campo, se
-            // le pedirá actualizarla de nuevo en su próximo ingreso.
-            if (filled($datos['password'])) {
-                $atributos['password'] = Hash::make($datos['password']);
+        DB::transaction(function () use ($atributos, $datos, $requiereTurno, $generador) {
+            if ($this->usuario) {
+                // Reseteo manual opcional: si el admin llenó el campo, se
+                // le pedirá actualizarla de nuevo en su próximo ingreso.
+                if (filled($datos['password'])) {
+                    $atributos['password'] = Hash::make($datos['password']);
+                    $atributos['debe_actualizar_password'] = true;
+                }
+
+                $this->usuario->update($atributos);
+            } else {
+                // Alta nueva: la contraseña inicial siempre es el DNI,
+                // nunca lo que se haya escrito en el campo (que ni
+                // siquiera se muestra en este caso, ver la vista).
+                $atributos['password'] = Hash::make($datos['dni']);
                 $atributos['debe_actualizar_password'] = true;
+
+                $this->usuario = User::create($atributos);
             }
 
-            $this->usuario->update($atributos);
-        } else {
-            // Alta nueva: la contraseña inicial siempre es el DNI,
-            // nunca lo que se haya escrito en el campo (que ni
-            // siquiera se muestra en este caso, ver la vista).
-            $atributos['password'] = Hash::make($datos['dni']);
-            $atributos['debe_actualizar_password'] = true;
+            $this->usuario->syncRoles($datos['rolesSeleccionados']);
 
-            $this->usuario = User::create($atributos);
-        }
-
-        $this->usuario->syncRoles($datos['rolesSeleccionados']);
+            if ($requiereTurno) {
+                $generador->cargarConfiguracion(
+                    trabajador: $this->usuario,
+                    turno: $datos['turno'],
+                    fechaAncla: Carbon::parse($datos['fechaAncla']),
+                    actor: Auth::user(),
+                    diasTrabajo: $datos['diasTrabajo'],
+                    diasDescanso: $datos['diasDescanso'],
+                );
+            }
+        });
 
         session()->flash('mensaje', $this->usuario->wasRecentlyCreated ? 'Usuario creado.' : 'Usuario actualizado.');
 
@@ -173,6 +244,10 @@ class UsuarioAdminForm extends Component
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
             'roles' => Role::orderBy('name')->get(),
+            'requiereTurno' => $this->requiereConfiguracionTurno(),
+            'opcionesTurno' => $this->regimen
+                ? ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen]))
+                : [],
         ]);
     }
 }

@@ -46,6 +46,19 @@ class CrearUsuarioRequest extends FormRequest
                 Rule::unique('users', 'email')->ignore($existenteInactivo?->id),
             ],
             'regimen' => ['required', Rule::in(['276', '728'])],
+            // 728 SIEMPRE necesita su turno vigente para crear una
+            // papeleta (ver CrearPapeletaAction): se exige en el mismo
+            // paso del alta para que no quede ningún 728 sin horario
+            // desde el día uno (el generador automático mensual solo
+            // continúa una configuración que ya existe, nunca crea la
+            // primera).
+            'turno' => [
+                Rule::requiredIf($this->input('regimen') === '728'),
+                Rule::in(['MANANA', 'TARDE', 'NOCHE']),
+            ],
+            'fecha_ancla' => [Rule::requiredIf($this->input('regimen') === '728'), 'date'],
+            'dias_trabajo' => ['nullable', 'integer', 'min:1', 'max:30'],
+            'dias_descanso' => ['nullable', 'integer', 'min:1', 'max:30'],
             'sede_id' => ['nullable', 'exists:sedes,id'],
             'tipo' => $esJefeDeArea
                 ? ['required', Rule::in(['trabajador', 'jefe_inmediato'])]
@@ -63,6 +76,8 @@ class CrearUsuarioRequest extends FormRequest
             'dni.unique' => 'Ya existe un usuario activo con ese DNI.',
             'email.unique' => 'Ese correo ya está en uso por otro usuario.',
             'unidad_organica_id.in' => 'Esa unidad no pertenece a tu área.',
+            'turno.required' => 'Un trabajador 728 necesita su turno inicial: sin esto no podrá crear ninguna papeleta.',
+            'fecha_ancla.required' => 'Indica desde cuándo empieza su próximo bloque de trabajo.',
         ];
     }
 

@@ -4,10 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Retira el interruptor MODO_ESTRICTO_728: un trabajador de régimen
- * 728 (rotativo) nunca es bloqueado para crear una papeleta por no
- * tener un turno vigente cargado en `turnos` — ese registro sigue
- * existiendo solo como referencia informativa (ver CrearPapeletaAction).
+ * Retira el interruptor MODO_ESTRICTO_728: deja de ser un valor que el
+ * Admin podía activar/desactivar en Configuraciones y pasa a ser la
+ * única regla, siempre activa — un trabajador de régimen 728
+ * (rotativo) SIEMPRE es bloqueado para crear una papeleta si no tiene
+ * un turno vigente cargado en `turnos` (ver CrearPapeletaAction).
  *
  * - configuraciones: MODO_ESTRICTO_728, MODO_ESTRICTO_728_MENSAJE.
  *

@@ -5,6 +5,8 @@ namespace App\Actions\Usuario;
 use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
@@ -43,8 +45,12 @@ use Illuminate\Support\Facades\Hash;
  */
 class CrearUsuarioAction
 {
+    public function __construct(
+        private GeneradorTurnoMensualService $generadorTurno,
+    ) {}
+
     /**
-     * @param  array{name:string,apellido:string,dni:string,email:string,regimen:string,sede_id:?int,unidad_organica_id:?int,tipo:string}  $datos
+     * @param  array{name:string,apellido:string,dni:string,email:string,regimen:string,sede_id:?int,unidad_organica_id:?int,tipo:string,turno:?string,fecha_ancla:?string,dias_trabajo:?int,dias_descanso:?int}  $datos
      */
     public function ejecutar(User $creador, array $datos, bool $esJefeDeArea): User
     {
@@ -105,6 +111,22 @@ class CrearUsuarioAction
                 $nuevo->jefesInmediatosAdicionales()->syncWithoutDetaching([
                     $creador->id => ['asignado_por_id' => $creador->id],
                 ]);
+            }
+
+            // 728 SIEMPRE necesita su turno vigente para crear una
+            // papeleta (ver CrearPapeletaAction): CrearUsuarioRequest ya
+            // exige turno/fecha_ancla cuando regimen es 728, así que acá
+            // solo se carga. Reingreso incluido: si vuelve como 728,
+            // también necesita su ciclo desde el primer día.
+            if ($datos['regimen'] === '728') {
+                $this->generadorTurno->cargarConfiguracion(
+                    trabajador: $nuevo,
+                    turno: $datos['turno'],
+                    fechaAncla: Carbon::parse($datos['fecha_ancla']),
+                    actor: $creador,
+                    diasTrabajo: (int) ($datos['dias_trabajo'] ?? 6),
+                    diasDescanso: (int) ($datos['dias_descanso'] ?? 1),
+                );
             }
 
             return $nuevo->fresh();

@@ -50,7 +50,7 @@
 
                 <div>
                     <label for="usuario-admin-form-regimen" class="block text-sm font-medium mb-1">Régimen</label>
-                    <select id="usuario-admin-form-regimen" wire:model="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="usuario-admin-form-regimen" wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">— Selecciona —</option>
                         <option value="276">276 (día)</option>
                         <option value="728">728 (rotativo)</option>
@@ -81,6 +81,49 @@
                     @error('unidadOrganicaId') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                 </div>
             </div>
+
+            @if ($requiereTurno)
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <p class="text-sm font-medium mb-1">Turno inicial (régimen 728)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        Este trabajador todavía no tiene un horario cargado. Sin esto no podrá crear ninguna
+                        papeleta desde el primer día (ver régimen 728 en Turnos). Trabajará
+                        {{ $diasTrabajo }} días seguidos en el turno elegido y descansará {{ $diasDescanso }},
+                        repitiendo el ciclo. Si no se vuelve a cargar una actualización, el mes siguiente se
+                        genera solo con esta misma configuración.
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label for="usuario-admin-form-turno" class="block text-sm font-medium mb-1">Turno</label>
+                            <select id="usuario-admin-form-turno" wire:model="turno" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                                <option value="">— Selecciona —</option>
+                                @foreach ($opcionesTurno as $opcion)
+                                    <option value="{{ $opcion }}">{{ $opcion }}</option>
+                                @endforeach
+                            </select>
+                            @error('turno') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label for="usuario-admin-form-fechaAncla" class="block text-sm font-medium mb-1">Fecha en que empieza su próximo bloque de trabajo</label>
+                            <input id="usuario-admin-form-fechaAncla" type="date" wire:model="fechaAncla" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                            @error('fechaAncla') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label for="usuario-admin-form-diasTrabajo" class="block text-sm font-medium mb-1">Días de trabajo seguidos</label>
+                            <input id="usuario-admin-form-diasTrabajo" type="number" min="1" max="30" wire:model="diasTrabajo" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                            @error('diasTrabajo') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label for="usuario-admin-form-diasDescanso" class="block text-sm font-medium mb-1">Días de descanso</label>
+                            <input id="usuario-admin-form-diasDescanso" type="number" min="1" max="30" wire:model="diasDescanso" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                            @error('diasDescanso') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <label class="flex items-center gap-2">
