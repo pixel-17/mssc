@@ -15,7 +15,6 @@ use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Paso 2: el Jefe Inmediato (o el Jefe de Área si ya escaló) aprueba.
  *
  * Si RRHH está en horario -> PENDIENTE_RRHH.
  * Si RRHH está fuera de horario -> directo a AUTORIZADA_Y_CORRIENDO,

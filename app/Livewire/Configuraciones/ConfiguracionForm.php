@@ -48,10 +48,6 @@ class ConfiguracionForm extends Component
      */
     public static function reglasParaClave(string $clave): array
     {
-        if ($clave === 'MODO_ESTRICTO_728') {
-            return ['required', 'string', 'in:0,1'];
-        }
-
         if (preg_match('/(_HORA_(INICIO|FIN)|^BLOQUE_ALMUERZO_(INICIO|FIN))$/', $clave)) {
             return ['required', 'string', 'date_format:H:i'];
         }

@@ -12,17 +12,7 @@
 
             <div>
                 <label for="configuracion-form-valor" class="block text-sm font-medium mb-1">Valor</label>
-                @if ($configuracion->clave === 'MODO_ESTRICTO_728')
-                    <select id="configuracion-form-valor" wire:model="valor" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                        <option value="0">Desactivado (728 nunca bloquea por falta de turno)</option>
-                        <option value="1">Activado (728 sin turno vigente no puede crear papeleta)</option>
-                    </select>
-                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        Solo Admin puede cambiar este interruptor. Aplica a todo el régimen 728 (no por área ni por trabajador) y se maneja por temporadas.
-                    </p>
-                @else
-                    <input id="configuracion-form-valor" type="text" wire:model="valor" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                @endif
+                <input id="configuracion-form-valor" type="text" wire:model="valor" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                 @error('valor') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
             </div>
 

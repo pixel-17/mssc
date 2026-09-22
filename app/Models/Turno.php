@@ -15,11 +15,9 @@ use Illuminate\Support\Carbon;
  * fila por cada uno de los ~500 trabajadores 276 todos los días.
  *
  * Para 728 (rotativo) sigue existiendo tal como antes: informativa y
- * opcional. Por defecto el sistema no bloquea nada contra ella para
- * ese régimen (ni al crear papeleta ni al escalar); la única
- * excepción es el interruptor global MODO_ESTRICTO_728 (tabla
- * configuraciones), que si está activo SÍ bloquea la creación de
- * papeleta cuando no hay turno vigente (ver CrearPapeletaAction).
+ * opcional. El sistema nunca bloquea nada contra ella para ese
+ * régimen — se quitó el interruptor MODO_ESTRICTO_728 que antes
+ * permitía exigir turno vigente (ver CrearPapeletaAction).
  */
 class Turno extends Model
 {

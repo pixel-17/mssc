@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Turnos;
 
-use App\Models\Configuracion;
 use App\Models\Turno;
 use App\Services\EquipoDelJefeService;
 use Illuminate\Contracts\View\View;
@@ -80,7 +79,6 @@ class CalendarioEquipoIndex extends Component
             'dias' => $dias,
             'inicioMes' => $inicioMes,
             'turnosPorUsuario' => $turnosPorUsuario,
-            'modoEstricto728Activo' => Configuracion::valorDe('MODO_ESTRICTO_728', '0') === '1',
             'hoy' => now(),
         ]);
     }

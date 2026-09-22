@@ -136,20 +136,14 @@ class VencimientoPorFinDeTurnoTest extends TestCase
         $this->assertTrue($papeleta->fresh()->estado->equals(Vencida::class));
     }
 
-    public function test_728_sin_turno_conserva_el_cierre_a_medianoche(): void
+    public function test_728_sin_turno_no_puede_crear_papeleta(): void
     {
         $trabajador = $this->usuarioDePrueba();
 
         $this->ir('2026-09-21 23:50:00');
-        $papeleta = $this->crear($trabajador);
 
-        $this->ir('2026-09-21 23:59:00');
-        $this->vencimientos();
-        $this->assertTrue($papeleta->fresh()->estado->equals(PendienteJefe::class));
-
-        $this->ir('2026-09-22 00:01:00');
-        $this->vencimientos();
-        $this->assertTrue($papeleta->fresh()->estado->equals(Vencida::class));
+        $this->expectException(\App\Exceptions\PapeletaException::class);
+        $this->crear($trabajador);
     }
 
     public function test_276_vence_al_terminar_el_horario_ordinario(): void

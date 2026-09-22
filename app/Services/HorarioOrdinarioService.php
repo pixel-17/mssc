@@ -15,10 +15,8 @@ use Illuminate\Support\Carbon;
  * todos los 276.
  *
  * Los 728 (rotativo) NO usan este servicio: siguen con `turnos` como
- * registro opcional/informativo. Por defecto no hay ventana que
- * bloquee la creación de papeleta para 728; ver MODO_ESTRICTO_728 en
- * CrearPapeletaAction para la excepción (interruptor global, solo
- * Admin lo cambia).
+ * registro opcional/informativo, y ninguna ventana bloquea la
+ * creación de papeleta para ese régimen.
  */
 class HorarioOrdinarioService
 {

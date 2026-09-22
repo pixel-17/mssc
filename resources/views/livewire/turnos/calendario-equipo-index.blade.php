@@ -44,18 +44,6 @@
             @endforeach
         </div>
 
-        <div class="glass-card p-4 text-sm flex items-center gap-2">
-            <span class="font-semibold">Modo estricto 728:</span>
-            @if ($modoEstricto728Activo)
-                <span class="text-red-700 dark:text-red-400 font-semibold">Activado</span>
-                <span class="text-gray-500">— un 728 sin turno vigente no puede crear papeleta.</span>
-            @else
-                <span class="text-green-700 dark:text-green-400 font-semibold">Desactivado</span>
-                <span class="text-gray-500">— un 728 nunca es bloqueado por falta de turno.</span>
-            @endif
-            <span class="text-xs text-gray-400 ml-2">(solo lectura aquí; lo cambia Admin en Configuraciones)</span>
-        </div>
-
         @if (session('mensaje'))
             <div class="glass-card p-4 text-sm text-green-700 dark:text-green-400">
                 {{ session('mensaje') }}

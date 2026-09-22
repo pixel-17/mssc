@@ -73,6 +73,7 @@ class CrearPapeletaTest extends TestCase
     public function test_un_trabajador_puede_tener_varias_papeletas_a_la_vez(): void
     {
         [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
         $crear = app(CrearPapeletaAction::class);
 
         $primera = $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
@@ -91,6 +92,7 @@ class CrearPapeletaTest extends TestCase
         $tope = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
+        $this->turnoDePrueba($tope);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
 
@@ -108,6 +110,7 @@ class CrearPapeletaTest extends TestCase
         $tope = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
+        $this->turnoDePrueba($tope);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
         $papeleta = $papeleta->fresh();
@@ -125,6 +128,7 @@ class CrearPapeletaTest extends TestCase
     {
         [, $jefeInmediato, $trabajador] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '276');
         $this->ir('2026-09-21 22:00:00'); // jefe de área (276) fuera de horario, pero no importa: decide el jefe inmediato
+        $this->turnoDePrueba($trabajador);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
 
@@ -144,6 +148,7 @@ class CrearPapeletaTest extends TestCase
         [$jefeArea, $jefeInmediato] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '276');
         $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
         $this->ir('2026-09-21 22:00:00'); // jefe de área y RRHH (276) fuera de horario
+        $this->turnoDePrueba($jefeInmediato);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeInmediato, $this->motivoDe('PARTICULAR'), []);
         $papeleta = $papeleta->fresh();
@@ -163,6 +168,7 @@ class CrearPapeletaTest extends TestCase
         $tope = $this->usuarioDePrueba([], ['trabajador', 'rrhh']);
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
+        $this->turnoDePrueba($tope);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
 
@@ -175,6 +181,7 @@ class CrearPapeletaTest extends TestCase
         $tope = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
+        $this->turnoDePrueba($tope);
         $rrhh = $this->usuarioDePrueba([], ['rrhh']);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);

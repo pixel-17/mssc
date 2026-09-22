@@ -3,14 +3,11 @@
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
-use App\Models\Configuracion;
-use App\Models\ConfiguracionTurno;
 use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Turno;
 use App\Models\User;
-use App\Services\GeneradorTurnoMensualService;
 use App\Services\HorarioOrdinarioService;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
@@ -26,12 +23,11 @@ use Illuminate\Support\Facades\DB;
  *   (HorarioOrdinarioService, editable en Configuraciones) — ya no
  *   contra una fila diaria por trabajador en `turnos` (insostenible con
  *   ~500 trabajadores 276). Fuera de ventana -> bloqueo total.
- * - 728 (rotativo): activo 24/7, sin validar horario ni día de descanso.
- *   `turnos` sigue existiendo para 728 y por defecto es solo
- *   informativo. Excepción: si el interruptor global MODO_ESTRICTO_728
- *   (tabla configuraciones, solo lo cambia Admin) está en "1", un
- *   trabajador 728 sin turno vigente (sin fila para hoy, o con
- *   es_descanso) NO puede crear papeleta.
+ * - 728 (rotativo): 24/7, sin validar horario. Sí exige turno vigente
+ *   cargado en `turnos` (fila de hoy, y que no sea es_descanso) para
+ *   poder crear la papeleta: fuera de eso, bloqueo total. Ya no es un
+ *   interruptor que el admin pueda activar/desactivar (antes
+ *   MODO_ESTRICTO_728): es la regla fija, siempre activa.
  * - Un trabajador puede tener varias papeletas al mismo tiempo: no hay
  *   regla de exclusividad ni columnas "slot" a nivel de BD.
  * - Decisor resuelto pero NO disponible ahora mismo (DecisorDisponibleService:
@@ -163,10 +159,10 @@ class CrearPapeletaAction
     }
 
     /**
-     * 728 (rotativo): por defecto se busca el turno solo como referencia
-     * (puede no existir, puede ser descanso) y NO bloquea ni valida la
-     * hora. Si MODO_ESTRICTO_728 está activo, en cambio, la ausencia de
-     * turno vigente sí bloquea (ver bloquearSiModoEstrictoSinTurno).
+     * 728 (rotativo): SIEMPRE debe tener un turno vigente cargado para
+     * crear una papeleta (sin fila para hoy, o con es_descanso -> se
+     * bloquea). Ya no es un interruptor que el admin pueda activar o
+     * desactivar (antes MODO_ESTRICTO_728): es la única regla, fija.
      * 276 (ordinario): ventana estricta contra el horario único global —
      * ya no contra una fila diaria en `turnos`, por eso no devuelve Turno.
      */
@@ -178,7 +174,12 @@ class CrearPapeletaAction
             // correcto también entre 00:00 y 06:00.
             $turno = Turno::vigenteParaUsuario($trabajador->id);
 
-            $this->bloquearSiModoEstrictoSinTurno($turno);
+            if (! $turno || $turno->es_descanso) {
+                throw new PapeletaException(
+                    'No puedes crear una papeleta en este momento: no tienes un turno vigente asignado. '.
+                    'Comunícate con tu jefe para que regularice tu turno.'
+                );
+            }
 
             return $turno;
         }
@@ -195,100 +196,16 @@ class CrearPapeletaAction
 
     /**
      * Instante en que termina el turno de esta papeleta. 728: fin del
-     * turno vigente (Turno::finReal resuelve el cruce de medianoche del
-     * turno Noche); si no hay fila de turno cargada pero su ciclo
-     * configurado es Noche y está dentro de esa ventana, el fin de esa
-     * noche (finDeNocheSinTurnoCargado); en cualquier otro caso, el
-     * cierre del día. 276: fin del horario ordinario de hoy.
+     * turno vigente, ya garantizado no-null por resolverTurnoActivo
+     * (Turno::finReal resuelve el cruce de medianoche del turno
+     * Noche). 276: fin del horario ordinario de hoy.
      */
     private function resolverFinDeTurno(User $trabajador, ?Turno $turno): Carbon
     {
         if ($trabajador->regimen === '728') {
-            return $turno?->finReal()
-                ?? $this->finDeNocheSinTurnoCargado($trabajador)
-                ?? now()->endOfDay();
+            return $turno->finReal() ?? now()->endOfDay();
         }
 
         return app(HorarioOrdinarioService::class)->finDelDia(now());
-    }
-
-    /**
-     * Sin modo estricto, un 728 puede crear papeleta aunque nadie le haya
-     * cargado el turno. Si su ciclo configurado (configuraciones_turno) es
-     * Noche y la papeleta se crea dentro de la ventana nocturna
-     * (22:00-06:00 por defecto), el turno termina al amanecer y no a las
-     * 23:59: de lo contrario la papeleta vencería (o se marcaría abandono)
-     * a medianoche, en pleno turno. Si hay alguna fila de `turnos` para
-     * hoy o ayer (p. ej. un día de descanso) no se infiere nada: el
-     * trabajador no está de turno.
-     */
-    private function finDeNocheSinTurnoCargado(User $trabajador): ?Carbon
-    {
-        $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
-
-        if ($config?->turno !== 'NOCHE') {
-            return null;
-        }
-
-        $ahora = now();
-
-        $hayFilaReciente = Turno::where('user_id', $trabajador->id)
-            ->whereIn('fecha', [$ahora->toDateString(), $ahora->copy()->subDay()->toDateString()])
-            ->exists();
-
-        if ($hayFilaReciente) {
-            return null;
-        }
-
-        [$horaInicio, $horaFin] = app(GeneradorTurnoMensualService::class)->horasDe('NOCHE');
-
-        $inicioHoy = $ahora->copy()->setTimeFromTimeString($horaInicio);
-        $finHoy = $ahora->copy()->setTimeFromTimeString($horaFin);
-
-        // Solo tiene sentido si la noche cruza medianoche (inicio > fin).
-        if (! $finHoy->lessThan($inicioHoy)) {
-            return null;
-        }
-
-        // Madrugada: la noche empezó ayer y termina hoy.
-        if ($ahora->lessThanOrEqualTo($finHoy)) {
-            return $finHoy;
-        }
-
-        // Tarde-noche: la noche empezó hoy y termina mañana.
-        if ($ahora->greaterThanOrEqualTo($inicioHoy)) {
-            return $finHoy->addDay();
-        }
-
-        return null;
-    }
-
-    /**
-     * MODO_ESTRICTO_728 (tabla configuraciones, clave global — no por
-     * área ni por trabajador, solo Admin la cambia): si está en "1" y
-     * el trabajador 728 no tiene turno vigente (sin fila para hoy, o
-     * la fila vigente es un día de descanso), se bloquea la creación
-     * con un mensaje editable en Configuraciones (MODO_ESTRICTO_728_MENSAJE)
-     * en vez de un texto fijo en el código. Nunca aplica a régimen 276
-     * (ese ya tiene su propia ventana en HorarioOrdinarioService).
-     */
-    private function bloquearSiModoEstrictoSinTurno(?Turno $turno): void
-    {
-        $modoEstrictoActivo = Configuracion::valorDe('MODO_ESTRICTO_728', '0') === '1';
-
-        if (! $modoEstrictoActivo) {
-            return;
-        }
-
-        if ($turno && ! $turno->es_descanso) {
-            return;
-        }
-
-        throw new PapeletaException(
-            (string) Configuracion::valorDe(
-                'MODO_ESTRICTO_728_MENSAJE',
-                'No puedes crear una papeleta en este momento: no tienes un turno vigente asignado.'
-            )
-        );
     }
 }

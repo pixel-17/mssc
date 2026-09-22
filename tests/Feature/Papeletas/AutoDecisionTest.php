@@ -82,9 +82,11 @@ class AutoDecisionTest extends TestCase
 
     public function test_la_papeleta_del_jefe_fotografia_a_su_superior_y_no_a_si_mismo(): void
     {
+        $this->turnoDePrueba($this->jefeOficina);
+
         $papeleta = app(CrearPapeletaAction::class)->ejecutar(
             $this->jefeOficina,
-            $this->motivoDe(), // 728 sin MODO_ESTRICTO_728: no depende del horario ni del turno
+            $this->motivoDe(), // 728 con turno cargado: no depende del horario
             ['justificacion' => 'Urgencia familiar'],
         );
 

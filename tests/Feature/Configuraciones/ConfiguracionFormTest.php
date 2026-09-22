@@ -82,20 +82,11 @@ class ConfiguracionFormTest extends TestCase
         }
     }
 
-    public function test_el_modo_estricto_sigue_aceptando_solo_0_o_1(): void
-    {
-        $this->editar('MODO_ESTRICTO_728', '0', '1')->assertHasNoErrors();
-
-        Configuracion::where('clave', 'MODO_ESTRICTO_728')->delete();
-
-        $this->editar('MODO_ESTRICTO_728', '0', '2')->assertHasErrors('valor');
-    }
-
     public function test_las_claves_de_texto_libre_conservan_su_regla(): void
     {
-        $this->editar('MODO_ESTRICTO_728_MENSAJE', 'Mensaje', 'Otro mensaje')->assertHasNoErrors();
+        $this->editar('ALGUNA_CLAVE_LIBRE', 'Mensaje', 'Otro mensaje')->assertHasNoErrors();
 
         $this->assertContains('date_format:H:i', ConfiguracionForm::reglasParaClave('TURNO_MANANA_HORA_INICIO'));
-        $this->assertNotContains('date_format:H:i', ConfiguracionForm::reglasParaClave('MODO_ESTRICTO_728_MENSAJE'));
+        $this->assertNotContains('date_format:H:i', ConfiguracionForm::reglasParaClave('ALGUNA_CLAVE_LIBRE'));
     }
 }
