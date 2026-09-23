@@ -79,9 +79,12 @@ class UsuarioAdminForm extends Component
 
     public function mount(?User $usuario = null): void
     {
-        $this->fechaAncla = now()->toDateString();
-
+        // En un alta nueva fechaAncla queda vacía a propósito: el admin debe
+        // elegirla de forma consciente (la regla `required` del turno 728
+        // no puede cumplirse con un valor prellenado).
         if ($usuario?->exists) {
+            // Usuario existente sin configuración de turno: sugerimos hoy.
+            $this->fechaAncla = now()->toDateString();
             $this->usuario = $usuario;
             $this->name = $usuario->name;
             $this->apellido = $usuario->apellido;

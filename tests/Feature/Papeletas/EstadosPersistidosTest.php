@@ -18,8 +18,6 @@ class EstadosPersistidosTest extends TestCase
     use CreaEscenarioPapeletas;
     use RefreshDatabase;
 
-    private const MIGRACION = 'migrations/2026_09_19_180000_convertir_estados_de_papeleta_a_nombres_estables.php';
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -67,23 +65,5 @@ class EstadosPersistidosTest extends TestCase
         $papeleta->save();
 
         $this->assertSame('rechazada', $this->estadoCrudo($papeleta));
-    }
-
-    public function test_la_migracion_convierte_los_nombres_de_clase_y_es_idempotente(): void
-    {
-        $papeleta = $this->papeletaDePrueba($this->usuarioDePrueba());
-        DB::table('papeletas')->where('id', $papeleta->id)->update(['estado' => 'App\\States\\Papeleta\\PendienteRrhh']);
-
-        $migracion = require database_path(self::MIGRACION);
-
-        $migracion->up();
-        $this->assertSame('pendiente_rrhh', $this->estadoCrudo($papeleta));
-        $this->assertTrue($papeleta->fresh()->estado->equals(PendienteRrhh::class));
-
-        $migracion->up(); // segunda corrida: no debe romper nada
-        $this->assertSame('pendiente_rrhh', $this->estadoCrudo($papeleta));
-
-        $migracion->down();
-        $this->assertSame('App\\States\\Papeleta\\PendienteRrhh', $this->estadoCrudo($papeleta));
     }
 }

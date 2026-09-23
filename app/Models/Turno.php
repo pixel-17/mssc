@@ -138,10 +138,12 @@ class Turno extends Model
         $momento ??= now();
 
         return static::where('user_id', $userId)
-            ->whereIn('fecha', [
-                $momento->toDateString(),
-                $momento->copy()->subDay()->toDateString(),
-            ])
+            // whereDate y no whereIn: Turno::create guarda 'fecha' como
+            // 'Y-m-d 00:00:00' en SQLite, mientras que una columna DATE
+            // (MySQL) la guarda como 'Y-m-d'. whereDate funciona en ambos.
+            ->where(fn ($q) => $q
+                ->whereDate('fecha', $momento->toDateString())
+                ->orWhereDate('fecha', $momento->copy()->subDay()->toDateString()))
             ->get()
             ->first(fn (self $turno) => $turno->cubre($momento));
     }

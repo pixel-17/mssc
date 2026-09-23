@@ -73,6 +73,7 @@ class TurnoVigenteRequeridoTest extends TestCase
     public function test_con_turno_vigente_hoy_si_puede_crear_papeleta(): void
     {
         $trabajador = $this->usuarioDePrueba();
+        $this->conJefeDePrueba($trabajador);
         $this->ir('2026-09-21 10:00:00');
 
         $this->turnoDePrueba($trabajador);
@@ -90,6 +91,7 @@ class TurnoVigenteRequeridoTest extends TestCase
     public function test_turno_noche_de_ayer_todavia_vigente_de_madrugada_si_permite_crear(): void
     {
         $trabajador = $this->usuarioDePrueba();
+        $this->conJefeDePrueba($trabajador);
 
         Turno::create([
             'user_id' => $trabajador->id,

@@ -39,6 +39,13 @@ class TurnoInicialAlCrearTest extends TestCase
         $this->admin = $this->usuarioDePrueba([], ['admin']);
     }
 
+    protected function tearDown(): void
+    {
+        $this->travelBack();
+
+        parent::tearDown();
+    }
+
     public function test_admin_no_puede_crear_un_728_sin_turno(): void
     {
         Livewire::actingAs($this->admin)
@@ -57,6 +64,10 @@ class TurnoInicialAlCrearTest extends TestCase
 
     public function test_admin_crea_un_728_con_turno_y_puede_crear_papeleta_el_mismo_dia(): void
     {
+        // Congelado dentro del horario de MANANA (06:00-14:00) para que el
+        // turno recién creado esté vigente al llamar a CrearPapeletaAction.
+        $this->travelTo(Carbon::parse(now()->toDateString().' 10:00:00'));
+
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class)
             ->set('name', 'Rosa')

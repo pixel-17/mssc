@@ -41,6 +41,13 @@ class JefeTurnoTest extends TestCase
         $this->seed(ConfiguracionSeeder::class);
     }
 
+    protected function tearDown(): void
+    {
+        $this->travelBack();
+
+        parent::tearDown();
+    }
+
     /**
      * Prueba directa de la FK: si `jefes_turno.unidad_organica_id` no
      * apuntara de verdad a `unidad_organicas`, borrar la unidad no
@@ -89,11 +96,7 @@ class JefeTurnoTest extends TestCase
 
         JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'NOCHE', 'jefe_id' => $jefeDeNoche->id]);
 
-        $this->turnoDePrueba($trabajador, [
-            'turno' => 'NOCHE',
-            'hora_inicio' => '22:00:00',
-            'hora_fin' => '06:00:00',
-        ]);
+        $this->turnoVigenteDePrueba($trabajador, 'NOCHE', '22:00:00', '06:00:00');
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
 
@@ -115,11 +118,7 @@ class JefeTurnoTest extends TestCase
         // Solo hay jefe asignado para NOCHE; el trabajador entra en MAÑANA.
         JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'NOCHE', 'jefe_id' => $jefeDeNoche->id]);
 
-        $this->turnoDePrueba($trabajador, [
-            'turno' => 'MANANA',
-            'hora_inicio' => '06:00:00',
-            'hora_fin' => '14:00:00',
-        ]);
+        $this->turnoVigenteDePrueba($trabajador, 'MANANA', '06:00:00', '14:00:00');
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
 

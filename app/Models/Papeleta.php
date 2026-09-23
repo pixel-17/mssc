@@ -160,6 +160,19 @@ class Papeleta extends Model
         return static::whereKey($this->id)->deJefeInmediato($user)->exists();
     }
 
+    /**
+     * true si esta papeleta se fotografió sin ningún jefe superior (ni
+     * inmediato ni de área) — el caso del tope del organigrama, o
+     * cualquier otra papeleta creada sin jefatura resuelta. Se usa para
+     * saber si hay a quién devolverle una observación de RRHH
+     * (ObservarRrhhAction) o para reportes; se calcula contra las
+     * columnas fotografiadas, no se vuelve a resolver la unidad actual.
+     */
+    public function sinJefatura(): bool
+    {
+        return $this->jefe_inmediato_id === null && $this->jefe_area_id === null;
+    }
+
     public function trabajador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trabajador_id');

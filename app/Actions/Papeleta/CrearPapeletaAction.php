@@ -76,16 +76,9 @@ class CrearPapeletaAction
         // UnidadOrganica::resolverJefeInmediato().
         [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador, $turno?->codigo()) : [null, null];
 
-        // Tope del organigrama: encabeza su unidad y no tiene a nadie arriba.
-        $sinJefatura = $unidad !== null
-            && (int) $unidad->jefe_id === (int) $trabajador->id
-            && $jefeInmediatoId === null
-            && $jefeAreaId === null
-            && ! $trabajador->jefesInmediatosAdicionales()->exists();
-
-        // Disponibilidad real del decisor resuelto (null si sinJefatura,
-        // o si por alguna razón el jefe_inmediato_id no resuelve a un User
-        // activo): estar asignado en la BD no implica poder decidir ahora.
+        // Disponibilidad real del decisor resuelto (o si por alguna razón
+        // el jefe_inmediato_id no resuelve a un User activo): estar
+        // asignado en la BD no implica poder decidir ahora.
         $jefeInmediato = $jefeInmediatoId ? User::find($jefeInmediatoId) : null;
         $jefeDisponible = $this->decisorDisponible->estaDisponibleAhora($jefeInmediato);
         $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
@@ -98,8 +91,8 @@ class CrearPapeletaAction
 
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $sinJefatura, $jefeDisponible, $estadoInicial, $autorizaSistema) {
-            $papeleta = Papeleta::create([
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $jefeDisponible, $estadoInicial, $autorizaSistema) {
+            $campos = [
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
                 'sede_id' => $trabajador->sede_id,
@@ -114,8 +107,18 @@ class CrearPapeletaAction
                 'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
                 'autorizado_con_rrhh_fuera_horario' => $autorizaSistema,
                 'hora_salida_real' => $autorizaSistema ? now() : null,
-                'revision_posthoc_estado' => $autorizaSistema ? 'pendiente' : null,
-            ]);
+            ];
+
+            // No se manda 'no_aplica' a mano: se deja que la BD aplique
+            // su propio default (columna no nullable) y así ningún otro
+            // punto de creación de Papeleta puede volver a colar un
+            // null aquí por accidente. Solo el caso que de verdad
+            // necesita otro valor lo pisa explícitamente.
+            if ($autorizaSistema) {
+                $campos['revision_posthoc_estado'] = 'pendiente';
+            }
+
+            $papeleta = Papeleta::create($campos);
 
             HistorialPapeleta::create([
                 'papeleta_id' => $papeleta->id,
@@ -127,6 +130,13 @@ class CrearPapeletaAction
             ]);
 
             if (! $jefeDisponible) {
+                // Única fuente de verdad: se le pregunta a la papeleta ya
+                // creada, sobre las columnas fotografiadas — el mismo
+                // método que usan ObservarRrhhAction y el resto del
+                // sistema. Ya no se recalcula la regla del tope del
+                // organigrama por segunda vez aquí.
+                $sinJefatura = $papeleta->sinJefatura();
+
                 HistorialPapeleta::create([
                     'papeleta_id' => $papeleta->id,
                     'actor_id' => null,
