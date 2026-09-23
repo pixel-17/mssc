@@ -26,7 +26,7 @@ return new class extends Migration
             // papeleta. Se fija al crearla y los jobs de vencimiento y de
             // abandono comparan contra él, en vez de asumir que el día
             // operativo termina a medianoche.
-            $table->dateTime('fin_turno_at')->nullable()->after('dia_operativo');
+            $table->dateTime('fin_turno_at')->nullable();
 
             // --- Estado (pensado para spatie/laravel-model-states) ---
             $table->string('estado')->default('pendiente_jefe');
