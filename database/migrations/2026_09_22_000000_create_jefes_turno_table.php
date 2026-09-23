@@ -27,7 +27,7 @@ return new class extends Migration
     {
         Schema::create('jefes_turno', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('unidad_organica_id')->constrained('unidades_organicas')->cascadeOnDelete();
+            $table->foreignId('unidad_organica_id')->constrained('unidad_organicas')->cascadeOnDelete();
             $table->string('turno', 10);
             $table->foreignId('jefe_id')->constrained('users');
             $table->timestamps();

@@ -60,10 +60,20 @@ return new class extends Migration
             $table->boolean('permite_gps')->default(false)->after('volumen_notificacion');
             $table->boolean('permite_camara')->default(false)->after('permite_gps');
         });
+
+        // A nivel de motor de BD, no solo de validación (CrearUsuarioRequest):
+        // dos requests casi simultáneos no deben poder colar DNIs duplicados.
+        Schema::table('users', function (Blueprint $table) {
+            $table->unique('dni');
+        });
     }
 
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropUnique(['dni']);
+        });
+
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
                 'volumen_notificacion',

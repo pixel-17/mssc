@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Los 4 motivos del flujo tienen reglas de negocio muy distintas
-     * (adjuntos, bypass de aprobación, suma a descuento, cierre sin retorno).
+     * Los motivos del flujo (Particular, Salud, Comisión) tienen reglas de
+     * negocio distintas (adjuntos, suma a descuento, cierre sin retorno).
      * En vez de hardcodear esas reglas en el código por nombre, se guardan
      * como banderas en la tabla para que el código las consulte, no las adivine.
      */
@@ -26,10 +26,8 @@ return new class extends Migration
             $table->enum('adjunto', ['no', 'opcional', 'flexible', 'obligatorio'])->default('no');
 
             $table->boolean('suma_descuento')->default(false); // Particular
-            $table->boolean('permite_bypass_aprobacion')->default(false); // Emergencia
             $table->boolean('permite_cierre_sin_retorno')->default(false); // Comisión de Servicio
             $table->boolean('requiere_sustento_en_retorno')->default(false); // Salud
-            $table->boolean('participa_regla_exclusividad')->default(true); // false solo para Emergencia (carril aparte)
 
             // Motivo.php documenta la regla "nunca comparar codigo ===
             // 'SALUD' para decidir lógica, siempre usar banderas" — esta

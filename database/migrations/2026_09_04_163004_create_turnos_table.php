@@ -24,6 +24,14 @@ return new class extends Migration
             $table->time('hora_inicio')->nullable();
             $table->time('hora_fin')->nullable();
             $table->boolean('es_descanso')->default(false);
+
+            // Código explícito del turno (MANANA|TARDE|NOCHE|DIA). El tipo
+            // también se puede deducir comparando hora_inicio contra las
+            // horas vigentes en `configuraciones` (ver Turno::etiqueta),
+            // pero se guarda aquí para no depender de esa deducción si las
+            // horas de configuraciones cambian más adelante.
+            $table->string('turno', 10)->nullable();
+
             $table->timestamps();
 
             $table->unique(['user_id', 'fecha']);

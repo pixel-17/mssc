@@ -28,6 +28,10 @@ return new class extends Migration
             $table->timestamp('revisado_at')->nullable();
 
             $table->timestamps();
+
+            // ProcesarVencimientoSustentos y varias bandejas (Jefe/RRHH)
+            // filtran siempre por (estado, fecha_limite).
+            $table->index(['estado', 'fecha_limite']);
         });
     }
 
