@@ -6,7 +6,7 @@
             </h2>
             <p class="mt-1 text-sm text-gray-500">
                 @if ($esJefeDeArea)
-                    Trabajadores 728 de tu área y sus sub-unidades.
+                    Trabajadores 728 directos y jefes de las sub-unidades de tu área.
                 @else
                     Trabajadores 728 de los que eres jefe inmediato.
                 @endif

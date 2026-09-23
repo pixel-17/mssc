@@ -97,8 +97,11 @@ class NavegacionComposer
         $turnosJefe = [];
 
         if ($esJefe) {
+            // "Calendario del equipo" ya permite pintar M/T/N/D directo en la
+            // grilla (728) — turnos.programacion.equipo queda sin enlazar en
+            // el menú para no duplicar la misma acción en dos pantallas,
+            // pero la ruta sigue viva por si algo más la referencia.
             $turnosJefe[] = ['label' => 'Calendario del equipo', 'route' => route('turnos.calendario.equipo'), 'active' => request()->routeIs('turnos.calendario.equipo'), 'icon' => 'calendar'];
-            $turnosJefe[] = ['label' => 'Programar horarios', 'route' => route('turnos.programacion.equipo'), 'active' => request()->routeIs('turnos.programacion.*'), 'icon' => 'clock'];
         }
 
         if ($turnosJefe) {

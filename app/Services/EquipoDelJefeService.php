@@ -2,17 +2,24 @@
 
 namespace App\Services;
 
+use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
 /**
  * Fuente única de "qué trabajadores ve este jefe" en las pantallas de
- * turnos (calendario de equipo y programación de equipo), para no
- * mantener dos criterios de alcance distintos.
+ * turnos (calendario de equipo y programación de equipo). A propósito
+ * usa un alcance MÁS ANGOSTO que User::equipoDe() (que sí usan
+ * papeletas/reportes/dashboard, donde el Jefe de Área debe ver a todo
+ * su personal en cadena de aprobación/histórico):
  *
- * Delegado en User::equipoDe() (única definición de "mi equipo"):
- * trabajadores directos, adicionales y unidades que encabeza, más él
- * mismo para que pueda gestionar su propio turno.
+ * - Jefe Inmediato: sus trabajadores directos (automáticos o
+ *   adicionales) y él mismo.
+ * - Jefe de Área: sus Jefes Inmediatos (los jefes de las sub-unidades
+ *   de su área, de cualquier nivel) y él mismo — NO a los
+ *   trabajadores de esas sub-unidades, salvo los que además tenga
+ *   asignados a él de forma directa (porque, en su propia oficina,
+ *   también funge como Jefe Inmediato de algunos).
  */
 class EquipoDelJefeService
 {
@@ -24,9 +31,18 @@ class EquipoDelJefeService
         $unidadIds = $this->subtreeIdsDeAreasQueEncabeza($user);
         $esJefeDeArea = $unidadIds->isNotEmpty();
 
-        // Misma definición de equipo que reportes/dashboard (User::equipoDe);
-        // aquí se suma el propio jefe para que gestione su turno.
-        $trabajadores = $user->equipo()
+        $directos = $user->subordinadosInmediatos()->get()
+            ->merge($user->trabajadoresAdicionales()->get());
+
+        $jefesDeSubunidades = $esJefeDeArea
+            ? User::whereIn('id', UnidadOrganica::whereIn('id', $unidadIds)
+                ->whereNotNull('jefe_id')
+                ->pluck('jefe_id'))
+                ->get()
+            : collect();
+
+        $trabajadores = $directos
+            ->merge($jefesDeSubunidades)
             ->push($user)
             ->unique('id')
             ->sortBy('name')

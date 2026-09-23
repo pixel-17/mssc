@@ -149,6 +149,20 @@ class User extends Authenticatable
     }
 
     /**
+     * Trabajadores cuyo jefe_inmediato_id (columna explícita) es este
+     * usuario: los que le llegan por ser jefe automático de una unidad
+     * orgánica (ver UnidadOrganica::jefaturasDe). NO incluye a los
+     * trabajadores de sub-unidades más abajo en el árbol (esos tienen
+     * a otro jefe_inmediato_id): para eso ver EquipoDelJefeService,
+     * que además suma los jefes de esas sub-unidades sin exponer a
+     * todo el personal de cada una.
+     */
+    public function subordinadosInmediatos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(User::class, 'jefe_inmediato_id');
+    }
+
+    /**
      * Trabajadores que este usuario supervisa como jefe inmediato
      * ADICIONAL (asignado a mano), aparte de los que le llegan por
      * ser jefe automático de una unidad orgánica.
