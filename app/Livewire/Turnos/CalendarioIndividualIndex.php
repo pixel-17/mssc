@@ -14,10 +14,11 @@ use Livewire\Component;
 /**
  * Vista individual: calendario mensual clásico con SOLO los datos del
  * propio trabajador. Trabajador ve el suyo (sin parámetro en la
- * ruta); Admin puede ver el de cualquiera (con {trabajador} en la
- * ruta). Ambos en modo lectura: crear/editar el horario se hace
- * siempre desde turnos.configuracion (Admin) o desde la vista de
- * equipo (Jefe) — nunca desde aquí.
+ * ruta); Admin y el Jefe Inmediato/Área del trabajador pueden ver el
+ * de cualquiera de su alcance (con {trabajador} en la ruta). Todos en
+ * modo lectura: crear/editar el horario se hace siempre desde
+ * turnos.configuracion (Admin) o desde la vista de equipo (Jefe) —
+ * nunca desde aquí.
  */
 #[Layout('layouts.app')]
 #[Title('Calendario de turnos')]
@@ -37,7 +38,10 @@ class CalendarioIndividualIndex extends Component
         if ($trabajador === null) {
             $this->trabajador = $actor;
         } else {
-            abort_unless($actor->hasRole('admin') || $actor->id === $trabajador->id, 403);
+            abort_unless(
+                $actor->hasRole('admin') || $actor->id === $trabajador->id || $actor->puedeGestionarTurnoDe($trabajador),
+                403
+            );
             $this->trabajador = $trabajador;
         }
 

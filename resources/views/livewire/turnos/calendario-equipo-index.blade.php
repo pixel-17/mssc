@@ -188,7 +188,9 @@
                         @forelse ($trabajadores as $trabajador)
                             <tr wire:key="fila-{{ $trabajador->id }}">
                                 <td class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900 whitespace-nowrap align-middle">
-                                    {{ $trabajador->nombre_completo }}
+                                    <a href="{{ route('turnos.calendario.individual-de', $trabajador) }}" class="text-tinta-800 dark:text-tinta-200 hover:underline" title="Ver calendario de {{ $trabajador->nombre_completo }}">
+                                        {{ $trabajador->nombre_completo }}
+                                    </a>
                                     <span class="text-xs text-gray-400">({{ $trabajador->regimen }})</span>
                                 </td>
                                 @if ($trabajador->regimen === '728' && $trabajador->activo)

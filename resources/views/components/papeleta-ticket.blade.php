@@ -8,7 +8,7 @@
 --}}
 <a
     href="{{ route('trabajador.papeletas.show', $papeleta) }}"
-    class="group block border-b border-dashed border-tinta-200/70 dark:border-white/15 py-4 first:pt-0 last:border-b-0 active:opacity-70 transition-opacity"
+    class="group block border-b-2 border-dashed border-tinta-300 dark:border-white/30 py-4 first:pt-0 last:border-b-0 hover:bg-tinta-50/60 dark:hover:bg-white/5 -mx-4 sm:-mx-5 px-4 sm:px-5 rounded-md active:opacity-70 transition-colors"
 >
     <div class="flex items-start justify-between gap-3">
         <div class="min-w-0 flex items-baseline gap-2">

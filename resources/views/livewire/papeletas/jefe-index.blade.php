@@ -15,7 +15,7 @@
                 <p class="p-4 text-sm text-gray-500 dark:text-tinta-100/50">No tienes papeletas pendientes de decisión.</p>
             @else
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                    <table class="min-w-full border-separate border-spacing-y-2">
                         <thead class="bg-tinta-50/70 dark:bg-white/5">
                             <tr>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
@@ -24,9 +24,9 @@
                                 <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-white/10">
+                        <tbody class="bg-white dark:bg-transparent">
                             @foreach ($porDecidir as $papeleta)
-                                <tr wire:key="por-decidir-{{ $papeleta->id }}">
+                                <tr wire:key="por-decidir-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->created_at->format('d/m/Y H:i') }}</td>
@@ -58,7 +58,7 @@
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Observadas por ti — esperan respuesta del trabajador ({{ $observadasPorMi->count() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                    <table class="min-w-full border-separate border-spacing-y-2">
                         <thead class="bg-tinta-50/70 dark:bg-white/5">
                             <tr>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
@@ -67,9 +67,9 @@
                                 <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-white/10">
+                        <tbody class="bg-white dark:bg-transparent">
                             @foreach ($observadasPorMi as $papeleta)
-                                <tr wire:key="observada-jefe-{{ $papeleta->id }}">
+                                <tr wire:key="observada-jefe-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">
@@ -96,7 +96,7 @@
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Observadas por RRHH — requieren tu reconocimiento ({{ $observacionesRrhh->count() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                    <table class="min-w-full border-separate border-spacing-y-2">
                         <thead class="bg-tinta-50/70 dark:bg-white/5">
                             <tr>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
@@ -104,9 +104,9 @@
                                 <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-white/10">
+                        <tbody class="bg-white dark:bg-transparent">
                             @foreach ($observacionesRrhh as $papeleta)
-                                <tr wire:key="observada-rrhh-{{ $papeleta->id }}">
+                                <tr wire:key="observada-rrhh-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3">
@@ -130,7 +130,7 @@
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">En curso ({{ $enCurso->count() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                    <table class="min-w-full border-separate border-spacing-y-2">
                         <thead class="bg-tinta-50/70 dark:bg-white/5">
                             <tr>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
@@ -139,9 +139,9 @@
                                 <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-white/10">
+                        <tbody class="bg-white dark:bg-transparent">
                             @foreach ($enCurso as $papeleta)
-                                <tr wire:key="en-curso-{{ $papeleta->id }}">
+                                <tr wire:key="en-curso-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->hora_salida_real?->format('d/m H:i') }}</td>
@@ -163,7 +163,7 @@
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Sustentos por revisar ({{ $sustentosPorRevisar->count() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-white/10">
+                    <table class="min-w-full border-separate border-spacing-y-2">
                         <thead class="bg-tinta-50/70 dark:bg-white/5">
                             <tr>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
@@ -171,9 +171,9 @@
                                 <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-white/10">
+                        <tbody class="bg-white dark:bg-transparent">
                             @foreach ($sustentosPorRevisar as $papeleta)
-                                <tr wire:key="sustento-{{ $papeleta->id }}">
+                                <tr wire:key="sustento-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-right">
