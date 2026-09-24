@@ -20,12 +20,19 @@ use Livewire\Component;
  * / jefeArea()). `tipo` es solo decorativo, nunca condiciona el
  * escalamiento de papeletas.
  *
- * Jefes por turno (jefes_turno, ver Avance 00.59): asignación manual y
- * fija del Jefe Inmediato de esta unidad para régimen 728, una por
- * turno (MANANA/TARDE/NOCHE) — CrearPapeletaAction la usa en vez de
- * $jefeId cuando hay fila para el turno vigente del trabajador (ver
- * UnidadOrganica::resolverJefeInmediato()). Solo aplica editando una
- * unidad ya creada (jefes_turno exige unidad_organica_id).
+ * Jefes por turno (jefes_turno, ver Avance 00.59 y 00.68): asignación
+ * manual del/los Jefe(s) Inmediato(s) de esta unidad para régimen 728,
+ * uno o VARIOS por turno (MANANA/TARDE/NOCHE) — CrearPapeletaAction ya
+ * no fotografía uno solo, guarda a todos los candidatos resueltos y
+ * "el que actúa primero decide" (ver UnidadOrganica::resolverJefesInmediatos()
+ * y Papeleta::jefesCandidatos()). Solo aplica editando una unidad ya
+ * creada (jefes_turno exige unidad_organica_id).
+ *
+ * Cada jefe agregado aquí necesita, además, su propio ciclo de turno
+ * (configuraciones_turno) para que el sistema sepa si está "de
+ * servicio" hoy — este formulario no lo carga, enlaza a la pantalla
+ * dedicada (turnos.configuracion, ver ConfiguracionTurnoForm) que ya
+ * reutiliza GeneradorTurnoMensualService::cargarConfiguracion.
  */
 #[Layout('layouts.app')]
 #[Title('Unidad orgánica')]
@@ -46,11 +53,17 @@ class UnidadOrganicaForm extends Component
 
     public bool $activo = true;
 
-    /** @var array<string, ?int> turno => jefe_id (null = sin asignar, cae a $jefeId) */
+    /**
+     * turno => lista de jefe_id (varios por turno permitidos desde
+     * Avance 00.68). Lista vacía = sin asignar, cae a $jefeId. Un slot
+     * en null es una fila añadida en el formulario y aún sin elegir.
+     *
+     * @var array<string, list<int|null>>
+     */
     public array $jefesPorTurno = [
-        'MANANA' => null,
-        'TARDE' => null,
-        'NOCHE' => null,
+        'MANANA' => [],
+        'TARDE' => [],
+        'NOCHE' => [],
     ];
 
     public const TIPOS = [
@@ -81,9 +94,20 @@ class UnidadOrganicaForm extends Component
             $this->activo = $unidad->activo;
 
             foreach ($unidad->jefesTurno as $jefeTurno) {
-                $this->jefesPorTurno[$jefeTurno->turno] = $jefeTurno->jefe_id;
+                $this->jefesPorTurno[$jefeTurno->turno][] = $jefeTurno->jefe_id;
             }
         }
+    }
+
+    public function agregarJefeTurno(string $turno): void
+    {
+        $this->jefesPorTurno[$turno][] = null;
+    }
+
+    public function quitarJefeTurno(string $turno, int $indice): void
+    {
+        unset($this->jefesPorTurno[$turno][$indice]);
+        $this->jefesPorTurno[$turno] = array_values($this->jefesPorTurno[$turno]);
     }
 
     protected function rules(): array
@@ -94,7 +118,7 @@ class UnidadOrganicaForm extends Component
             'parentId' => ['nullable', 'exists:unidad_organicas,id'],
             'jefeId' => ['nullable', 'exists:users,id'],
             'activo' => ['boolean'],
-            'jefesPorTurno.*' => ['nullable', 'exists:users,id'],
+            'jefesPorTurno.*.*' => ['nullable', 'exists:users,id'],
         ];
     }
 
@@ -133,14 +157,29 @@ class UnidadOrganicaForm extends Component
                 return; // Crear primero; los jefes por turno se asignan editando.
             }
 
-            foreach ($datos['jefesPorTurno'] as $turno => $jefeId) {
-                if ($jefeId) {
-                    JefeTurno::updateOrCreate(
-                        ['unidad_organica_id' => $unidad->id, 'turno' => $turno],
-                        ['jefe_id' => $jefeId]
-                    );
-                } else {
-                    JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', $turno)->delete();
+            foreach ($datos['jefesPorTurno'] as $turno => $jefeIds) {
+                // Slots sin elegir (fila añadida y dejada en blanco) y
+                // duplicados (mismo jefe elegido dos veces) se descartan
+                // aquí; el unique de BD es (unidad, turno, jefe_id).
+                $idsDeseados = collect($jefeIds)->filter()->unique()->values();
+
+                $idsActuales = JefeTurno::where('unidad_organica_id', $unidad->id)
+                    ->where('turno', $turno)
+                    ->pluck('jefe_id');
+
+                foreach ($idsActuales->diff($idsDeseados) as $jefeId) {
+                    JefeTurno::where('unidad_organica_id', $unidad->id)
+                        ->where('turno', $turno)
+                        ->where('jefe_id', $jefeId)
+                        ->delete();
+                }
+
+                foreach ($idsDeseados->diff($idsActuales) as $jefeId) {
+                    JefeTurno::create([
+                        'unidad_organica_id' => $unidad->id,
+                        'turno' => $turno,
+                        'jefe_id' => $jefeId,
+                    ]);
                 }
             }
         });

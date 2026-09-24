@@ -6,10 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Jefe inmediato de UN turno (MANANA/TARDE/NOCHE) de UNA unidad
- * orgánica. Asignación fija, manual — no hay ausencia ni suplente
- * automático (ver UnidadOrganica::resolverJefeInmediato(), que es la
- * única fuente de verdad que lee esta tabla).
+ * Un jefe inmediato asignado a UN turno (MANANA/TARDE/NOCHE) de UNA
+ * unidad orgánica. Asignación manual — desde Avance 00.68 puede haber
+ * varias filas por (unidad, turno): "el que actúa primero decide" (ver
+ * UnidadOrganica::resolverJefesInmediatos(), fuente de verdad para
+ * varios candidatos; resolverJefeInmediato() se mantiene para el caso
+ * de uno solo, por compatibilidad).
  */
 class JefeTurno extends Model
 {

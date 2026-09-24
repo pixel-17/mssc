@@ -51,26 +51,50 @@
             </label>
 
             @if ($unidad)
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-3">
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
                     <div>
                         <h3 class="text-sm font-medium">Jefes por turno (régimen 728)</h3>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Opcional. Si un turno queda sin asignar, el Jefe Inmediato de ese turno sigue siendo
-                            "{{ $jefesDisponibles[$jefeId] ?? 'el jefe de la unidad' }}" (arriba). Solo aplica a
-                            trabajadores de régimen 728 cargados en ese turno.
+                            Opcional, uno o varios por turno. Con varios, cualquiera puede decidir una papeleta —
+                            el que actúe primero. Si un turno queda sin ninguno, su Jefe Inmediato sigue siendo
+                            "{{ $jefesDisponibles[$jefeId] ?? 'el jefe de la unidad' }}" (arriba). Cada jefe
+                            agregado necesita además su propio ciclo de turno para que el sistema sepa si está
+                            de servicio hoy — usa "Configurar turno" tras guardar.
                         </p>
                     </div>
 
                     @foreach (\App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS as $codigo => $etiqueta)
-                        <div>
-                            <label for="unidad-organica-form-jefe-turno-{{ $codigo }}" class="block text-sm font-medium mb-1">{{ $etiqueta }}</label>
-                            <select id="unidad-organica-form-jefe-turno-{{ $codigo }}" wire:model="jefesPorTurno.{{ $codigo }}" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                                <option value="">— (usar jefe de la unidad) —</option>
-                                @foreach ($jefesDisponibles as $id => $nombreJefe)
-                                    <option value="{{ $id }}">{{ $nombreJefe }}</option>
-                                @endforeach
-                            </select>
-                            @error("jefesPorTurno.{$codigo}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="block text-sm font-medium">{{ $etiqueta }}</span>
+                                <button type="button" wire:click="agregarJefeTurno('{{ $codigo }}')" class="text-xs text-tinta-700 hover:underline">
+                                    + Agregar jefe
+                                </button>
+                            </div>
+
+                            @forelse ($jefesPorTurno[$codigo] as $indice => $jefeIdTurno)
+                                <div class="flex items-center gap-2" wire:key="jefe-turno-{{ $codigo }}-{{ $indice }}">
+                                    <select wire:model="jefesPorTurno.{{ $codigo }}.{{ $indice }}" class="flex-1 rounded-md border-gray-300 dark:bg-gray-800">
+                                        <option value="">— (sin elegir) —</option>
+                                        @foreach ($jefesDisponibles as $id => $nombreJefe)
+                                            <option value="{{ $id }}">{{ $nombreJefe }}</option>
+                                        @endforeach
+                                    </select>
+
+                                    @if ($jefeIdTurno)
+                                        <a href="{{ route('turnos.configuracion', $jefeIdTurno) }}" target="_blank" class="text-xs text-gray-500 hover:underline whitespace-nowrap">
+                                            Configurar turno
+                                        </a>
+                                    @endif
+
+                                    <button type="button" wire:click="quitarJefeTurno('{{ $codigo }}', {{ $indice }})" class="text-xs text-red-600 hover:underline whitespace-nowrap">
+                                        Quitar
+                                    </button>
+                                </div>
+                                @error("jefesPorTurno.{$codigo}.{$indice}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                            @empty
+                                <p class="text-xs text-gray-400">Sin jefes asignados a este turno.</p>
+                            @endforelse
                         </div>
                     @endforeach
                 </div>
