@@ -16,21 +16,12 @@
                     @endif
                 </p>
 
-                <div class="flex items-center gap-2">
-                    @if ($esJefeDeArea)
-                        <a href="{{ route('unidad-organica.oficinas.create') }}"
-                           class="inline-flex items-center px-4 py-2 bg-white dark:bg-white/5 border border-tinta-600 text-tinta-700 dark:text-tinta-200 rounded-md font-semibold text-xs uppercase tracking-widest hover:bg-tinta-50">
-                            Nueva oficina
-                        </a>
-                    @endif
-
-                    @if ($puedeCrear)
-                        <a href="{{ route('usuarios.create') }}"
-                           class="inline-flex items-center px-4 py-2 bg-tinta-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-tinta-700">
-                            Crear usuario
-                        </a>
-                    @endif
-                </div>
+                @if ($puedeCrear)
+                    <a href="{{ route('usuarios.create') }}"
+                       class="inline-flex items-center px-4 py-2 bg-tinta-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-tinta-700">
+                        Crear usuario
+                    </a>
+                @endif
             </div>
 
             <div class="glass-card overflow-hidden">

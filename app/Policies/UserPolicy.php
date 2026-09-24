@@ -30,23 +30,6 @@ class UserPolicy
     }
 
     /**
-     * ¿Puede $creator crear una nueva oficina (UnidadOrganica) colgando
-     * de $parentId? Mismo criterio que crearEnUnidad(): admin siempre,
-     * o Jefe de Área si $parentId es su propia unidad o cualquier
-     * descendiente de ella — así el árbol nuevo queda contenido dentro
-     * de su área, sin importar la profundidad (ver
-     * CrearOficinaConJefeAction).
-     */
-    public function crearOficina(User $creator, int $parentId): bool
-    {
-        if ($creator->hasRole('admin')) {
-            return true;
-        }
-
-        return $this->esJefeDeAreaDe($creator, $parentId);
-    }
-
-    /**
      * ¿Puede $creator crear un Trabajador y asignarse a sí mismo como
      * jefe inmediato adicional? Cualquier jefe inmediato (automático o
      * adicional) de al menos un trabajador puede hacerlo, sin importar

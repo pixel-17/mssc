@@ -12,7 +12,6 @@ use App\Http\Controllers\Rrhh\SustentoController as RrhhSustentoController;
 use App\Http\Controllers\Trabajador\PapeletaController as TrabajadorPapeletaController;
 use App\Http\Controllers\Trabajador\RetornoController as TrabajadorRetornoController;
 use App\Http\Controllers\Trabajador\SustentoController as TrabajadorSustentoController;
-use App\Http\Controllers\UnidadOrganica\OficinaController;
 use App\Http\Controllers\Usuario\JefeAdicionalController;
 use App\Http\Controllers\Usuario\UsuarioController;
 use App\Http\Controllers\Usuario\VinculoController;
@@ -251,20 +250,6 @@ Route::middleware([
 
         Route::post('/vincular/buscar', [VinculoController::class, 'buscar'])->name('buscar');
         Route::post('/{trabajador}/vincular', [VinculoController::class, 'vincular'])->name('vincular');
-    });
-
-    /*
-     * Autoservicio de árbol para Jefe de Área: crea una oficina nueva
-     * dentro de su propio subárbol junto con su(s) jefe(s) inmediato(s)
-     * en un solo paso (ver CrearOficinaConJefeAction). Admin ya no
-     * necesita insertar cada oficina manualmente — sigue sembrando solo
-     * la raíz del árbol vía unidades-organicas.crear. Sin middleware de
-     * rol, mismo motivo que 'usuarios': la autorización real vive en
-     * UserPolicy::crearOficina.
-     */
-    Route::prefix('mi-area/oficinas')->name('unidad-organica.oficinas.')->group(function () {
-        Route::get('/crear', [OficinaController::class, 'create'])->name('create');
-        Route::post('/', [OficinaController::class, 'store'])->name('store');
     });
 
     /*

@@ -24,7 +24,6 @@ class UnidadOrganica extends Model
         'tipo',
         'parent_id',
         'jefe_id',
-        'creado_por_id',
         'activo',
     ];
 
@@ -48,12 +47,6 @@ class UnidadOrganica extends Model
     public function jefe(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_id');
-    }
-
-    /** Quién dio de alta esta unidad — admin (raíz) o un Jefe de Área (auto-servicio, ver CrearOficinaConJefeAction). */
-    public function creadoPor(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'creado_por_id');
     }
 
     /** Jefes inmediatos de esta unidad, uno por turno (MANANA/TARDE/NOCHE). Asignación manual. */
