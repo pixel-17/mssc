@@ -43,17 +43,13 @@ class NotificarPapeletaService
 {
     public function creada(Papeleta $papeleta): void
     {
-        if (! $papeleta->jefeInmediato) {
-            return;
-        }
-
-        $this->enviarUno(
-            $papeleta->jefeInmediato,
+        $this->enviar(
+            $this->destinatariosJefe($papeleta),
             $papeleta,
             'creada_pendiente_jefe',
             'Nueva papeleta por aprobar',
             "{$papeleta->trabajador->nombre_completo} solicitó una papeleta de {$papeleta->motivo->nombre}.",
-            $this->urlJefe($papeleta),
+            fn () => $this->urlJefe($papeleta),
         );
     }
 
@@ -122,17 +118,13 @@ class NotificarPapeletaService
     /** El trabajador respondió la observación: la papeleta vuelve a la decisión del jefe. */
     public function observacionRespondida(Papeleta $papeleta): void
     {
-        if (! $papeleta->jefeInmediato) {
-            return;
-        }
-
-        $this->enviarUno(
-            $papeleta->jefeInmediato,
+        $this->enviar(
+            $this->destinatariosJefe($papeleta),
             $papeleta,
             'observacion_respondida',
             'Observación respondida',
             "{$papeleta->trabajador->nombre_completo} respondió tu observación. La papeleta volvió a tu bandeja.",
-            $this->urlJefe($papeleta),
+            fn () => $this->urlJefe($papeleta),
         );
     }
 
@@ -143,17 +135,13 @@ class NotificarPapeletaService
      */
     public function observadaPorRrhh(Papeleta $papeleta): void
     {
-        if (! $papeleta->jefeInmediato) {
-            return;
-        }
-
-        $this->enviarUno(
-            $papeleta->jefeInmediato,
+        $this->enviar(
+            $this->destinatariosJefe($papeleta),
             $papeleta,
             'observada_rrhh',
             'RRHH observó una papeleta de tu equipo',
             "RRHH observó la papeleta de {$papeleta->trabajador->nombre_completo}. Coordina la subsanación.",
-            $this->urlJefe($papeleta),
+            fn () => $this->urlJefe($papeleta),
         );
     }
 
@@ -171,11 +159,7 @@ class NotificarPapeletaService
 
     public function abandonoNoMarcado(Papeleta $papeleta): void
     {
-        $destinatarios = $this->usuariosRrhh();
-
-        if ($papeleta->jefeInmediato) {
-            $destinatarios->push($papeleta->jefeInmediato);
-        }
+        $destinatarios = $this->usuariosRrhh()->concat($this->destinatariosJefe($papeleta));
 
         $this->enviar(
             $destinatarios,
@@ -201,11 +185,7 @@ class NotificarPapeletaService
 
     public function sustentoSinRevisar(Papeleta $papeleta): void
     {
-        $destinatarios = $this->usuariosRrhh();
-
-        if ($papeleta->jefeInmediato) {
-            $destinatarios->push($papeleta->jefeInmediato);
-        }
+        $destinatarios = $this->usuariosRrhh()->concat($this->destinatariosJefe($papeleta));
 
         $this->enviar(
             $destinatarios,
@@ -235,6 +215,33 @@ class NotificarPapeletaService
     private function usuariosRrhh(): Collection
     {
         return User::role('rrhh')->get();
+    }
+
+    /**
+     * Todos los jefes que pueden decidir/atender esta papeleta: los
+     * candidatos fotografiados en papeleta_jefes_candidatos (turno 728
+     * con varios jefes posibles, ver
+     * UnidadOrganica::resolverJefesInmediatos()), o si no hay ninguna
+     * fila ahí (papeletas de antes de este cambio, o régimen 276 con
+     * un solo candidato), el jefe_inmediato_id fotografiado tal cual.
+     * Nunca los dos a la vez, para no duplicar notificaciones a la
+     * misma persona en el caso normal.
+     *
+     * @return Collection<int, User>
+     */
+    private function destinatariosJefe(Papeleta $papeleta): Collection
+    {
+        $candidatos = $papeleta->jefesCandidatos()
+            ->with('jefe')
+            ->get()
+            ->pluck('jefe')
+            ->filter();
+
+        if ($candidatos->isNotEmpty()) {
+            return $candidatos->values();
+        }
+
+        return $papeleta->jefeInmediato ? collect([$papeleta->jefeInmediato]) : collect();
     }
 
     private function enviarUno(User $destinatario, Papeleta $papeleta, string $tipo, string $titulo, string $mensaje, ?string $url): void

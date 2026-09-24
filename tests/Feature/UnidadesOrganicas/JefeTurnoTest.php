@@ -74,7 +74,14 @@ class JefeTurnoTest extends TestCase
         $this->assertDatabaseMissing('jefes_turno', ['id' => $jefeTurno->id]);
     }
 
-    public function test_no_se_puede_repetir_el_mismo_turno_dos_veces_en_la_misma_unidad(): void
+    /**
+     * Desde el cambio "varios jefes por turno" (unique ahora es
+     * unidad+turno+jefe_id, no unidad+turno): un turno SÍ puede tener
+     * más de un jefe asignado. Lo único que sigue bloqueado es
+     * duplicar exactamente la misma fila (mismo jefe, mismo turno,
+     * misma unidad) dos veces.
+     */
+    public function test_un_turno_puede_tener_varios_jefes_pero_no_la_misma_fila_repetida(): void
     {
         $jefe = $this->usuarioDePrueba([], ['trabajador']);
         $otroJefe = $this->usuarioDePrueba([], ['trabajador']);
@@ -82,8 +89,14 @@ class JefeTurnoTest extends TestCase
 
         JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
 
-        $this->expectException(QueryException::class);
+        // Segundo jefe para el MISMO turno: ahora permitido.
         JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $otroJefe->id]);
+
+        $this->assertSame(2, JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', 'MANANA')->count());
+
+        // Repetir la fila exacta (mismo jefe, mismo turno, misma unidad) sigue bloqueado.
+        $this->expectException(QueryException::class);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
     }
 
     public function test_la_papeleta_de_un_728_fotografia_al_jefe_del_turno_vigente_no_al_jefe_titular(): void

@@ -78,31 +78,49 @@ class CrearPapeletaAction
 
         // Misma regla que UserObserver: quien encabeza su unidad NO es su propio jefe.
         // El código de turno (MANANA/TARDE/NOCHE, null para 276) resuelve
-        // el jefe inmediato de ESTE turno vía jefes_turno — ver
-        // UnidadOrganica::resolverJefeInmediato().
-        [$jefeInmediatoId, $jefeAreaId] = $unidad ? $unidad->jefaturasDe($trabajador, $turno?->codigo()) : [null, null];
+        // TODOS los candidatos a jefe inmediato de ESTE turno vía
+        // jefes_turno — ver UnidadOrganica::resolverJefesInmediatos().
+        // Para 276 (turno null) esto sigue siendo, como mucho, un único
+        // candidato: jefe_id de la unidad.
+        [$jefesInmediatosIds, $jefeAreaId] = $unidad ? $unidad->jefaturasMultiplesDe($trabajador, $turno?->codigo()) : [[], null];
 
-        // Disponibilidad real del decisor resuelto (o si por alguna razón
-        // el jefe_inmediato_id no resuelve a un User activo): estar
-        // asignado en la BD no implica poder decidir ahora.
-        $jefeInmediato = $jefeInmediatoId ? User::find($jefeInmediatoId) : null;
+        // resolverJefesInmediatos() ya filtra a jefes activos, así que
+        // estos son directamente los candidatos válidos (0 o más).
+        $jefesInmediatos = $jefesInmediatosIds !== [] ? User::whereKey($jefesInmediatosIds)->get() : collect();
 
-        // Turno sin jefe inmediato ACTIVO (huecos de cobertura por turno,
-        // o el jefe fue dado de baja): a diferencia de "jefe fuera de
-        // horario" (que sí escala más abajo), esto bloquea del todo —
-        // nunca se queda esperando a alguien que no existe. Solo aplica
-        // cuando SÍ hay un Jefe de Área (jerarquía normal, con quien
-        // regularizar) — si $jefeAreaId también es null (tope del
+        // Turno sin NINGÚN jefe inmediato activo (huecos de cobertura por
+        // turno, o todos los jefes fueron dados de baja): a diferencia de
+        // "jefe fuera de horario" (que sí escala más abajo), esto bloquea
+        // del todo — nunca se queda esperando a alguien que no existe.
+        // Solo aplica cuando SÍ hay un Jefe de Área (jerarquía normal, con
+        // quien regularizar) — si $jefeAreaId también es null (tope del
         // organigrama, ver Papeleta::sinJefatura), ese caso sigue
         // escalando a RRHH/autorización del sistema como siempre.
-        if ($jefeAreaId !== null && (! $jefeInmediato || ! $jefeInmediato->activo)) {
+        if ($jefeAreaId !== null && $jefesInmediatos->isEmpty()) {
             throw new PapeletaException(
                 'Tu turno actual no tiene un jefe inmediato activo asignado. '.
                 'Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
             );
         }
 
-        $jefeDisponible = $this->decisorDisponible->estaDisponibleAhora($jefeInmediato);
+        // Disponibilidad real: estar asignado en la BD no implica poder
+        // decidir ahora (ver DecisorDisponibleService). Con varios
+        // candidatos basta con que UNO esté disponible para no escalar —
+        // en 728 esto siempre es cierto en cuanto hay al menos un
+        // candidato, porque DecisorDisponibleService considera a
+        // cualquier decisor 728 siempre disponible.
+        $jefeDisponible = $jefesInmediatos->contains(
+            fn (User $jefe) => $this->decisorDisponible->estaDisponibleAhora($jefe)
+        );
+
+        // Columna única (compatibilidad con reportes/dashboards): se
+        // fotografía preferentemente a un candidato disponible, o al
+        // primero si ninguno lo está. La lista completa de candidatos se
+        // guarda aparte, ver Papeleta::jefesCandidatos().
+        $jefeInmediatoId = $jefesInmediatos
+            ->first(fn (User $jefe) => $this->decisorDisponible->estaDisponibleAhora($jefe))
+            ?->id ?? $jefesInmediatos->first()?->id;
+
         $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 
         $estadoInicial = match (true) {
@@ -113,7 +131,7 @@ class CrearPapeletaAction
 
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $jefeDisponible, $estadoInicial, $autorizaSistema) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $estadoInicial, $autorizaSistema) {
             $campos = [
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
@@ -141,6 +159,16 @@ class CrearPapeletaAction
             }
 
             $papeleta = Papeleta::create($campos);
+
+            // Fotografía de TODOS los candidatos resueltos (no solo el
+            // guardado en jefe_inmediato_id): cualquiera puede decidir
+            // esta papeleta, el que actúe primero — ver
+            // Papeleta::scopeDeJefeInmediato().
+            if ($jefesInmediatosIds !== []) {
+                $papeleta->jefesCandidatos()->createMany(
+                    collect($jefesInmediatosIds)->map(fn (int $id) => ['user_id' => $id])->all()
+                );
+            }
 
             HistorialPapeleta::create([
                 'papeleta_id' => $papeleta->id,

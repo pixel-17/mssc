@@ -120,6 +120,78 @@ class UnidadOrganica extends Model
     }
 
     /**
+     * Todos los candidatos a jefe inmediato de esta unidad para el
+     * turno dado — no uno solo (ver resolverJefeInmediato() para el
+     * caso de un solo jefe fotografiado, que se mantiene por
+     * compatibilidad).
+     *
+     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): trae todas
+     *   las filas de jefes_turno para ese turno (pueden ser varias,
+     *   ver create_jefes_turno_table). De esas:
+     *   - si alguna está "de servicio" hoy (su propio ciclo en
+     *     configuraciones_turno, vía Turno::vigenteParaUsuario, igual
+     *     que un trabajador) devuelve solo esas;
+     *   - si ninguna está de servicio, devuelve a TODAS las
+     *     asignadas igual — nunca bloquea si hay al menos un
+     *     jefes_turno asignado a ese turno;
+     *   - si no hay ninguna fila para ese turno, devuelve vacío (cae
+     *     al comportamiento de bloqueo de CrearPapeletaAction).
+     *   Solo cuenta jefes activos.
+     * - Cualquier otro valor ($turno null, régimen 276, o un código
+     *   que no es de turno rotativo): un único candidato, jefe_id de
+     *   la unidad (o vacío si no tiene).
+     *
+     * @return list<int>
+     */
+    public function resolverJefesInmediatos(?string $turno): array
+    {
+        if (! in_array($turno, ConfiguracionTurno::TURNOS_728, true)) {
+            return $this->jefe_id !== null ? [(int) $this->jefe_id] : [];
+        }
+
+        $candidatos = $this->jefesTurno
+            ->where('turno', $turno)
+            ->filter(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe?->activo);
+
+        if ($candidatos->isEmpty()) {
+            return [];
+        }
+
+        $deServicio = $candidatos->filter(
+            fn (JefeTurno $jefeTurno) => Turno::vigenteParaUsuario($jefeTurno->jefe_id)?->codigo() === $turno
+        );
+
+        $resultado = $deServicio->isNotEmpty() ? $deServicio : $candidatos;
+
+        return $resultado->pluck('jefe_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+    }
+
+    /**
+     * Versión de jefaturasDe() que devuelve TODOS los candidatos a
+     * jefe inmediato (no uno solo), junto al jefe de área tal cual.
+     * Usada por CrearPapeletaAction para fotografiar en
+     * papeleta_jefes_candidatos (ver Papeleta::jefesCandidatos()).
+     *
+     * @return array{0: list<int>, 1: ?int}
+     */
+    public function jefaturasMultiplesDe(User $usuario, ?string $turno = null): array
+    {
+        $padre = $this->padre;
+
+        if ($this->esJefeDeLaUnidad($usuario)) {
+            return [
+                $padre?->resolverJefesInmediatos($turno) ?? [],
+                $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
+            ];
+        }
+
+        return [
+            $this->resolverJefesInmediatos($turno),
+            $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
+        ];
+    }
+
+    /**
      * ¿$usuario es jefe de ESTA unidad? Lo es quien figura como
      * `jefe_id` o como jefe de algún turno en jefes_turno.
      */

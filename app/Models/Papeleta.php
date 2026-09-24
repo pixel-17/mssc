@@ -121,14 +121,23 @@ class Papeleta extends Model
         $this->estado = new $destino($this);
     }
 
-    /** Papeletas que el usuario decide como jefe inmediato (automático o adicional). */
+    /**
+     * Papeletas que el usuario decide como jefe inmediato: automático
+     * (jefe_inmediato_id, columna fotografiada), adicional
+     * (jefes_inmediatos_adicionales, asignación manual permanente) o
+     * candidato de turno 728 (papeleta_jefes_candidatos, fotografiado
+     * al crear — ver UnidadOrganica::resolverJefesInmediatos()).
+     */
     public function scopeDeJefeInmediato(Builder $query, User $jefe): Builder
     {
         return $query->where(fn (Builder $q) => $q
             ->where('papeletas.jefe_inmediato_id', $jefe->id)
             ->orWhereIn('papeletas.trabajador_id', DB::table('jefes_inmediatos_adicionales')
                 ->where('jefe_inmediato_id', $jefe->id)
-                ->select('trabajador_id')));
+                ->select('trabajador_id'))
+            ->orWhereIn('papeletas.id', DB::table('papeleta_jefes_candidatos')
+                ->where('user_id', $jefe->id)
+                ->select('papeleta_id')));
     }
 
     /**
@@ -236,5 +245,16 @@ class Papeleta extends Model
     public function historial(): HasMany
     {
         return $this->hasMany(HistorialPapeleta::class);
+    }
+
+    /**
+     * Todos los candidatos a jefe inmediato fotografiados al crear esta
+     * papeleta (ver UnidadOrganica::resolverJefesInmediatos()). Para
+     * papeletas creadas antes de este cambio, o de régimen 276, puede
+     * estar vacía — ahí sigue mandando solo jefe_inmediato_id.
+     */
+    public function jefesCandidatos(): HasMany
+    {
+        return $this->hasMany(PapeletaJefeCandidato::class);
     }
 }
