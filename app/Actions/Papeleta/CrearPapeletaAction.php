@@ -30,6 +30,12 @@ use Illuminate\Support\Facades\DB;
  *   MODO_ESTRICTO_728): es la regla fija, siempre activa.
  * - Un trabajador puede tener varias papeletas al mismo tiempo: no hay
  *   regla de exclusividad ni columnas "slot" a nivel de BD.
+ * - Jefe inmediato sin resolver o inactivo, HABIENDO Jefe de Área
+ *   (jerarquía normal, con quien regularizar): bloqueo total, no se
+ *   crea la papeleta — es un hueco de configuración (turno sin jefe
+ *   asignado, o jefe dado de baja), no una indisponibilidad temporal.
+ *   Distinto del caso de abajo (sinJefatura, tope del organigrama sin
+ *   jefe_area_id tampoco), que sí sigue escalando.
  * - Decisor resuelto pero NO disponible ahora mismo (DecisorDisponibleService:
  *   jefe 276 fuera de su horario ordinario, o feriado) o sin jefatura
  *   (tope del organigrama sin nadie arriba): la papeleta NO se queda
@@ -80,6 +86,22 @@ class CrearPapeletaAction
         // el jefe_inmediato_id no resuelve a un User activo): estar
         // asignado en la BD no implica poder decidir ahora.
         $jefeInmediato = $jefeInmediatoId ? User::find($jefeInmediatoId) : null;
+
+        // Turno sin jefe inmediato ACTIVO (huecos de cobertura por turno,
+        // o el jefe fue dado de baja): a diferencia de "jefe fuera de
+        // horario" (que sí escala más abajo), esto bloquea del todo —
+        // nunca se queda esperando a alguien que no existe. Solo aplica
+        // cuando SÍ hay un Jefe de Área (jerarquía normal, con quien
+        // regularizar) — si $jefeAreaId también es null (tope del
+        // organigrama, ver Papeleta::sinJefatura), ese caso sigue
+        // escalando a RRHH/autorización del sistema como siempre.
+        if ($jefeAreaId !== null && (! $jefeInmediato || ! $jefeInmediato->activo)) {
+            throw new PapeletaException(
+                'Tu turno actual no tiene un jefe inmediato activo asignado. '.
+                'Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
+            );
+        }
+
         $jefeDisponible = $this->decisorDisponible->estaDisponibleAhora($jefeInmediato);
         $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 

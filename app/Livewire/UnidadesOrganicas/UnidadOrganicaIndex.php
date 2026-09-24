@@ -42,7 +42,7 @@ class UnidadOrganicaIndex extends Component
     public function render(): View
     {
         return view('livewire.unidades-organicas.unidad-organica-index', [
-            'unidades' => UnidadOrganica::with(['padre', 'jefe'])->orderBy('nombre')->get(),
+            'unidades' => UnidadOrganica::with(['padre', 'jefe', 'jefesTurno.jefe'])->orderBy('nombre')->get(),
         ]);
     }
 }

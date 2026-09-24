@@ -30,6 +30,7 @@
                         <th scope="col" class="px-4 py-3">Unidad padre</th>
                         <th scope="col" class="px-4 py-3">Tipo</th>
                         <th scope="col" class="px-4 py-3">Jefe</th>
+                        <th scope="col" class="px-4 py-3">Turnos sin jefe</th>
                         <th scope="col" class="px-4 py-3">Activo</th>
                         <th scope="col" class="px-4 py-3"></th>
                     </tr>
@@ -41,6 +42,14 @@
                             <td class="px-4 py-3">{{ $unidad->padre?->nombre ?? '— (raíz)' }}</td>
                             <td class="px-4 py-3">{{ $unidad->tipo }}</td>
                             <td class="px-4 py-3">{{ $unidad->jefe?->name }}</td>
+                            <td class="px-4 py-3 text-sm">
+                                @php($faltan = $unidad->turnosSinJefe())
+                                @if ($faltan !== [])
+                                    <span class="text-yellow-700 dark:text-yellow-400">{{ collect($faltan)->map(fn ($t) => \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ') }}</span>
+                                @else
+                                    —
+                                @endif
+                            </td>
                             <td class="px-4 py-3">{{ $unidad->activo ? 'Sí' : 'No' }}</td>
                             <td class="px-4 py-3 text-right space-x-3">
                                 <a href="{{ route('unidades-organicas.editar', $unidad) }}" class="btn-row">
@@ -58,7 +67,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                            <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
                                 Aún no hay unidades orgánicas registradas.
                             </td>
                         </tr>

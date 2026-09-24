@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Usuario;
 
+use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
@@ -12,6 +13,10 @@ use Illuminate\Validation\Rule;
  * no aquí — authorize() solo exige estar autenticado. Esta clase solo
  * valida la FORMA de los datos, incluyendo que la unidad elegida (si
  * aplica) caiga dentro del área del creador.
+ *
+ * Régimen: cada jefe inmediato tiene trabajadores de su mismo régimen
+ * (ya no se permiten mezclas) — ver withValidator() y
+ * regimenEsperado().
  */
 class CrearUsuarioRequest extends FormRequest
 {
@@ -79,6 +84,53 @@ class CrearUsuarioRequest extends FormRequest
             'turno.required' => 'Un trabajador 728 necesita su turno inicial: sin esto no podrá crear ninguna papeleta.',
             'fecha_ancla.required' => 'Indica desde cuándo empieza su próximo bloque de trabajo.',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $regimenEsperado = $this->regimenEsperado();
+            $regimenEnviado = $this->input('regimen');
+
+            if ($regimenEsperado !== null && $regimenEnviado !== null && $regimenEnviado !== $regimenEsperado) {
+                $validator->errors()->add(
+                    'regimen',
+                    "El régimen debe coincidir con el de su jefe inmediato (régimen {$regimenEsperado})."
+                );
+            }
+        });
+    }
+
+    /**
+     * Régimen que debe tener el nuevo usuario para coincidir con su
+     * jefe inmediato — cada jefe inmediato solo tiene trabajadores de
+     * su propio régimen:
+     *
+     * - Jefe Inmediato creando su propio trabajador (! esJefeDeArea):
+     *   el régimen del propio creador, porque ÉL es quien queda como
+     *   jefe inmediato automático (unidad_organica_id se hereda).
+     * - Jefe de Área dando de alta un trabajador (no un jefe_inmediato
+     *   nuevo) en una unidad que YA tiene jefe asignado: el régimen de
+     *   ese jefe (jefe_id de la unidad).
+     * - Cualquier otro caso (jefe_inmediato nuevo, o unidad sin jefe
+     *   todavía): no hay nada contra qué comparar, se deja pasar.
+     */
+    private function regimenEsperado(): ?string
+    {
+        $unidadesDisponibles = $this->unidadesDisponibles();
+        $esJefeDeArea = $unidadesDisponibles->isNotEmpty();
+
+        if (! $esJefeDeArea) {
+            return $this->user()->regimen;
+        }
+
+        if ($this->input('tipo') !== 'trabajador') {
+            return null;
+        }
+
+        $unidad = UnidadOrganica::find($this->input('unidad_organica_id'));
+
+        return $unidad?->jefe?->regimen;
     }
 
     /**

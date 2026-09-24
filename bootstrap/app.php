@@ -50,6 +50,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->command('turnos:generar-proximo-mes')
             ->monthlyOn(25, '02:00')
             ->withoutOverlapping(120);
+
+        // Huecos de cobertura por turno que aparecen sin un alta de por
+        // medio (baja de un jefe titular, reasignación manual de
+        // jefes_turno). No es sensible al minuto: cada hora alcanza.
+        $schedule->command('jefaturas:avisar-faltantes')
+            ->hourly()
+            ->withoutOverlapping(30);
     })
     ->withMiddleware(function (Middleware $middleware): void {
         // Alias de spatie/laravel-permission, usado por 'role:admin' en

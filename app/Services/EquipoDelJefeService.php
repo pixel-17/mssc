@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -14,7 +15,8 @@ use Illuminate\Support\Collection;
  * su personal en cadena de aprobación/histórico):
  *
  * - Jefe Inmediato: sus trabajadores directos (automáticos o
- *   adicionales) y él mismo.
+ *   adicionales), los de su unidad que trabajan el turno que cubre
+ *   como jefe de turno (jefes_turno) y él mismo.
  * - Jefe de Área: sus Jefes Inmediatos (los jefes de las sub-unidades
  *   de su área, de cualquier nivel) y él mismo — NO a los
  *   trabajadores de esas sub-unidades, salvo los que además tenga
@@ -32,12 +34,15 @@ class EquipoDelJefeService
         $esJefeDeArea = $unidadIds->isNotEmpty();
 
         $directos = $user->subordinadosInmediatos()->get()
-            ->merge($user->trabajadoresAdicionales()->get());
+            ->merge($user->trabajadoresAdicionales()->get())
+            ->merge(User::deLosTurnosQueCubre($user)->get());
 
         $jefesDeSubunidades = $esJefeDeArea
             ? User::whereIn('id', UnidadOrganica::whereIn('id', $unidadIds)
                 ->whereNotNull('jefe_id')
-                ->pluck('jefe_id'))
+                ->pluck('jefe_id')
+                ->merge(JefeTurno::whereIn('unidad_organica_id', $unidadIds)->pluck('jefe_id'))
+                ->unique())
                 ->get()
             : collect();
 

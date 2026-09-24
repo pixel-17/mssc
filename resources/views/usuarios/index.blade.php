@@ -7,6 +7,18 @@
 
     <div class="py-12">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @if (! empty($avisosTurnos ?? []))
+                <div class="rounded-md bg-yellow-50 border border-yellow-200 p-4" role="status">
+                    <p class="text-sm font-semibold text-yellow-800">Turnos sin jefe inmediato</p>
+                    <ul class="mt-1 list-disc ps-5 text-sm text-yellow-800">
+                        @foreach ($avisosTurnos as $aviso)
+                            <li>{{ $aviso }}</li>
+                        @endforeach
+                    </ul>
+                    <p class="mt-2 text-xs text-yellow-700">Hasta que se asigne, los trabajadores 728 de ese turno no pueden crear papeletas.</p>
+                </div>
+            @endif
+
             <div class="flex items-center justify-between gap-3 flex-wrap">
                 <p class="text-sm text-gray-500 dark:text-tinta-100/60">
                     @if ($esJefeDeArea)

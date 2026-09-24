@@ -6,6 +6,7 @@ use App\Actions\Usuario\CrearUsuarioAction;
 use App\Exceptions\UsuarioException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Usuario\CrearUsuarioRequest;
+use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -39,6 +40,7 @@ class UsuarioController extends Controller
             'usuarios' => $usuarios,
             'esJefeDeArea' => $unidadIds->isNotEmpty(),
             'puedeCrear' => $user->can('puedeCrearAlgo', User::class),
+            'avisosTurnos' => $this->avisosDeTurnosSinJefe($unidadIds),
         ]);
     }
 
@@ -80,8 +82,58 @@ class UsuarioController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
-        return redirect()->route('usuarios.index')
+        $respuesta = redirect()->route('usuarios.index')
             ->with('success', "Usuario {$nuevo->nombre_completo} creado correctamente.");
+
+        $advertencia = $this->advertenciaTurnoSinJefe($nuevo, $request->input('turno'));
+
+        return $advertencia ? $respuesta->with('warning', $advertencia) : $respuesta;
+    }
+
+    /**
+     * Un trabajador 728 se crea aunque su turno no tenga jefe todavía,
+     * pero se avisa: hasta que se asigne, no podrá crear papeletas.
+     */
+    private function advertenciaTurnoSinJefe(User $nuevo, ?string $turno): ?string
+    {
+        if ($nuevo->regimen !== '728' || $turno === null) {
+            return null;
+        }
+
+        $unidad = UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])->find($nuevo->unidad_organica_id);
+
+        if (! $unidad || ! in_array($turno, $unidad->turnosSinJefe(), true)) {
+            return null;
+        }
+
+        $etiqueta = UnidadOrganicaForm::TURNOS[$turno] ?? $turno;
+
+        return "La unidad {$unidad->nombre} todavía no tiene jefe inmediato para el turno {$etiqueta}: ".
+            'hasta que se asigne, sus trabajadores de ese turno no podrán crear papeletas.';
+    }
+
+    /**
+     * Una línea por unidad 728 del área con turnos sin jefe inmediato.
+     *
+     * @return list<string>
+     */
+    private function avisosDeTurnosSinJefe(\Illuminate\Support\Collection $unidadIds): array
+    {
+        if ($unidadIds->isEmpty()) {
+            return [];
+        }
+
+        return UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])
+            ->whereIn('id', $unidadIds)
+            ->where('activo', true)
+            ->orderBy('nombre')
+            ->get()
+            ->map(fn (UnidadOrganica $unidad) => [$unidad, $unidad->turnosSinJefe()])
+            ->filter(fn (array $par) => $par[1] !== [])
+            ->map(fn (array $par) => "{$par[0]->nombre}: falta jefe inmediato para ".
+                collect($par[1])->map(fn (string $t) => UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ').'.')
+            ->values()
+            ->all();
     }
 
     /**

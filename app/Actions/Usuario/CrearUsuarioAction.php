@@ -5,6 +5,7 @@ namespace App\Actions\Usuario;
 use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Services\AlertaJefaturaService;
 use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -42,11 +43,16 @@ use Illuminate\Support\Facades\Hash;
  *
  * admin NO pasa por aquí: usa UsuarioAdminForm (mismo criterio de
  * contraseña = DNI, ver ese componente).
+ *
+ * Si el trabajador 728 recién cargado queda en un turno sin jefe
+ * inmediato activo, se avisa a admin + Jefe de Área (ver
+ * AlertaJefaturaService) — no bloquea el alta, solo informa.
  */
 class CrearUsuarioAction
 {
     public function __construct(
         private GeneradorTurnoMensualService $generadorTurno,
+        private AlertaJefaturaService $alertaJefatura,
     ) {}
 
     /**
@@ -54,7 +60,7 @@ class CrearUsuarioAction
      */
     public function ejecutar(User $creador, array $datos, bool $esJefeDeArea): User
     {
-        return DB::transaction(function () use ($creador, $datos, $esJefeDeArea) {
+        $nuevo = DB::transaction(function () use ($creador, $datos, $esJefeDeArea) {
             // Reingreso: si el DNI corresponde a alguien ya desactivado
             // (ver UsuarioAdminIndex::desactivar(), que desactiva en vez de
             // borrar), reactivamos esa misma fila en vez de crear una
@@ -131,6 +137,16 @@ class CrearUsuarioAction
 
             return $nuevo->fresh();
         });
+
+        // Fuera de la transacción: mismo motivo que CrearPapeletaAction —
+        // si el envío de la notificación falla, nunca debe revertir el
+        // alta ya confirmada en BD. Solo aplica a 728 (jefes_turno no se
+        // usa en 276, ver AlertaJefaturaService).
+        if ($datos['regimen'] === '728' && $nuevo->unidadOrganica) {
+            $this->alertaJefatura->avisarSiFaltaJefeDeTurno($nuevo->unidadOrganica, $datos['turno']);
+        }
+
+        return $nuevo;
     }
 
     /**

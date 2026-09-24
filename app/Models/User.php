@@ -198,10 +198,37 @@ class User extends Authenticatable
                 ->orWhere('users.jefe_area_id', $jefe->id)
                 ->orWhereIn('users.id', \Illuminate\Support\Facades\DB::table('jefes_inmediatos_adicionales')
                     ->where('jefe_inmediato_id', $jefe->id)
-                    ->select('trabajador_id'));
+                    ->select('trabajador_id'))
+                ->orWhereIn('users.id', User::deLosTurnosQueCubre($jefe)->select('users.id'));
 
             if ($unidadIds->isNotEmpty()) {
                 $q->orWhereIn('users.unidad_organica_id', $unidadIds);
+            }
+        });
+    }
+
+    /**
+     * Trabajadores que caen bajo $jefe por ser JEFE DE TURNO (jefes_turno):
+     * los de esa unidad cuyo turno configurado es el que él cubre. Sin
+     * esto, los jefes de turno que no son `jefe_id` no verían a nadie
+     * (users.jefe_inmediato_id apunta al jefe de la unidad).
+     */
+    public function scopeDeLosTurnosQueCubre(\Illuminate\Database\Eloquent\Builder $query, User $jefe): \Illuminate\Database\Eloquent\Builder
+    {
+        $turnos = \App\Models\JefeTurno::where('jefe_id', $jefe->id)->get(['unidad_organica_id', 'turno']);
+
+        if ($turnos->isEmpty()) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($q) use ($turnos) {
+            foreach ($turnos as $jefeTurno) {
+                $q->orWhere(function ($w) use ($jefeTurno) {
+                    $w->where('users.unidad_organica_id', $jefeTurno->unidad_organica_id)
+                        ->whereIn('users.id', \Illuminate\Support\Facades\DB::table('configuraciones_turno')
+                            ->where('turno', $jefeTurno->turno)
+                            ->select('user_id'));
+                });
             }
         });
     }

@@ -49,6 +49,35 @@ class UnidadOrganica extends Model
         return $this->belongsTo(User::class, 'jefe_id');
     }
 
+    /**
+     * Régimen de la unidad = el de su jefe (`jefe_id`): todos sus jefes y
+     * trabajadores deben ser de ese mismo régimen. null mientras la
+     * unidad todavía no tiene jefe (el primero que se cree lo define).
+     */
+    public function regimen(): ?string
+    {
+        return $this->jefe?->regimen;
+    }
+
+    /**
+     * Turnos rotativos de una unidad 728 que hoy NO tienen jefe inmediato
+     * activo (sin fila en jefes_turno, o con el jefe desactivado). Vacío
+     * para unidades 276 o sin jefe: ahí la regla de turnos no aplica.
+     *
+     * @return list<string>
+     */
+    public function turnosSinJefe(): array
+    {
+        if ($this->regimen() !== '728') {
+            return [];
+        }
+
+        return array_values(array_filter(
+            ConfiguracionTurno::TURNOS_728,
+            fn (string $turno) => $this->resolverJefeInmediato($turno) === null,
+        ));
+    }
+
     /** Jefes inmediatos de esta unidad, uno por turno (MANANA/TARDE/NOCHE). Asignación manual. */
     public function jefesTurno(): HasMany
     {
@@ -65,20 +94,45 @@ class UnidadOrganica extends Model
     }
 
     /**
-     * Jefe inmediato de esta unidad para el turno dado. Si el turno no
-     * tiene fila propia en jefes_turno (o $turno es null, ej. régimen
-     * 276), cae a `jefe_id` — mismo comportamiento de siempre, para no
-     * romper unidades que todavía no configuraron jefes por turno.
+     * Jefe inmediato de esta unidad para el turno dado.
+     *
+     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): SOLO cuenta la
+     *   fila de jefes_turno de ese turno, y solo si ese jefe sigue
+     *   activo. Sin fila (o con el jefe desactivado) devuelve null: ese
+     *   turno no tiene jefe y quien pide la papeleta debe enterarse
+     *   (ver CrearPapeletaAction). Ya NO cae a `jefe_id`.
+     * - Cualquier otro valor ($turno null, ej. régimen 276, o un código
+     *   que no es de turno rotativo): `jefe_id` de la unidad.
      */
     public function resolverJefeInmediato(?string $turno): ?int
     {
-        $jefeTurno = $this->jefeTurnoPara($turno);
-
-        if ($jefeTurno?->jefe_id) {
-            return (int) $jefeTurno->jefe_id;
+        if (! in_array($turno, ConfiguracionTurno::TURNOS_728, true)) {
+            return $this->jefe_id !== null ? (int) $this->jefe_id : null;
         }
 
-        return $this->jefe_id !== null ? (int) $this->jefe_id : null;
+        $jefeTurno = $this->jefeTurnoPara($turno);
+
+        if (! $jefeTurno?->jefe_id || ! $jefeTurno->jefe?->activo) {
+            return null;
+        }
+
+        return (int) $jefeTurno->jefe_id;
+    }
+
+    /**
+     * ¿$usuario es jefe de ESTA unidad? Lo es quien figura como
+     * `jefe_id` o como jefe de algún turno en jefes_turno.
+     */
+    public function esJefeDeLaUnidad(User $usuario): bool
+    {
+        if ($usuario->id === null) {
+            return false;
+        }
+
+        return (int) $this->jefe_id === (int) $usuario->id
+            || $this->jefesTurno->contains(
+                fn (JefeTurno $jefeTurno) => (int) $jefeTurno->jefe_id === (int) $usuario->id
+            );
     }
 
     /** Trabajadores que pertenecen a esta unidad. */
@@ -114,8 +168,9 @@ class UnidadOrganica extends Model
      * (fotografía en la papeleta) y el comando jefaturas:recalcular,
      * para que nunca diverjan.
      *
-     * Quien encabeza la unidad también es miembro de ella, pero NO puede
-     * ser su propio jefe: su superior está un nivel arriba (jefe
+     * Quien encabeza la unidad (como `jefe_id` o como jefe de un turno)
+     * también es miembro de ella, pero NO puede ser su propio jefe: su
+     * superior está un nivel arriba (jefe
      * inmediato = jefe de la unidad padre; jefe de área = jefe de la
      * unidad abuela). Si no hay unidad padre, ese nivel queda en null.
      *
@@ -132,7 +187,7 @@ class UnidadOrganica extends Model
     {
         $padre = $this->padre;
 
-        if ($usuario->id !== null && (int) $this->jefe_id === (int) $usuario->id) {
+        if ($this->esJefeDeLaUnidad($usuario)) {
             return [
                 $padre?->resolverJefeInmediato($turno),
                 $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
