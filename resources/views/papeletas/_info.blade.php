@@ -1,11 +1,12 @@
-<div class="glass-card p-6">
-    <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-        @if ($papeleta->relationLoaded('trabajador') && $papeleta->trabajador)
-            <div>
-                <dt class="text-gray-500 dark:text-tinta-100/50">Trabajador</dt>
-                <dd class="text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }} ({{ $papeleta->regimen }})</dd>
-            </div>
-        @endif
+<div class="glass-card p-6 space-y-5">
+    @if ($papeleta->relationLoaded('trabajador') && $papeleta->trabajador)
+        <div>
+            <dt class="text-gray-500 dark:text-tinta-100/50 text-sm">Trabajador</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">{{ $papeleta->trabajador->nombre_completo }} ({{ $papeleta->regimen }})</dd>
+        </div>
+    @endif
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
         <div>
             <dt class="text-gray-500 dark:text-tinta-100/50">Sede</dt>
             <dd class="text-gray-900 dark:text-white">{{ $papeleta->sede->nombre ?? '—' }}</dd>
@@ -15,6 +16,15 @@
             <dd class="text-gray-900 dark:text-white">{{ $papeleta->dia_operativo?->format('d/m/Y') }}</dd>
         </div>
         <div>
+            <dt class="text-gray-500 dark:text-tinta-100/50">Hora de salida real</dt>
+            <dd class="text-gray-900 dark:text-white">{{ $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—' }}</dd>
+        </div>
+    </div>
+
+    {{-- Jefe inmediato y de área agrupados aparte: son la cadena de
+         escalamiento, un dato distinto a lo operativo de arriba. --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 dark:border-white/10 pt-4">
+        <div>
             <dt class="text-gray-500 dark:text-tinta-100/50">Jefe inmediato</dt>
             <dd class="text-gray-900 dark:text-white">{{ $papeleta->jefeInmediato?->nombre_completo ?? '—' }}</dd>
         </div>
@@ -22,41 +32,42 @@
             <dt class="text-gray-500 dark:text-tinta-100/50">Jefe de área</dt>
             <dd class="text-gray-900 dark:text-white">{{ $papeleta->jefeArea?->nombre_completo ?? '—' }}</dd>
         </div>
-        <div>
-            <dt class="text-gray-500 dark:text-tinta-100/50">Hora de salida real</dt>
-            <dd class="text-gray-900 dark:text-white">{{ $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—' }}</dd>
+    </div>
+
+    @if ($papeleta->autorizado_con_rrhh_fuera_horario || $papeleta->justificacion || $papeleta->observacion_subsanada_at || $papeleta->motivo_rechazo || $papeleta->causa_finalizacion_sin_retorno)
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 dark:border-white/10 pt-4">
+            @if ($papeleta->autorizado_con_rrhh_fuera_horario)
+                <div>
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Revisión post-hoc RRHH</dt>
+                    <dd class="text-gray-900 dark:text-white">{{ ucfirst($papeleta->revision_posthoc_estado ?? 'pendiente') }}</dd>
+                </div>
+            @endif
+            @if ($papeleta->justificacion)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Justificación</dt>
+                    <dd class="text-gray-900 dark:text-white">{{ $papeleta->justificacion }}</dd>
+                </div>
+            @endif
+            @if ($papeleta->observacion_subsanada_at)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Respuesta del trabajador a la observación ({{ $papeleta->observacion_subsanada_at->format('d/m/Y H:i') }})</dt>
+                    <dd class="text-gray-900 dark:text-white">{{ $papeleta->observacion_respuesta }}</dd>
+                </div>
+            @endif
+            @if ($papeleta->motivo_rechazo)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Motivo de rechazo</dt>
+                    <dd class="text-red-700 dark:text-red-400">{{ $papeleta->motivo_rechazo }}</dd>
+                </div>
+            @endif
+            @if ($papeleta->causa_finalizacion_sin_retorno)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Causa de finalización sin retorno</dt>
+                    <dd class="text-red-700 dark:text-red-400">{{ $papeleta->causa_finalizacion_sin_retorno }}</dd>
+                </div>
+            @endif
         </div>
-        @if ($papeleta->autorizado_con_rrhh_fuera_horario)
-            <div>
-                <dt class="text-gray-500 dark:text-tinta-100/50">Revisión post-hoc RRHH</dt>
-                <dd class="text-gray-900 dark:text-white">{{ ucfirst($papeleta->revision_posthoc_estado ?? 'pendiente') }}</dd>
-            </div>
-        @endif
-        @if ($papeleta->justificacion)
-            <div class="sm:col-span-2">
-                <dt class="text-gray-500 dark:text-tinta-100/50">Justificación</dt>
-                <dd class="text-gray-900 dark:text-white">{{ $papeleta->justificacion }}</dd>
-            </div>
-        @endif
-        @if ($papeleta->observacion_subsanada_at)
-            <div class="sm:col-span-2">
-                <dt class="text-gray-500 dark:text-tinta-100/50">Respuesta del trabajador a la observación ({{ $papeleta->observacion_subsanada_at->format('d/m/Y H:i') }})</dt>
-                <dd class="text-gray-900 dark:text-white">{{ $papeleta->observacion_respuesta }}</dd>
-            </div>
-        @endif
-        @if ($papeleta->motivo_rechazo)
-            <div class="sm:col-span-2">
-                <dt class="text-gray-500 dark:text-tinta-100/50">Motivo de rechazo</dt>
-                <dd class="text-red-700 dark:text-red-400">{{ $papeleta->motivo_rechazo }}</dd>
-            </div>
-        @endif
-        @if ($papeleta->causa_finalizacion_sin_retorno)
-            <div class="sm:col-span-2">
-                <dt class="text-gray-500 dark:text-tinta-100/50">Causa de finalización sin retorno</dt>
-                <dd class="text-red-700 dark:text-red-400">{{ $papeleta->causa_finalizacion_sin_retorno }}</dd>
-            </div>
-        @endif
-    </dl>
+    @endif
 </div>
 
 @if ($papeleta->retorno)

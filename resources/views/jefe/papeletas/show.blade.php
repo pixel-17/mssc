@@ -24,12 +24,23 @@
     $sustentoPresentado = $papeleta->estado->equals(RetornoPendienteSustento::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
+
+    // El tope de observaciones es configurable (Configuraciones > TOPE_OBSERVACIONES,
+    // por defecto 3) y ObservarJefeAction rechaza automáticamente la papeleta en
+    // cuanto el contador lo alcanza. Antes este número estaba hardcodeado en la
+    // vista como "/3" y el jefe no tenía ninguna advertencia de que "Observar"
+    // podía terminar rechazando la papeleta en vez de observarla.
+    $topeObservaciones = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
+    $observarAgotaElTope = $papeleta->contador_observaciones_jefe >= $topeObservaciones - 1;
+    $avisoObservar = $observarAgotaElTope
+        ? "Esta papeleta ya tiene {$papeleta->contador_observaciones_jefe}/{$topeObservaciones} observaciones. Si la observas, alcanzará el tope y el sistema la rechazará automáticamente en vez de esperar respuesta del trabajador."
+        : null;
 @endphp
 
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
+            <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
             <span data-en-vivo-estado><x-estado-papeleta :estado="$papeleta->estado" class="text-sm" /></span>
@@ -46,10 +57,10 @@
 
             @if ($puedeDecidir)
                 <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisión</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Decisión</h3>
 
                     @if ($estaObservada)
-                        <p class="text-sm text-gray-600 mb-3">
+                        <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">
                             Observaste esta papeleta. Espera la respuesta escrita del trabajador{{ $papeleta->observacion_requiere_adjunto ? ' (con archivo adjunto)' : '' }}:
                             volverá a tu bandeja para que decidas. Mientras tanto solo puedes rechazarla.
                         </p>
@@ -66,38 +77,38 @@
                             </form>
                         @endif
                         @if ($estaPendiente)
-                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" />
+                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" :aviso="$avisoObservar" />
                         @endif
                         <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                     </div>
                     @if ($papeleta->contador_observaciones_jefe > 0)
-                        <p class="text-xs text-gray-400 mt-2">Observaciones previas del jefe: {{ $papeleta->contador_observaciones_jefe }}/3</p>
+                        <p class="text-xs text-gray-400 dark:text-tinta-100/40 mt-2">Observaciones previas del jefe: {{ $papeleta->contador_observaciones_jefe }}/{{ $topeObservaciones }}</p>
                     @endif
                 </div>
             @endif
 
             @if ($puedeReconocer)
                 <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Observación de RRHH</h3>
-                    <p class="text-sm text-gray-600 mb-3">RRHH observó esta papeleta. Revisa el historial y reconoce para reabrirla en tu bandeja.</p>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Observación de RRHH</h3>
+                    <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">RRHH observó esta papeleta. Revisa el historial y reconoce para reabrirla en tu bandeja.</p>
                     <x-accion-comentario :action="route('jefe.papeletas.reconocer-observacion-rrhh', $papeleta)" label="Reconocer" color="orange" />
                 </div>
             @endif
 
             @if ($enCurso)
                 <div class="glass-card p-6 space-y-6">
-                    <h3 class="text-sm font-semibold text-gray-700">Papeleta en curso</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Papeleta en curso</h3>
 
                     @if (! $papeleta->retorno)
                         <div>
-                            <p class="text-xs text-gray-500 mb-2">Retorno manual (solo ante falla de conectividad del trabajador):</p>
+                            <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Retorno manual (solo ante falla de conectividad del trabajador):</p>
                             <x-accion-comentario :action="route('jefe.papeletas.retorno-manual', $papeleta)" label="Marcar retorno manual" color="gray" field="justificacion" :minlength="10" placeholder="Justifica la falla de conectividad (mínimo 10 caracteres)..." confirmText="¿Confirmas el retorno manual por falla de conectividad?" />
                         </div>
                     @endif
 
                     @if ($papeleta->motivo->permite_cierre_sin_retorno)
                         <div>
-                            <p class="text-xs text-gray-500 mb-2">Comisión de servicio sin retorno físico:</p>
+                            <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Comisión de servicio sin retorno físico:</p>
                             <form method="POST" action="{{ route('jefe.papeletas.cerrar-sin-retorno', $papeleta) }}" onsubmit="return confirm('¿Cerrar esta papeleta sin retorno físico?')">
                                 @csrf
                                 <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-gray-600 hover:bg-gray-700">Cerrar sin retorno físico</button>
@@ -106,7 +117,7 @@
                     @endif
 
                     <div>
-                        <p class="text-xs text-gray-500 mb-2">Marcar abandono (no retornó y no hay justificación válida):</p>
+                        <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Marcar abandono (no retornó y no hay justificación válida):</p>
                         <x-accion-comentario :action="route('jefe.papeletas.marcar-abandono', $papeleta)" label="Marcar abandono" color="red" confirmText="¿Confirmas marcar esta papeleta como abandono?" />
                     </div>
                 </div>
@@ -114,10 +125,10 @@
 
             @if ($sustentoPresentado)
                 <div class="glass-card p-6" x-data="{ resultado: 'aprobado', enviando: false }">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-3">Revisar sustento presentado</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Revisar sustento presentado</h3>
                     <form method="POST" action="{{ route('jefe.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3" @submit="enviando = true">
                         @csrf
-                        <div class="flex items-center gap-4 text-sm">
+                        <div class="flex items-center gap-4 text-sm text-gray-700 dark:text-tinta-100/80">
                             <label class="inline-flex items-center gap-1">
                                 <input type="radio" name="resultado" value="aprobado" x-model="resultado"> Aprobar
                             </label>

@@ -81,7 +81,17 @@
                         return;
                     }
 
+                    // Transición de opacidad vía estilo inline (no depende de
+                    // que Tailwind haya compilado ninguna clase): evita que
+                    // el cambio de historial/acciones se sienta como un
+                    // salto brusco mientras el jefe está leyendo la página.
+                    contenido.style.transition = 'opacity 150ms ease';
+                    contenido.style.opacity = '0';
+
+                    await new Promise((resolve) => setTimeout(resolve, 150));
+
                     contenido.innerHTML = contenidoNuevo.innerHTML;
+                    contenido.style.opacity = '1';
 
                     const estadoNuevo = doc.querySelector('[data-en-vivo-estado]');
                     const estado = document.querySelector('[data-en-vivo-estado]');

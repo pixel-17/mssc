@@ -3,8 +3,10 @@
 namespace App\Livewire\Navegacion;
 
 use App\Models\Papeleta;
+use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
+use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Locked;
@@ -60,8 +62,20 @@ class InsigniaBandeja extends Component
         }
 
         return match ($this->bandeja) {
-            'jefe' => Papeleta::whereState('estado', PendienteJefe::class)
-                ->deJefeInmediato($usuario)
+            // Todo lo que requiere una acción del jefe ahora mismo:
+            // decidir, reconocer una observación de RRHH, o revisar un
+            // sustento presentado. Antes solo se contaba lo pendiente
+            // de decidir, así que el badge podía quedar en 0 con
+            // pendientes reales esperando en la bandeja (ver JefeIndex).
+            'jefe' => Papeleta::deJefeInmediato($usuario)
+                ->where(function ($query) {
+                    $query->whereState('estado', PendienteJefe::class)
+                        ->orWhereState('estado', ObservadaPorRrhh::class)
+                        ->orWhere(function ($sub) {
+                            $sub->whereState('estado', RetornoPendienteSustento::class)
+                                ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'));
+                        });
+                })
                 ->count(),
             'rrhh' => $usuario->hasRole('rrhh')
                 ? Papeleta::whereState('estado', PendienteRrhh::class)->count()
