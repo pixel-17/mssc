@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -24,17 +25,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('jefes_turno', function (Blueprint $table) {
-            $table->dropUnique(['unidad_organica_id', 'turno']);
-            $table->unique(['unidad_organica_id', 'turno', 'jefe_id'], 'jefes_turno_unidad_turno_jefe_unique');
-        });
+        // Ambos índices empiezan por `unidad_organica_id`, que tiene una FK
+        // hacia unidad_organicas. MySQL/InnoDB no deja borrar un índice si
+        // es el único que respalda esa FK (error 1553), así que ADD y DROP
+        // van en un solo ALTER TABLE: MySQL evalúa ambas cláusulas juntas y
+        // en ningún momento se queda sin índice que cubra la FK.
+        DB::statement(
+            'ALTER TABLE jefes_turno '.
+            'ADD UNIQUE jefes_turno_unidad_turno_jefe_unique (unidad_organica_id, turno, jefe_id), '.
+            'DROP INDEX jefes_turno_unidad_organica_id_turno_unique'
+        );
     }
 
     public function down(): void
     {
-        Schema::table('jefes_turno', function (Blueprint $table) {
-            $table->dropUnique('jefes_turno_unidad_turno_jefe_unique');
-            $table->unique(['unidad_organica_id', 'turno']);
-        });
+        DB::statement(
+            'ALTER TABLE jefes_turno '.
+            'ADD UNIQUE jefes_turno_unidad_organica_id_turno_unique (unidad_organica_id, turno), '.
+            'DROP INDEX jefes_turno_unidad_turno_jefe_unique'
+        );
     }
 };

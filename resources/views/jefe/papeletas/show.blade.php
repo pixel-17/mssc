@@ -8,13 +8,18 @@
     $estaPendiente = $papeleta->estado->equals(PendienteJefe::class);
     $estaObservada = $papeleta->estado->equals(ObservadaPorJefe::class);
 
+    // Un trabajador puede tener varios jefes inmediatos.
+    // Centralizamos esta comprobación para que todos los botones
+    // respeten la misma regla de autorización.
+    $esJefeInmediato = $papeleta->tieneComoJefeInmediatoA(auth()->user());
+
     // Tras observar, mientras el trabajador no responda el jefe solo puede rechazar
     // (al responder, la papeleta vuelve a PENDIENTE_JEFE y decide como siempre).
-    $puedeDecidir = ($estaPendiente || $estaObservada) && $papeleta->jefe_inmediato_id === auth()->id();
+    $puedeDecidir = ($estaPendiente || $estaObservada) && $esJefeInmediato;
 
-    $puedeReconocer = $papeleta->estado->equals(ObservadaPorRrhh::class) && $papeleta->jefe_inmediato_id === auth()->id();
+    $puedeReconocer = $papeleta->estado->equals(ObservadaPorRrhh::class) && $esJefeInmediato;
 
-    $enCurso = $papeleta->estado->equals(AutorizadaYCorriendo::class) && $papeleta->jefe_inmediato_id === auth()->id();
+    $enCurso = $papeleta->estado->equals(AutorizadaYCorriendo::class) && $esJefeInmediato;
 
     $sustentoPresentado = $papeleta->estado->equals(RetornoPendienteSustento::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
