@@ -36,13 +36,12 @@
                 <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Decisión de RRHH</h3>
                     <div class="flex items-center gap-3 flex-wrap">
-                        <form method="POST" action="{{ route('rrhh.papeletas.aprobar', $papeleta) }}" x-data="{ enviando: false }" @submit="enviando = true">
-                            @csrf
-                            <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
-                                <span x-show="! enviando">Aprobar</span>
-                                <span x-show="enviando" x-cloak>Aprobando…</span>
-                            </button>
-                        </form>
+                        <x-boton-confirmar
+                            :action="route('rrhh.papeletas.aprobar', $papeleta)"
+                            label="Aprobar"
+                            color="green"
+                            confirmText="¿Aprobar la papeleta de {{ $papeleta->trabajador->nombre_completo }}?"
+                        />
                         @unless ($papeleta->sinJefatura())
                             <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar (vuelve al jefe)" color="orange" />
                         @endunless
@@ -61,13 +60,12 @@
                         El jefe inmediato autorizó esta papeleta fuera del horario de RRHH ({{ $papeleta->resueltoPorJefe?->nombre_completo ?? '—' }}). Deja constancia de la revisión.
                     </p>
                     <div class="flex items-center gap-3 flex-wrap">
-                        <form method="POST" action="{{ route('rrhh.papeletas.posthoc-aprobar', $papeleta) }}" x-data="{ enviando: false }" @submit="enviando = true">
-                            @csrf
-                            <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
-                                <span x-show="! enviando">Aprobar revisión</span>
-                                <span x-show="enviando" x-cloak>Aprobando…</span>
-                            </button>
-                        </form>
+                        <x-boton-confirmar
+                            :action="route('rrhh.papeletas.posthoc-aprobar', $papeleta)"
+                            label="Aprobar revisión"
+                            color="green"
+                            confirmText="¿Aprobar la revisión post-hoc de la papeleta de {{ $papeleta->trabajador->nombre_completo }}?"
+                        />
                         <x-accion-comentario :action="route('rrhh.papeletas.posthoc-observar', $papeleta)" label="Observar revisión" color="orange" />
                     </div>
                 </div>
