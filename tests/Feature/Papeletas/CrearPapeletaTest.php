@@ -84,44 +84,26 @@ class CrearPapeletaTest extends TestCase
         $this->assertTrue($primera->fresh()->estado->equals(PendienteJefe::class));
     }
 
-    public function test_quien_no_tiene_jefe_arriba_envia_su_papeleta_directo_a_rrhh_si_rrhh_esta_en_horario(): void
+    /**
+     * Regla de estructura (2026-09-24): el jefe inmediato (o, para quien
+     * encabeza su propia unidad, su Jefe de Área) SIEMPRE debe existir y
+     * estar activo. En el tope del organigrama no hay nadie arriba: ya
+     * no escala a RRHH ni se autoautoriza (eso se quitó) — se bloquea
+     * por completo, sin importar si RRHH está o no en horario en ese
+     * momento.
+     */
+    public function test_quien_no_tiene_jefe_arriba_no_puede_crear_papeleta(): void
     {
         $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
-        $this->ir('2026-09-21 10:00:00'); // lunes, dentro de 07:45-16:15
 
         $tope = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
         $this->turnoDePrueba($tope);
 
-        $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
+        $this->expectException(\App\Exceptions\PapeletaException::class);
 
-        $this->assertTrue($papeleta->fresh()->estado->equals(PendienteRrhh::class));
-        $this->assertNull($papeleta->jefe_inmediato_id);
-        $this->assertNull($papeleta->jefe_area_id);
-        $this->assertTrue($papeleta->fresh()->sinJefatura());
-    }
-
-    public function test_quien_no_tiene_jefe_arriba_y_rrhh_fuera_de_horario_se_autoautoriza_con_posthoc(): void
-    {
-        $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
-        $this->ir('2026-09-21 22:00:00'); // lunes, fuera de 07:45-16:15
-
-        $tope = $this->usuarioDePrueba();
-        $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
-        $tope->update(['unidad_organica_id' => $unidad->id]);
-        $this->turnoDePrueba($tope);
-
-        $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
-        $papeleta = $papeleta->fresh();
-
-        $this->assertTrue($papeleta->estado->equals(AutorizadaYCorriendo::class));
-        $this->assertTrue($papeleta->autorizado_con_rrhh_fuera_horario);
-        $this->assertSame('pendiente', $papeleta->revision_posthoc_estado);
-        $this->assertSame('2026-09-21 22:00:00', $papeleta->hora_salida_real->format('Y-m-d H:i:s'));
-
-        $historial = HistorialPapeleta::where('papeleta_id', $papeleta->id)->latest('id')->first();
-        $this->assertSame('sistema', $historial->actor_tipo);
+        app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
     }
 
     public function test_jefe_inmediato_728_disponible_manda_a_pendiente_jefe_aunque_jefe_de_area_este_fuera_de_horario(): void
@@ -168,9 +150,14 @@ class CrearPapeletaTest extends TestCase
         $tope = $this->usuarioDePrueba([], ['trabajador', 'rrhh']);
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
-        $this->turnoDePrueba($tope);
+        $tope = $tope->fresh();
 
-        $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
+        // Ya no se puede llegar a este estado vía CrearPapeletaAction: el
+        // tope del organigrama bloquea la creación desde el 2026-09-24
+        // (ver test_quien_no_tiene_jefe_arriba_no_puede_crear_papeleta).
+        // Se arma directo en BD para seguir probando que RRHH no puede
+        // aprobarse a sí mismo una papeleta sin jefatura.
+        $papeleta = $this->papeletaDePrueba($tope, PendienteRrhh::class);
 
         $this->expectException(\App\Exceptions\PapeletaException::class);
         app(\App\Actions\Papeleta\AprobarRrhhAction::class)->ejecutar($papeleta, $tope);
@@ -181,10 +168,13 @@ class CrearPapeletaTest extends TestCase
         $tope = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
-        $this->turnoDePrueba($tope);
+        $tope = $tope->fresh();
         $rrhh = $this->usuarioDePrueba([], ['rrhh']);
 
-        $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
+        // Igual que arriba: se arma directo en BD, ya no se llega a este
+        // estado vía CrearPapeletaAction desde que el tope del
+        // organigrama bloquea la creación.
+        $papeleta = $this->papeletaDePrueba($tope, PendienteRrhh::class);
 
         $this->expectException(\App\Exceptions\PapeletaException::class);
         app(\App\Actions\Papeleta\ObservarRrhhAction::class)->ejecutar($papeleta, $rrhh, 'falta detalle');
