@@ -70,10 +70,21 @@ class ProcesarVencimientosPapeletas extends Command
             return;
         }
 
+        // Único caso en que el sistema autoriza: la papeleta del propio
+        // jefe inmediato (o jefe de área), cuando tras la aprobación de
+        // SU jefe, RRHH sale de horario antes de decidir. Un trabajador
+        // raso nunca se autoriza por sistema: si RRHH no decide a
+        // tiempo, su papeleta sigue esperando hasta que venza (ver
+        // vencerPapeletasSinTurnoVigente) — nunca escala a nadie más.
         Papeleta::whereState('estado', PendienteRrhh::class)
             ->whereNotNull('jefe_resuelto_at')
+            ->with('trabajador')
             ->chunkById(100, function ($lote) {
                 foreach ($lote as $candidata) {
+                    if (! $candidata->trabajador?->esJefeDeAlguien()) {
+                        continue;
+                    }
+
                     try {
                         $this->autorizarPorCierreDeRrhh($candidata);
                     } catch (Throwable $e) {

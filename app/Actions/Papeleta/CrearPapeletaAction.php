@@ -30,22 +30,28 @@ use Illuminate\Support\Facades\DB;
  *   MODO_ESTRICTO_728): es la regla fija, siempre activa.
  * - Un trabajador puede tener varias papeletas al mismo tiempo: no hay
  *   regla de exclusividad ni columnas "slot" a nivel de BD.
- * - Jefe inmediato sin resolver o inactivo, HABIENDO Jefe de Área
- *   (jerarquía normal, con quien regularizar): bloqueo total, no se
- *   crea la papeleta — es un hueco de configuración (turno sin jefe
- *   asignado, o jefe dado de baja), no una indisponibilidad temporal.
- *   Distinto del caso de abajo (sinJefatura, tope del organigrama sin
- *   jefe_area_id tampoco), que sí sigue escalando.
- * - Decisor resuelto pero NO disponible ahora mismo (DecisorDisponibleService:
- *   jefe 276 fuera de su horario ordinario, o feriado) o sin jefatura
- *   (tope del organigrama sin nadie arriba): la papeleta NO se queda
- *   esperando a un decisor inalcanzable. Sube un nivel:
- *     - Si RRHH está en horario -> PENDIENTE_RRHH directo (salta al jefe).
+ * - Jefe inmediato (o, si quien crea la papeleta es él mismo jefe
+ *   inmediato, su Jefe de Área) sin resolver o inactivo: bloqueo total
+ *   SIEMPRE, sin excepción por régimen ni por posición en el
+ *   organigrama — es un hueco de configuración (turno sin jefe
+ *   asignado, jefe dado de baja, o tope del organigrama sin nadie
+ *   arriba), no una indisponibilidad temporal. La papeleta nunca se
+ *   crea esperando a alguien que no existe.
+ * - Trabajador raso (no es jefe de nadie): SIEMPRE PENDIENTE_JEFE, sin
+ *   importar si su jefe inmediato está "disponible ahora" (fuera de
+ *   horario ordinario, feriado, etc. — ver DecisorDisponibleService).
+ *   Nunca salta a RRHH y el sistema nunca la autoriza por sí solo: si
+ *   el jefe no decide a tiempo, la papeleta simplemente vence (ver
+ *   ProcesarVencimientosPapeletas), nunca escala a nadie más.
+ * - Jefe inmediato enviando SU PROPIA papeleta (sube un nivel, a su
+ *   Jefe de Área): si su Jefe de Área no está disponible ahora mismo,
+ *   sí escala:
+ *     - Si RRHH está en horario -> PENDIENTE_RRHH directo.
  *     - Si RRHH también está fuera de horario -> el sistema autoriza
  *       (AUTORIZADA_Y_CORRIENDO) y queda para revisión post-hoc
  *       obligatoria al día siguiente (mismo mecanismo que AprobarJefeAction
- *       usa cuando el jefe aprueba con RRHH fuera de horario). Nunca es el
- *       propio trabajador quien se autoautoriza: queda registrado como
+ *       usa cuando el jefe aprueba con RRHH fuera de horario). Es el
+ *       ÚNICO caso en que el sistema autoriza; queda registrado como
  *       actor_tipo = 'sistema', nadie "decidió" nada.
  * - Sede/regimen/dia_operativo/fin_turno_at quedan fijados como fotografía
  *   inmutable. fin_turno_at es el instante real en que termina el turno
@@ -88,18 +94,25 @@ class CrearPapeletaAction
         // estos son directamente los candidatos válidos (0 o más).
         $jefesInmediatos = $jefesInmediatosIds !== [] ? User::whereKey($jefesInmediatosIds)->get() : collect();
 
-        // Turno sin NINGÚN jefe inmediato activo (huecos de cobertura por
-        // turno, o todos los jefes fueron dados de baja): a diferencia de
-        // "jefe fuera de horario" (que sí escala más abajo), esto bloquea
-        // del todo — nunca se queda esperando a alguien que no existe.
-        // Solo aplica cuando SÍ hay un Jefe de Área (jerarquía normal, con
-        // quien regularizar) — si $jefeAreaId también es null (tope del
-        // organigrama, ver Papeleta::sinJefatura), ese caso sigue
-        // escalando a RRHH/autorización del sistema como siempre.
-        if ($jefeAreaId !== null && $jefesInmediatos->isEmpty()) {
+        // ¿Quien crea la papeleta es, él mismo, jefe inmediato de su
+        // unidad? Si lo es, jefaturasMultiplesDe() ya resolvió más
+        // arriba en el organigrama (su Jefe de Área) en $jefesInmediatos.
+        // Es el único rol cuya papeleta puede escalar a RRHH o a
+        // autorización del sistema (ver $estadoInicial más abajo): un
+        // trabajador raso nunca escala, solo espera a su jefe inmediato.
+        $esJefeInmediatoDeLaUnidad = $unidad?->esJefeDeLaUnidad($trabajador) ?? false;
+
+        // Regla de estructura: el jefe inmediato (o, si quien crea la
+        // papeleta es él mismo jefe inmediato, su Jefe de Área) SIEMPRE
+        // debe existir y estar activo — sin excepción por régimen ni por
+        // posición en el organigrama. Sin él, no se puede crear la
+        // papeleta: bloqueo total, nunca se queda esperando a alguien
+        // que no existe ni escala a RRHH por defecto.
+        if ($jefesInmediatos->isEmpty()) {
             throw new PapeletaException(
-                'Tu turno actual no tiene un jefe inmediato activo asignado. '.
-                'Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
+                $esJefeInmediatoDeLaUnidad
+                    ? 'Tu unidad no tiene un Jefe de Área activo asignado. Comunícate con Administración para regularizar la jefatura antes de crear una papeleta.'
+                    : 'Tu turno actual no tiene un jefe inmediato activo asignado. Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
             );
         }
 
@@ -108,7 +121,9 @@ class CrearPapeletaAction
         // candidatos basta con que UNO esté disponible para no escalar —
         // en 728 esto siempre es cierto en cuanto hay al menos un
         // candidato, porque DecisorDisponibleService considera a
-        // cualquier decisor 728 siempre disponible.
+        // cualquier decisor 728 siempre disponible. Solo importa para
+        // decidir si se escala, y solo se escala cuando
+        // $esJefeInmediatoDeLaUnidad es true (ver $estadoInicial).
         $jefeDisponible = $jefesInmediatos->contains(
             fn (User $jefe) => $this->decisorDisponible->estaDisponibleAhora($jefe)
         );
@@ -123,15 +138,25 @@ class CrearPapeletaAction
 
         $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 
+        // Trabajador raso (no es jefe de nadie): SIEMPRE PendienteJefe,
+        // sin importar si el jefe está "disponible ahora mismo" — nunca
+        // salta a RRHH ni el sistema la autoriza por sí solo. Si el jefe
+        // no decide a tiempo, la papeleta simplemente vence (ver
+        // ProcesarVencimientosPapeletas), nunca escala a nadie más.
+        // Jefe inmediato enviando SU PROPIA papeleta: aquí sí escala a
+        // RRHH y, si RRHH también está fuera de horario, el sistema
+        // autoriza con revisión post-hoc — es el ÚNICO caso en que el
+        // sistema autoriza.
         $estadoInicial = match (true) {
+            ! $esJefeInmediatoDeLaUnidad => PendienteJefe::class,
             $jefeDisponible => PendienteJefe::class,
-            $rrhhEnHorario => PendienteRrhh::class, // jefe no disponible (o sin jefatura): salta directo a RRHH
-            default => AutorizadaYCorriendo::class, // nadie disponible: autoriza el sistema, no una persona
+            $rrhhEnHorario => PendienteRrhh::class,
+            default => AutorizadaYCorriendo::class,
         };
 
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $estadoInicial, $autorizaSistema) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $estadoInicial, $autorizaSistema) {
             $campos = [
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
@@ -179,7 +204,12 @@ class CrearPapeletaAction
                 'justificacion' => $datos['justificacion'] ?? null,
             ]);
 
-            if (! $jefeDisponible) {
+            if ($esJefeInmediatoDeLaUnidad && ! $jefeDisponible) {
+                // Este historial explicativo solo aplica al caso que sí
+                // puede escalar (jefe inmediato enviando su propia
+                // papeleta). Un trabajador raso siempre queda en
+                // PendienteJefe y no necesita esta explicación.
+                //
                 // Única fuente de verdad: se le pregunta a la papeleta ya
                 // creada, sobre las columnas fotografiadas — el mismo
                 // método que usan ObservarRrhhAction y el resto del
