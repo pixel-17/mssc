@@ -236,17 +236,18 @@ Route::middleware([
     Route::delete('/trabajadores/{trabajador}/jefes-adicionales/{jefe}', [JefeAdicionalController::class, 'destroy'])->name('jefes-adicionales.destroy');
 
     /*
-     * Alta de usuarios y vinculación de jefe inmediato por Jefe de
-     * Área / Jefe Inmediato (Admin NO pasa por aquí: usa el
-     * UserResource de Filament). Controller y vistas ya existían
-     * completos, pero nunca se habían registrado las rutas — sin
-     * middleware de rol por el mismo motivo que jefes-adicionales: la
-     * autorización real vive en UserPolicy.
+     * Alta, edición y vinculación de jefe inmediato por Jefe de Área /
+     * Jefe Inmediato (Admin NO pasa por aquí: usa el UserResource de
+     * Filament). Sin middleware de rol por el mismo motivo que
+     * jefes-adicionales: la autorización real vive en UserPolicy
+     * (ver UserPolicy::editar() para el alcance de edit/update).
      */
     Route::prefix('usuarios')->name('usuarios.')->group(function () {
         Route::get('/', [UsuarioController::class, 'index'])->name('index');
         Route::get('/crear', [UsuarioController::class, 'create'])->name('create');
         Route::post('/', [UsuarioController::class, 'store'])->name('store');
+        Route::get('/{trabajador}/editar', [UsuarioController::class, 'edit'])->name('edit');
+        Route::put('/{trabajador}', [UsuarioController::class, 'update'])->name('update');
 
         Route::post('/vincular/buscar', [VinculoController::class, 'buscar'])->name('buscar');
         Route::post('/{trabajador}/vincular', [VinculoController::class, 'vincular'])->name('vincular');

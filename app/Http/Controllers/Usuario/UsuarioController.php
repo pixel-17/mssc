@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Usuario;
 
 use App\Actions\Usuario\CrearUsuarioAction;
+use App\Actions\Usuario\EditarUsuarioAction;
 use App\Exceptions\UsuarioException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Usuario\CrearUsuarioRequest;
+use App\Http\Requests\Usuario\EditarUsuarioRequest;
 use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -88,6 +90,42 @@ class UsuarioController extends Controller
         $advertencia = $this->advertenciaTurnoSinJefe($nuevo, $request->input('turno'));
 
         return $advertencia ? $respuesta->with('warning', $advertencia) : $respuesta;
+    }
+
+    public function edit(User $trabajador): View
+    {
+        $user = Auth::user();
+        $this->authorize('editar', $trabajador);
+
+        $unidadIds = $this->subtreeIdsDeAreasQueEncabeza($user);
+        // A diferencia de create() (donde $esJefeDeArea es una capacidad
+        // global del creador), aquí se mira si la unidad ACTUAL del
+        // trabajador cae en el subárbol del editor: un Jefe de Área que
+        // edita a alguien que solo le llegó como jefe inmediato adicional
+        // (fuera de su área) no debe ver el selector de unidad/sede, o el
+        // valor actual del trabajador ni siquiera aparecería en la lista.
+        $esJefeDeArea = $trabajador->unidad_organica_id && $unidadIds->contains($trabajador->unidad_organica_id);
+
+        return view('usuarios.editar', [
+            'trabajador' => $trabajador,
+            'esJefeDeArea' => $esJefeDeArea,
+            'unidades' => $esJefeDeArea
+                ? UnidadOrganica::whereIn('id', $unidadIds)->orderBy('nombre')->get()
+                : collect(),
+            'sedes' => Sede::where('activo', true)->orderBy('nombre')->get(),
+        ]);
+    }
+
+    public function update(EditarUsuarioRequest $request, User $trabajador, EditarUsuarioAction $action): RedirectResponse
+    {
+        $this->authorize('editar', $trabajador);
+
+        $esJefeDeArea = $request->unidadesDisponibles()->isNotEmpty();
+
+        $action->ejecutar($trabajador, $request->validated(), $esJefeDeArea);
+
+        return redirect()->route('usuarios.index')
+            ->with('success', "Usuario {$trabajador->nombre_completo} actualizado correctamente.");
     }
 
     /**

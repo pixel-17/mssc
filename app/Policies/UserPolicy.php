@@ -62,6 +62,37 @@ class UserPolicy
     }
 
     /**
+     * ¿Puede $editor editar los datos de $target? Mismo alcance que ya
+     * tienen para crear (crearEnUnidad/crearTrabajadorPropio), pero
+     * aplicado a un usuario existente:
+     *
+     * - admin: cualquiera.
+     * - Jefe de Área: cualquiera de su área (unidad que encabeza + sub-unidades).
+     * - Jefe Inmediato "puro": solo sus propios trabajadores (automáticos +
+     *   adicionales), y nunca a un Jefe de Área ni a un admin — mismo
+     *   límite que esVinculable() en VincularJefeInmediatoAction, para
+     *   que vincularse como jefe adicional de alguien no se convierta en
+     *   una puerta trasera para editar a quien en realidad manda sobre él.
+     */
+    public function editar(User $editor, User $target): bool
+    {
+        if ($editor->hasRole('admin')) {
+            return true;
+        }
+
+        if ($target->hasRole('admin') || $editor->id === $target->id) {
+            return false;
+        }
+
+        if ($target->unidad_organica_id
+            && $this->esJefeDeAreaDe($editor, $target->unidad_organica_id)) {
+            return true;
+        }
+
+        return $editor->esJefeInmediatoDe($target) && ! $target->esJefeDeArea();
+    }
+
+    /**
      * ¿Puede $viewer ver el perfil/listado de $target?
      */
     public function view(User $viewer, User $target): bool
