@@ -25,6 +25,19 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // SQLite (tests): no tiene la restricción de MySQL/InnoDB de abajo
+        // (ni siquiera admite combinar ADD/DROP en un ALTER TABLE — cada
+        // índice se agrega/borra con su propia sentencia), así que el
+        // camino simple con Schema:: alcanza.
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            Schema::table('jefes_turno', function (Blueprint $table) {
+                $table->unique(['unidad_organica_id', 'turno', 'jefe_id'], 'jefes_turno_unidad_turno_jefe_unique');
+                $table->dropUnique('jefes_turno_unidad_organica_id_turno_unique');
+            });
+
+            return;
+        }
+
         // Ambos índices empiezan por `unidad_organica_id`, que tiene una FK
         // hacia unidad_organicas. MySQL/InnoDB no deja borrar un índice si
         // es el único que respalda esa FK (error 1553), así que ADD y DROP
@@ -39,6 +52,15 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            Schema::table('jefes_turno', function (Blueprint $table) {
+                $table->unique(['unidad_organica_id', 'turno'], 'jefes_turno_unidad_organica_id_turno_unique');
+                $table->dropUnique('jefes_turno_unidad_turno_jefe_unique');
+            });
+
+            return;
+        }
+
         DB::statement(
             'ALTER TABLE jefes_turno '.
             'ADD UNIQUE jefes_turno_unidad_organica_id_turno_unique (unidad_organica_id, turno), '.

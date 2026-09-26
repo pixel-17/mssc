@@ -104,6 +104,77 @@
                         <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-4">Papeletas por motivo (últimos 30 días)</h4>
                         <x-bar-list :items="$rrhh['papeletas_por_motivo']" />
                     </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {{-- Quién está afuera ahora mismo --}}
+                        <div class="glass-card p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Afuera ahora mismo</h4>
+                                <span class="text-xs text-gray-500 dark:text-tinta-100/50">{{ $rrhh['trabajadores_afuera_total'] }} en curso</span>
+                            </div>
+                            @if ($rrhh['trabajadores_afuera']->isEmpty())
+                                <p class="text-sm text-gray-500 dark:text-tinta-100/50">Nadie está afuera en este momento.</p>
+                            @else
+                                <ul class="divide-y divide-gray-100 dark:divide-white/10">
+                                    @foreach ($rrhh['trabajadores_afuera'] as $papeleta)
+                                        <li class="py-2 flex items-center justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $papeleta->trabajador->nombre_completo }}</p>
+                                                <p class="text-xs text-gray-500 dark:text-tinta-100/50 truncate">{{ $papeleta->motivo->nombre }}</p>
+                                            </div>
+                                            <span class="text-xs text-gray-500 dark:text-tinta-100/50 shrink-0" title="{{ $papeleta->hora_salida_real?->format('d/m/Y H:i') }}">
+                                                {{ $papeleta->hora_salida_real?->diffForHumans(null, true) }}
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                                @if ($rrhh['trabajadores_afuera_total'] > $rrhh['trabajadores_afuera']->count())
+                                    <p class="text-xs text-gray-500 dark:text-tinta-100/50 mt-2">
+                                        +{{ $rrhh['trabajadores_afuera_total'] - $rrhh['trabajadores_afuera']->count() }} más
+                                    </p>
+                                @endif
+                            @endif
+                        </div>
+
+                        {{-- Top trabajadores por cantidad de papeletas --}}
+                        <div class="glass-card p-5">
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-4">Top trabajadores por papeletas (últimos 30 días)</h4>
+                            <x-bar-list :items="$rrhh['papeletas_por_trabajador']" vacio="Sin papeletas en este periodo." />
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {{-- Horas acumuladas del mes --}}
+                        <div class="glass-card p-5">
+                            <div class="flex items-center justify-between mb-4">
+                                <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 capitalize">Horas acumuladas — {{ \Illuminate\Support\Carbon::createFromFormat('Y-m', $rrhh['horas_acumuladas_mes'])->translatedFormat('F Y') }}</h4>
+                                <a href="{{ route('reportes.horas-acumuladas') }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Ver reporte completo →</a>
+                            </div>
+                            @if ($rrhh['horas_acumuladas_top']->isEmpty())
+                                <p class="text-sm text-gray-500 dark:text-tinta-100/50">Sin retornos registrados este mes.</p>
+                            @else
+                                <ul class="divide-y divide-gray-100 dark:divide-white/10">
+                                    @foreach ($rrhh['horas_acumuladas_top'] as $fila)
+                                        <li class="py-2 flex items-center justify-between gap-3">
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ $fila['trabajador'] }}</p>
+                                                <p class="text-xs text-gray-500 dark:text-tinta-100/50">{{ $fila['papeletas'] }} papeleta(s)</p>
+                                            </div>
+                                            <span class="text-sm font-semibold text-tinta-950 dark:text-white shrink-0">
+                                                {{ intdiv($fila['minutos_totales'], 60) }}h {{ $fila['minutos_totales'] % 60 }}m
+                                            </span>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            @endif
+                        </div>
+
+                        {{-- Seguimiento: rechazadas u observadas por RRHH --}}
+                        <div class="glass-card p-5">
+                            <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-4">Seguimiento (rechazadas u observadas, 30 días)</h4>
+                            <x-bar-list :items="$rrhh['seguimiento_por_trabajador']" vacio="Sin rechazos ni observaciones en este periodo." />
+                        </div>
+                    </div>
                 </section>
             @endif
 

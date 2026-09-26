@@ -36,14 +36,22 @@ class DashboardMetricsService
     /** Ventana usada para las métricas "del último periodo" (conteos, promedios, tasas). */
     protected int $diasVentana = 30;
 
+    public function __construct(
+        private readonly ReporteHorasAcumuladasService $reporteHorasAcumuladas,
+    ) {}
+
     public function paraAdmin(): array
     {
         return $this->recordar('admin', fn () => $this->calcularAdmin());
     }
 
-    public function paraRrhh(): array
+    public function paraRrhh(User $rrhh): array
     {
-        return $this->recordar('rrhh', fn () => $this->calcularRrhh());
+        // El agregado no depende de CUÁL usuario RRHH lo pide (ver
+        // ReporteHorasAcumuladasService::query: cualquier rrhh ve todo
+        // el mismo universo), así que la clave de caché sigue siendo
+        // "rrhh" sin el id, compartida entre todos los de ese rol.
+        return $this->recordar('rrhh', fn () => $this->calcularRrhh($rrhh));
     }
 
     public function paraJefe(User $jefe): array
@@ -103,7 +111,7 @@ class DashboardMetricsService
         ];
     }
 
-    private function calcularRrhh(): array
+    private function calcularRrhh(User $rrhh): array
     {
         $desde = now()->subDays($this->diasVentana);
 
@@ -116,6 +124,24 @@ class DashboardMetricsService
             : (int) round($resueltasPeriodo->avg(
                 fn (Papeleta $p) => $p->created_at->diffInMinutes($p->rrhh_resuelto_at)
             ));
+
+        // "Quién está afuera ahora mismo": lista en vivo (se re-renderiza
+        // con el resto del dashboard vía EscuchaNotificacionesEnVivo), la
+        // más antigua primero porque es la que más atención necesita.
+        // Se recorta a 8 para no volver pesado un widget de resumen; el
+        // total real va aparte para poder avisar "+N más".
+        $afueraQuery = Papeleta::whereState('estado', AutorizadaYCorriendo::class);
+        $trabajadoresAfueraTotal = (clone $afueraQuery)->count();
+        $trabajadoresAfuera = $afueraQuery
+            ->with(['trabajador', 'motivo'])
+            ->orderBy('hora_salida_real')
+            ->limit(8)
+            ->get();
+
+        $mesActual = now()->format('Y-m');
+        $horasAcumuladasTop = $this->reporteHorasAcumuladas
+            ->resumenPorTrabajador($rrhh, $mesActual)
+            ->take(5);
 
         return [
             'pendientes_decision' => Papeleta::whereState('estado', PendienteRrhh::class)->count(),
@@ -130,6 +156,33 @@ class DashboardMetricsService
                 ->join('motivos', 'motivos.id', '=', 'papeletas.motivo_id')
                 ->selectRaw('motivos.nombre as etiqueta, count(*) as total')
                 ->groupBy('motivos.nombre')
+                ->orderByDesc('total')
+                ->limit(5)
+                ->get(),
+            'trabajadores_afuera' => $trabajadoresAfuera,
+            'trabajadores_afuera_total' => $trabajadoresAfueraTotal,
+            // Top 5 trabajadores con más papeletas creadas en el periodo.
+            'papeletas_por_trabajador' => Papeleta::where('papeletas.created_at', '>=', $desde)
+                ->join('users as trabajadores', 'trabajadores.id', '=', 'papeletas.trabajador_id')
+                ->selectRaw("CONCAT(trabajadores.name, ' ', trabajadores.apellido) as etiqueta, count(*) as total")
+                ->groupBy('trabajadores.id', 'trabajadores.name', 'trabajadores.apellido')
+                ->orderByDesc('total')
+                ->limit(5)
+                ->get(),
+            'horas_acumuladas_mes' => $mesActual,
+            'horas_acumuladas_top' => $horasAcumuladasTop,
+            // Seguimiento de calidad, no un "ranking": papeletas rechazadas
+            // u observadas por RRHH en el periodo, agrupadas por trabajador.
+            // Mismo criterio de "atención requerida" que en las bandejas,
+            // no una lista pensada para exponer públicamente.
+            'seguimiento_por_trabajador' => Papeleta::where('papeletas.created_at', '>=', $desde)
+                ->where(function ($q) {
+                    $q->whereState('estado', Rechazada::class)
+                        ->orWhere('contador_observaciones_rrhh', '>=', 1);
+                })
+                ->join('users as trabajadores', 'trabajadores.id', '=', 'papeletas.trabajador_id')
+                ->selectRaw("CONCAT(trabajadores.name, ' ', trabajadores.apellido) as etiqueta, count(*) as total")
+                ->groupBy('trabajadores.id', 'trabajadores.name', 'trabajadores.apellido')
                 ->orderByDesc('total')
                 ->limit(5)
                 ->get(),

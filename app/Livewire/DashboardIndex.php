@@ -50,7 +50,7 @@ class DashboardIndex extends Component
             'esRrhh' => $esRrhh,
             'esJefe' => $esJefe,
             'admin' => $esAdmin ? $metricas->paraAdmin() : null,
-            'rrhh' => $esRrhh ? $metricas->paraRrhh() : null,
+            'rrhh' => $esRrhh ? $metricas->paraRrhh($user) : null,
             'jefe' => $esJefe ? $metricas->paraJefe($user) : null,
         ]);
     }
