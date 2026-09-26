@@ -61,4 +61,16 @@ class ConfiguracionTurno extends Model
     {
         return $trabajador->regimen === '728' ? self::TURNOS_728 : [self::TURNO_276];
     }
+
+    /** Nombre completo de un código de turno, para mensajes al usuario. */
+    public static function etiquetaDeTurno(?string $turno): string
+    {
+        return match ($turno) {
+            'MANANA' => 'Mañana',
+            'TARDE' => 'Tarde',
+            'NOCHE' => 'Noche',
+            self::TURNO_276 => 'Día',
+            default => (string) $turno,
+        };
+    }
 }

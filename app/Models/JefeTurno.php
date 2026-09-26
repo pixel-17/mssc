@@ -6,12 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Un jefe inmediato asignado a UN turno (MANANA/TARDE/NOCHE) de UNA
- * unidad orgánica. Asignación manual — desde Avance 00.68 puede haber
- * varias filas por (unidad, turno): "el que actúa primero decide" (ver
- * UnidadOrganica::resolverJefesInmediatos(), fuente de verdad para
- * varios candidatos; resolverJefeInmediato() se mantiene para el caso
- * de uno solo, por compatibilidad).
+ * Un jefe inmediato ADICIONAL de UNA unidad orgánica (régimen 728).
+ * Asignación manual de QUIÉN es jefe inmediato de esa unidad — ya NO
+ * de qué turno fijo cubre: eso ya no se elige a mano aquí, sale
+ * siempre de la programación de calendario propia del jefe
+ * (`configuraciones_turno`, la misma que usan los trabajadores). Ver
+ * UnidadOrganica::resolverJefeInmediato() / resolverJefesInmediatos()
+ * y User::scopeDeLosTurnosQueCubre(), que comparan el turno vigente o
+ * configurado del jefe contra el del trabajador. Puede haber varias
+ * filas por unidad (varios jefes inmediatos adicionales); "el que
+ * actúa primero decide" cuando coinciden en turno (ver
+ * resolverJefesInmediatos()).
  */
 class JefeTurno extends Model
 {
@@ -19,7 +24,6 @@ class JefeTurno extends Model
 
     protected $fillable = [
         'unidad_organica_id',
-        'turno',
         'jefe_id',
     ];
 

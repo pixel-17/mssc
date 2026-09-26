@@ -209,28 +209,28 @@ class User extends Authenticatable
 
     /**
      * Trabajadores que caen bajo $jefe por ser JEFE DE TURNO (jefes_turno):
-     * los de esa unidad cuyo turno configurado es el que él cubre. Sin
-     * esto, los jefes de turno que no son `jefe_id` no verían a nadie
-     * (users.jefe_inmediato_id apunta al jefe de la unidad).
+     * los de las unidades donde es jefe inmediato adicional, cuyo turno
+     * configurado coincide con el turno configurado del propio $jefe
+     * (ya no con un turno fijo elegido a mano en jefes_turno — ver
+     * JefeTurno). Sin esto, los jefes de turno que no son `jefe_id` no
+     * verían a nadie (users.jefe_inmediato_id apunta al jefe de la
+     * unidad). Sin configuración de turno propia, $jefe no cubre a nadie
+     * por este camino.
      */
     public function scopeDeLosTurnosQueCubre(\Illuminate\Database\Eloquent\Builder $query, User $jefe): \Illuminate\Database\Eloquent\Builder
     {
-        $turnos = \App\Models\JefeTurno::where('jefe_id', $jefe->id)->get(['unidad_organica_id', 'turno']);
+        $unidadIds = \App\Models\JefeTurno::where('jefe_id', $jefe->id)->pluck('unidad_organica_id');
 
-        if ($turnos->isEmpty()) {
+        $turnoDelJefe = \App\Models\ConfiguracionTurno::where('user_id', $jefe->id)->value('turno');
+
+        if ($unidadIds->isEmpty() || $turnoDelJefe === null) {
             return $query->whereRaw('1 = 0');
         }
 
-        return $query->where(function ($q) use ($turnos) {
-            foreach ($turnos as $jefeTurno) {
-                $q->orWhere(function ($w) use ($jefeTurno) {
-                    $w->where('users.unidad_organica_id', $jefeTurno->unidad_organica_id)
-                        ->whereIn('users.id', \Illuminate\Support\Facades\DB::table('configuraciones_turno')
-                            ->where('turno', $jefeTurno->turno)
-                            ->select('user_id'));
-                });
-            }
-        });
+        return $query->whereIn('users.unidad_organica_id', $unidadIds)
+            ->whereIn('users.id', \Illuminate\Support\Facades\DB::table('configuraciones_turno')
+                ->where('turno', $turnoDelJefe)
+                ->select('user_id'));
     }
 
     /** Equipo del jefe como colección (para selects/buscadores). */

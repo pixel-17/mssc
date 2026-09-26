@@ -3,6 +3,8 @@
 namespace App\Actions\Usuario;
 
 use App\Exceptions\UsuarioException;
+use App\Models\ConfiguracionTurno;
+use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Services\AlertaJefaturaService;
@@ -18,9 +20,12 @@ use Illuminate\Support\Facades\Hash;
  *   inmediato ADICIONAL (tabla jefes_inmediatos_adicionales), sin
  *   importar la unidad orgánica del trabajador.
  * - Jefe de Área crea un Trabajador (con unidad_organica_id dentro de
- *   su propia área) o un Jefe Inmediato (mismo caso, pero además pone
- *   al nuevo usuario como jefe_id de esa unidad — eso es justamente lo
- *   que lo convierte en "Jefe Inmediato", ver UnidadOrganica::jefeInmediato()).
+ *   su propia área) o un Jefe Inmediato. El primer jefe_inmediato de
+ *   una unidad queda como jefe_id (titular); en régimen 728 puede
+ *   haber hasta 3 en total (jefe_id + hasta 2 más en jefes_turno, ver
+ *   asignarComoJefeDeUnidad()) — uno no puede coincidir con el turno
+ *   YA cubierto (según su propia configuración de calendario) por otro
+ *   jefe activo de la misma unidad. En 276 solo se admite uno.
  *
  * jefe_inmediato_id/jefe_area_id del nuevo usuario se recalculan solos
  * vía UserObserver en cuanto se guarda con unidad_organica_id (si la
@@ -106,7 +111,7 @@ class CrearUsuarioAction
             }
 
             if ($esJefeDeArea && $datos['tipo'] === 'jefe_inmediato') {
-                $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id']);
+                $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id'], $datos['regimen'], $datos['turno'] ?? null);
             }
 
             if (! $esJefeDeArea) {
@@ -177,16 +182,53 @@ class CrearUsuarioAction
         }
     }
 
-    private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId): void
+    private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId, string $regimen, ?string $turno): void
     {
         $unidad = UnidadOrganica::findOrFail($unidadId);
 
-        if ($unidad->jefe_id) {
+        if (! $unidad->jefe_id) {
+            $unidad->update(['jefe_id' => $nuevo->id]);
+
+            // 728: el titular también entra a jefes_turno como uno más —
+            // resolverJefeInmediato()/resolverJefesInmediatos() para los
+            // turnos rotativos SOLO miran jefes_turno (ver UnidadOrganica),
+            // el turno que cubre sale de su propia configuración de
+            // calendario (cargada más abajo en ejecutar()), no de aquí.
+            if ($regimen === '728') {
+                JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $nuevo->id]);
+            }
+
+            return;
+        }
+
+        if ($regimen !== '728') {
             throw new UsuarioException(
-                "La unidad \"{$unidad->nombre}\" ya tiene un jefe asignado. Reasígnala desde el organigrama antes de crear otro."
+                "La unidad \"{$unidad->nombre}\" ya tiene su jefe inmediato. Reasígnala desde el organigrama antes de crear otro."
             );
         }
 
-        $unidad->update(['jefe_id' => $nuevo->id]);
+        $jefesActuales = JefeTurno::where('unidad_organica_id', $unidad->id)->pluck('jefe_id');
+
+        if ($jefesActuales->count() >= 3) {
+            throw new UsuarioException(
+                "La unidad \"{$unidad->nombre}\" ya tiene sus 3 jefes inmediatos (uno por turno)."
+            );
+        }
+
+        // ¿Alguno de los jefes actuales, activo, ya cubre ese turno según
+        // su propia configuración de calendario? Sin bucket manual: el
+        // turno de cada jefe es el que él mismo tiene configurado.
+        $idsActivos = User::whereIn('id', $jefesActuales)->where('activo', true)->pluck('id');
+        $turnoOcupado = ConfiguracionTurno::whereIn('user_id', $idsActivos)->where('turno', $turno)->exists();
+
+        if ($turnoOcupado) {
+            $etiqueta = ConfiguracionTurno::etiquetaDeTurno($turno);
+
+            throw new UsuarioException(
+                "La unidad \"{$unidad->nombre}\" ya tiene jefe inmediato para el turno {$etiqueta}."
+            );
+        }
+
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $nuevo->id]);
     }
 }

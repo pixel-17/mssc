@@ -354,7 +354,7 @@ class UsuarioAdminCrudTest extends TestCase
     {
         $jefe = $this->usuarioDePrueba(['regimen' => '276']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina de Guardia', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'NOCHE', 'jefe_id' => $jefe->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
 
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class, ['usuario' => $jefe->fresh()])

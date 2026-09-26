@@ -78,29 +78,44 @@ class UnidadOrganica extends Model
         ));
     }
 
-    /** Jefes inmediatos de esta unidad, uno por turno (MANANA/TARDE/NOCHE). Asignación manual. */
+    /** Jefes inmediatos adicionales de esta unidad (régimen 728). Asignación manual de QUIÉN, sin turno fijo. */
     public function jefesTurno(): HasMany
     {
         return $this->hasMany(JefeTurno::class, 'unidad_organica_id');
     }
 
-    public function jefeTurnoPara(?string $turno): ?JefeTurno
+    /**
+     * Jefes inmediatos adicionales de esta unidad cuyo turno
+     * CONFIGURADO (`configuraciones_turno.turno` — el que el
+     * Admin/Jefe le eligió al armar su calendario, no el de hoy) es
+     * el turno dado. Es la versión "estructural": no depende de si
+     * hoy es su día de trabajo o de descanso, por eso la usan los
+     * avisos de "falta jefe" (ver AlertaJefaturaService) y las
+     * columnas fijas de `users` (ver jefaturasDe()) — no queremos
+     * avisar un hueco solo porque el jefe asignado está descansando
+     * hoy.
+     *
+     * @return \Illuminate\Support\Collection<int, JefeTurno>
+     */
+    private function jefesTurnoConfiguradosPara(string $turno): \Illuminate\Support\Collection
     {
-        if ($turno === null) {
-            return null;
-        }
+        $jefeIdsDelTurno = ConfiguracionTurno::where('turno', $turno)->pluck('user_id');
 
-        return $this->jefesTurno->firstWhere('turno', $turno);
+        return $this->jefesTurno
+            ->filter(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe?->activo)
+            ->filter(fn (JefeTurno $jefeTurno) => $jefeIdsDelTurno->contains($jefeTurno->jefe_id));
     }
 
     /**
      * Jefe inmediato de esta unidad para el turno dado.
      *
-     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): SOLO cuenta la
-     *   fila de jefes_turno de ese turno, y solo si ese jefe sigue
-     *   activo. Sin fila (o con el jefe desactivado) devuelve null: ese
-     *   turno no tiene jefe y quien pide la papeleta debe enterarse
-     *   (ver CrearPapeletaAction). Ya NO cae a `jefe_id`.
+     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): de los
+     *   jefes inmediatos adicionales de esta unidad (jefes_turno, sin
+     *   turno fijo asignado), cuenta al primero cuyo turno
+     *   CONFIGURADO coincide con el pedido y que sigue activo. Sin
+     *   ninguno devuelve null: ese turno no tiene jefe y quien pide
+     *   la papeleta debe enterarse (ver CrearPapeletaAction). Ya NO
+     *   cae a `jefe_id`.
      * - Cualquier otro valor ($turno null, ej. régimen 276, o un código
      *   que no es de turno rotativo): `jefe_id` de la unidad.
      */
@@ -110,13 +125,9 @@ class UnidadOrganica extends Model
             return $this->jefe_id !== null ? (int) $this->jefe_id : null;
         }
 
-        $jefeTurno = $this->jefeTurnoPara($turno);
+        $jefeTurno = $this->jefesTurnoConfiguradosPara($turno)->first();
 
-        if (! $jefeTurno?->jefe_id || ! $jefeTurno->jefe?->activo) {
-            return null;
-        }
-
-        return (int) $jefeTurno->jefe_id;
+        return $jefeTurno ? (int) $jefeTurno->jefe_id : null;
     }
 
     /**
@@ -125,18 +136,16 @@ class UnidadOrganica extends Model
      * caso de un solo jefe fotografiado, que se mantiene por
      * compatibilidad).
      *
-     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): trae todas
-     *   las filas de jefes_turno para ese turno (pueden ser varias,
-     *   ver create_jefes_turno_table). De esas:
-     *   - si alguna está "de servicio" hoy (su propio ciclo en
-     *     configuraciones_turno, vía Turno::vigenteParaUsuario, igual
-     *     que un trabajador) devuelve solo esas;
-     *   - si ninguna está de servicio, devuelve a TODAS las
-     *     asignadas igual — nunca bloquea si hay al menos un
-     *     jefes_turno asignado a ese turno;
-     *   - si no hay ninguna fila para ese turno, devuelve vacío (cae
-     *     al comportamiento de bloqueo de CrearPapeletaAction).
-     *   Solo cuenta jefes activos.
+     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): de los
+     *   jefes inmediatos adicionales de esta unidad, activos, SOLO
+     *   cuentan los que hoy están "de servicio" para ese turno (su
+     *   propio ciclo en configuraciones_turno, vía
+     *   Turno::vigenteParaUsuario, igual que un trabajador). El jefe
+     *   inmediato no tiene turno fijo asignado: aplica únicamente
+     *   cuando él mismo está de turno y coincide con el de sus
+     *   trabajadores — si ninguno está de servicio hoy, no hay
+     *   candidatos (cae al bloqueo de CrearPapeletaAction, no hay
+     *   caída a "todos los asignados" aunque no estén de servicio).
      * - Cualquier otro valor ($turno null, régimen 276, o un código
      *   que no es de turno rotativo): un único candidato, jefe_id de
      *   la unidad (o vacío si no tiene).
@@ -149,21 +158,13 @@ class UnidadOrganica extends Model
             return $this->jefe_id !== null ? [(int) $this->jefe_id] : [];
         }
 
-        $candidatos = $this->jefesTurno
-            ->where('turno', $turno)
-            ->filter(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe?->activo);
+        $deServicio = $this->jefesTurno
+            ->filter(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe?->activo)
+            ->filter(
+                fn (JefeTurno $jefeTurno) => Turno::vigenteParaUsuario($jefeTurno->jefe_id)?->codigo() === $turno
+            );
 
-        if ($candidatos->isEmpty()) {
-            return [];
-        }
-
-        $deServicio = $candidatos->filter(
-            fn (JefeTurno $jefeTurno) => Turno::vigenteParaUsuario($jefeTurno->jefe_id)?->codigo() === $turno
-        );
-
-        $resultado = $deServicio->isNotEmpty() ? $deServicio : $candidatos;
-
-        return $resultado->pluck('jefe_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        return $deServicio->pluck('jefe_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
     }
 
     /**

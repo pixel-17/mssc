@@ -4,6 +4,7 @@ namespace Tests\Feature\Usuarios;
 
 use App\Actions\Usuario\CrearUsuarioAction;
 use App\Exceptions\UsuarioException;
+use App\Models\ConfiguracionTurno;
 use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -16,8 +17,13 @@ use Tests\TestCase;
  * - Todos los jefes y trabajadores de una unidad son del mismo régimen
  *   que su jefe (UnidadOrganica::regimen()).
  * - Unidad 276: un solo jefe inmediato.
- * - Unidad 728: hasta 3 jefes, uno por turno (el primero queda como
- *   jefe_id, y todos quedan registrados en jefes_turno).
+ * - Unidad 728: hasta 3 jefes en total (el primero queda como jefe_id,
+ *   titular; todos —titular incluido— quedan en jefes_turno). Ya no se
+ *   elige un turno "bucket" para cada uno: jefes_turno solo dice QUIÉN,
+ *   el turno que cubre sale de su propia configuración de calendario
+ *   (configuraciones_turno, cargada con el mismo `turno` del alta). Por
+ *   eso no se puede dar de alta a un segundo jefe cuyo turno ya cubre,
+ *   activo, otro jefe de la misma unidad.
  */
 class JefesPorRegimenTest extends TestCase
 {
@@ -92,7 +98,7 @@ class JefesPorRegimenTest extends TestCase
         $this->assertNull(User::where('dni', '70000002')->first());
     }
 
-    public function test_en_una_unidad_728_el_primer_jefe_queda_como_jefe_id_y_jefe_de_su_turno(): void
+    public function test_en_una_unidad_728_el_primer_jefe_queda_como_jefe_id_y_en_jefes_turno(): void
     {
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina nueva']);
 
@@ -101,9 +107,10 @@ class JefesPorRegimenTest extends TestCase
         $this->assertSame($jefe->id, $unidad->fresh()->jefe_id);
         $this->assertDatabaseHas('jefes_turno', [
             'unidad_organica_id' => $unidad->id,
-            'turno' => 'MANANA',
             'jefe_id' => $jefe->id,
         ]);
+        $this->assertSame('MANANA', ConfiguracionTurno::where('user_id', $jefe->id)->value('turno'));
+        $this->assertSame($jefe->id, $unidad->fresh()->resolverJefeInmediato('MANANA'));
     }
 
     public function test_una_unidad_728_admite_tres_jefes_uno_por_turno_y_no_un_cuarto(): void

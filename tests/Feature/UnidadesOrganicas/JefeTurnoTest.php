@@ -4,17 +4,24 @@ namespace Tests\Feature\UnidadesOrganicas;
 
 use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Exceptions\PapeletaException;
+use App\Models\ConfiguracionTurno;
 use App\Models\JefeTurno;
-use App\Models\Turno;
 use App\Models\UnidadOrganica;
+use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
 /**
- * Regresión de dos problemas reales encontrados en Avance 00.60:
+ * Regresión de dos problemas reales encontrados en Avance 00.60, y del
+ * cambio de Avance 00.74: `jefes_turno` ya NO guarda un turno fijo
+ * elegido a mano — solo dice QUIÉN es jefe inmediato adicional de la
+ * unidad. El turno que cada uno cubre sale siempre de su propia
+ * programación de calendario (`configuraciones_turno` / `turnos`, la
+ * misma que usan los trabajadores):
  *
  * 1. La migración de `jefes_turno` apuntaba su FK a la tabla
  *    `unidades_organicas` (no existe; la tabla real es
@@ -51,6 +58,18 @@ class JefeTurnoTest extends TestCase
         parent::tearDown();
     }
 
+    /** Da a $jefe su propia configuración de calendario para $turno (estructural, no depende de la hora real). */
+    private function configurarTurnoDe(User $jefe, string $turno): void
+    {
+        ConfiguracionTurno::create([
+            'user_id' => $jefe->id,
+            'turno' => $turno,
+            'fecha_ancla' => Carbon::parse('2026-09-01'),
+            'dias_trabajo' => 6,
+            'dias_descanso' => 1,
+        ]);
+    }
+
     /**
      * Prueba directa de la FK: si `jefes_turno.unidad_organica_id` no
      * apuntara de verdad a `unidad_organicas`, borrar la unidad no
@@ -63,7 +82,6 @@ class JefeTurnoTest extends TestCase
 
         $jefeTurno = JefeTurno::create([
             'unidad_organica_id' => $unidad->id,
-            'turno' => 'MANANA',
             'jefe_id' => $jefe->id,
         ]);
 
@@ -75,28 +93,27 @@ class JefeTurnoTest extends TestCase
     }
 
     /**
-     * Desde el cambio "varios jefes por turno" (unique ahora es
-     * unidad+turno+jefe_id, no unidad+turno): un turno SÍ puede tener
-     * más de un jefe asignado. Lo único que sigue bloqueado es
-     * duplicar exactamente la misma fila (mismo jefe, mismo turno,
-     * misma unidad) dos veces.
+     * Desde el cambio "sin turno fijo" (unique ahora es unidad+jefe_id):
+     * una unidad SÍ puede tener varios jefes inmediatos adicionales.
+     * Lo único que sigue bloqueado es agregar al MISMO jefe dos veces a
+     * la misma unidad.
      */
-    public function test_un_turno_puede_tener_varios_jefes_pero_no_la_misma_fila_repetida(): void
+    public function test_una_unidad_puede_tener_varios_jefes_adicionales_pero_no_el_mismo_jefe_repetido(): void
     {
         $jefe = $this->usuarioDePrueba([], ['trabajador']);
         $otroJefe = $this->usuarioDePrueba([], ['trabajador']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
 
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
 
-        // Segundo jefe para el MISMO turno: ahora permitido.
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $otroJefe->id]);
+        // Segundo jefe para la MISMA unidad: permitido.
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $otroJefe->id]);
 
-        $this->assertSame(2, JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', 'MANANA')->count());
+        $this->assertSame(2, JefeTurno::where('unidad_organica_id', $unidad->id)->count());
 
-        // Repetir la fila exacta (mismo jefe, mismo turno, misma unidad) sigue bloqueado.
+        // Repetir al mismo jefe en la misma unidad sigue bloqueado.
         $this->expectException(QueryException::class);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
     }
 
     public function test_la_papeleta_de_un_728_fotografia_al_jefe_del_turno_vigente_no_al_jefe_titular(): void
@@ -110,8 +127,11 @@ class JefeTurnoTest extends TestCase
         $jefeDeNoche->update(['unidad_organica_id' => $unidad->id]);
         $trabajador->update(['unidad_organica_id' => $unidad->id]);
 
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'NOCHE', 'jefe_id' => $jefeDeNoche->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefeDeNoche->id]);
 
+        // El jefe inmediato no tiene turno fijo: solo cuenta si, como el
+        // trabajador, está literalmente de turno NOCHE en este momento.
+        $this->turnoVigenteDePrueba($jefeDeNoche, 'NOCHE', '22:00:00', '06:00:00');
         $this->turnoVigenteDePrueba($trabajador, 'NOCHE', '22:00:00', '06:00:00');
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
@@ -120,7 +140,7 @@ class JefeTurnoTest extends TestCase
         $this->assertNotSame($jefeTitular->id, $papeleta->jefe_inmediato_id);
     }
 
-    public function test_si_el_turno_vigente_no_tiene_jefe_asignado_se_informa_y_no_se_crea_la_papeleta(): void
+    public function test_si_ningun_jefe_inmediato_coincide_con_el_turno_vigente_se_informa_y_no_se_crea_la_papeleta(): void
     {
         $jefeTitular = $this->usuarioDePrueba([], ['trabajador']);
         $jefeDeNoche = $this->usuarioDePrueba([], ['trabajador']);
@@ -131,17 +151,19 @@ class JefeTurnoTest extends TestCase
         $jefeDeNoche->update(['unidad_organica_id' => $unidad->id]);
         $trabajador->update(['unidad_organica_id' => $unidad->id]);
 
-        // Solo hay jefe asignado para NOCHE; el trabajador entra en MAÑANA.
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'NOCHE', 'jefe_id' => $jefeDeNoche->id]);
+        // El único jefe inmediato adicional está, hoy, de turno NOCHE;
+        // el trabajador entra en MAÑANA: nadie coincide.
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefeDeNoche->id]);
+        $this->turnoVigenteDePrueba($jefeDeNoche, 'NOCHE', '22:00:00', '06:00:00');
 
         $this->turnoVigenteDePrueba($trabajador, 'MANANA', '06:00:00', '14:00:00');
 
         try {
             app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
 
-            $this->fail('Debió lanzar PapeletaException: el turno MAÑANA no tiene jefe asignado.');
+            $this->fail('Debió lanzar PapeletaException: nadie está de turno MAÑANA.');
         } catch (PapeletaException $e) {
-            $this->assertStringContainsString('no tiene un jefe inmediato asignado para el turno Mañana', $e->getMessage());
+            $this->assertStringContainsString('Tu turno actual no tiene un jefe inmediato activo asignado', $e->getMessage());
         }
 
         $this->assertDatabaseCount('papeletas', 0);
@@ -158,7 +180,8 @@ class JefeTurnoTest extends TestCase
         $jefeDeNoche->update(['unidad_organica_id' => $unidad->id]);
         $trabajador->update(['unidad_organica_id' => $unidad->id]);
 
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'NOCHE', 'jefe_id' => $jefeDeNoche->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefeDeNoche->id]);
+        $this->configurarTurnoDe($jefeDeNoche, 'NOCHE');
 
         $this->assertSame($jefeDeNoche->id, $unidad->fresh()->resolverJefeInmediato('NOCHE'));
 
@@ -169,7 +192,7 @@ class JefeTurnoTest extends TestCase
         $this->turnoVigenteDePrueba($trabajador, 'NOCHE', '22:00:00', '06:00:00');
 
         $this->expectException(PapeletaException::class);
-        $this->expectExceptionMessage('no tiene un jefe inmediato asignado para el turno Noche');
+        $this->expectExceptionMessage('Tu turno actual no tiene un jefe inmediato activo asignado');
 
         app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
     }
@@ -184,7 +207,7 @@ class JefeTurnoTest extends TestCase
         $this->assertNull($unidad->resolverJefeInmediato('MANANA'));
     }
 
-    public function test_el_tope_del_organigrama_728_no_se_bloquea_por_no_tener_jefe_de_turno(): void
+    public function test_el_tope_del_organigrama_728_tambien_se_bloquea_sin_jefe_de_area(): void
     {
         $tope = $this->usuarioDePrueba(['regimen' => '728'], ['trabajador']);
         $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
@@ -192,9 +215,10 @@ class JefeTurnoTest extends TestCase
 
         $this->turnoVigenteDePrueba($tope, 'MANANA', '06:00:00', '14:00:00');
 
-        $papeleta = app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
+        $this->expectException(PapeletaException::class);
+        $this->expectExceptionMessage('Tu unidad no tiene un Jefe de Área activo asignado');
 
-        $this->assertNull($papeleta->jefe_inmediato_id);
+        app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
     }
 
     public function test_un_jefe_de_turno_que_no_es_jefe_id_responde_ante_el_jefe_del_mismo_turno_de_la_unidad_padre(): void
@@ -204,10 +228,11 @@ class JefeTurnoTest extends TestCase
         $jefeDeManana = $this->usuarioDePrueba([], ['trabajador']);
 
         $padre = UnidadOrganica::create(['nombre' => 'Gerencia', 'jefe_id' => $jefePadre->id]);
-        JefeTurno::create(['unidad_organica_id' => $padre->id, 'turno' => 'MANANA', 'jefe_id' => $jefePadre->id]);
+        JefeTurno::create(['unidad_organica_id' => $padre->id, 'jefe_id' => $jefePadre->id]);
+        $this->configurarTurnoDe($jefePadre, 'MANANA');
 
         $hija = UnidadOrganica::create(['nombre' => 'Oficina', 'parent_id' => $padre->id, 'jefe_id' => $titular->id]);
-        JefeTurno::create(['unidad_organica_id' => $hija->id, 'turno' => 'MANANA', 'jefe_id' => $jefeDeManana->id]);
+        JefeTurno::create(['unidad_organica_id' => $hija->id, 'jefe_id' => $jefeDeManana->id]);
 
         $this->assertTrue($hija->fresh()->esJefeDeLaUnidad($jefeDeManana));
 

@@ -113,62 +113,60 @@ class UnidadOrganicaCrudTest extends TestCase
             ->assertHasErrors(['parentId' => 'exists', 'jefeId' => 'exists']);
     }
 
-    public function test_al_crear_los_jefes_por_turno_se_ignoran(): void
+    public function test_al_crear_los_jefes_adicionales_se_ignoran(): void
     {
         $jefe = $this->usuarioDePrueba();
 
         Livewire::actingAs($this->admin)
             ->test(UnidadOrganicaForm::class)
             ->set('nombre', 'Recién creada')
-            ->set('jefesPorTurno.MANANA', $jefe->id)
+            ->set('jefesAdicionales.0', $jefe->id)
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $this->assertSame(0, JefeTurno::count(), 'los jefes por turno solo se asignan editando una unidad ya creada');
+        $this->assertSame(0, JefeTurno::count(), 'los jefes adicionales solo se asignan editando una unidad ya creada');
     }
 
-    public function test_editar_asigna_y_quita_jefes_por_turno(): void
+    public function test_editar_asigna_y_quita_jefes_adicionales(): void
     {
         $unidad = $this->unidad('Serenazgo');
-        $jefeManana = $this->usuarioDePrueba();
-        $jefeNoche = $this->usuarioDePrueba();
+        $jefeUno = $this->usuarioDePrueba();
+        $jefeDos = $this->usuarioDePrueba();
 
         Livewire::actingAs($this->admin)
             ->test(UnidadOrganicaForm::class, ['unidad' => $unidad])
-            ->set('jefesPorTurno.MANANA', $jefeManana->id)
-            ->set('jefesPorTurno.NOCHE', $jefeNoche->id)
+            ->set('jefesAdicionales.0', $jefeUno->id)
+            ->set('jefesAdicionales.1', $jefeDos->id)
             ->call('guardar')
             ->assertHasNoErrors();
 
         $this->assertSame(2, JefeTurno::where('unidad_organica_id', $unidad->id)->count());
-        $this->assertSame($jefeManana->id, JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', 'MANANA')->value('jefe_id'));
-        $this->assertSame($jefeNoche->id, JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', 'NOCHE')->value('jefe_id'));
+        $this->assertTrue(JefeTurno::where('unidad_organica_id', $unidad->id)->where('jefe_id', $jefeUno->id)->exists());
+        $this->assertTrue(JefeTurno::where('unidad_organica_id', $unidad->id)->where('jefe_id', $jefeDos->id)->exists());
 
-        // Se reabre el formulario: precarga lo asignado y vaciar un turno lo elimina.
+        // Se reabre el formulario: precarga lo asignado y quitar uno lo elimina.
         Livewire::actingAs($this->admin)
             ->test(UnidadOrganicaForm::class, ['unidad' => $unidad->fresh()])
-            ->assertSet('jefesPorTurno.MANANA', $jefeManana->id)
-            ->assertSet('jefesPorTurno.TARDE', null)
-            ->assertSet('jefesPorTurno.NOCHE', $jefeNoche->id)
-            ->set('jefesPorTurno.MANANA', null)
+            ->assertSet('jefesAdicionales', [$jefeUno->id, $jefeDos->id])
+            ->set('jefesAdicionales.0', null)
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $this->assertFalse(JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', 'MANANA')->exists());
-        $this->assertTrue(JefeTurno::where('unidad_organica_id', $unidad->id)->where('turno', 'NOCHE')->exists());
+        $this->assertFalse(JefeTurno::where('unidad_organica_id', $unidad->id)->where('jefe_id', $jefeUno->id)->exists());
+        $this->assertTrue(JefeTurno::where('unidad_organica_id', $unidad->id)->where('jefe_id', $jefeDos->id)->exists());
     }
 
-    public function test_reasignar_el_jefe_de_un_turno_no_duplica_filas(): void
+    public function test_reasignar_un_jefe_adicional_no_duplica_filas(): void
     {
         $unidad = $this->unidad('Limpieza pública');
         $primero = $this->usuarioDePrueba();
         $segundo = $this->usuarioDePrueba();
 
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'TARDE', 'jefe_id' => $primero->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $primero->id]);
 
         Livewire::actingAs($this->admin)
             ->test(UnidadOrganicaForm::class, ['unidad' => $unidad->fresh()])
-            ->set('jefesPorTurno.TARDE', $segundo->id)
+            ->set('jefesAdicionales.0', $segundo->id)
             ->call('guardar')
             ->assertHasNoErrors();
 

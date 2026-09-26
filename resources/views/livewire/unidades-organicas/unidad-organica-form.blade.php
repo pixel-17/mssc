@@ -52,51 +52,47 @@
 
             @if ($unidad)
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
-                    <div>
-                        <h3 class="text-sm font-medium">Jefes por turno (régimen 728)</h3>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                            Opcional, uno o varios por turno. Con varios, cualquiera puede decidir una papeleta —
-                            el que actúe primero. Si un turno queda sin ninguno, su Jefe Inmediato sigue siendo
-                            "{{ $jefesDisponibles[$jefeId] ?? 'el jefe de la unidad' }}" (arriba). Cada jefe
-                            agregado necesita además su propio ciclo de turno para que el sistema sepa si está
-                            de servicio hoy — usa "Configurar turno" tras guardar.
-                        </p>
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-medium">Jefes inmediatos adicionales (régimen 728)</h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Opcional, uno o varios. No se elige un turno fijo aquí: el turno que cada uno
+                                cubre sale de su propia programación de calendario — configúrasela con
+                                "Configurar turno" tras guardar. Con varios coincidiendo en turno, cualquiera
+                                puede decidir una papeleta — el que actúe primero. Si nadie coincide con el
+                                turno vigente de un trabajador, su Jefe Inmediato sigue siendo
+                                "{{ $jefesDisponibles[$jefeId] ?? 'el jefe de la unidad' }}" (arriba) solo para
+                                régimen 276; en 728 la papeleta se bloquea hasta que alguien coincida.
+                            </p>
+                        </div>
+                        <button type="button" wire:click="agregarJefeAdicional" class="text-xs text-tinta-700 hover:underline whitespace-nowrap">
+                            + Agregar jefe
+                        </button>
                     </div>
 
-                    @foreach (\App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS as $codigo => $etiqueta)
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <span class="block text-sm font-medium">{{ $etiqueta }}</span>
-                                <button type="button" wire:click="agregarJefeTurno('{{ $codigo }}')" class="text-xs text-tinta-700 hover:underline">
-                                    + Agregar jefe
-                                </button>
-                            </div>
+                    @forelse ($jefesAdicionales as $indice => $jefeIdAdicional)
+                        <div class="flex items-center gap-2" wire:key="jefe-adicional-{{ $indice }}">
+                            <select wire:model="jefesAdicionales.{{ $indice }}" class="flex-1 rounded-md border-gray-300 dark:bg-gray-800">
+                                <option value="">— (sin elegir) —</option>
+                                @foreach ($jefesDisponibles as $id => $nombreJefe)
+                                    <option value="{{ $id }}">{{ $nombreJefe }}</option>
+                                @endforeach
+                            </select>
 
-                            @forelse ($jefesPorTurno[$codigo] as $indice => $jefeIdTurno)
-                                <div class="flex items-center gap-2" wire:key="jefe-turno-{{ $codigo }}-{{ $indice }}">
-                                    <select wire:model="jefesPorTurno.{{ $codigo }}.{{ $indice }}" class="flex-1 rounded-md border-gray-300 dark:bg-gray-800">
-                                        <option value="">— (sin elegir) —</option>
-                                        @foreach ($jefesDisponibles as $id => $nombreJefe)
-                                            <option value="{{ $id }}">{{ $nombreJefe }}</option>
-                                        @endforeach
-                                    </select>
+                            @if ($jefeIdAdicional)
+                                <a href="{{ route('turnos.configuracion', $jefeIdAdicional) }}" target="_blank" class="text-xs text-gray-500 hover:underline whitespace-nowrap">
+                                    Configurar turno
+                                </a>
+                            @endif
 
-                                    @if ($jefeIdTurno)
-                                        <a href="{{ route('turnos.configuracion', $jefeIdTurno) }}" target="_blank" class="text-xs text-gray-500 hover:underline whitespace-nowrap">
-                                            Configurar turno
-                                        </a>
-                                    @endif
-
-                                    <button type="button" wire:click="quitarJefeTurno('{{ $codigo }}', {{ $indice }})" class="text-xs text-red-600 hover:underline whitespace-nowrap">
-                                        Quitar
-                                    </button>
-                                </div>
-                                @error("jefesPorTurno.{$codigo}.{$indice}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-                            @empty
-                                <p class="text-xs text-gray-400">Sin jefes asignados a este turno.</p>
-                            @endforelse
+                            <button type="button" wire:click="quitarJefeAdicional({{ $indice }})" class="text-xs text-red-600 hover:underline whitespace-nowrap">
+                                Quitar
+                            </button>
                         </div>
-                    @endforeach
+                        @error("jefesAdicionales.{$indice}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
+                    @empty
+                        <p class="text-xs text-gray-400">Sin jefes inmediatos adicionales asignados.</p>
+                    @endforelse
                 </div>
             @endif
 

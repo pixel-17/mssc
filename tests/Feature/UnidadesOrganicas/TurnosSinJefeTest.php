@@ -3,10 +3,13 @@
 namespace Tests\Feature\UnidadesOrganicas;
 
 use App\Livewire\UnidadesOrganicas\UnidadOrganicaIndex;
+use App\Models\ConfiguracionTurno;
 use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
+use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
@@ -15,6 +18,11 @@ use Tests\TestCase;
  * Avisos de turnos sin jefe inmediato: UnidadOrganica::turnosSinJefe() y
  * los tres sitios donde se muestran (índice de unidades del admin,
  * listado de usuarios del jefe de área y alta de un trabajador 728).
+ *
+ * El jefe inmediato ya no elige un turno fijo al asignarse a la unidad
+ * (jefes_turno solo dice QUIÉN); el turno que cubre para efectos de este
+ * aviso sale de su propia configuración de calendario
+ * (configuraciones_turno.turno, ver UnidadOrganica::resolverJefeInmediato()).
  */
 class TurnosSinJefeTest extends TestCase
 {
@@ -29,11 +37,25 @@ class TurnosSinJefeTest extends TestCase
         $this->seed(ConfiguracionSeeder::class);
     }
 
+    /** Asigna a $jefe como jefe inmediato adicional de $unidad, cubriendo $turno según su propio calendario. */
+    private function asignarJefeConTurno(UnidadOrganica $unidad, User $jefe, string $turno): void
+    {
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
+
+        ConfiguracionTurno::create([
+            'user_id' => $jefe->id,
+            'turno' => $turno,
+            'fecha_ancla' => Carbon::parse('2026-09-01'),
+            'dias_trabajo' => 6,
+            'dias_descanso' => 1,
+        ]);
+    }
+
     public function test_una_unidad_728_lista_los_turnos_que_no_tienen_jefe(): void
     {
         $jefe = $this->usuarioDePrueba(['regimen' => '728']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
+        $this->asignarJefeConTurno($unidad, $jefe, 'MANANA');
 
         $this->assertSame(['TARDE', 'NOCHE'], $unidad->fresh()->turnosSinJefe());
     }
@@ -43,8 +65,10 @@ class TurnosSinJefeTest extends TestCase
         $jefe = $this->usuarioDePrueba(['regimen' => '728']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
 
+        // Un jefe cubre un solo turno propio (su calendario es uno solo):
+        // una unidad completa necesita un jefe distinto por cada turno.
         foreach (['MANANA', 'TARDE', 'NOCHE'] as $turno) {
-            JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => $turno, 'jefe_id' => $jefe->id]);
+            $this->asignarJefeConTurno($unidad, $this->usuarioDePrueba(['regimen' => '728']), $turno);
         }
 
         $this->assertSame([], $unidad->fresh()->turnosSinJefe());
@@ -65,8 +89,8 @@ class TurnosSinJefeTest extends TestCase
         $jefe = $this->usuarioDePrueba(['regimen' => '728']);
         $jefeTarde = $this->usuarioDePrueba(['regimen' => '728']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'TARDE', 'jefe_id' => $jefeTarde->id]);
+        $this->asignarJefeConTurno($unidad, $jefe, 'MANANA');
+        $this->asignarJefeConTurno($unidad, $jefeTarde, 'TARDE');
 
         $jefeTarde->update(['activo' => false]);
 
@@ -76,10 +100,11 @@ class TurnosSinJefeTest extends TestCase
     public function test_el_admin_ve_en_el_indice_que_turnos_le_faltan_a_cada_unidad(): void
     {
         $admin = $this->usuarioDePrueba([], ['admin']);
-        $jefe = $this->usuarioDePrueba(['regimen' => '728']);
-        $unidad = UnidadOrganica::create(['nombre' => 'Oficina Sin Cobertura', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'TARDE', 'jefe_id' => $jefe->id]);
+        $jefeManana = $this->usuarioDePrueba(['regimen' => '728']);
+        $jefeTarde = $this->usuarioDePrueba(['regimen' => '728']);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina Sin Cobertura', 'jefe_id' => $jefeManana->id]);
+        $this->asignarJefeConTurno($unidad, $jefeManana, 'MANANA');
+        $this->asignarJefeConTurno($unidad, $jefeTarde, 'TARDE');
 
         Livewire::actingAs($admin)
             ->test(UnidadOrganicaIndex::class)
@@ -102,7 +127,7 @@ class TurnosSinJefeTest extends TestCase
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefeDeArea->id]);
+        $this->asignarJefeConTurno($unidad, $jefeDeArea, 'MANANA');
 
         $this->actingAs($jefeDeArea)
             ->post(route('usuarios.store'), [
@@ -125,7 +150,7 @@ class TurnosSinJefeTest extends TestCase
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'turno' => 'MANANA', 'jefe_id' => $jefeDeArea->id]);
+        $this->asignarJefeConTurno($unidad, $jefeDeArea, 'MANANA');
 
         $this->actingAs($jefeDeArea)
             ->post(route('usuarios.store'), [

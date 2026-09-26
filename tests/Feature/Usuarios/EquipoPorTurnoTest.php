@@ -44,23 +44,27 @@ class EquipoPorTurnoTest extends TestCase
         $area = UnidadOrganica::create(['nombre' => 'Gerencia', 'jefe_id' => $this->jefeDeArea->id]);
         $oficina = UnidadOrganica::create(['nombre' => 'Oficina', 'parent_id' => $area->id, 'jefe_id' => $this->titular->id]);
 
-        JefeTurno::create(['unidad_organica_id' => $oficina->id, 'turno' => 'MANANA', 'jefe_id' => $this->titular->id]);
-        JefeTurno::create(['unidad_organica_id' => $oficina->id, 'turno' => 'TARDE', 'jefe_id' => $this->jefeTarde->id]);
+        JefeTurno::create(['unidad_organica_id' => $oficina->id, 'jefe_id' => $this->titular->id]);
+        JefeTurno::create(['unidad_organica_id' => $oficina->id, 'jefe_id' => $this->jefeTarde->id]);
 
         $this->trabajadorTarde = $this->usuarioDePrueba();
         $this->trabajadorManana = $this->usuarioDePrueba();
 
-        foreach ([[$this->trabajadorTarde, 'TARDE'], [$this->trabajadorManana, 'MANANA']] as [$trabajador, $turno]) {
-            $trabajador->update(['unidad_organica_id' => $oficina->id]);
-
+        // El jefe de turno cubre a los trabajadores cuyo turno CONFIGURADO
+        // coincide con el suyo propio (ver User::scopeDeLosTurnosQueCubre):
+        // por eso jefeTarde también necesita su propia configuración TARDE.
+        foreach ([[$this->jefeTarde, 'TARDE'], [$this->trabajadorTarde, 'TARDE'], [$this->trabajadorManana, 'MANANA']] as [$usuario, $turno]) {
             ConfiguracionTurno::create([
-                'user_id' => $trabajador->id,
+                'user_id' => $usuario->id,
                 'turno' => $turno,
                 'fecha_ancla' => Carbon::parse('2026-09-01'),
                 'dias_trabajo' => 6,
                 'dias_descanso' => 1,
             ]);
         }
+
+        $this->trabajadorTarde->update(['unidad_organica_id' => $oficina->id]);
+        $this->trabajadorManana->update(['unidad_organica_id' => $oficina->id]);
     }
 
     public function test_el_equipo_de_un_jefe_de_turno_son_los_trabajadores_de_su_turno(): void
