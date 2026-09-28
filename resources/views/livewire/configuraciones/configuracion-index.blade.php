@@ -1,40 +1,20 @@
 <div>
     <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
-            Configuraciones
-        </h2>
+        <x-admin.encabezado titulo="Configuraciones" />
 
-        @if (session('mensaje'))
-            <div class="glass-card p-4 text-sm text-green-700 dark:text-green-400">
-                {{ session('mensaje') }}
-            </div>
-        @endif
+        <x-admin.mensajes />
 
-        <div class="glass-card overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                    <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th scope="col" class="px-4 py-3">Clave</th>
-                        <th scope="col" class="px-4 py-3">Valor</th>
-                        <th scope="col" class="px-4 py-3">Descripción</th>
-                        <th scope="col" class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @foreach ($configuraciones as $configuracion)
-                        <tr wire:key="config-{{ $configuracion->id }}">
-                            <td class="px-4 py-3 font-semibold">{{ $configuracion->clave }}</td>
-                            <td class="px-4 py-3">{{ $configuracion->valor }}</td>
-                            <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $configuracion->descripcion }}</td>
-                            <td class="px-4 py-3 text-right">
-                                <a href="{{ route('configuraciones.editar', $configuracion) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline">
-                                    Editar
-                                </a>
-                            </td>
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
+        <x-admin.tabla :columnas="['Clave', 'Valor', 'Descripción', '']">
+            @foreach ($configuraciones as $configuracion)
+                <tr wire:key="config-{{ $configuracion->id }}">
+                    <td class="px-4 py-3 font-semibold">{{ $configuracion->clave }}</td>
+                    <td class="px-4 py-3">{{ $configuracion->valor }}</td>
+                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ $configuracion->descripcion }}</td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <x-admin.accion-editar :href="route('configuraciones.editar', $configuracion)" />
+                    </td>
+                </tr>
+            @endforeach
+        </x-admin.tabla>
     </div>
 </div>

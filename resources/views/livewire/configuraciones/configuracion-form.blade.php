@@ -1,31 +1,25 @@
 <div>
     <div class="max-w-2xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
-            Editar configuración
-        </h2>
+        <x-admin.encabezado titulo="Editar configuración" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
             <div>
-                <label for="configuracion-form-clave" class="block text-sm font-medium mb-1">Clave</label>
-                <input id="configuracion-form-clave" type="text" value="{{ $configuracion->clave }}" disabled class="w-full rounded-md border-gray-300 dark:bg-gray-800 opacity-60">
+                <x-label for="configuracion-form-clave" value="Clave" class="block mb-1" />
+                <x-input id="configuracion-form-clave" type="text" :value="$configuracion->clave" disabled class="w-full opacity-60" />
             </div>
 
-            <div>
-                <label for="configuracion-form-valor" class="block text-sm font-medium mb-1">Valor</label>
-                <input id="configuracion-form-valor" type="text" wire:model="valor" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                @error('valor') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+            <x-admin.campo label="Valor" for="configuracion-form-valor">
+                <x-input id="configuracion-form-valor" type="text" wire:model="valor" class="w-full" />
+            </x-admin.campo>
 
             <div>
-                <label for="configuracion-form-descripcion" class="block text-sm font-medium mb-1">Descripción</label>
-                <input id="configuracion-form-descripcion" type="text" value="{{ $configuracion->descripcion }}" disabled class="w-full rounded-md border-gray-300 dark:bg-gray-800 opacity-60">
+                <x-label for="configuracion-form-descripcion" value="Descripción" class="block mb-1" />
+                <x-input id="configuracion-form-descripcion" type="text" :value="$configuracion->descripcion" disabled class="w-full opacity-60" />
             </div>
 
             <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('configuraciones.index') }}" class="text-sm text-gray-500">Cancelar</a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
-                    Guardar
-                </button>
+                <a href="{{ route('configuraciones.index') }}" class="text-sm text-gray-600 dark:text-gray-400">Cancelar</a>
+                <x-button>Guardar</x-button>
             </div>
         </form>
     </div>

@@ -29,10 +29,10 @@ Route::get('/', function () {
  * Feriados, Unidades orgánicas, Configuraciones, Horario de RRHH,
  * Usuarios) ya vive en Blade + Livewire puro, uno por uno, en los
  * bloques de abajo. Filament ya no se usa en este proyecto —
- * AdminPanelProvider fue retirado de bootstrap/providers.php y la
- * dependencia se sacó de composer.json (las carpetas
- * app/Filament/Resources/* quedaron sin uso, listas para borrarse
- * cuando se limpie el repo).
+ * AdminPanelProvider fue retirado de bootstrap/providers.php, la
+ * dependencia se sacó de composer.json y no quedan carpetas
+ * app/Filament/Resources/* ni assets compilados en public/ (css/js/
+ * fonts/filament): la limpieza ya se hizo, no queda nada pendiente.
  */
 /*
  * Sedes: primer recurso del catálogo de administración ya migrado

@@ -1,77 +1,43 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
-                Turnos
-            </h2>
+        <x-admin.encabezado titulo="Turnos">
+            <x-admin.boton-nuevo :href="route('turnos.crear')">Nuevo turno</x-admin.boton-nuevo>
+        </x-admin.encabezado>
 
-            <a href="{{ route('turnos.crear') }}" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
-                + Nuevo turno
-            </a>
+        <x-admin.mensajes />
+
+        <div class="flex flex-wrap gap-4">
+            <x-admin.filtro-campo label="Filtrar por trabajador" for="turno-index-userId">
+                <x-select id="turno-index-userId" wire:model.live="userId">
+                    <option value="">Todos</option>
+                    @foreach ($trabajadores as $id => $nombre)
+                        <option value="{{ $id }}">{{ $nombre }}</option>
+                    @endforeach
+                </x-select>
+            </x-admin.filtro-campo>
         </div>
 
-        @if (session('mensaje'))
-            <div class="glass-card p-4 text-sm text-green-700 dark:text-green-400">
-                {{ session('mensaje') }}
-            </div>
-        @endif
-
-        <div class="max-w-xs">
-            <label for="turno-index-userId" class="block text-sm font-medium mb-1">Filtrar por trabajador</label>
-            <select id="turno-index-userId" wire:model.live="userId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                <option value="">Todos</option>
-                @foreach ($trabajadores as $id => $nombre)
-                    <option value="{{ $id }}">{{ $nombre }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="glass-card overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                    <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th scope="col" class="px-4 py-3">Trabajador</th>
-                        <th scope="col" class="px-4 py-3">Sede</th>
-                        <th scope="col" class="px-4 py-3">Fecha</th>
-                        <th scope="col" class="px-4 py-3">Inicio</th>
-                        <th scope="col" class="px-4 py-3">Fin</th>
-                        <th scope="col" class="px-4 py-3">Descanso</th>
-                        <th scope="col" class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse ($turnos as $turno)
-                        <tr wire:key="turno-{{ $turno->id }}">
-                            <td class="px-4 py-3">{{ $turno->usuario?->name }}</td>
-                            <td class="px-4 py-3">{{ $turno->sede?->nombre }}</td>
-                            <td class="px-4 py-3">{{ $turno->fecha?->format('d/m/Y') }}</td>
-                            <td class="px-4 py-3">{{ $turno->hora_inicio }}</td>
-                            <td class="px-4 py-3">{{ $turno->hora_fin }}</td>
-                            <td class="px-4 py-3">{{ $turno->es_descanso ? 'Sí' : 'No' }}</td>
-                            <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('turnos.editar', $turno) }}" class="btn-row">
-                                    Editar
-                                </a>
-                                <button
-                                    type="button"
-                                    wire:click="eliminar({{ $turno->id }})"
-                                    wire:confirm="¿Eliminar el turno de {{ $turno->usuario?->name }} del {{ $turno->fecha?->format('d/m/Y') }}?"
-                                    class="btn-row-danger"
-                                >
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                                Aún no hay turnos registrados.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-admin.tabla :columnas="['Trabajador', 'Sede', 'Fecha', 'Inicio', 'Fin', 'Descanso', '']">
+            @forelse ($turnos as $turno)
+                <tr wire:key="turno-{{ $turno->id }}">
+                    <td class="px-4 py-3">{{ $turno->usuario?->name }}</td>
+                    <td class="px-4 py-3">{{ $turno->sede?->nombre }}</td>
+                    <td class="px-4 py-3">{{ $turno->fecha?->format('d/m/Y') }}</td>
+                    <td class="px-4 py-3">{{ $turno->hora_inicio }}</td>
+                    <td class="px-4 py-3">{{ $turno->hora_fin }}</td>
+                    <td class="px-4 py-3"><x-admin.estado :activo="$turno->es_descanso" etiqueta-si="Sí" etiqueta-no="No" /></td>
+                    <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                        <x-admin.accion-editar :href="route('turnos.editar', $turno)" />
+                        <x-admin.accion-eliminar
+                            wire:click="eliminar({{ $turno->id }})"
+                            wire:confirm="¿Eliminar el turno de {{ $turno->usuario?->name }} del {{ $turno->fecha?->format('d/m/Y') }}?"
+                        />
+                    </td>
+                </tr>
+            @empty
+                <x-admin.fila-vacia :colspan="7">Aún no hay turnos registrados.</x-admin.fila-vacia>
+            @endforelse
+        </x-admin.tabla>
 
         {{ $turnos->links() }}
     </div>

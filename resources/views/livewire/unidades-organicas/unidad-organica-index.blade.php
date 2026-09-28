@@ -1,79 +1,38 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <div class="flex items-center justify-between">
-            <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
-                Unidades orgánicas
-            </h2>
+        <x-admin.encabezado titulo="Unidades orgánicas">
+            <x-admin.boton-nuevo :href="route('unidades-organicas.crear')">Nueva unidad</x-admin.boton-nuevo>
+        </x-admin.encabezado>
 
-            <a href="{{ route('unidades-organicas.crear') }}" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
-                + Nueva unidad
-            </a>
-        </div>
+        <x-admin.mensajes />
 
-        @if (session('mensaje'))
-            <div class="glass-card p-4 text-sm text-green-700 dark:text-green-400">
-                {{ session('mensaje') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="glass-card p-4 text-sm text-red-700 dark:text-red-400">
-                {{ session('error') }}
-            </div>
-        @endif
-
-        <div class="glass-card overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                    <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <th scope="col" class="px-4 py-3">Nombre</th>
-                        <th scope="col" class="px-4 py-3">Unidad padre</th>
-                        <th scope="col" class="px-4 py-3">Tipo</th>
-                        <th scope="col" class="px-4 py-3">Jefe</th>
-                        <th scope="col" class="px-4 py-3">Turnos sin jefe</th>
-                        <th scope="col" class="px-4 py-3">Activo</th>
-                        <th scope="col" class="px-4 py-3"></th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    @forelse ($unidades as $unidad)
-                        <tr wire:key="unidad-{{ $unidad->id }}">
-                            <td class="px-4 py-3">{{ $unidad->nombre }}</td>
-                            <td class="px-4 py-3">{{ $unidad->padre?->nombre ?? '— (raíz)' }}</td>
-                            <td class="px-4 py-3">{{ $unidad->tipo }}</td>
-                            <td class="px-4 py-3">{{ $unidad->jefe?->name }}</td>
-                            <td class="px-4 py-3 text-sm">
-                                @php($faltan = $unidad->turnosSinJefe())
-                                @if ($faltan !== [])
-                                    <span class="text-yellow-700 dark:text-yellow-400">{{ collect($faltan)->map(fn ($t) => \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ') }}</span>
-                                @else
-                                    —
-                                @endif
-                            </td>
-                            <td class="px-4 py-3">{{ $unidad->activo ? 'Sí' : 'No' }}</td>
-                            <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('unidades-organicas.editar', $unidad) }}" class="btn-row">
-                                    Editar
-                                </a>
-                                <button
-                                    type="button"
-                                    wire:click="eliminar({{ $unidad->id }})"
-                                    wire:confirm="¿Eliminar la unidad orgánica &quot;{{ $unidad->nombre }}&quot;?"
-                                    class="btn-row-danger"
-                                >
-                                    Eliminar
-                                </button>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                                Aún no hay unidades orgánicas registradas.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+        <x-admin.tabla :columnas="['Nombre', 'Unidad padre', 'Tipo', 'Jefe', 'Turnos sin jefe', 'Activo', '']">
+            @forelse ($unidades as $unidad)
+                <tr wire:key="unidad-{{ $unidad->id }}">
+                    <td class="px-4 py-3">{{ $unidad->nombre }}</td>
+                    <td class="px-4 py-3">{{ $unidad->padre?->nombre ?? '— (raíz)' }}</td>
+                    <td class="px-4 py-3">{{ $unidad->tipo }}</td>
+                    <td class="px-4 py-3">{{ $unidad->jefe?->name }}</td>
+                    <td class="px-4 py-3 text-sm">
+                        @php($faltan = $unidad->turnosSinJefe())
+                        @if ($faltan !== [])
+                            <span class="text-ambar-700 dark:text-ambar-400">{{ collect($faltan)->map(fn ($t) => \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ') }}</span>
+                        @else
+                            —
+                        @endif
+                    </td>
+                    <td class="px-4 py-3"><x-admin.estado :activo="$unidad->activo" /></td>
+                    <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
+                        <x-admin.accion-editar :href="route('unidades-organicas.editar', $unidad)" />
+                        <x-admin.accion-eliminar
+                            wire:click="eliminar({{ $unidad->id }})"
+                            wire:confirm="¿Eliminar la unidad orgánica &quot;{{ $unidad->nombre }}&quot;?"
+                        />
+                    </td>
+                </tr>
+            @empty
+                <x-admin.fila-vacia :colspan="7">Aún no hay unidades orgánicas registradas.</x-admin.fila-vacia>
+            @endforelse
+        </x-admin.tabla>
     </div>
 </div>

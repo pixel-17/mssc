@@ -1,54 +1,40 @@
 <div>
     <div class="max-w-2xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
-            {{ $unidad ? 'Editar unidad orgánica' : 'Nueva unidad orgánica' }}
-        </h2>
+        <x-admin.encabezado :titulo="$unidad ? 'Editar unidad orgánica' : 'Nueva unidad orgánica'" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
-            <div>
-                <label for="unidad-organica-form-nombre" class="block text-sm font-medium mb-1">Nombre</label>
-                <input id="unidad-organica-form-nombre" type="text" wire:model="nombre" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                @error('nombre') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+            <x-admin.campo label="Nombre" for="unidad-organica-form-nombre">
+                <x-input id="unidad-organica-form-nombre" type="text" wire:model="nombre" class="w-full" />
+            </x-admin.campo>
 
-            <div>
-                <label for="unidad-organica-form-tipo" class="block text-sm font-medium mb-1">Tipo</label>
-                <select id="unidad-organica-form-tipo" wire:model="tipo" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+            <x-admin.campo label="Tipo" for="unidad-organica-form-tipo" ayuda="Solo pinta el organigrama, no afecta el escalamiento de papeletas.">
+                <x-select id="unidad-organica-form-tipo" wire:model="tipo">
                     <option value="">— (sin tipo) —</option>
                     @foreach (\App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TIPOS as $valor => $etiqueta)
                         <option value="{{ $valor }}">{{ $etiqueta }}</option>
                     @endforeach
-                </select>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Solo pinta el organigrama, no afecta el escalamiento de papeletas.</p>
-                @error('tipo') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+                </x-select>
+            </x-admin.campo>
 
-            <div>
-                <label for="unidad-organica-form-parentId" class="block text-sm font-medium mb-1">Unidad padre</label>
-                <select id="unidad-organica-form-parentId" wire:model="parentId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+            <x-admin.campo label="Unidad padre" for="unidad-organica-form-parentId">
+                <x-select id="unidad-organica-form-parentId" wire:model="parentId">
                     <option value="">— (raíz) —</option>
                     @foreach ($padresDisponibles as $id => $nombrePadre)
                         <option value="{{ $id }}">{{ $nombrePadre }}</option>
                     @endforeach
-                </select>
-                @error('parentId') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+                </x-select>
+            </x-admin.campo>
 
-            <div>
-                <label for="unidad-organica-form-jefeId" class="block text-sm font-medium mb-1">Jefe de la unidad</label>
-                <select id="unidad-organica-form-jefeId" wire:model="jefeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+            <x-admin.campo label="Jefe de la unidad" for="unidad-organica-form-jefeId">
+                <x-select id="unidad-organica-form-jefeId" wire:model="jefeId">
                     <option value="">— (ninguno) —</option>
                     @foreach ($jefesDisponibles as $id => $nombreJefe)
                         <option value="{{ $id }}">{{ $nombreJefe }}</option>
                     @endforeach
-                </select>
-                @error('jefeId') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+                </x-select>
+            </x-admin.campo>
 
-            <label class="flex items-center gap-2">
-                <input type="checkbox" wire:model="activo" class="rounded">
-                <span class="text-sm">Activo</span>
-            </label>
+            <x-admin.campo-checkbox for="activo" wire:model="activo" label="Activo" />
 
             @if ($unidad)
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
@@ -65,19 +51,20 @@
                                 régimen 276; en 728 la papeleta se bloquea hasta que alguien coincida.
                             </p>
                         </div>
-                        <button type="button" wire:click="agregarJefeAdicional" class="text-xs text-tinta-700 hover:underline whitespace-nowrap">
-                            + Agregar jefe
+                        <button type="button" wire:click="agregarJefeAdicional" class="text-xs text-tinta-700 hover:underline whitespace-nowrap inline-flex items-center gap-1">
+                            <x-icon name="plus-circle" class="size-3.5" />
+                            Agregar jefe
                         </button>
                     </div>
 
                     @forelse ($jefesAdicionales as $indice => $jefeIdAdicional)
                         <div class="flex items-center gap-2" wire:key="jefe-adicional-{{ $indice }}">
-                            <select wire:model="jefesAdicionales.{{ $indice }}" class="flex-1 rounded-md border-gray-300 dark:bg-gray-800">
+                            <x-select wire:model="jefesAdicionales.{{ $indice }}" class="flex-1">
                                 <option value="">— (sin elegir) —</option>
                                 @foreach ($jefesDisponibles as $id => $nombreJefe)
                                     <option value="{{ $id }}">{{ $nombreJefe }}</option>
                                 @endforeach
-                            </select>
+                            </x-select>
 
                             @if ($jefeIdAdicional)
                                 <a href="{{ route('turnos.configuracion', $jefeIdAdicional) }}" target="_blank" class="text-xs text-gray-500 hover:underline whitespace-nowrap">
@@ -85,7 +72,7 @@
                                 </a>
                             @endif
 
-                            <button type="button" wire:click="quitarJefeAdicional({{ $indice }})" class="text-xs text-red-600 hover:underline whitespace-nowrap">
+                            <button type="button" wire:click="quitarJefeAdicional({{ $indice }})" class="text-xs text-alarma-700 dark:text-alarma-500 hover:underline whitespace-nowrap">
                                 Quitar
                             </button>
                         </div>
@@ -97,10 +84,8 @@
             @endif
 
             <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('unidades-organicas.index') }}" class="text-sm text-gray-500">Cancelar</a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
-                    Guardar
-                </button>
+                <a href="{{ route('unidades-organicas.index') }}" class="text-sm text-gray-600 dark:text-gray-400">Cancelar</a>
+                <x-button>Guardar</x-button>
             </div>
         </form>
     </div>

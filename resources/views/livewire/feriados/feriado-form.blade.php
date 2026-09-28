@@ -1,27 +1,19 @@
 <div>
     <div class="max-w-2xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
-            {{ $feriado ? 'Editar feriado' : 'Nuevo feriado' }}
-        </h2>
+        <x-admin.encabezado :titulo="$feriado ? 'Editar feriado' : 'Nuevo feriado'" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
-            <div>
-                <label for="feriado-form-fecha" class="block text-sm font-medium mb-1">Fecha</label>
-                <input id="feriado-form-fecha" type="date" wire:model="fecha" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                @error('fecha') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+            <x-admin.campo label="Fecha" for="feriado-form-fecha">
+                <x-input id="feriado-form-fecha" type="date" wire:model="fecha" class="w-full" />
+            </x-admin.campo>
 
-            <div>
-                <label for="feriado-form-descripcion" class="block text-sm font-medium mb-1">Descripción</label>
-                <input id="feriado-form-descripcion" type="text" wire:model="descripcion" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                @error('descripcion') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-            </div>
+            <x-admin.campo label="Descripción" for="feriado-form-descripcion">
+                <x-input id="feriado-form-descripcion" type="text" wire:model="descripcion" class="w-full" />
+            </x-admin.campo>
 
             <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('feriados.index') }}" class="text-sm text-gray-500">Cancelar</a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
-                    Guardar
-                </button>
+                <a href="{{ route('feriados.index') }}" class="text-sm text-gray-600 dark:text-gray-400">Cancelar</a>
+                <x-button>Guardar</x-button>
             </div>
         </form>
     </div>
