@@ -1,5 +1,5 @@
 <x-trabajador-layout titulo="Nueva papeleta" :volver-a="route('trabajador.papeletas.index')">
-    <div x-data="{ motivoId: '{{ old('motivo_id') }}', motivos: {{ $motivos->toJson() }}, archivo: null }">
+    <div x-data="{ motivoId: '{{ old('motivo_id') }}', motivos: {{ $motivos->toJson() }}, archivo: null, get pideAdjunto() { const m = this.motivos.find(m => m.id == this.motivoId); return !m || m.adjunto !== 'no'; } }">
         <x-flash-messages />
 
         {{--
@@ -105,11 +105,11 @@
                     </div>
                 </div>
 
-                <div class="py-4">
+                <div class="py-4" x-show="pideAdjunto">
                     <div class="flex items-baseline gap-2.5">
                         <span class="font-display text-sello-500 dark:text-sello-300 font-semibold shrink-0">4</span>
                         <div class="w-full space-y-2">
-                            <x-label value="Adjunto (opcional según motivo)" />
+                            <x-label value="Adjunto" />
 
                             <label
                                 for="adjunto_inicial_path"
@@ -124,6 +124,7 @@
                                     type="file"
                                     id="adjunto_inicial_path"
                                     name="adjunto_inicial_path"
+                                    :disabled="!pideAdjunto"
                                     class="hidden"
                                     @change="archivo = $event.target.files[0]?.name ?? null"
                                 >

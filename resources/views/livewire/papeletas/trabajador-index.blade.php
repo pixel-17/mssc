@@ -1,7 +1,15 @@
 <div class="space-y-5">
     <x-flash-messages />
 
-    @if ($papeletas->isEmpty())
+    <div>
+        <label for="trabajador-index-buscar" class="block text-sm font-medium mb-1 text-gray-700 dark:text-tinta-50/80">Buscar papeleta</label>
+        <input id="trabajador-index-buscar" type="text" wire:model.live.debounce.300ms="buscar" placeholder="Motivo o justificación..."
+               class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
+    </div>
+
+    @if ($papeletas->isEmpty() && $buscar !== '')
+        <div class="glass-card p-6 text-center text-sm text-gray-500 dark:text-tinta-100/60">Ninguna papeleta coincide con la búsqueda.</div>
+    @elseif ($papeletas->isEmpty())
         <div class="glass-card p-8 text-center space-y-3">
             <div class="mx-auto icon-chip !size-14 !bg-tinta-500/15 !text-tinta-600 dark:!text-tinta-300">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7">

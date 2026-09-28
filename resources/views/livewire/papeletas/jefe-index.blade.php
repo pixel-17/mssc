@@ -11,6 +11,13 @@
 
         <x-flash-messages />
 
+        {{-- Buscar por trabajador: filtra todas las listas de abajo. --}}
+        <div class="max-w-xs">
+            <label for="jefe-index-buscar" class="block text-sm font-medium mb-1 text-gray-700 dark:text-tinta-50/80">Buscar trabajador</label>
+            <input id="jefe-index-buscar" type="text" wire:model.live.debounce.300ms="buscar" placeholder="Nombre, apellido o DNI..."
+                   class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
+        </div>
+
         {{-- Por decidir --}}
         <div class="glass-card overflow-hidden border-l-4 border-amber-500 dark:border-amber-400">
             <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
@@ -20,7 +27,7 @@
                 </h3>
             </div>
             @if ($porDecidir->isEmpty())
-                <p class="p-4 text-sm text-gray-500 dark:text-tinta-100/50">No tienes papeletas pendientes de decisión.</p>
+                <p class="p-4 text-sm text-gray-500 dark:text-tinta-100/50">{{ $buscar ? 'Ningún trabajador coincide con la búsqueda.' : 'No tienes papeletas pendientes de decisión.' }}</p>
             @else
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-separate border-spacing-y-2">
@@ -164,6 +171,45 @@
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->hora_salida_real?->format('d/m H:i') }}</td>
                                     <td class="px-4 py-3 text-right">
                                         <a href="{{ route('jefe.papeletas.show', $papeleta) }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Gestionar retorno →</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        @endif
+
+        {{-- Papeletas del turno: siguen visibles después de decidir, hasta que termina el turno --}}
+        @if ($delTurno->isNotEmpty())
+            <div class="glass-card overflow-hidden border-l-4 border-emerald-500 dark:border-emerald-400">
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
+                        Papeletas del turno
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">{{ $delTurno->count() }}</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 dark:text-tinta-100/50 mt-0.5">Se muestran hasta que finalice el turno.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full border-separate border-spacing-y-2">
+                        <thead class="bg-tinta-50/70 dark:bg-white/5">
+                            <tr>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Motivo</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Estado</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Fin de turno</th>
+                                <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white dark:bg-transparent">
+                            @foreach ($delTurno as $papeleta)
+                                <tr wire:key="del-turno-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
+                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
+                                    <td class="px-4 py-3 text-sm"><x-estado-papeleta :estado="$papeleta->estado" /></td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->fin_turno_at?->format('d/m H:i') ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-right">
+                                        <a href="{{ route('jefe.papeletas.show', $papeleta) }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Ver</a>
                                     </td>
                                 </tr>
                             @endforeach

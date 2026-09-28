@@ -6,6 +6,12 @@
 
         <x-admin.mensajes />
 
+        <div class="flex flex-wrap gap-4">
+            <x-admin.filtro-campo label="Buscar" for="motivo-index-buscar">
+                <x-input id="motivo-index-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Código o nombre" />
+            </x-admin.filtro-campo>
+        </div>
+
         <x-admin.tabla :columnas="['Código', 'Nombre', 'Adjunto', 'Sustento', 'Cierre s/retorno', 'Activo', '']">
             @forelse ($motivos as $motivo)
                 <tr wire:key="motivo-{{ $motivo->id }}">
@@ -24,7 +30,7 @@
                     </td>
                 </tr>
             @empty
-                <x-admin.fila-vacia :colspan="7">Aún no hay motivos registrados.</x-admin.fila-vacia>
+                <x-admin.fila-vacia :colspan="7">{{ $buscar ? 'Ningún motivo coincide con la búsqueda.' : 'Aún no hay motivos registrados.' }}</x-admin.fila-vacia>
             @endforelse
         </x-admin.tabla>
     </div>

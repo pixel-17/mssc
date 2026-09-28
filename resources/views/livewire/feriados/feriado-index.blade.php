@@ -6,6 +6,12 @@
 
         <x-admin.mensajes />
 
+        <div class="flex flex-wrap gap-4">
+            <x-admin.filtro-campo label="Buscar" for="feriado-index-buscar">
+                <x-input id="feriado-index-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Descripción" />
+            </x-admin.filtro-campo>
+        </div>
+
         <x-admin.tabla :columnas="['Fecha', 'Descripción', '']">
             @forelse ($feriados as $feriado)
                 <tr wire:key="feriado-{{ $feriado->id }}">
@@ -20,7 +26,7 @@
                     </td>
                 </tr>
             @empty
-                <x-admin.fila-vacia :colspan="3">Aún no hay feriados registrados.</x-admin.fila-vacia>
+                <x-admin.fila-vacia :colspan="3">{{ $buscar ? 'Ningún feriado coincide con la búsqueda.' : 'Aún no hay feriados registrados.' }}</x-admin.fila-vacia>
             @endforelse
         </x-admin.tabla>
     </div>

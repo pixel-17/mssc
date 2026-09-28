@@ -6,6 +6,12 @@
 
         <x-admin.mensajes />
 
+        <div class="flex flex-wrap gap-4">
+            <x-admin.filtro-campo label="Buscar" for="sede-index-buscar">
+                <x-input id="sede-index-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Nombre o dirección" />
+            </x-admin.filtro-campo>
+        </div>
+
         <x-admin.tabla :columnas="['Nombre', 'Dirección', 'Radio (m)', 'Trabajadores', 'Activa', '']">
             @forelse ($sedes as $sede)
                 <tr wire:key="sede-{{ $sede->id }}">
@@ -23,7 +29,7 @@
                     </td>
                 </tr>
             @empty
-                <x-admin.fila-vacia :colspan="6">Aún no hay sedes registradas.</x-admin.fila-vacia>
+                <x-admin.fila-vacia :colspan="6">{{ $buscar ? 'Ninguna sede coincide con la búsqueda.' : 'Aún no hay sedes registradas.' }}</x-admin.fila-vacia>
             @endforelse
         </x-admin.tabla>
     </div>

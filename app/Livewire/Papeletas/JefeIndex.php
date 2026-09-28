@@ -34,12 +34,23 @@ class JefeIndex extends Component
 {
     use EscuchaNotificacionesEnVivo;
 
+    public string $buscar = '';
+
     public function render(): View
     {
         $user = Auth::user();
 
+        // Buscador por trabajador (nombre, apellido o DNI): filtra todas las listas.
+        $termino = trim($this->buscar);
+        $filtroBuscar = fn ($query) => $query->whereHas('trabajador', fn ($q) => $q
+            ->where(fn ($w) => $w
+                ->where('name', 'like', "%{$termino}%")
+                ->orWhere('apellido', 'like', "%{$termino}%")
+                ->orWhere('dni', 'like', "%{$termino}%")));
+
         $porDecidir = Papeleta::whereState('estado', PendienteJefe::class)
             ->deJefeInmediato($user)
+            ->when($termino !== '', $filtroBuscar)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
@@ -47,26 +58,51 @@ class JefeIndex extends Component
         // Las que yo observé: esperan la respuesta del trabajador.
         $observadasPorMi = Papeleta::whereState('estado', ObservadaPorJefe::class)
             ->deJefeInmediato($user)
+            ->when($termino !== '', $filtroBuscar)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
         $observacionesRrhh = Papeleta::whereState('estado', ObservadaPorRrhh::class)
             ->deJefeInmediato($user)
+            ->when($termino !== '', $filtroBuscar)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
         $enCurso = Papeleta::whereState('estado', AutorizadaYCorriendo::class)
             ->deJefeInmediato($user)
+            ->when($termino !== '', $filtroBuscar)
             ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
         $sustentosPorRevisar = Papeleta::whereState('estado', RetornoPendienteSustento::class)
             ->deJefeInmediato($user)
+            ->when($termino !== '', $filtroBuscar)
             ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
             ->with(['trabajador', 'motivo', 'sustentos'])
+            ->latest()
+            ->get();
+
+        // Papeletas del turno vigente: tras aprobar, la papeleta sale de "Por decidir"
+        // (pasa a RRHH, sigue en curso, se cierra...) pero el jefe debe seguir viéndola
+        // hasta que termine el turno (fin_turno_at). Sin fin_turno_at (papeletas viejas)
+        // se usa el día operativo de hoy. Se excluyen las que ya salen en otra lista.
+        $yaMostradas = collect()
+            ->merge($porDecidir)->merge($observadasPorMi)->merge($observacionesRrhh)
+            ->merge($enCurso)->merge($sustentosPorRevisar)
+            ->pluck('id');
+
+        $delTurno = Papeleta::deJefeInmediato($user)
+            ->when($termino !== '', $filtroBuscar)
+            ->whereNotIn('papeletas.id', $yaMostradas)
+            ->where(fn ($q) => $q
+                ->where('papeletas.fin_turno_at', '>', now())
+                ->orWhere(fn ($q2) => $q2
+                    ->whereNull('papeletas.fin_turno_at')
+                    ->whereDate('papeletas.dia_operativo', today())))
+            ->with(['trabajador', 'motivo'])
             ->latest()
             ->get();
 
@@ -76,6 +112,7 @@ class JefeIndex extends Component
             'observacionesRrhh',
             'enCurso',
             'sustentosPorRevisar',
+            'delTurno',
         ));
     }
 }

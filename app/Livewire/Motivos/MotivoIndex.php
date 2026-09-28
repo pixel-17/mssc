@@ -21,6 +21,8 @@ class MotivoIndex extends Component
 {
     use RequiereAdmin;
 
+    public string $buscar = '';
+
     public function eliminar(Motivo $motivo): void
     {
         $this->autorizarAdmin();
@@ -42,7 +44,7 @@ class MotivoIndex extends Component
     public function render(): View
     {
         return view('livewire.motivos.motivo-index', [
-            'motivos' => Motivo::orderBy('nombre')->get(),
+            'motivos' => Motivo::when(trim($this->buscar) !== '', fn ($q) => $q->where(fn ($w) => $w->where('nombre', 'like', '%'.trim($this->buscar).'%')->orWhere('codigo', 'like', '%'.trim($this->buscar).'%')))->orderBy('nombre')->get(),
         ]);
     }
 }

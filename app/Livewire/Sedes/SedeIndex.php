@@ -21,6 +21,8 @@ class SedeIndex extends Component
 {
     use RequiereAdmin;
 
+    public string $buscar = '';
+
     public function eliminar(Sede $sede): void
     {
         $this->autorizarAdmin();
@@ -42,7 +44,7 @@ class SedeIndex extends Component
     public function render(): View
     {
         return view('livewire.sedes.sede-index', [
-            'sedes' => Sede::withCount('usuarios')->orderBy('nombre')->get(),
+            'sedes' => Sede::withCount('usuarios')->when(trim($this->buscar) !== '', fn ($q) => $q->where(fn ($w) => $w->where('nombre', 'like', '%'.trim($this->buscar).'%')->orWhere('direccion', 'like', '%'.trim($this->buscar).'%')))->orderBy('nombre')->get(),
         ]);
     }
 }

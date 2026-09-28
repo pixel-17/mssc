@@ -20,6 +20,8 @@ class FeriadoIndex extends Component
 {
     use RequiereAdmin;
 
+    public string $buscar = '';
+
     public function eliminar(Feriado $feriado): void
     {
         $this->autorizarAdmin();
@@ -32,7 +34,7 @@ class FeriadoIndex extends Component
     public function render(): View
     {
         return view('livewire.feriados.feriado-index', [
-            'feriados' => Feriado::orderByDesc('fecha')->get(),
+            'feriados' => Feriado::when(trim($this->buscar) !== '', fn ($q) => $q->where('descripcion', 'like', '%'.trim($this->buscar).'%'))->orderByDesc('fecha')->get(),
         ]);
     }
 }

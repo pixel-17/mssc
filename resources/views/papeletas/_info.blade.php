@@ -6,6 +6,13 @@
         </div>
     @endif
 
+    @if ($papeleta->relationLoaded('motivo') && $papeleta->motivo)
+        <div>
+            <dt class="text-gray-500 dark:text-tinta-100/50 text-sm">Tipo de papeleta</dt>
+            <dd class="text-gray-900 dark:text-white font-medium">{{ $papeleta->motivo->nombre }}</dd>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
         <div>
             <dt class="text-gray-500 dark:text-tinta-100/50">Sede</dt>

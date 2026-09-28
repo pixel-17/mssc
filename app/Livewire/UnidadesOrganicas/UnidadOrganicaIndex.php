@@ -21,6 +21,8 @@ class UnidadOrganicaIndex extends Component
 {
     use RequiereAdmin;
 
+    public string $buscar = '';
+
     public function eliminar(UnidadOrganica $unidad): void
     {
         $this->autorizarAdmin();
@@ -42,7 +44,7 @@ class UnidadOrganicaIndex extends Component
     public function render(): View
     {
         return view('livewire.unidades-organicas.unidad-organica-index', [
-            'unidades' => UnidadOrganica::with(['padre', 'jefe', 'jefesTurno.jefe'])->orderBy('nombre')->get(),
+            'unidades' => UnidadOrganica::with(['padre', 'jefe', 'jefesTurno.jefe'])->when(trim($this->buscar) !== '', fn ($q) => $q->where('nombre', 'like', '%'.trim($this->buscar).'%'))->orderBy('nombre')->get(),
         ]);
     }
 }

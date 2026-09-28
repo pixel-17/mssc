@@ -6,6 +6,12 @@
 
         <x-admin.mensajes />
 
+        <div class="flex flex-wrap gap-4">
+            <x-admin.filtro-campo label="Buscar" for="unidad-organica-index-buscar">
+                <x-input id="unidad-organica-index-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Nombre de la unidad" />
+            </x-admin.filtro-campo>
+        </div>
+
         <x-admin.tabla :columnas="['Nombre', 'Unidad padre', 'Tipo', 'Jefe', 'Turnos sin jefe', 'Activo', '']">
             @forelse ($unidades as $unidad)
                 <tr wire:key="unidad-{{ $unidad->id }}">
@@ -31,7 +37,7 @@
                     </td>
                 </tr>
             @empty
-                <x-admin.fila-vacia :colspan="7">Aún no hay unidades orgánicas registradas.</x-admin.fila-vacia>
+                <x-admin.fila-vacia :colspan="7">{{ $buscar ? 'Ninguna unidad coincide con la búsqueda.' : 'Aún no hay unidades orgánicas registradas.' }}</x-admin.fila-vacia>
             @endforelse
         </x-admin.tabla>
     </div>

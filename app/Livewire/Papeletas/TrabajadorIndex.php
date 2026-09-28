@@ -27,11 +27,23 @@ class TrabajadorIndex extends Component
 {
     use EscuchaNotificacionesEnVivo, WithPagination;
 
+    public string $buscar = '';
+
+    public function updatedBuscar(): void
+    {
+        $this->resetPage();
+    }
+
     public function render(): View
     {
+        $termino = trim($this->buscar);
+
         return view('livewire.papeletas.trabajador-index', [
             'papeletas' => Auth::user()->papeletas()
                 ->with(['motivo', 'sede', 'retorno'])
+                ->when($termino !== '', fn ($q) => $q->where(fn ($w) => $w
+                    ->whereHas('motivo', fn ($m) => $m->where('nombre', 'like', "%{$termino}%"))
+                    ->orWhere('justificacion', 'like', "%{$termino}%")))
                 ->latest()
                 ->paginate(15),
         ]);
