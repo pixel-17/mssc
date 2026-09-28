@@ -214,8 +214,8 @@ class User extends Authenticatable
      * (ya no con un turno fijo elegido a mano en jefes_turno — ver
      * JefeTurno). Sin esto, los jefes de turno que no son `jefe_id` no
      * verían a nadie (users.jefe_inmediato_id apunta al jefe de la
-     * unidad). Sin configuración de turno propia, $jefe no cubre a nadie
-     * por este camino.
+     * unidad). Sin configuración de turno propia (programación día por día),
+     * cubre al personal 728 de esas unidades.
      */
     public function scopeDeLosTurnosQueCubre(\Illuminate\Database\Eloquent\Builder $query, User $jefe): \Illuminate\Database\Eloquent\Builder
     {
@@ -223,8 +223,18 @@ class User extends Authenticatable
 
         $turnoDelJefe = \App\Models\ConfiguracionTurno::where('user_id', $jefe->id)->value('turno');
 
-        if ($unidadIds->isEmpty() || $turnoDelJefe === null) {
+        if ($unidadIds->isEmpty()) {
             return $query->whereRaw('1 = 0');
+        }
+
+        // Sin ciclo propio en configuraciones_turno (el jefe se programa
+        // día por día, M-M-T-T-N-D): no hay un único turno con el cual
+        // comparar, así que cubre al personal 728 de las unidades donde
+        // es jefe inmediato. Quién puede aprobar cada papeleta sigue
+        // resolviéndose aparte (UnidadOrganica::resolverJefesInmediatos).
+        if ($turnoDelJefe === null) {
+            return $query->whereIn('users.unidad_organica_id', $unidadIds)
+                ->where('users.regimen', '728');
         }
 
         return $query->whereIn('users.unidad_organica_id', $unidadIds)
@@ -316,21 +326,56 @@ class User extends Authenticatable
     }
 
     /**
-     * Quién puede cargar/actualizar el ciclo de turno (mensual) de un
-     * trabajador: Admin (rol Spatie), su Jefe Inmediato (automático o
-     * adicional, ver esJefeInmediatoDe), su Jefe de Área explícito, o el
-     * propio trabajador si es jefe de alguien (ver esJefeDeAlguien) —
-     * un jefe no tiene, dentro del sistema, un jefe inmediato/de área
-     * propio que le cargue el horario. "jefe" no es un rol de Spatie
-     * (ver RoleSeeder) — por eso esto se resuelve por relación, no por
-     * hasRole.
+     * Quién puede cargar/actualizar el turno (mensual) de un trabajador:
+     *
+     * - Admin (rol Spatie): a cualquiera.
+     * - Su propia programación, si es jefe de alguien (ver esJefeDeAlguien):
+     *   un jefe no tiene, dentro del sistema, un jefe inmediato/de área
+     *   propio que le cargue el horario.
+     * - Su Jefe de Área explícito (trabajador->jefe_area_id): también a los
+     *   jefes inmediatos de su área.
+     * - Un Jefe Inmediato (automático, adicional o de turno): solo a los
+     *   TRABAJADORES a su cargo, nunca a otro jefe inmediato. Un Jefe de
+     *   Área (encabeza una unidad) conserva su alcance de siempre.
+     *
+     * "jefe" no es un rol de Spatie (ver RoleSeeder) — por eso esto se
+     * resuelve por relación, no por hasRole.
      */
     public function puedeGestionarTurnoDe(User $trabajador): bool
     {
-        return $this->hasRole('admin')
-            || ($this->id === $trabajador->id && $this->esJefeDeAlguien())
-            || $this->esJefeInmediatoDe($trabajador)
-            || $trabajador->jefe_area_id === $this->id;
+        if ($this->hasRole('admin')) {
+            return true;
+        }
+
+        if ($this->id === $trabajador->id) {
+            return $this->esJefeDeAlguien();
+        }
+
+        if ($trabajador->jefe_area_id === $this->id) {
+            return true;
+        }
+
+        // Un jefe inmediato no programa a otro jefe inmediato.
+        if (! $this->esJefeDeArea() && $trabajador->esJefeDeAlguien()) {
+            return false;
+        }
+
+        return $this->esJefeInmediatoDe($trabajador)
+            || $this->esJefeDeTurnoDe($trabajador);
+    }
+
+    /**
+     * ¿Es jefe de turno (jefes_turno) de la unidad orgánica del
+     * trabajador 728? Sin turno fijo: su turno sale de su propia
+     * programación, así que cubre a todo el personal 728 de la unidad.
+     */
+    public function esJefeDeTurnoDe(User $trabajador): bool
+    {
+        return $trabajador->regimen === '728'
+            && $trabajador->unidad_organica_id !== null
+            && JefeTurno::where('jefe_id', $this->id)
+                ->where('unidad_organica_id', $trabajador->unidad_organica_id)
+                ->exists();
     }
 
     /**
@@ -346,7 +391,8 @@ class User extends Authenticatable
     {
         return $this->unidadesQueEncabeza()->exists()
             || User::where('jefe_inmediato_id', $this->id)->exists()
-            || $this->trabajadoresAdicionales()->exists();
+            || $this->trabajadoresAdicionales()->exists()
+            || $this->turnosQueEncabeza()->exists();
     }
 
     public function papeletas(): \Illuminate\Database\Eloquent\Relations\HasMany

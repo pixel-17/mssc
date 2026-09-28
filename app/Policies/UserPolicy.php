@@ -43,7 +43,10 @@ class UserPolicy
 
         return $creator->unidadesQueEncabeza()->exists()
             || \App\Models\User::where('jefe_inmediato_id', $creator->id)->exists()
-            || $creator->trabajadoresAdicionales()->exists();
+            || $creator->trabajadoresAdicionales()->exists()
+            // Jefe inmediato de turno (728): registrado en jefes_turno sin
+            // trabajadores propios asignados a mano; también es jefe.
+            || $creator->turnosQueEncabeza()->exists();
     }
 
     /**

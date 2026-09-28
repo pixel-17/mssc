@@ -6,6 +6,7 @@ use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Fuente única de "qué trabajadores ve este jefe" en las pantallas de
@@ -37,6 +38,18 @@ class EquipoDelJefeService
             ->merge($user->trabajadoresAdicionales()->get())
             ->merge(User::deLosTurnosQueCubre($user)->get());
 
+        // Un Jefe Inmediato (que no es Jefe de Área) solo ve y programa a
+        // trabajadores, no a otros jefes inmediatos (ver
+        // User::puedeGestionarTurnoDe). Se le quita de la lista a todo el
+        // que sea jefe de alguien, salvo él mismo. El admin no se recorta.
+        if (! $esJefeDeArea && ! $user->hasRole('admin')) {
+            $idsDeJefes = $this->idsDeJefes();
+
+            $directos = $directos->reject(
+                fn (User $t) => $t->id !== $user->id && $idsDeJefes->contains($t->id)
+            );
+        }
+
         $jefesDeSubunidades = $esJefeDeArea
             ? User::whereIn('id', UnidadOrganica::whereIn('id', $unidadIds)
                 ->whereNotNull('jefe_id')
@@ -54,6 +67,25 @@ class EquipoDelJefeService
             ->values();
 
         return [$trabajadores, $esJefeDeArea];
+    }
+
+    /**
+     * IDs de todos los usuarios que son jefe de alguien: jefe de unidad,
+     * jefe de turno (jefes_turno), jefe adicional o jefe inmediato de al
+     * menos un trabajador. Mismo criterio que User::esJefeDeAlguien(),
+     * pero en pocas consultas para no repetirlo por cada trabajador.
+     *
+     * @return Collection<int, int>
+     */
+    private function idsDeJefes(): Collection
+    {
+        return UnidadOrganica::whereNotNull('jefe_id')->pluck('jefe_id')
+            ->merge(JefeTurno::pluck('jefe_id'))
+            ->merge(DB::table('jefes_inmediatos_adicionales')->pluck('jefe_inmediato_id'))
+            ->merge(User::whereNotNull('jefe_inmediato_id')->distinct()->pluck('jefe_inmediato_id'))
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values();
     }
 
     /**
