@@ -30,8 +30,12 @@ use Livewire\Component;
  * un ciclo de trabajo/descanso fijo — y el jefe sigue yendo a
  * turnos.configuracion para cargarlo o cambiarlo.
  *
- * Admin y Trabajador NO usan esta pantalla — ellos ven la vista
- * individual (CalendarioIndividualIndex).
+ * Trabajador NO usa esta pantalla — ve la vista individual
+ * (CalendarioIndividualIndex). El Admin tampoco la abre por su cuenta
+ * (no tiene equipo propio), pero SÍ puede verla "como" un jefe
+ * concreto: ProgramacionAdmin la incrusta con $jefeId y aquí se
+ * calcula el equipo de ese jefe (con su mismo alcance y sus filas de
+ * solo lectura). Lo que se guarda queda a nombre del admin (actor).
  */
 #[Layout('layouts.app')]
 #[Title('Calendario de turnos — mi equipo')]
@@ -40,6 +44,14 @@ class CalendarioEquipoIndex extends Component
     public int $anio;
 
     public int $mes;
+
+    /**
+     * Jefe cuyo equipo se muestra. Solo lo puede fijar un admin (ver
+     * mount/jefeVista); null = el propio usuario autenticado. Locked:
+     * el navegador no puede cambiarlo.
+     */
+    #[Locked]
+    public ?int $jefeId = null;
 
     /** Se incrementa al cambiar de mes o guardar para reiniciar el estado Alpine de la grilla. */
     #[Locked]
@@ -52,10 +64,31 @@ class CalendarioEquipoIndex extends Component
     #[Locked]
     public ?string $mensaje = null;
 
-    public function mount(): void
+    public function mount(?int $jefeId = null): void
     {
+        if ($jefeId !== null) {
+            abort_unless(auth()->user()?->hasRole('admin'), 403);
+            $this->jefeId = $jefeId;
+        }
+
         $this->anio = now()->year;
         $this->mes = now()->month;
+    }
+
+    /**
+     * Usuario cuyo equipo se muestra: el autenticado, o —solo si es
+     * admin— el jefe elegido. Se revalida en cada acción porque las
+     * llamadas a métodos de Livewire no re-evalúan el middleware.
+     */
+    private function jefeVista(): User
+    {
+        if ($this->jefeId === null) {
+            return auth()->user();
+        }
+
+        abort_unless(auth()->user()?->hasRole('admin'), 403);
+
+        return User::findOrFail($this->jefeId);
     }
 
     public function mesAnterior(): void
@@ -146,7 +179,7 @@ class CalendarioEquipoIndex extends Component
      */
     private function equipo728(): Collection
     {
-        [$trabajadores, , $soloLectura] = app(EquipoDelJefeService::class)->para(auth()->user());
+        [$trabajadores, , $soloLectura] = app(EquipoDelJefeService::class)->para($this->jefeVista());
 
         return $trabajadores
             ->filter(fn (User $t) => $t->regimen === '728' && $t->activo && ! in_array($t->id, $soloLectura, true))
@@ -155,7 +188,9 @@ class CalendarioEquipoIndex extends Component
 
     public function render(): View
     {
-        [$trabajadores, $esJefeDeArea, $soloLectura] = app(EquipoDelJefeService::class)->para(auth()->user());
+        $jefe = $this->jefeVista();
+
+        [$trabajadores, $esJefeDeArea, $soloLectura] = app(EquipoDelJefeService::class)->para($jefe);
 
         $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
@@ -193,6 +228,8 @@ class CalendarioEquipoIndex extends Component
         }
 
         return view('livewire.turnos.calendario-equipo-index', [
+            'jefe' => $jefe,
+            'vistaAdmin' => $this->jefeId !== null,
             'trabajadores' => $trabajadores,
             'esJefeDeArea' => $esJefeDeArea,
             'soloLectura' => $soloLectura,

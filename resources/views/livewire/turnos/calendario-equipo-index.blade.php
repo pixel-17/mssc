@@ -2,12 +2,18 @@
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-3">
             <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
-                Calendario de turnos — mi equipo
+                @if ($vistaAdmin)
+                    Calendario de turnos — equipo de {{ $jefe->nombre_completo }}
+                @else
+                    Calendario de turnos — mi equipo
+                @endif
             </h2>
         </div>
 
         <p class="text-sm text-gray-500">
-            @if ($esJefeDeArea)
+            @if ($vistaAdmin)
+                Lo que ve {{ $jefe->nombre_completo }} como {{ $esJefeDeArea ? 'jefe de área' : 'jefe inmediato' }}. Lo que guardes aquí queda registrado a tu nombre.
+            @elseif ($esJefeDeArea)
                 Tus trabajadores directos y los jefes de las sub-unidades de tu área.
             @else
                 Solo los trabajadores de los que eres jefe inmediato (automático o adicional).
@@ -268,7 +274,7 @@
                         @empty
                             <tr>
                                 <td colspan="100" class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                                    Todavía no tienes trabajadores a cargo.
+                                    {{ $vistaAdmin ? 'Este jefe todavía no tiene trabajadores a cargo.' : 'Todavía no tienes trabajadores a cargo.' }}
                                 </td>
                             </tr>
                         @endforelse

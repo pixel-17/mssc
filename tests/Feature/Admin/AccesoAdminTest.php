@@ -25,7 +25,6 @@ class AccesoAdminTest extends TestCase
         'motivos.index',
         'motivos.crear',
         'turnos.index',
-        'turnos.crear',
         'feriados.index',
         'feriados.crear',
         'unidades-organicas.index',

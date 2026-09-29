@@ -68,8 +68,9 @@ Route::middleware([
 });
 
 /*
- * Turnos: tercer recurso migrado — Blade + Livewire puro
- * (App\Livewire\Turnos\*), mismo patrón que Sedes/Motivos.
+ * Turnos (catálogo de admin): solo DEFINE las horas de cada turno
+ * (Mañana, Tarde, Noche, Día). No programa a ningún trabajador: eso lo
+ * hacen los jefes en el calendario de equipo (ver más abajo).
  */
 Route::middleware([
     'auth:sanctum',
@@ -77,9 +78,7 @@ Route::middleware([
     'verified',
     'role:admin',
 ])->prefix('turnos')->name('turnos.')->group(function () {
-    Route::get('/', \App\Livewire\Turnos\TurnoIndex::class)->name('index');
-    Route::get('/crear', \App\Livewire\Turnos\TurnoForm::class)->name('crear');
-    Route::get('/{turno}/editar', \App\Livewire\Turnos\TurnoForm::class)->name('editar');
+    Route::get('/', \App\Livewire\Turnos\DefinicionTurnos::class)->name('index');
 });
 
 /*

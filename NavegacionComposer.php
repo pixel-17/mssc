@@ -96,6 +96,10 @@ class NavegacionComposer
 
         $turnosJefe = [];
 
+        if ($esAdmin) {
+            $turnosJefe[] = ['label' => 'Programar por usuario', 'route' => route('turnos.administrar'), 'active' => request()->routeIs('turnos.administrar'), 'icon' => 'users'];
+        }
+
         if ($esJefe) {
             $turnosJefe[] = ['label' => 'Calendario del equipo', 'route' => route('turnos.calendario.equipo'), 'active' => request()->routeIs('turnos.calendario.equipo'), 'icon' => 'calendar'];
             $turnosJefe[] = ['label' => 'Programar horarios', 'route' => route('turnos.programacion.equipo'), 'active' => request()->routeIs('turnos.programacion.*'), 'icon' => 'clock'];
@@ -133,7 +137,7 @@ class NavegacionComposer
                 ['label' => 'Sedes', 'route' => route('sedes.index'), 'active' => request()->routeIs('sedes.*'), 'icon' => 'map-pin'],
                 ['label' => 'Unidades orgánicas', 'route' => route('unidades-organicas.index'), 'active' => request()->routeIs('unidades-organicas.*'), 'icon' => 'building'],
                 ['label' => 'Motivos', 'route' => route('motivos.index'), 'active' => request()->routeIs('motivos.*'), 'icon' => 'tag'],
-                ['label' => 'Turnos', 'route' => route('turnos.index'), 'active' => request()->routeIs('turnos.*'), 'icon' => 'clock'],
+                ['label' => 'Turnos', 'route' => route('turnos.index'), 'active' => request()->routeIs('turnos.index', 'turnos.crear', 'turnos.editar'), 'icon' => 'clock'],
                 ['label' => 'Feriados', 'route' => route('feriados.index'), 'active' => request()->routeIs('feriados.*'), 'icon' => 'calendar'],
             ]];
 
