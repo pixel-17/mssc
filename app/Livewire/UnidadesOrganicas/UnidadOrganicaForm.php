@@ -166,8 +166,10 @@ class UnidadOrganicaForm extends Component
 
             // Slots sin elegir (fila añadida y dejada en blanco) y
             // duplicados (mismo jefe elegido dos veces) se descartan
-            // aquí; el unique de BD es (unidad, jefe_id).
-            $idsDeseados = collect($datos['jefesAdicionales'])->filter()->unique()->values();
+            // aquí; el unique de BD es (unidad, jefe_id). Con la lista vacía
+            // validate() no devuelve la clave (solo hay regla 'jefesAdicionales.*'),
+            // y eso significa "ningún otro jefe": se quitan los existentes.
+            $idsDeseados = collect($datos['jefesAdicionales'] ?? [])->filter()->unique()->values();
 
             $idsActuales = JefeTurno::where('unidad_organica_id', $unidad->id)->pluck('jefe_id');
 

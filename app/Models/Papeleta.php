@@ -166,9 +166,9 @@ class Papeleta extends Model
      * turno en CrearPapeletaAction vía jefes_turno) más los adicionales
      * vigentes — mismo criterio que scopeDeJefeInmediato, para que quien
      * ve la papeleta en su bandeja sea siempre quien puede decidirla.
-     * Aquí manda la fotografía de la papeleta (quién estaba de servicio
-     * al crearla), no User::esJefeInmediatoDe(): esa dice si alguien es
-     * jefe inmediato del trabajador en general, sin mirar el turno.
+     * No usar User::esJefeInmediatoDe() aquí: esa compara contra
+     * users.jefe_inmediato_id, la columna estática que UserObserver
+     * calcula SIN turno y por lo tanto no refleja jefes_turno.
      */
     public function tieneComoJefeInmediatoA(User $user): bool
     {
@@ -191,9 +191,7 @@ class Papeleta extends Model
     /**
      * Revisión post-hoc observada por RRHH: solo el MISMO jefe que
      * autorizó la papeleta (resuelto_por_jefe_id) puede responderla,
-     * no cualquier otro jefe inmediato del trabajador. Es una regla sobre
-     * QUIÉN decidió esa papeleta, no sobre un tipo de jefe: aplica igual
-     * sin importar el origen de su jefatura.
+     * no cualquier otro candidato de turno ni un jefe adicional.
      */
     public function puedeResponderPosthoc(User $user): bool
     {
