@@ -80,6 +80,12 @@ body.app-bg {
 }
 
 .dark .auth-bg {
+    /* Mismas superficies oscuras que .app-bg: sin esto la tarjeta del
+       login se quedaba blanca en modo oscuro y las etiquetas (claras)
+       no se leían. */
+    --surface: #1f1f23;
+    --surface-muted: #14181a;
+    --border-soft: #2d2d33;
     background:
         radial-gradient(
             60rem 32rem at 50% -10%,

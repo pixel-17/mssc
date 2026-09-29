@@ -351,6 +351,12 @@ class User extends Authenticatable
             return $this->esJefeDeAlguien();
         }
 
+        // Entre jefes inmediatos de una misma unidad (automático o
+        // adicional, da igual) nadie programa a otro: cada uno solo el suyo.
+        if ($this->esJefeParDe($trabajador)) {
+            return false;
+        }
+
         if ($trabajador->jefe_area_id === $this->id) {
             return true;
         }
@@ -362,6 +368,30 @@ class User extends Authenticatable
 
         return $this->esJefeInmediatoDe($trabajador)
             || $this->esJefeDeTurnoDe($trabajador);
+    }
+
+    /**
+     * ¿Comparte alguna unidad con $otro como jefe inmediato (jefe_id de
+     * la unidad o jefe adicional en jefes_turno)? Entre pares no se
+     * programan turnos.
+     */
+    public function esJefeParDe(User $otro): bool
+    {
+        if ($this->id === $otro->id) {
+            return false;
+        }
+
+        $mias = $this->unidadIdsComoJefe();
+
+        return $mias->isNotEmpty() && $otro->unidadIdsComoJefe()->intersect($mias)->isNotEmpty();
+    }
+
+    /** @return \Illuminate\Support\Collection<int, int> */
+    private function unidadIdsComoJefe(): \Illuminate\Support\Collection
+    {
+        return UnidadOrganica::where('jefe_id', $this->id)->pluck('id')
+            ->merge(JefeTurno::where('jefe_id', $this->id)->pluck('unidad_organica_id'))
+            ->unique();
     }
 
     /**

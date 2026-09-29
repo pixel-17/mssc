@@ -142,16 +142,19 @@ class ProgramacionEquipo extends Component
      */
     private function equipo(): Collection
     {
-        [$trabajadores] = app(EquipoDelJefeService::class)->para(auth()->user());
+        [$trabajadores, , $soloLectura] = app(EquipoDelJefeService::class)->para(auth()->user());
 
         return $trabajadores
-            ->filter(fn (User $t) => $t->regimen === '728' && $t->activo)
+            ->filter(fn (User $t) => $t->regimen === '728' && $t->activo && ! in_array($t->id, $soloLectura, true))
             ->keyBy('id');
     }
 
     public function render(): View
     {
-        [$todos, $esJefeDeArea] = app(EquipoDelJefeService::class)->para(auth()->user());
+        [$todos, $esJefeDeArea, $soloLectura] = app(EquipoDelJefeService::class)->para(auth()->user());
+
+        // Los jefes pares que solo se ven (solo lectura) no se programan aquí.
+        $todos = $todos->reject(fn (User $t) => in_array($t->id, $soloLectura, true))->values();
 
         $equipo = $todos->filter(fn (User $t) => $t->regimen === '728' && $t->activo)->values();
 

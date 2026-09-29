@@ -85,33 +85,44 @@ class UnidadOrganica extends Model
     }
 
     /**
-     * Jefes inmediatos adicionales de esta unidad cuyo turno
-     * CONFIGURADO (`configuraciones_turno.turno` — el que el
-     * Admin/Jefe le eligió al armar su calendario, no el de hoy) es
-     * el turno dado. Es la versión "estructural": no depende de si
-     * hoy es su día de trabajo o de descanso, por eso la usan los
-     * avisos de "falta jefe" (ver AlertaJefaturaService) y las
-     * columnas fijas de `users` (ver jefaturasDe()) — no queremos
-     * avisar un hueco solo porque el jefe asignado está descansando
-     * hoy.
+     * Jefes inmediatos de esta unidad para régimen 728, de UN solo tipo:
+     * el jefe de la unidad (`jefe_id`) y los adicionales (`jefes_turno`)
+     * cuentan igual, sin distinguir cómo se asignaron. Solo activos y
+     * sin repetir.
      *
-     * @return \Illuminate\Support\Collection<int, JefeTurno>
+     * @return \Illuminate\Support\Collection<int, User>
      */
-    private function jefesTurnoConfiguradosPara(string $turno): \Illuminate\Support\Collection
+    private function jefesInmediatos728(): \Illuminate\Support\Collection
+    {
+        return collect([$this->jefe])
+            ->merge($this->jefesTurno->map(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe))
+            ->filter(fn (?User $jefe) => $jefe?->activo)
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Jefes inmediatos de esta unidad cuyo turno CONFIGURADO
+     * (`configuraciones_turno.turno`, no el de hoy) es el turno dado.
+     * Versión "estructural" para avisos de "falta jefe" (ver
+     * AlertaJefaturaService) y columnas fijas de `users`.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    private function jefesConfiguradosPara(string $turno): \Illuminate\Support\Collection
     {
         $jefeIdsDelTurno = ConfiguracionTurno::where('turno', $turno)->pluck('user_id');
 
-        return $this->jefesTurno
-            ->filter(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe?->activo)
-            ->filter(fn (JefeTurno $jefeTurno) => $jefeIdsDelTurno->contains($jefeTurno->jefe_id));
+        return $this->jefesInmediatos728()
+            ->filter(fn (User $jefe) => $jefeIdsDelTurno->contains($jefe->id));
     }
 
     /**
      * Jefe inmediato de esta unidad para el turno dado.
      *
      * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): de los
-     *   jefes inmediatos adicionales de esta unidad (jefes_turno, sin
-     *   turno fijo asignado), cuenta al primero cuyo turno
+     *   jefes inmediatos de esta unidad (jefe_id y jefes_turno cuentan
+     *   igual, ver jefesInmediatos728()), cuenta al primero cuyo turno
      *   CONFIGURADO coincide con el pedido y que sigue activo. Sin
      *   ninguno devuelve null: ese turno no tiene jefe y quien pide
      *   la papeleta debe enterarse (ver CrearPapeletaAction). Ya NO
@@ -125,9 +136,9 @@ class UnidadOrganica extends Model
             return $this->jefe_id !== null ? (int) $this->jefe_id : null;
         }
 
-        $jefeTurno = $this->jefesTurnoConfiguradosPara($turno)->first();
+        $jefe = $this->jefesConfiguradosPara($turno)->first();
 
-        return $jefeTurno ? (int) $jefeTurno->jefe_id : null;
+        return $jefe ? (int) $jefe->id : null;
     }
 
     /**
@@ -137,7 +148,8 @@ class UnidadOrganica extends Model
      * compatibilidad).
      *
      * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): de los
-     *   jefes inmediatos adicionales de esta unidad, activos, SOLO
+     *   jefes inmediatos de esta unidad (jefe_id y jefes_turno cuentan
+     *   igual, ver jefesInmediatos728()), activos, SOLO
      *   cuentan los que hoy están "de servicio" para ese turno (su
      *   propio ciclo en configuraciones_turno, vía
      *   Turno::vigenteParaUsuario, igual que un trabajador). El jefe
@@ -158,13 +170,13 @@ class UnidadOrganica extends Model
             return $this->jefe_id !== null ? [(int) $this->jefe_id] : [];
         }
 
-        $deServicio = $this->jefesTurno
-            ->filter(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe?->activo)
-            ->filter(
-                fn (JefeTurno $jefeTurno) => Turno::vigenteParaUsuario($jefeTurno->jefe_id)?->codigo() === $turno
-            );
-
-        return $deServicio->pluck('jefe_id')->map(fn ($id) => (int) $id)->unique()->values()->all();
+        return $this->jefesInmediatos728()
+            ->filter(fn (User $jefe) => Turno::vigenteParaUsuario($jefe->id)?->codigo() === $turno)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**

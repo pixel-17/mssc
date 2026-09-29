@@ -146,16 +146,16 @@ class CalendarioEquipoIndex extends Component
      */
     private function equipo728(): Collection
     {
-        [$trabajadores] = app(EquipoDelJefeService::class)->para(auth()->user());
+        [$trabajadores, , $soloLectura] = app(EquipoDelJefeService::class)->para(auth()->user());
 
         return $trabajadores
-            ->filter(fn (User $t) => $t->regimen === '728' && $t->activo)
+            ->filter(fn (User $t) => $t->regimen === '728' && $t->activo && ! in_array($t->id, $soloLectura, true))
             ->keyBy('id');
     }
 
     public function render(): View
     {
-        [$trabajadores, $esJefeDeArea] = app(EquipoDelJefeService::class)->para(auth()->user());
+        [$trabajadores, $esJefeDeArea, $soloLectura] = app(EquipoDelJefeService::class)->para(auth()->user());
 
         $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
@@ -195,6 +195,8 @@ class CalendarioEquipoIndex extends Component
         return view('livewire.turnos.calendario-equipo-index', [
             'trabajadores' => $trabajadores,
             'esJefeDeArea' => $esJefeDeArea,
+            'soloLectura' => $soloLectura,
+            'idsJefes' => app(EquipoDelJefeService::class)->idsDeJefes()->all(),
             'dias' => $dias,
             'fechas' => $fechas,
             'inicioMes' => $inicioMes,

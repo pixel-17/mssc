@@ -188,12 +188,19 @@
                         @forelse ($trabajadores as $trabajador)
                             <tr wire:key="fila-{{ $trabajador->id }}">
                                 <td class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900 whitespace-nowrap align-middle">
-                                    <a href="{{ route('turnos.calendario.individual-de', $trabajador) }}" class="text-tinta-800 dark:text-tinta-200 hover:underline" title="Ver calendario de {{ $trabajador->nombre_completo }}">
-                                        {{ $trabajador->nombre_completo }}
-                                    </a>
+                                    @if (in_array($trabajador->id, $soloLectura, true))
+                                        <span class="text-tinta-800 dark:text-tinta-200">{{ $trabajador->nombre_completo }}</span>
+                                    @else
+                                        <a href="{{ route('turnos.calendario.individual-de', $trabajador) }}" class="text-tinta-800 dark:text-tinta-200 hover:underline" title="Ver calendario de {{ $trabajador->nombre_completo }}">
+                                            {{ $trabajador->nombre_completo }}
+                                        </a>
+                                    @endif
                                     <span class="text-xs text-gray-400">({{ $trabajador->regimen }})</span>
+                                    @if (in_array($trabajador->id, $idsJefes, true))
+                                        <span class="ml-1 inline-flex items-center rounded bg-tinta-100 dark:bg-tinta-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-tinta-800 dark:text-tinta-200">Jefe</span>
+                                    @endif
                                 </td>
-                                @if ($trabajador->regimen === '728' && $trabajador->activo)
+                                @if (in_array((string) $trabajador->id, $uids728, true))
                                     @foreach ($fechas as $fecha)
                                         @php($f = $fecha->toDateString())
                                         <td class="p-0">
@@ -244,7 +251,9 @@
                                     @endforeach
                                 @endif
                                 <td class="px-3 py-2 text-right whitespace-nowrap align-middle">
-                                    @if ($trabajador->regimen === '728')
+                                    @if (in_array($trabajador->id, $soloLectura, true))
+                                        <span class="text-xs text-gray-400">Solo lectura</span>
+                                    @elseif ($trabajador->regimen === '728')
                                         <label class="inline-flex items-center gap-1 text-xs text-gray-500 mr-2">
                                             <input type="checkbox" class="rounded border-gray-300" value="{{ $trabajador->id }}" x-model="seleccion">
                                             marcar
