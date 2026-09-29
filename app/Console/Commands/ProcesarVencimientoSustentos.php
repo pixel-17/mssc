@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Paso 5, motivo Salud. Corre cada minuto (ver routes/console.php),
+ * Paso 5, motivo Salud. Corre cada hora (ver bootstrap/app.php, withSchedule),
  * separado de ProcesarVencimientosPapeletas porque esta ventana (48h
  * hábiles desde el retorno) no tiene nada que ver con el SLA de
  * minutos del jefe ni con el fin de turno/día.

@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
  *  1. Es un momento dentro del horario ordinario de 276 (días laborables
  *     y horas de HorarioOrdinarioService: mismas claves que ya usa el
  *     resto del sistema para validar la ventana de creación de papeletas).
- *  2. El día no es un feriado cargado en /admin/feriados.
+ *  2. El día no es un feriado cargado en /feriados.
  *  3. Existe al menos un trabajador con rol 'rrhh' ACTIVO — RRHH se arma
  *     DESIGNANDO trabajadores de régimen 276 (rol 'rrhh'), no escribiendo
  *     un horario suelto sin relación con el personal real. Si no hay nadie

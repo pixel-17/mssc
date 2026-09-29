@@ -56,12 +56,32 @@ class ProgramacionAdminTest extends TestCase
         Livewire::actingAs($admin)
             ->test(ProgramacionAdmin::class)
             ->set('buscar', 'Zoraida Quispe')
-            ->assertSee('Jefe de área')
+            ->assertSee('Jefe inmediato')
+            ->assertDontSee('Jefe de área')
             ->assertSee('Programar su equipo')
             ->assertDontSee('Zacarias')
             ->set('buscar', 'Zacarias')
             ->assertSee('Trabajador')
             ->assertDontSee('Programar su equipo');
+    }
+
+    public function test_quien_encabeza_una_unidad_con_sub_unidades_es_jefe_de_area(): void
+    {
+        $admin = $this->usuarioDePrueba([], ['admin']);
+
+        $jefeArea = $this->usuarioDePrueba(['name' => 'Berta', 'apellido' => 'Huaman'], ['trabajador']);
+        $jefeInmediato = $this->usuarioDePrueba(['name' => 'Ivan', 'apellido' => 'Condori'], ['trabajador']);
+
+        $area = UnidadOrganica::create(['nombre' => 'Oficina General', 'jefe_id' => $jefeArea->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina', 'parent_id' => $area->id, 'jefe_id' => $jefeInmediato->id]);
+
+        Livewire::actingAs($admin)
+            ->test(ProgramacionAdmin::class)
+            ->set('buscar', 'Berta Huaman')
+            ->assertSee('Jefe de área')
+            ->set('buscar', 'Ivan Condori')
+            ->assertSee('Jefe inmediato')
+            ->assertDontSee('Jefe de área');
     }
 
     public function test_el_admin_guarda_los_turnos_del_equipo_de_un_jefe(): void

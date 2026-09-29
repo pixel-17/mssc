@@ -2,20 +2,41 @@
 
 namespace App\Services;
 
+use App\Models\Configuracion;
 use App\Models\Feriado;
 use Carbon\Carbon;
 
 /**
- * Calcula plazos saltando sábados, domingos y feriados cargados por el
- * admin en /admin/feriados. Usado por:
- * - Sustento de Salud: fecha_limite = hora del retorno + 48h hábiles.
- * Sin este servicio, la tabla `feriados` no tiene ningún efecto real.
+ * ÚNICA definición de "día hábil" del sistema: día laborable según
+ * Configuraciones (HORARIO_ORDINARIO_DIAS_LABORABLES) y que no sea un
+ * feriado cargado por el admin en /feriados. Lo usan:
+ * - HorarioOrdinarioService (ventana de 276, disponibilidad de RRHH y
+ *   de decisores 276).
+ * - Los plazos en horas/días hábiles (sustento de Salud: 48h hábiles).
+ * Antes los plazos asumían sábado y domingo como no hábiles y la
+ * ventana de 276 leía los días de Configuraciones: si el admin cambiaba
+ * los días laborables, ambos criterios se desalineaban.
  */
 class CalculadorDiasHabiles
 {
     public function esHabil(Carbon $fecha): bool
     {
-        return ! $fecha->isWeekend() && ! $this->esFeriado($fecha);
+        return $this->esDiaLaborable($fecha) && ! $this->esFeriado($fecha);
+    }
+
+    /**
+     * ¿El día de la semana está entre los laborables configurados
+     * (ISO: 1 = lunes ... 7 = domingo)? No mira feriados: para eso,
+     * esHabil().
+     */
+    public function esDiaLaborable(Carbon $fecha): bool
+    {
+        $dias = array_map(
+            'trim',
+            explode(',', (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5'))
+        );
+
+        return in_array((string) $fecha->isoWeekday(), $dias, true);
     }
 
     public function esFeriado(Carbon $fecha): bool

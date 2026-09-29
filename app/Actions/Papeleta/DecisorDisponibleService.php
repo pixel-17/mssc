@@ -2,8 +2,8 @@
 
 namespace App\Actions\Papeleta;
 
+use App\Models\Turno;
 use App\Models\User;
-use App\Services\CalculadorDiasHabiles;
 use App\Services\HorarioOrdinarioService;
 use Illuminate\Support\Carbon;
 
@@ -24,11 +24,15 @@ use Illuminate\Support\Carbon;
  *   desactivación (ver User::esJefeTitularDeAlgunTurno /
  *   UsuarioAdminIndex::desactivar), pero se chequea igual por si
  *   queda un jefe_inmediato_id fotografiado de antes de ese guardrail.
- * - Decisor 728 (rotativo): siempre disponible. Mismo criterio que ya
- *   usa CrearPapeletaAction para no bloquear por horario la creación de
- *   papeletas de un 728.
+ * - Decisor 728 (rotativo): disponible las 24 h (no tiene horario
+ *   ordinario), EXCEPTO en su día de descanso: si tiene cargada una fila
+ *   de descanso para la fecha y no está dentro de un turno que sigue
+ *   corriendo (p. ej. una Noche que empezó ayer y termina a las 06:00),
+ *   no puede decidir ahora. Sin programación cargada se asume disponible
+ *   (no se puede afirmar que descansa).
  * - Decisor 276 (ordinario): disponible solo dentro de la ventana de
- *   HorarioOrdinarioService y si el día no es feriado.
+ *   HorarioOrdinarioService (que ya excluye días no laborables y feriados).
+ * - Decisor sin régimen 276/728: nunca disponible.
  * - Sin decisor (null, p. ej. el tope del organigrama sin jefatura):
  *   nunca disponible — no hay a quién esperar.
  */
@@ -36,7 +40,6 @@ class DecisorDisponibleService
 {
     public function __construct(
         private HorarioOrdinarioService $horarioOrdinario,
-        private CalculadorDiasHabiles $diasHabiles,
     ) {}
 
     public function estaDisponibleAhora(?User $decisor): bool
@@ -54,14 +57,31 @@ class DecisorDisponibleService
             return false;
         }
 
-        if ($decisor->regimen !== '276') {
-            return true;
-        }
+        // Régimen explícito: un decisor sin régimen (null u otro valor) no
+        // se asume disponible ni se trata como 276 por descarte.
+        return match ($decisor->regimen) {
+            '728' => ! $this->estaDeDescanso($decisor, $momento),
+            // estaDentroDeVentana() ya descarta días no laborables y feriados.
+            '276' => $this->horarioOrdinario->estaDentroDeVentana($momento),
+            default => false,
+        };
+    }
 
-        if ($this->diasHabiles->esFeriado($momento)) {
+    /**
+     * ¿El decisor 728 descansa en la fecha del momento y no está dentro de
+     * un turno vigente? Turno::vigenteParaUsuario() ya considera el cruce
+     * de medianoche, así que un turno Noche de ayer que sigue corriendo
+     * cuenta como "en turno" aunque hoy figure descanso.
+     */
+    private function estaDeDescanso(User $decisor, Carbon $momento): bool
+    {
+        if (Turno::vigenteParaUsuario($decisor->id, $momento) !== null) {
             return false;
         }
 
-        return $this->horarioOrdinario->estaDentroDeVentana($momento);
+        return Turno::where('user_id', $decisor->id)
+            ->whereDate('fecha', $momento->toDateString())
+            ->where('es_descanso', true)
+            ->exists();
     }
 }

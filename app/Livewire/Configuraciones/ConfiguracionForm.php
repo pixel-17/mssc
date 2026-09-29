@@ -56,7 +56,7 @@ class ConfiguracionForm extends Component
             return ['required', 'string', 'regex:/^[1-7](,[1-7])*$/'];
         }
 
-        if (preg_match('/(_MINUTOS|_HORAS_HABILES|_DIAS_HABILES|^TOPE_)/', $clave)) {
+        if (preg_match('/(_MINUTOS|_HORAS_HABILES|_DIAS_HABILES|^TOPE_|^POSTHOC_ALERTA_)/', $clave)) {
             return ['required', 'integer', 'min:1', 'max:100000'];
         }
 

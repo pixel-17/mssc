@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Corre cada minuto (ver routes/console.php). Cubre la parte del flujo
+ * Corre cada minuto (ver bootstrap/app.php, withSchedule). Cubre la parte del flujo
  * que NO depende de que un humano haga clic:
  *
  * 1) Vencimiento: cualquier papeleta no terminal cuyo turno/día ya terminó

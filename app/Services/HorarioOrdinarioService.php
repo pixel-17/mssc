@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
  * Reemplaza la fila diaria por trabajador en `turnos`: con ~500
  * trabajadores 276 era insostenible que el admin cargara un turno por
  * persona por día. Ahora es un solo horario (días laborables + hora
- * inicio/fin) editable desde Configuraciones (Filament), igual para
+ * inicio/fin) editable desde Configuraciones, igual para
  * todos los 276.
  *
  * Los 728 (rotativo) NO usan este servicio: siguen con `turnos`, pero
@@ -20,6 +20,8 @@ use Illuminate\Support\Carbon;
  */
 class HorarioOrdinarioService
 {
+    public function __construct(private CalculadorDiasHabiles $diasHabiles) {}
+
     /**
      * Valores por defecto ÚNICOS del horario ordinario (mismos que siembra
      * ConfiguracionSeeder). Antes cada servicio tenía su propio fallback
@@ -32,8 +34,8 @@ class HorarioOrdinarioService
     public const HORA_FIN_DEFECTO = '16:15';
 
     /**
-     * ¿El momento cae en día laborable y entre la hora de inicio y el fin
-     * (ambos inclusive, minuto completo)? Compara instantes, no strings
+     * ¿El momento cae en día hábil (laborable configurado y no feriado)
+     * y entre la hora de inicio y el fin (ambos inclusive, minuto completo)? Compara instantes, no strings
      * H:i: con strings, un valor sin cero inicial en Configuraciones
      * ("8:00") rompía la comparación silenciosamente.
      */
@@ -41,7 +43,7 @@ class HorarioOrdinarioService
     {
         $momento ??= now();
 
-        if (! $this->esDiaLaborable($momento)) {
+        if (! $this->diasHabiles->esHabil($momento)) {
             return false;
         }
 
@@ -71,16 +73,6 @@ class HorarioOrdinarioService
     public function yaTerminoElDia(Carbon $fecha): bool
     {
         return now()->greaterThan($this->finDelDia($fecha));
-    }
-
-    private function esDiaLaborable(Carbon $momento): bool
-    {
-        $dias = array_map(
-            'trim',
-            explode(',', (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5'))
-        );
-
-        return in_array((string) $momento->isoWeekday(), $dias, true);
     }
 
     /**

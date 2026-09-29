@@ -41,6 +41,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ->hourly()
             ->withoutOverlapping(30);
 
+        // Cola de revisión post-hoc de RRHH: avisa si se acumula o envejece.
+        // Una vez por hora basta; el servicio ya limita a un aviso por día.
+        $schedule->command('papeletas:avisar-posthoc-acumulado')
+            ->hourly()
+            ->withoutOverlapping(30);
+
         // Día 25: si para esa fecha Admin/Jefe no cargaron el turno
         // del mes siguiente, se genera solo continuando el ciclo
         // vigente (ver GeneradorTurnoMensualService). Corre antes de

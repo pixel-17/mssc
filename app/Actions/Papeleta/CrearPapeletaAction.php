@@ -68,6 +68,15 @@ class CrearPapeletaAction
 
     public function ejecutar(User $trabajador, Motivo $motivo, array $datos): Papeleta
     {
+        // Sin régimen 276/728 no hay regla de horario que aplicar (antes caía
+        // como 276 por descarte y fallaba en el INSERT: papeletas.regimen no
+        // admite null). Se corta aquí con un mensaje que el usuario entienda.
+        if (! in_array($trabajador->regimen, ['276', '728'], true)) {
+            throw new PapeletaException(
+                'Tu usuario no tiene un régimen (276 o 728) asignado. Comunícate con Administración para regularizarlo antes de crear una papeleta.'
+            );
+        }
+
         if (! $motivo->activo) {
             throw new PapeletaException("El motivo {$motivo->nombre} ya no está disponible.");
         }
@@ -118,12 +127,11 @@ class CrearPapeletaAction
 
         // Disponibilidad real: estar asignado en la BD no implica poder
         // decidir ahora (ver DecisorDisponibleService). Con varios
-        // candidatos basta con que UNO esté disponible para no escalar —
-        // en 728 esto siempre es cierto en cuanto hay al menos un
-        // candidato, porque DecisorDisponibleService considera a
-        // cualquier decisor 728 siempre disponible. Solo importa para
-        // decidir si se escala, y solo se escala cuando
-        // $esJefeInmediatoDeLaUnidad es true (ver $estadoInicial).
+        // candidatos basta con que UNO esté disponible para no escalar.
+        // En 728 un decisor está disponible salvo en su día de descanso
+        // (ver DecisorDisponibleService). Solo importa para decidir si
+        // se escala, y solo se escala cuando $esJefeInmediatoDeLaUnidad
+        // es true (ver $estadoInicial).
         $jefeDisponible = $jefesInmediatos->contains(
             fn (User $jefe) => $this->decisorDisponible->estaDisponibleAhora($jefe)
         );
