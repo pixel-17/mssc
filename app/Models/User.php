@@ -275,9 +275,21 @@ class User extends Authenticatable
     }
 
     /**
-     * ¿Es este usuario jefe inmediato del trabajador dado, ya sea de
-     * forma automática (por unidad orgánica) o adicional (asignado a
-     * mano)? Cualquiera de los dos habilita a decidir sus papeletas.
+     * ¿Es este usuario jefe inmediato del trabajador dado?
+     *
+     * "Jefe inmediato" es UN solo tipo de jefe: todos los jefes inmediatos
+     * de un trabajador tienen las mismas capacidades y privilegios (ver
+     * sus papeletas y decidirlas, ver y editar al trabajador, programar
+     * su turno, asignarle otros jefes). Lo único que varía es DE DÓNDE
+     * viene la asignación, y eso solo describe su alcance, no su rol:
+     *
+     * - por la unidad orgánica (users.jefe_inmediato_id, derivado de
+     *   unidades_organicas.jefe_id);
+     * - por la unidad para el personal 728 (jefes_turno);
+     * - a mano para ese trabajador (jefes_inmediatos_adicionales).
+     *
+     * Toda autorización de "jefe inmediato" debe pasar por aquí (o por
+     * jefesInmediatos()) en vez de preguntar por cada origen a mano.
      */
     public function esJefeInmediatoDe(User $trabajador): bool
     {
@@ -288,13 +300,39 @@ class User extends Authenticatable
         // Con la relación ya cargada (with('trabajador.jefesInmediatosAdicionales'))
         // no hay query; si no, se memoiza por instancia para no repetirla
         // en listados/policies que llaman esto una vez por fila.
-        if ($trabajador->relationLoaded('jefesInmediatosAdicionales')) {
-            return $trabajador->jefesInmediatosAdicionales->contains('id', $this->id);
+        $asignadoAMano = $trabajador->relationLoaded('jefesInmediatosAdicionales')
+            ? $trabajador->jefesInmediatosAdicionales->contains('id', $this->id)
+            : ($this->esAdicionalDe[$trabajador->id] ??= $trabajador->jefesInmediatosAdicionales()
+                ->where('users.id', $this->id)
+                ->exists());
+
+        return $asignadoAMano || $this->esJefeDeTurnoDe($trabajador);
+    }
+
+    /**
+     * TODOS los jefes inmediatos de este usuario (como trabajador), sin
+     * distinguir su origen: el de su unidad, los de jefes_turno si es
+     * 728 y los asignados a mano. Fuente única para mostrar "quiénes son
+     * mis jefes" y para no volver a armar la lista según el origen.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function jefesInmediatos(): \Illuminate\Support\Collection
+    {
+        $ids = collect([$this->jefe_inmediato_id])
+            ->merge($this->jefesInmediatosAdicionales()->get()->pluck('id'));
+
+        if ($this->regimen === '728' && $this->unidad_organica_id !== null) {
+            $ids = $ids->merge(JefeTurno::where('unidad_organica_id', $this->unidad_organica_id)->pluck('jefe_id'));
         }
 
-        return $this->esAdicionalDe[$trabajador->id] ??= $trabajador->jefesInmediatosAdicionales()
-            ->where('users.id', $this->id)
-            ->exists();
+        $ids = $ids->filter()->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return collect();
+        }
+
+        return User::whereIn('id', $ids)->orderBy('name')->get();
     }
 
     /** @var array<int, bool> */
@@ -312,15 +350,15 @@ class User extends Authenticatable
     }
 
     /**
-     * ¿Es jefe inmediato titular de algún turno (MANANA/TARDE/NOCHE) de
-     * alguna unidad? Si es así, no se le puede desactivar sin antes
+     * ¿Es jefe inmediato de algún turno (MANANA/TARDE/NOCHE) de alguna
+     * unidad (jefes_turno)? Si es así, no se le puede desactivar sin antes
      * reasignar esa fila a otro jefe — ver UsuarioAdminIndex::desactivar
      * y UsuarioAdminForm::guardar, que bloquean la desactivación con
      * este chequeo. Sin este guardrail, esa unidad-turno se quedaría
      * sin nadie que pueda decidir papeletas (DecisorDisponibleService
      * ya descarta a los inactivos).
      */
-    public function esJefeTitularDeAlgunTurno(): bool
+    public function esJefeInmediatoDeAlgunTurno(): bool
     {
         return $this->turnosQueEncabeza()->exists();
     }
@@ -334,7 +372,7 @@ class User extends Authenticatable
      *   propio que le cargue el horario.
      * - Su Jefe de Área explícito (trabajador->jefe_area_id): también a los
      *   jefes inmediatos de su área.
-     * - Un Jefe Inmediato (automático, adicional o de turno): solo a los
+     * - Un Jefe Inmediato (de cualquier origen, todos iguales): solo a los
      *   TRABAJADORES a su cargo, nunca a otro jefe inmediato. Un Jefe de
      *   Área (encabeza una unidad) conserva su alcance de siempre.
      *
@@ -351,8 +389,8 @@ class User extends Authenticatable
             return $this->esJefeDeAlguien();
         }
 
-        // Entre jefes inmediatos de una misma unidad (automático o
-        // adicional, da igual) nadie programa a otro: cada uno solo el suyo.
+        // Entre jefes inmediatos de una misma unidad nadie programa a
+        // otro: cada uno solo el suyo.
         if ($this->esJefeParDe($trabajador)) {
             return false;
         }
@@ -366,8 +404,7 @@ class User extends Authenticatable
             return false;
         }
 
-        return $this->esJefeInmediatoDe($trabajador)
-            || $this->esJefeDeTurnoDe($trabajador);
+        return $this->esJefeInmediatoDe($trabajador);
     }
 
     /**

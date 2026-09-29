@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
  *
  * - Decisor inactivo (dado de baja): nunca disponible, sin importar
  *   régimen — no debería llegar aquí gracias al guardrail de
- *   desactivación (ver User::esJefeTitularDeAlgunTurno /
+ *   desactivación (ver User::esJefeInmediatoDeAlgunTurno /
  *   UsuarioAdminIndex::desactivar), pero se chequea igual por si
  *   queda un jefe_inmediato_id fotografiado de antes de ese guardrail.
  * - Decisor 728 (rotativo): disponible las 24 h (no tiene horario

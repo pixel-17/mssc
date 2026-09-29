@@ -22,7 +22,7 @@
                                 <li>{{ $nombre }}</li>
                             @endforeach
                         </ul>
-                        <p class="mt-2 text-sm text-yellow-800 dark:text-yellow-200">Puedes añadirte como jefe inmediato adicional. Ambos podrán decidir sobre sus papeletas.</p>
+                        <p class="mt-2 text-sm text-yellow-800 dark:text-yellow-200">Puedes añadirte como jefe inmediato. Todos los jefes inmediatos tienen las mismas capacidades y podrán decidir sobre sus papeletas.</p>
                     </div>
                 @else
                     <p class="text-sm text-gray-500">Este trabajador todavía no tiene jefe inmediato asignado.</p>
@@ -34,7 +34,7 @@
                     @if (! empty($jefesActuales))
                         <label class="flex items-start gap-2">
                             <x-checkbox name="confirmado" value="1" required class="mt-1" />
-                            <span class="text-sm text-gray-700">Confirmo que quiero agregarme como jefe inmediato adicional, aunque ya tenga otro(s) jefe(s).</span>
+                            <span class="text-sm text-gray-700">Confirmo que quiero agregarme como jefe inmediato, aunque ya tenga otro(s) jefe(s).</span>
                         </label>
                     @else
                         <input type="hidden" name="confirmado" value="1">

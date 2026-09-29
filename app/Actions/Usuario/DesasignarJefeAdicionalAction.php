@@ -8,7 +8,9 @@ use App\Models\User;
 /**
  * Contraparte de AsignarJefeAdicionalAction. Mismo criterio de
  * autorización: admin, jefe de área del trabajador, o cualquier jefe
- * inmediato (automático o adicional) que el trabajador ya tenga.
+ * inmediato del trabajador (todos tienen los mismos privilegios).
+ * Solo quita asignaciones hechas a mano para este trabajador; los
+ * jefes que le llegan por su unidad se cambian desde la unidad orgánica.
  *
  * A propósito NO valida papeletas en curso: si el trabajador tiene una
  * papeleta PENDIENTE_JEFE esperando a este jefe en particular, sigue
@@ -33,7 +35,7 @@ class DesasignarJefeAdicionalAction
             ->exists();
 
         if (! $existia) {
-            throw new PapeletaException('Ese usuario no es jefe inmediato adicional de este trabajador.');
+            throw new PapeletaException('Ese usuario no tiene una asignación manual como jefe inmediato de este trabajador. Si es jefe por la unidad orgánica, se cambia desde la unidad.');
         }
 
         $trabajador->jefesInmediatosAdicionales()->detach($jefeAQuitar->id);

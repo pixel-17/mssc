@@ -11,8 +11,8 @@ use App\Models\User;
  * uno más" — este es ese flujo, en dos pasos:
  *
  * 1. buscarPorDni(): localiza al trabajador y devuelve quiénes ya son
- *    su(s) jefe(s) inmediato(s) (el automático de su unidad + los
- *    adicionales), para que la vista se lo muestre al jefe que está
+ *    su(s) jefe(s) inmediato(s) (todos, sin importar si le vienen
+ *    de su unidad o asignados a mano), para que la vista se lo muestre al jefe que está
  *    creando/vinculando ANTES de pedir confirmación.
  * 2. vincular(): recién aquí, con $confirmado = true explícito desde el
  *    formulario, se inserta la fila en jefes_inmediatos_adicionales.
@@ -49,17 +49,11 @@ class VincularJefeInmediatoAction
      */
     public function jefesActualesDe(User $trabajador): array
     {
-        $jefes = collect();
-
-        if ($trabajador->jefeInmediato) {
-            $jefes->push($trabajador->jefeInmediato->nombre_completo);
-        }
-
-        foreach ($trabajador->jefesInmediatosAdicionales as $adicional) {
-            $jefes->push($adicional->nombre_completo);
-        }
-
-        return $jefes->unique()->values()->all();
+        return $trabajador->jefesInmediatos()
+            ->map(fn (User $jefe) => $jefe->nombre_completo)
+            ->unique()
+            ->values()
+            ->all();
     }
 
     public function vincular(User $jefe, User $trabajador, bool $confirmado): void
@@ -81,7 +75,7 @@ class VincularJefeInmediatoAction
             ->where('users.id', $jefe->id)
             ->exists();
 
-        if ($trabajador->jefe_inmediato_id === $jefe->id || $yaEsAdicional) {
+        if ($trabajador->jefe_inmediato_id === $jefe->id || $yaEsAdicional || $jefe->esJefeDeTurnoDe($trabajador)) {
             throw new UsuarioException('Ya eres jefe inmediato de este trabajador.');
         }
 

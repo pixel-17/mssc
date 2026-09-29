@@ -9,8 +9,8 @@ use Illuminate\Console\Command;
  * Corrida periódica de AlertaJefaturaService::avisarFaltantesEnTodoElOrganigrama():
  * detecta huecos de cobertura por turno (MANANA/TARDE/NOCHE) que
  * aparecen SIN que nadie esté dando de alta a un trabajador justo en
- * ese momento — p. ej. se desactiva al único jefe titular de un
- * turno (ver User::esJefeTitularDeAlgunTurno, que ya bloquea la
+ * ese momento — p. ej. se desactiva al único jefe inmediato de un
+ * turno (ver User::esJefeInmediatoDeAlgunTurno, que ya bloquea la
  * desactivación en el flujo normal, pero no cubre bajas hechas fuera
  * de ese camino ni reasignaciones manuales de jefes_turno).
  */

@@ -191,8 +191,8 @@ class UsuarioAdminForm extends Component
             }
         }
 
-        if (! $datos['activo'] && $this->usuario?->esJefeTitularDeAlgunTurno()) {
-            $this->addError('activo', 'Es jefe inmediato titular de un turno (MAÑANA/TARDE/NOCHE) en su unidad: reasigna primero ese turno a otro jefe antes de desactivarlo.');
+        if (! $datos['activo'] && $this->usuario?->esJefeInmediatoDeAlgunTurno()) {
+            $this->addError('activo', 'Es jefe inmediato de un turno (MAÑANA/TARDE/NOCHE) en su unidad: reasigna primero ese turno a otro jefe antes de desactivarlo.');
 
             return;
         }

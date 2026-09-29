@@ -111,7 +111,7 @@ class PapeletaActualizada implements ShouldBroadcastNow
                     report($e);
                 }
 
-                $papeleta = Papeleta::with('trabajador.jefesInmediatosAdicionales')->find($papeletaId);
+                $papeleta = Papeleta::with(['trabajador.jefesInmediatosAdicionales', 'jefesCandidatos'])->find($papeletaId);
 
                 if (! $papeleta) {
                     return;
@@ -119,6 +119,9 @@ class PapeletaActualizada implements ShouldBroadcastNow
 
                 $ids = collect([$papeleta->trabajador_id, $papeleta->jefe_inmediato_id, $papeleta->jefe_area_id])
                     ->merge($papeleta->trabajador?->jefesInmediatosAdicionales->pluck('id') ?? [])
+                    // Todos los jefes inmediatos reciben el aviso por igual,
+                    // también los candidatos de turno 728.
+                    ->merge($papeleta->jefesCandidatos->pluck('user_id'))
                     ->merge(User::role(['rrhh', 'admin'])->pluck('id'))
                     ->filter()
                     ->map(fn ($id) => (int) $id)

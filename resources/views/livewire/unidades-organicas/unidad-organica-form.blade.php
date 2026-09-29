@@ -40,7 +40,7 @@
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-4">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h3 class="text-sm font-medium">Jefes inmediatos adicionales (régimen 728)</h3>
+                            <h3 class="text-sm font-medium">Otros jefes inmediatos de la unidad (régimen 728)</h3>
                             <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                 Opcional, uno o varios. No se elige un turno fijo aquí: el turno que cada uno
                                 cubre sale de su propia programación de calendario — configúrasela con
@@ -78,7 +78,7 @@
                         </div>
                         @error("jefesAdicionales.{$indice}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                     @empty
-                        <p class="text-xs text-gray-400">Sin jefes inmediatos adicionales asignados.</p>
+                        <p class="text-xs text-gray-400">Sin otros jefes inmediatos asignados.</p>
                     @endforelse
                 </div>
             @endif

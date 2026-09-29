@@ -24,7 +24,7 @@
                     @if ($esJefeDeArea)
                         Todos los usuarios de tu área y sus sub-unidades.
                     @else
-                        Solo ves a los trabajadores de los que eres jefe inmediato (automático o adicional).
+                        Solo ves a los trabajadores de los que eres jefe inmediato.
                     @endif
                 </p>
 

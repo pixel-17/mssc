@@ -16,7 +16,7 @@
             @elseif ($esJefeDeArea)
                 Tus trabajadores directos y los jefes de las sub-unidades de tu área.
             @else
-                Solo los trabajadores de los que eres jefe inmediato (automático o adicional).
+                Solo los trabajadores de los que eres jefe inmediato.
             @endif
             Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) se cargan en
             "Crear/editar horario".

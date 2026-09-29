@@ -8,13 +8,13 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * jefes_inmediatos_adicionales (2026_09_10_200000): asigna a mano un
- * jefe inmediato EXTRA a un trabajador, aparte del automático derivado
- * de la unidad orgánica (users.jefe_inmediato_id, que esta acción
- * nunca toca).
+ * jefe inmediato a un trabajador concreto, con las mismas capacidades
+ * que cualquier otro jefe inmediato suyo (users.jefe_inmediato_id, que
+ * esta acción nunca toca).
  *
  * Quién puede asignar (ver comentario de la migración): un admin, el
- * jefe de área del trabajador, o cualquier otro jefe inmediato que el
- * trabajador ya tenga (automático o adicional) — de ahí que se
+ * jefe de área del trabajador, o cualquier jefe inmediato que el
+ * trabajador ya tenga (todos son iguales) — de ahí que se
  * autorice con User::esJefeInmediatoDe() en vez de un rol fijo.
  *
  * "La UI debe mostrar los jefes que ya tiene ... y pedir confirmación
@@ -35,7 +35,7 @@ class AsignarJefeAdicionalAction
         }
 
         if (! $confirmado) {
-            throw new PapeletaException('Falta confirmar explícitamente la asignación de jefe adicional.');
+            throw new PapeletaException('Falta confirmar explícitamente la asignación de jefe inmediato.');
         }
 
         $puedeAsignar = $asignadoPor->hasRole('admin')
@@ -46,12 +46,10 @@ class AsignarJefeAdicionalAction
             throw new PapeletaException('No tienes permiso para asignar jefes inmediatos a este trabajador.');
         }
 
-        if ($trabajador->jefe_inmediato_id === $jefeNuevo->id) {
-            throw new PapeletaException('Ese usuario ya es el jefe inmediato automático de este trabajador.');
-        }
-
-        if ($trabajador->jefesInmediatosAdicionales()->where('users.id', $jefeNuevo->id)->exists()) {
-            throw new PapeletaException('Ese usuario ya es jefe inmediato adicional de este trabajador.');
+        // Da igual por dónde le venga la jefatura (su unidad, jefes_turno
+        // o una asignación manual previa): todos son jefes inmediatos.
+        if ($jefeNuevo->esJefeInmediatoDe($trabajador)) {
+            throw new PapeletaException('Ese usuario ya es jefe inmediato de este trabajador.');
         }
 
         DB::transaction(function () use ($trabajador, $jefeNuevo, $asignadoPor) {
