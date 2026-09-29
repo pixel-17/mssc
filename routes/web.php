@@ -79,6 +79,9 @@ Route::middleware([
     'role:admin',
 ])->prefix('turnos')->name('turnos.')->group(function () {
     Route::get('/', \App\Livewire\Turnos\DefinicionTurnos::class)->name('index');
+
+    // Programar horarios por usuario: el admin busca a la persona y le arma su calendario.
+    Route::get('/administrar', \App\Livewire\Turnos\ProgramacionAdmin::class)->name('administrar');
 });
 
 /*

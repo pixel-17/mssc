@@ -7,8 +7,10 @@ use App\Models\Turno;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
 use App\Services\ProgramacionTurnoService;
+use App\Support\PatronTurnos;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -45,6 +47,16 @@ class ProgramacionMensual extends Component
 
     #[Locked]
     public ?string $mensaje = null;
+
+    /**
+     * Meses generados con un patrón que esperan confirmación por tener
+     * advertencias ('Y-m' => dias). Locked: el navegador no puede
+     * cambiarlo, solo se llena desde generarMeses().
+     *
+     * @var array<string, array<string, string>>
+     */
+    #[Locked]
+    public array $planPendiente = [];
 
     public function mount(User $trabajador): void
     {
@@ -101,9 +113,61 @@ class ProgramacionMensual extends Component
         $this->persistir($servicio, $dias);
     }
 
+    /**
+     * Repite un patrón durante varios meses (a partir de $desde, dentro
+     * del mes que se está viendo) y lo guarda. $dias es la grilla actual:
+     * lo pintado antes de $desde en este mes se conserva.
+     *
+     * Con advertencias no guarda: las muestra y espera confirmación
+     * (guardarPlanIgualmente), igual que guardar().
+     *
+     * @param  array<string, string>  $dias
+     */
+    public function generarMeses(ProgramacionTurnoService $servicio, string $patron, string $desde, int $meses, bool $continuar, array $dias): void
+    {
+        $this->autorizar($this->trabajador);
+
+        $pasos = PatronTurnos::parsear($patron);
+        if ($pasos === null) {
+            throw ValidationException::withMessages(['dias' => 'Usa solo M, T, N o D separados por espacios. Ej.: M M T T N D']);
+        }
+
+        $desdeOk = preg_match('/^\d{4}-\d{2}-\d{2}$/', $desde) === 1
+            && str_starts_with($desde, sprintf('%04d-%02d-', $this->anio, $this->mes))
+            && checkdate($this->mes, (int) substr($desde, 8, 2), $this->anio);
+
+        if (! $desdeOk) {
+            throw ValidationException::withMessages(['dias' => 'Elige un día "desde" dentro del mes que estás viendo.']);
+        }
+
+        // El payload viene del navegador: se valida antes de usarlo.
+        $servicio->validar($this->trabajador, $this->anio, $this->mes, $dias);
+
+        $plan = $servicio->planPatron($this->trabajador, $pasos, $desde, $meses, $continuar, $dias);
+
+        $this->advertencias = $servicio->advertenciasPlan($plan);
+        $this->mensaje = null;
+
+        if ($this->advertencias === []) {
+            $this->persistirPlan($servicio, $plan);
+        } else {
+            $this->planPendiente = $plan;
+        }
+    }
+
+    public function guardarPlanIgualmente(ProgramacionTurnoService $servicio): void
+    {
+        $this->autorizar($this->trabajador);
+
+        if ($this->planPendiente !== []) {
+            $this->persistirPlan($servicio, $this->planPendiente);
+        }
+    }
+
     public function descartarAdvertencias(): void
     {
         $this->advertencias = [];
+        $this->planPendiente = [];
     }
 
     /**
@@ -118,11 +182,31 @@ class ProgramacionMensual extends Component
         $this->version++;
     }
 
+    /**
+     * @param  array<string, array<string, string>>  $plan
+     */
+    private function persistirPlan(ProgramacionTurnoService $servicio, array $plan): void
+    {
+        $servicio->guardarPlan($this->trabajador, $plan, auth()->user());
+
+        $claves = array_keys($plan);
+        $primero = Carbon::createFromFormat('Y-m-d', $claves[0].'-01');
+        $ultimo = Carbon::createFromFormat('Y-m-d', end($claves).'-01');
+
+        $this->advertencias = [];
+        $this->planPendiente = [];
+        $this->mensaje = count($plan) === 1
+            ? 'Programación de '.$primero->translatedFormat('F Y').' guardada.'
+            : 'Programación guardada de '.$primero->translatedFormat('F Y').' a '.$ultimo->translatedFormat('F Y').'.';
+        $this->version++;
+    }
+
     private function irA(Carbon $fecha): void
     {
         $this->anio = $fecha->year;
         $this->mes = $fecha->month;
         $this->advertencias = [];
+        $this->planPendiente = [];
         $this->mensaje = null;
         $this->version++;
     }
@@ -158,6 +242,17 @@ class ProgramacionMensual extends Component
             $celdas[] = null;
         }
 
+        // Últimos 14 días del mes anterior, para "continuar la rotación" en el navegador.
+        $previosMes = Turno::where('user_id', $this->trabajador->id)
+            ->whereBetween('fecha', [
+                $inicioMes->copy()->subDays(14)->toDateString(),
+                $inicioMes->copy()->subDay()->toDateString(),
+            ])
+            ->get()
+            ->mapWithKeys(fn (Turno $t) => [$t->fecha->toDateString() => $t->codigo()])
+            ->filter(fn (string $codigo) => in_array($codigo, $validos, true))
+            ->all();
+
         $generador = app(GeneradorTurnoMensualService::class);
         $horas = [];
         foreach (ConfiguracionTurno::TURNOS_728 as $codigo) {
@@ -171,6 +266,9 @@ class ProgramacionMensual extends Component
             'inicioMes' => $inicioMes,
             'semanas' => array_chunk($celdas, 7),
             'diasIniciales' => (object) $dias,
+            'previosMes' => (object) $previosMes,
+            'predefinidos' => PatronTurnos::PREDEFINIDOS,
+            'maxMeses' => PatronTurnos::MAX_MESES,
             'hoy' => now()->toDateString(),
         ]);
     }

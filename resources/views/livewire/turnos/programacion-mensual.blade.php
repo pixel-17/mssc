@@ -24,6 +24,9 @@
                 patron: 'M M M M M M D',
                 desde: @js($fechasMes[0] ?? ''),
                 errorPatron: '',
+                continuar: false,
+                meses: 1,
+                previosMes: @js($previosMes),
                 claves: { M: 'MANANA', T: 'TARDE', N: 'NOCHE', D: 'DESCANSO' },
                 siglas: { MANANA: 'M', TARDE: 'T', NOCHE: 'N', DESCANSO: 'D' },
                 clases: @js(\App\Support\TurnoColores::porCodigo()),
@@ -37,15 +40,51 @@
                 pintar(fecha) {
                     if (this.pincel === 'BORRAR') { delete this.dias[fecha]; } else { this.dias[fecha] = this.pincel; }
                 },
-                aplicarPatron() {
+                pasosPatron() {
                     const pasos = this.patron.toUpperCase().split(/[\s,]+/).filter(Boolean).map(t => this.claves[t]);
                     if (!pasos.length || pasos.includes(undefined)) {
                         this.errorPatron = 'Usa solo M, T, N o D separados por espacios. Ej.: M M T T N D';
-                        return;
+                        return null;
                     }
                     this.errorPatron = '';
-                    let i = 0;
+                    return pasos;
+                },
+                fechaMenos(fecha, dias) {
+                    const d = new Date(fecha + 'T00:00:00');
+                    d.setDate(d.getDate() - dias);
+                    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                },
+                {{-- Misma regla que PatronTurnos::offsetContinuacion (PHP): sigue la rotación donde terminó lo anterior a 'desde'. --}}
+                offsetContinuacion(pasos) {
+                    const n = pasos.length;
+                    const previos = [];
+                    for (let i = n; i >= 1; i--) {
+                        const f = this.fechaMenos(this.desde, i);
+                        previos.push(this.dias[f] ?? this.previosMes[f] ?? null);
+                    }
+                    let mejorPosicion = null, mejorRacha = 0;
+                    for (let posicion = 0; posicion < n; posicion++) {
+                        let racha = 0;
+                        for (let k = 0; k < previos.length; k++) {
+                            const codigo = previos[previos.length - 1 - k];
+                            if (codigo === null || pasos[(((posicion - k) % n) + n) % n] !== codigo) break;
+                            racha++;
+                        }
+                        if (racha > mejorRacha) { mejorRacha = racha; mejorPosicion = posicion; }
+                    }
+                    return mejorPosicion === null ? 0 : (mejorPosicion + 1) % n;
+                },
+                aplicarPatron() {
+                    const pasos = this.pasosPatron();
+                    if (!pasos) return;
+                    let i = this.continuar ? this.offsetContinuacion(pasos) : 0;
                     for (const f of this.fechasMes.filter(f => f >= this.desde)) { this.dias[f] = pasos[i++ % pasos.length]; }
+                },
+                generarMeses() {
+                    if (!this.pasosPatron()) return;
+                    const n = Math.max(1, Math.min(@js($maxMeses), parseInt(this.meses) || 1));
+                    if (!confirm('Se guardarán ' + n + ' meses de golpe, a partir del ' + this.desde + '. Lo que ya exista en los meses siguientes se reemplaza. ¿Continuar?')) return;
+                    this.$wire.generarMeses(this.patron, this.desde, n, this.continuar, this.dias);
                 },
                 navegar(accion) {
                     if (!this.sucio || confirm('Tienes cambios sin guardar. ¿Descartarlos?')) { this.$wire[accion](); }
@@ -99,9 +138,28 @@
                         <label for="programacion-mensual-desde" class="block text-xs font-medium mb-1">desde el</label>
                         <input id="programacion-mensual-desde" type="date" x-model="desde" :min="fechasMes[0]" :max="fechasMes[fechasMes.length - 1]" class="rounded-md border-gray-300 dark:bg-gray-800 text-sm">
                     </div>
-                    <button type="button" @click="aplicarPatron()" class="px-3 py-2 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800">Aplicar hasta fin de mes</button>
+                    <div>
+                        <label for="programacion-mensual-meses" class="block text-xs font-medium mb-1">Meses</label>
+                        <input id="programacion-mensual-meses" type="number" x-model.number="meses" min="1" max="{{ $maxMeses }}" class="w-20 rounded-md border-gray-300 dark:bg-gray-800 text-sm">
+                    </div>
+                    <button type="button" x-show="meses <= 1" @click="aplicarPatron()" class="px-3 py-2 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800">Aplicar hasta fin de mes</button>
+                    <button type="button" x-show="meses > 1" x-cloak @click="generarMeses()" wire:loading.attr="disabled" class="px-3 py-2 rounded-md bg-tinta-800 text-white text-sm disabled:opacity-50">Generar y guardar <span x-text="meses"></span> meses</button>
                     <button type="button" @click="dias = {}" class="px-3 py-2 rounded-md border text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800">Limpiar mes</button>
                 </div>
+                {{-- Atajos y continuación de la rotación --}}
+                <div class="flex flex-wrap items-center gap-2">
+                    <span class="text-xs text-gray-500">Atajos:</span>
+                    @foreach ($predefinidos as $etiqueta => $valor)
+                        <button type="button" wire:key="programacion-mensual-predef-{{ $loop->index }}" @click="patron = @js($valor)" class="rounded-full border px-3 py-1 text-xs hover:bg-gray-50 dark:hover:bg-gray-800">{{ $etiqueta }}</button>
+                    @endforeach
+                    <label class="inline-flex items-center gap-2 text-xs ml-2">
+                        <input type="checkbox" x-model="continuar" class="rounded border-gray-300">
+                        Continuar la rotación donde terminó el mes anterior
+                    </label>
+                </div>
+                <p x-show="meses > 1" x-cloak class="text-xs text-gray-500">
+                    Con más de un mes, el patrón se guarda directamente desde la fecha elegida (máx. {{ $maxMeses }} meses) y reemplaza los meses siguientes.
+                </p>
                 <p x-show="errorPatron" x-text="errorPatron" x-cloak class="text-sm text-red-600"></p>
             </div>
 
@@ -167,14 +225,18 @@
                         @endforeach
                     </ul>
                     <div class="flex items-center gap-3">
-                        <button type="button" @click="$wire.guardarIgualmente(dias)" class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md text-sm">Guardar igualmente</button>
+                        @if ($planPendiente !== [])
+                            <button type="button" wire:click="guardarPlanIgualmente" class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md text-sm">Guardar {{ count($planPendiente) }} meses igualmente</button>
+                        @else
+                            <button type="button" @click="$wire.guardarIgualmente(dias)" class="inline-flex items-center px-3 py-1.5 bg-amber-600 text-white rounded-md text-sm">Guardar igualmente</button>
+                        @endif
                         <button type="button" wire:click="descartarAdvertencias" class="text-sm text-gray-600 dark:text-gray-300">Seguir editando</button>
                     </div>
                 </div>
             @endif
 
             <div class="flex items-center justify-end gap-3">
-                <a href="{{ route('turnos.calendario.equipo') }}" class="text-sm text-gray-500">Volver</a>
+                <a href="{{ auth()->user()->hasRole('admin') ? route('turnos.administrar') : route('turnos.calendario.equipo') }}" class="text-sm text-gray-500">Volver</a>
                 <button
                     type="button"
                     @click="$wire.guardar(dias)"

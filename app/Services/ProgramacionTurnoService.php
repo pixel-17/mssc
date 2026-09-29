@@ -6,6 +6,7 @@ use App\Models\CargaTurnoMensual;
 use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
+use App\Support\PatronTurnos;
 use DateTimeImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -102,6 +103,104 @@ class ProgramacionTurnoService
         });
 
         \App\Events\HorarioActualizado::notificar($trabajador->id);
+    }
+
+    /**
+     * Calcula (sin guardar) qué quedaría al repetir un patrón durante
+     * $meses meses seguidos, empezando en $desde.
+     *
+     * - Del mes de $desde se conservan los días anteriores a $desde que
+     *   ya vienen pintados en $diasActuales (lo que el usuario ve en la
+     *   grilla, aunque no lo haya guardado).
+     * - Los meses siguientes se generan completos (reemplazan lo que
+     *   hubiera en ellos al guardar).
+     * - Con $continuar, el patrón sigue donde terminó lo anterior a
+     *   $desde (grilla + lo guardado en la base) en vez de empezar de cero.
+     *
+     * @param  array<int, string>  $pasos  ver PatronTurnos::parsear()
+     * @param  array<string, string>  $diasActuales  días del mes de $desde tal como están en pantalla
+     * @return array<string, array<string, string>> 'Y-m' => dias, un elemento por mes
+     */
+    public function planPatron(User $trabajador, array $pasos, string $desde, int $meses, bool $continuar, array $diasActuales = []): array
+    {
+        $inicio = Carbon::createFromFormat('Y-m-d', $desde)->startOfDay();
+        $meses = max(1, min(PatronTurnos::MAX_MESES, $meses));
+        $largo = count($pasos);
+
+        $offset = 0;
+        if ($continuar && $largo > 0) {
+            $guardados = Turno::where('user_id', $trabajador->id)
+                ->whereBetween('fecha', [
+                    $inicio->copy()->subDays($largo)->toDateString(),
+                    $inicio->copy()->subDay()->toDateString(),
+                ])
+                ->get()
+                ->mapWithKeys(fn (Turno $t) => [$t->fecha->toDateString() => $t->codigo()]);
+
+            $previos = [];
+            for ($i = $largo; $i >= 1; $i--) {
+                $fecha = $inicio->copy()->subDays($i)->toDateString();
+                $previos[] = $diasActuales[$fecha] ?? $guardados[$fecha] ?? null;
+            }
+
+            $offset = PatronTurnos::offsetContinuacion($pasos, $previos);
+        }
+
+        $ultimo = $inicio->copy()->addMonthsNoOverflow($meses - 1)->endOfMonth();
+
+        $plan = [];
+        foreach (PatronTurnos::generar($pasos, $inicio->toDateString(), $ultimo->toDateString(), $offset) as $fecha => $codigo) {
+            $plan[substr($fecha, 0, 7)][$fecha] = $codigo;
+        }
+
+        // Días previos de la grilla, en el mes de arranque, que el patrón no toca.
+        $claveInicial = $inicio->format('Y-m');
+        $anteriores = array_filter(
+            $diasActuales,
+            fn ($codigo, $fecha) => is_string($fecha) && str_starts_with($fecha, $claveInicial) && $fecha < $desde,
+            ARRAY_FILTER_USE_BOTH
+        );
+        $plan[$claveInicial] = array_merge($anteriores, $plan[$claveInicial]);
+        ksort($plan[$claveInicial]);
+
+        return $plan;
+    }
+
+    /**
+     * Advertencias del plan completo, con las rachas contadas de corrido
+     * entre un mes y el siguiente.
+     *
+     * @param  array<string, array<string, string>>  $plan
+     * @return array<int, string>
+     */
+    public function advertenciasPlan(array $plan): array
+    {
+        return $this->advertencias($plan === [] ? [] : array_merge(...array_values($plan)));
+    }
+
+    /**
+     * Guarda todos los meses de un plan en una sola transacción: si uno
+     * falla la validación, no se escribe ninguno. Cada mes reemplaza por
+     * completo el anterior (ver guardarMes).
+     *
+     * @param  array<string, array<string, string>>  $plan  'Y-m' => dias
+     */
+    public function guardarPlan(User $trabajador, array $plan, User $actor): void
+    {
+        foreach ($plan as $clave => $dias) {
+            if (preg_match('/^(\d{4})-(\d{2})$/', (string) $clave, $m) !== 1 || ! is_array($dias)) {
+                throw ValidationException::withMessages(['dias' => 'La programación contiene un mes inválido.']);
+            }
+
+            $this->validar($trabajador, (int) $m[1], (int) $m[2], $dias);
+        }
+
+        DB::transaction(function () use ($trabajador, $plan, $actor) {
+            foreach ($plan as $clave => $dias) {
+                [$anio, $mes] = array_map('intval', explode('-', (string) $clave));
+                $this->guardarMes($trabajador, $anio, $mes, $dias, $actor);
+            }
+        });
     }
 
     /**

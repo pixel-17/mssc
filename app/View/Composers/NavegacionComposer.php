@@ -96,7 +96,13 @@ class NavegacionComposer
 
         $turnosJefe = [];
 
-        if ($esJefe) {
+        if ($esAdmin) {
+            $turnosJefe[] = ['label' => 'Programar por usuario', 'route' => route('turnos.administrar'), 'active' => request()->routeIs('turnos.administrar'), 'icon' => 'users'];
+        }
+
+        // El admin programa desde "Programar por usuario" (incluido el equipo de cualquier jefe),
+        // así que no ve "Calendario del equipo": ese enlace queda para los jefes.
+        if ($esJefe && ! $esAdmin) {
             // "Calendario del equipo" ya permite pintar M/T/N/D directo en la
             // grilla (728) — turnos.programacion.equipo queda sin enlazar en
             // el menú para no duplicar la misma acción en dos pantallas,
@@ -136,7 +142,7 @@ class NavegacionComposer
                 ['label' => 'Sedes', 'route' => route('sedes.index'), 'active' => request()->routeIs('sedes.*'), 'icon' => 'map-pin'],
                 ['label' => 'Unidades orgánicas', 'route' => route('unidades-organicas.index'), 'active' => request()->routeIs('unidades-organicas.*'), 'icon' => 'building'],
                 ['label' => 'Motivos', 'route' => route('motivos.index'), 'active' => request()->routeIs('motivos.*'), 'icon' => 'tag'],
-                ['label' => 'Turnos', 'route' => route('turnos.index'), 'active' => request()->routeIs('turnos.*'), 'icon' => 'clock'],
+                ['label' => 'Turnos', 'route' => route('turnos.index'), 'active' => request()->routeIs('turnos.index', 'turnos.crear', 'turnos.editar'), 'icon' => 'clock'],
                 ['label' => 'Feriados', 'route' => route('feriados.index'), 'active' => request()->routeIs('feriados.*'), 'icon' => 'calendar'],
             ]];
 

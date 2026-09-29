@@ -56,10 +56,6 @@
                                     Crear/editar horario
                                 </a>
                             @endif
-                            <a href="{{ route('turnos.calendario.individual-de', $usuario) }}" class="btn-row">
-                                <x-icon name="calendar" class="size-3.5" />
-                                Calendario
-                            </a>
                         </td>
                     </tr>
                 @empty
