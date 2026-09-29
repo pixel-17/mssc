@@ -67,18 +67,32 @@ class InsigniaBandeja extends Component
             // sustento presentado. Antes solo se contaba lo pendiente
             // de decidir, así que el badge podía quedar en 0 con
             // pendientes reales esperando en la bandeja (ver JefeIndex).
-            'jefe' => Papeleta::deJefeInmediato($usuario)
-                ->where(function ($query) {
-                    $query->whereState('estado', PendienteJefe::class)
-                        ->orWhereState('estado', ObservadaPorRrhh::class)
-                        ->orWhere(function ($sub) {
-                            $sub->whereState('estado', RetornoPendienteSustento::class)
-                                ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'));
-                        });
-                })
+            'jefe' => Papeleta::where(fn ($raiz) => $raiz
+                ->where(fn ($propias) => $propias
+                    ->deJefeInmediato($usuario)
+                    ->where(function ($query) {
+                        $query->whereState('estado', PendienteJefe::class)
+                            ->orWhereState('estado', ObservadaPorRrhh::class)
+                            ->orWhere(function ($sub) {
+                                $sub->whereState('estado', RetornoPendienteSustento::class)
+                                    ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'));
+                            });
+                    }))
+                // Observación post-hoc de RRHH: solo responde el jefe que
+                // autorizó, aunque hoy ya no figure entre los candidatos.
+                ->orWhere(fn ($posthoc) => $posthoc
+                    ->where('autorizado_con_rrhh_fuera_horario', true)
+                    ->where('revision_posthoc_estado', 'observada')
+                    ->where('resuelto_por_jefe_id', $usuario->id)))
                 ->count(),
+            // Decidir + revisión post-hoc por hacer (pendiente, o el jefe
+            // ya respondió su observación).
             'rrhh' => $usuario->hasRole('rrhh')
-                ? Papeleta::whereState('estado', PendienteRrhh::class)->count()
+                ? Papeleta::whereState('estado', PendienteRrhh::class)
+                    ->orWhere(fn ($q) => $q
+                        ->where('autorizado_con_rrhh_fuera_horario', true)
+                        ->whereIn('revision_posthoc_estado', ['pendiente', 'respondida']))
+                    ->count()
                 : 0,
             default => 0,
         };

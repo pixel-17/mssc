@@ -146,7 +146,7 @@ class DashboardMetricsService
         return [
             'pendientes_decision' => Papeleta::whereState('estado', PendienteRrhh::class)->count(),
             'posthoc_pendientes' => Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
-                ->where('revision_posthoc_estado', 'pendiente')
+                ->whereIn('revision_posthoc_estado', ['pendiente', 'respondida'])
                 ->count(),
             'sustentos_por_revisar' => Papeleta::whereState('estado', RetornoPendienteSustento::class)
                 ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))

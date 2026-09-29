@@ -8,14 +8,18 @@ use App\Actions\Papeleta\MarcarRetornoAction;
 use App\Actions\Papeleta\ObservarJefeAction;
 use App\Actions\Papeleta\RechazarJefeAction;
 use App\Actions\Papeleta\ReconocerObservacionRrhhAction;
+use App\Actions\Papeleta\ResponderPosthocAction;
 use App\Exceptions\PapeletaException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\ComentarioRequest;
 use App\Http\Requests\Papeleta\ObservarJefeRequest;
+use App\Http\Requests\Papeleta\ResponderPosthocRequest;
 use App\Http\Requests\Papeleta\RetornoManualRequest;
 use App\Models\Papeleta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Throwable;
 
 /**
  * Todas las decisiones del Jefe sobre una papeleta (Paso 2 + los
@@ -80,6 +84,43 @@ class DecisionController extends Controller
         }
 
         return back()->with('success', 'Observación de RRHH reconocida, papeleta reabierta para tu decisión.');
+    }
+
+    /**
+     * Responde la observación post-hoc de RRHH (solo el jefe que autorizó).
+     * Igual que en el flujo del trabajador, un archivo nunca debe quedar
+     * suelto en disco si la Action no llegó a referenciarlo.
+     */
+    public function responderPosthoc(ResponderPosthocRequest $request, Papeleta $papeleta, ResponderPosthocAction $action): RedirectResponse
+    {
+        $this->authorize('responderPosthoc', $papeleta);
+
+        $archivoPath = $request->hasFile('archivo')
+            ? $request->file('archivo')->store('papeletas/posthoc', 'local')
+            : null;
+
+        try {
+            $action->ejecutar($papeleta, Auth::user(), $request->input('respuesta'), $archivoPath);
+        } catch (PapeletaException $e) {
+            $this->descartarAdjunto($archivoPath);
+
+            return back()->withInput()->with('error', $e->getMessage());
+        } catch (Throwable $e) {
+            $this->descartarAdjunto($archivoPath);
+
+            throw $e;
+        }
+
+        return redirect()
+            ->route('jefe.papeletas.show', $papeleta)
+            ->with('success', 'Respuesta enviada. RRHH volverá a revisar la papeleta.');
+    }
+
+    private function descartarAdjunto(?string $path): void
+    {
+        if ($path) {
+            Storage::disk('local')->delete($path);
+        }
     }
 
     public function retornoManual(RetornoManualRequest $request, Papeleta $papeleta, MarcarRetornoAction $action): RedirectResponse

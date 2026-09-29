@@ -89,6 +89,48 @@ class NotificarPapeletaService
         );
     }
 
+    /**
+     * RRHH observó la revisión post-hoc: se avisa al jefe que autorizó
+     * (el único que puede responder). Si la observación quedó firme
+     * (tope alcanzado o autorización de sistema) es solo un aviso, sin
+     * respuesta pendiente.
+     */
+    public function posthocObservada(Papeleta $papeleta): void
+    {
+        $jefe = $papeleta->resueltoPorJefe;
+
+        if (! $jefe) {
+            return;
+        }
+
+        $firme = $papeleta->revision_posthoc_estado === 'observada_firme';
+        $nombre = $papeleta->trabajador->nombre_completo;
+
+        $this->enviarUno(
+            $jefe,
+            $papeleta,
+            $firme ? 'posthoc_observada_firme' : 'posthoc_observada',
+            $firme ? 'Revisión post-hoc observada (definitiva)' : 'RRHH observó tu autorización',
+            $firme
+                ? "RRHH dejó un reparo definitivo sobre la papeleta de {$nombre} que autorizaste fuera de horario. Ya no admite respuesta."
+                : "RRHH observó la papeleta de {$nombre} que autorizaste fuera de su horario. Responde por escrito (y con un adjunto si quieres) para que vuelva a RRHH.",
+            $this->urlJefe($papeleta),
+        );
+    }
+
+    /** El jefe respondió la observación post-hoc: vuelve a la bandeja de RRHH. */
+    public function posthocRespondida(Papeleta $papeleta): void
+    {
+        $this->enviar(
+            $this->usuariosRrhh(),
+            $papeleta,
+            'posthoc_respondida',
+            'Respuesta a observación post-hoc',
+            "El jefe respondió tu observación sobre la papeleta de {$papeleta->trabajador->nombre_completo}. Requiere tu revisión.",
+            fn () => $this->urlRrhh($papeleta),
+        );
+    }
+
     public function rechazada(Papeleta $papeleta): void
     {
         $this->enviarUno(

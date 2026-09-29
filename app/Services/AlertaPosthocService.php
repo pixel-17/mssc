@@ -75,11 +75,17 @@ class AlertaPosthocService
         return true;
     }
 
-    /** @return Builder<Papeleta> */
+    /**
+     * Revisiones que están en manos de RRHH: las que nunca se revisaron
+     * ('pendiente') y las que el jefe ya respondió ('respondida'). Las
+     * 'observada' esperan al jefe, no a RRHH, y no cuentan aquí.
+     *
+     * @return Builder<Papeleta>
+     */
     private function pendientes(): Builder
     {
         return Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
-            ->where('revision_posthoc_estado', 'pendiente');
+            ->whereIn('revision_posthoc_estado', ['pendiente', 'respondida']);
     }
 
     /**

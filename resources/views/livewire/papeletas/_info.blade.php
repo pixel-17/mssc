@@ -35,8 +35,25 @@
         @if ($papeleta->autorizado_con_rrhh_fuera_horario)
             <div>
                 <dt class="text-gray-500 dark:text-tinta-100/50">Revisión post-hoc RRHH</dt>
-                <dd class="text-gray-900 dark:text-white">{{ ucfirst($papeleta->revision_posthoc_estado ?? 'pendiente') }}</dd>
+                <dd class="text-gray-900 dark:text-white">{{ $papeleta->etiquetaPosthoc() }}</dd>
             </div>
+            @if ($papeleta->posthoc_observacion)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Última observación post-hoc de RRHH ({{ $papeleta->contador_observaciones_posthoc }})</dt>
+                    <dd class="text-gray-900 dark:text-white">{{ $papeleta->posthoc_observacion }}</dd>
+                </div>
+            @endif
+            @if ($papeleta->posthoc_respondida_at)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Respuesta del jefe a la observación post-hoc ({{ $papeleta->posthoc_respondida_at->format('d/m/Y H:i') }})</dt>
+                    <dd class="text-gray-900 dark:text-white">
+                        {{ $papeleta->posthoc_respuesta }}
+                        @if ($papeleta->posthoc_adjunto_path)
+                            <a href="{{ route('papeletas.archivo', [$papeleta, 'respuesta-posthoc']) }}" target="_blank" rel="noopener" class="ml-2 text-xs text-tinta-600 dark:text-tinta-300 underline">Ver adjunto</a>
+                        @endif
+                    </dd>
+                </div>
+            @endif
         @endif
         @if ($papeleta->justificacion)
             <div class="sm:col-span-2">

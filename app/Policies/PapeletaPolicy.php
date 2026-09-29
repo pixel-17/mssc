@@ -48,6 +48,7 @@ class PapeletaPolicy
         return $user->hasRole('rrhh')
             || $papeleta->trabajador_id === $user->id
             || $papeleta->tieneComoJefeInmediatoA($user)
+            || $papeleta->resuelto_por_jefe_id === $user->id
             || $papeleta->jefe_area_id === $user->id;
     }
 
@@ -104,6 +105,15 @@ class PapeletaPolicy
         return $papeleta->estado->equals(ObservadaPorRrhh::class)
             && ! $this->esPropia($user, $papeleta)
             && $papeleta->tieneComoJefeInmediatoA($user);
+    }
+
+    /**
+     * Responder la observación post-hoc de RRHH: solo el MISMO jefe que
+     * autorizó la papeleta (ver Papeleta::puedeResponderPosthoc()).
+     */
+    public function responderPosthoc(User $user, Papeleta $papeleta): bool
+    {
+        return $papeleta->puedeResponderPosthoc($user);
     }
 
     public function decidirComoRrhh(User $user, Papeleta $papeleta): bool

@@ -27,6 +27,7 @@ class PapeletaArchivoController extends Controller
             'adjunto-inicial' => $papeleta->adjunto_inicial_path,
             'retorno-foto' => $papeleta->retorno?->foto_path,
             'justificacion-observacion' => $papeleta->observacion_adjunto_path,
+            'respuesta-posthoc' => $papeleta->posthoc_adjunto_path,
             default => abort(404),
         };
 

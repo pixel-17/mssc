@@ -70,6 +70,15 @@ class JefeIndex extends Component
             ->latest()
             ->get();
 
+        // Observaciones post-hoc de RRHH que solo yo (el que autorizó) puedo responder.
+        $posthocPorResponder = Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
+            ->where('revision_posthoc_estado', 'observada')
+            ->where('resuelto_por_jefe_id', $user->id)
+            ->when($termino !== '', $filtroBuscar)
+            ->with(['trabajador', 'motivo'])
+            ->latest()
+            ->get();
+
         $enCurso = Papeleta::whereState('estado', AutorizadaYCorriendo::class)
             ->deJefeInmediato($user)
             ->when($termino !== '', $filtroBuscar)
@@ -90,7 +99,7 @@ class JefeIndex extends Component
         // hasta que termine el turno (fin_turno_at). Sin fin_turno_at (papeletas viejas)
         // se usa el día operativo de hoy. Se excluyen las que ya salen en otra lista.
         $yaMostradas = collect()
-            ->merge($porDecidir)->merge($observadasPorMi)->merge($observacionesRrhh)
+            ->merge($porDecidir)->merge($observadasPorMi)->merge($observacionesRrhh)->merge($posthocPorResponder)
             ->merge($enCurso)->merge($sustentosPorRevisar)
             ->pluck('id');
 
@@ -110,6 +119,7 @@ class JefeIndex extends Component
             'porDecidir',
             'observadasPorMi',
             'observacionesRrhh',
+            'posthocPorResponder',
             'enCurso',
             'sustentosPorRevisar',
             'delTurno',

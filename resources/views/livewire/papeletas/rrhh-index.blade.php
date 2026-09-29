@@ -75,6 +75,7 @@
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Motivo</th>
                                 <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Autorizó</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Estado</th>
                                 <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
                             </tr>
                         </thead>
@@ -84,6 +85,13 @@
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->resueltoPorJefe?->nombre_completo ?? '—' }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">
+                                        @if ($papeleta->revision_posthoc_estado === 'respondida')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-500/15 text-blue-700 dark:text-blue-300">Jefe respondió</span>
+                                        @else
+                                            Pendiente
+                                        @endif
+                                    </td>
                                     <td class="px-4 py-3 text-right">
                                         <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Revisar →</a>
                                     </td>

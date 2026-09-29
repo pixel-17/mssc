@@ -5,7 +5,10 @@
     $puedeDecidir = $papeleta->estado->equals(PendienteRrhh::class);
 
     $puedePosthoc = $papeleta->autorizado_con_rrhh_fuera_horario
-        && $papeleta->revision_posthoc_estado === 'pendiente';
+        && in_array($papeleta->revision_posthoc_estado, ['pendiente', 'respondida'], true);
+
+    $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+    $posthocRespondida = $papeleta->revision_posthoc_estado === 'respondida';
 
     $sustentoPresentado = $papeleta->estado->equals(RetornoPendienteSustento::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
@@ -59,6 +62,23 @@
                     <p class="text-sm text-gray-600 mb-3">
                         El jefe inmediato autorizó esta papeleta fuera del horario de RRHH ({{ $papeleta->resueltoPorJefe?->nombre_completo ?? '—' }}). Deja constancia de la revisión.
                     </p>
+                    @if ($posthocRespondida)
+                        <div class="mb-3 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-900">
+                            <p class="font-medium">El jefe respondió tu observación:</p>
+                            <p class="mt-1">{{ $papeleta->posthoc_respuesta }}</p>
+                            @if ($papeleta->posthoc_adjunto_path)
+                                <a href="{{ route('papeletas.archivo', [$papeleta, 'respuesta-posthoc']) }}" target="_blank" rel="noopener" class="mt-1 inline-block text-xs underline">Ver adjunto</a>
+                            @endif
+                        </div>
+                    @endif
+                    @if ($papeleta->contador_observaciones_posthoc > 0)
+                        <p class="text-xs text-gray-400 mb-3">
+                            Observaciones post-hoc: {{ $papeleta->contador_observaciones_posthoc }}/{{ $topePosthoc }}.
+                            @if ($papeleta->contador_observaciones_posthoc >= $topePosthoc - 1)
+                                Si observas de nuevo, quedará como reparo definitivo, sin más respuestas.
+                            @endif
+                        </p>
+                    @endif
                     <div class="flex items-center gap-3 flex-wrap">
                         <x-boton-confirmar
                             :action="route('rrhh.papeletas.posthoc-aprobar', $papeleta)"

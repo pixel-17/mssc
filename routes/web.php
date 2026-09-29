@@ -270,7 +270,7 @@ Route::middleware([
      * PapeletaPolicy::view (PapeletaArchivoController).
      */
     Route::get('/papeletas/{papeleta}/archivo/{tipo}', [PapeletaArchivoController::class, 'show'])
-        ->whereIn('tipo', ['adjunto-inicial', 'retorno-foto', 'justificacion-observacion'])
+        ->whereIn('tipo', ['adjunto-inicial', 'retorno-foto', 'justificacion-observacion', 'respuesta-posthoc'])
         ->name('papeletas.archivo');
 
     // --- Trabajador (Paso 1 y Paso 5 del flujo) ---
@@ -300,6 +300,7 @@ Route::middleware([
         Route::post('/papeletas/{papeleta}/rechazar', [JefeDecisionController::class, 'rechazar'])->name('papeletas.rechazar');
         Route::post('/papeletas/{papeleta}/observar', [JefeDecisionController::class, 'observar'])->name('papeletas.observar');
         Route::post('/papeletas/{papeleta}/reconocer-observacion-rrhh', [JefeDecisionController::class, 'reconocerObservacionRrhh'])->name('papeletas.reconocer-observacion-rrhh');
+        Route::post('/papeletas/{papeleta}/responder-posthoc', [JefeDecisionController::class, 'responderPosthoc'])->name('papeletas.responder-posthoc');
         Route::post('/papeletas/{papeleta}/retorno-manual', [JefeDecisionController::class, 'retornoManual'])->name('papeletas.retorno-manual');
         Route::post('/papeletas/{papeleta}/cerrar-sin-retorno', [JefeDecisionController::class, 'cerrarSinRetorno'])->name('papeletas.cerrar-sin-retorno');
         Route::post('/papeletas/{papeleta}/marcar-abandono', [JefeDecisionController::class, 'marcarAbandono'])->name('papeletas.marcar-abandono');

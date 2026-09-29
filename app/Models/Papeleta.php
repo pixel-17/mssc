@@ -51,6 +51,11 @@ class Papeleta extends Model
         'revision_posthoc_estado',
         'revision_posthoc_por_id',
         'revision_posthoc_at',
+        'contador_observaciones_posthoc',
+        'posthoc_observacion',
+        'posthoc_respuesta',
+        'posthoc_adjunto_path',
+        'posthoc_respondida_at',
         'hora_salida_real',
         'hora_retorno_estimado',
         'descuento_refrigerio_minutos',
@@ -81,6 +86,7 @@ class Papeleta extends Model
             'rrhh_resuelto_at' => 'datetime',
             'autorizado_con_rrhh_fuera_horario' => 'boolean',
             'revision_posthoc_at' => 'datetime',
+            'posthoc_respondida_at' => 'datetime',
             'hora_salida_real' => 'datetime',
             'hora_retorno_estimado' => 'datetime',
             'cancelada_at' => 'datetime',
@@ -180,6 +186,33 @@ class Papeleta extends Model
     public function sinJefatura(): bool
     {
         return $this->jefe_inmediato_id === null && $this->jefe_area_id === null;
+    }
+
+    /**
+     * Revisión post-hoc observada por RRHH: solo el MISMO jefe que
+     * autorizó la papeleta (resuelto_por_jefe_id) puede responderla,
+     * no cualquier otro candidato de turno ni un jefe adicional.
+     */
+    public function puedeResponderPosthoc(User $user): bool
+    {
+        return $this->autorizado_con_rrhh_fuera_horario
+            && $this->revision_posthoc_estado === 'observada'
+            && $this->resuelto_por_jefe_id !== null
+            && (int) $this->resuelto_por_jefe_id === (int) $user->id
+            && (int) $this->trabajador_id !== (int) $user->id;
+    }
+
+    /** Texto legible del estado de la revisión post-hoc (para las vistas). */
+    public function etiquetaPosthoc(): string
+    {
+        return match ($this->revision_posthoc_estado) {
+            'observada' => 'Observada — espera respuesta del jefe',
+            'respondida' => 'Respondida por el jefe — pendiente de RRHH',
+            'observada_firme' => 'Observada (reparo definitivo)',
+            'aprobada' => 'Aprobada',
+            'no_aplica' => 'No aplica',
+            default => 'Pendiente',
+        };
     }
 
     public function trabajador(): BelongsTo

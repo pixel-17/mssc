@@ -21,7 +21,7 @@
     ]);
 
     if ($papeleta->autorizado_con_rrhh_fuera_horario) {
-        $filas->push(['Revisión post-hoc RRHH', ucfirst($papeleta->revision_posthoc_estado ?? 'pendiente')]);
+        $filas->push(['Revisión post-hoc RRHH', $papeleta->etiquetaPosthoc()]);
     }
 @endphp
 

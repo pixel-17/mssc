@@ -61,6 +61,25 @@ class AlertaPosthocTest extends TestCase
         Configuracion::where('clave', $clave)->firstOrFail()->update(['valor' => $valor]);
     }
 
+    public function test_una_revision_respondida_por_el_jefe_cuenta_como_pendiente_de_rrhh(): void
+    {
+        Notification::fake();
+        $rrhh = $this->usuarioDePrueba(['activo' => true], ['rrhh']);
+        $this->posthocPendiente(48, 'respondida');
+
+        $this->assertTrue(app(AlertaPosthocService::class)->evaluar());
+        Notification::assertSentTo($rrhh, AlertaOrganizacionalNotification::class);
+    }
+
+    public function test_una_revision_observada_espera_al_jefe_y_no_cuenta(): void
+    {
+        Notification::fake();
+        $this->usuarioDePrueba(['activo' => true], ['rrhh']);
+        $this->posthocPendiente(48, 'observada');
+
+        $this->assertFalse(app(AlertaPosthocService::class)->evaluar());
+    }
+
     public function test_sin_pendientes_no_avisa(): void
     {
         Notification::fake();

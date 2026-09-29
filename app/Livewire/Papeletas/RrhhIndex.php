@@ -42,7 +42,7 @@ class RrhhIndex extends Component
             ->get();
 
         $posthocPendientes = Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
-            ->where('revision_posthoc_estado', 'pendiente')
+            ->whereIn('revision_posthoc_estado', ['pendiente', 'respondida'])
             ->when($this->buscar, $filtroBuscar)
             ->with(['trabajador', 'motivo', 'resueltoPorJefe'])
             ->latest()

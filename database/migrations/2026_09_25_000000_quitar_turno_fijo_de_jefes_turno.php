@@ -21,15 +21,28 @@ return new class extends Migration
 {
     public function up(): void
     {
-        // Mismo motivo que la migración anterior (permitir_varios_jefes_por_turno):
-        // ambos índices cuelgan de columnas con FK, así que ADD y DROP van juntos
-        // en un solo ALTER TABLE para no quedarse sin índice que respalde la FK.
-        DB::statement(
-            'ALTER TABLE jefes_turno '.
-            'ADD UNIQUE jefes_turno_unidad_jefe_unique (unidad_organica_id, jefe_id), '.
-            'DROP INDEX jefes_turno_unidad_turno_jefe_unique'
-        );
+        // SQLite (tests): no admite ADD UNIQUE / DROP INDEX dentro de un
+        // ALTER TABLE, así que cada índice se crea/borra con su propia
+        // sentencia vía Schema::. Sin la restricción de FK de MySQL/InnoDB,
+        // el orden entre ADD y DROP es libre.
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            Schema::table('jefes_turno', function (Blueprint $table) {
+                $table->unique(['unidad_organica_id', 'jefe_id'], 'jefes_turno_unidad_jefe_unique');
+                $table->dropUnique('jefes_turno_unidad_turno_jefe_unique');
+            });
+        } else {
+            // Mismo motivo que la migración anterior (permitir_varios_jefes_por_turno):
+            // ambos índices cuelgan de columnas con FK, así que ADD y DROP van juntos
+            // en un solo ALTER TABLE para no quedarse sin índice que respalde la FK.
+            DB::statement(
+                'ALTER TABLE jefes_turno '.
+                'ADD UNIQUE jefes_turno_unidad_jefe_unique (unidad_organica_id, jefe_id), '.
+                'DROP INDEX jefes_turno_unidad_turno_jefe_unique'
+            );
+        }
 
+        // Va después de borrar el índice viejo: SQLite no deja borrar una
+        // columna que todavía forma parte de un índice.
         Schema::table('jefes_turno', function (Blueprint $table) {
             $table->dropColumn('turno');
         });
@@ -37,6 +50,19 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (DB::connection()->getDriverName() === 'sqlite') {
+            Schema::table('jefes_turno', function (Blueprint $table) {
+                $table->string('turno', 10)->default('MANANA');
+            });
+
+            Schema::table('jefes_turno', function (Blueprint $table) {
+                $table->unique(['unidad_organica_id', 'turno', 'jefe_id'], 'jefes_turno_unidad_turno_jefe_unique');
+                $table->dropUnique('jefes_turno_unidad_jefe_unique');
+            });
+
+            return;
+        }
+
         Schema::table('jefes_turno', function (Blueprint $table) {
             $table->string('turno', 10)->nullable()->after('unidad_organica_id');
         });

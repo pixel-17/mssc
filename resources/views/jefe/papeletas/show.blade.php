@@ -21,6 +21,10 @@
 
     $enCurso = $papeleta->estado->equals(AutorizadaYCorriendo::class) && $esJefeInmediato;
 
+    // Observación post-hoc de RRHH: solo responde el MISMO jefe que autorizó.
+    $puedeResponderPosthoc = $papeleta->puedeResponderPosthoc(auth()->user());
+    $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+
     $sustentoPresentado = $papeleta->estado->equals(RetornoPendienteSustento::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
@@ -92,6 +96,39 @@
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Observación de RRHH</h3>
                     <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">RRHH observó esta papeleta. Revisa el historial y reconoce para reabrirla en tu bandeja.</p>
                     <x-accion-comentario :action="route('jefe.papeletas.reconocer-observacion-rrhh', $papeleta)" label="Reconocer" color="orange" />
+                </div>
+            @endif
+
+            @if ($puedeResponderPosthoc)
+                <div class="glass-card p-6" x-data="{ enviando: false }">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-1">RRHH observó tu autorización</h3>
+                    <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">
+                        Autorizaste esta papeleta fuera del horario de RRHH y RRHH dejó una observación
+                        ({{ $papeleta->contador_observaciones_posthoc }}/{{ $topePosthoc }}). Responde por escrito y, si quieres, adjunta un sustento: volverá a RRHH para su revisión.
+                    </p>
+                    <blockquote class="mb-4 border-l-4 border-orange-400 pl-3 text-sm text-gray-700 dark:text-tinta-100/80">{{ $papeleta->posthoc_observacion }}</blockquote>
+
+                    <form method="POST" action="{{ route('jefe.papeletas.responder-posthoc', $papeleta) }}" enctype="multipart/form-data" class="space-y-3" @submit="enviando = true">
+                        @csrf
+                        <div>
+                            <label for="respuesta-posthoc" class="block text-sm font-medium text-gray-700 dark:text-tinta-50/80 mb-1">Tu respuesta</label>
+                            <textarea id="respuesta-posthoc" name="respuesta" rows="4" required minlength="5" maxlength="2000"
+                                      placeholder="Explica por qué autorizaste la salida (mínimo 5 caracteres)..."
+                                      class="block w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">{{ old('respuesta') }}</textarea>
+                            @error('respuesta') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label for="archivo-posthoc" class="block text-sm font-medium text-gray-700 dark:text-tinta-50/80 mb-1">Sustento (opcional)</label>
+                            <input id="archivo-posthoc" type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-sm text-gray-600 dark:text-tinta-100/70">
+                            <p class="mt-1 text-xs text-gray-400">PDF, JPG o PNG, hasta 10 MB.</p>
+                            @error('archivo') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                        </div>
+                        <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-orange-500 hover:bg-orange-600">
+                            <span x-show="! enviando">Enviar respuesta a RRHH</span>
+                            <span x-show="enviando" x-cloak>Enviando…</span>
+                        </button>
+                    </form>
                 </div>
             @endif
 
