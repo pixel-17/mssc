@@ -29,7 +29,7 @@ class VincularJefeInmediatoAction
     {
         return $trabajador->activo
             && ! $trabajador->hasRole('admin')
-            && ! $trabajador->esJefeDeArea();
+            && ! $trabajador->esJefeTitular();
     }
 
     /**

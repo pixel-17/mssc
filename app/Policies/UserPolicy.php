@@ -92,7 +92,7 @@ class UserPolicy
             return true;
         }
 
-        return $editor->esJefeInmediatoDe($target) && ! $target->esJefeDeArea();
+        return $editor->esJefeInmediatoDe($target) && ! $target->esJefeTitular();
     }
 
     /**
@@ -128,7 +128,7 @@ class UserPolicy
         $unidad = \App\Models\UnidadOrganica::find($unidadId);
 
         while ($unidad) {
-            if ($unidad->jefe_id === $user->id) {
+            if ($unidad->jefe_id === $user->id && $unidad->hijos()->exists()) {
                 return true;
             }
             $unidad = $unidad->parent_id

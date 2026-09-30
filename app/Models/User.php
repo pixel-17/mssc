@@ -127,10 +127,27 @@ class User extends Authenticatable
         return $this->hasMany(UnidadOrganica::class, 'jefe_id');
     }
 
-    /** Jefe de área = encabeza al menos una unidad orgánica del organigrama. */
-    public function esJefeDeArea(): bool
+    /**
+     * Unidades que este usuario encabeza Y que tienen sub-unidades: solo
+     * esas lo hacen Jefe de Área. Quien encabeza una unidad hoja (sin
+     * sub-oficinas) es Jefe Inmediato "puro": su jefe_id lo pone como
+     * jefe de ESA oficina, no le da mando sobre otras.
+     */
+    public function unidadesDeArea(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->unidadesQueEncabeza()->whereHas('hijos');
+    }
+
+    /** Jefe titular de alguna unidad (hoja o no): jefe inmediato O de área. Usar para blindar contra ediciones/vínculos de pares. */
+    public function esJefeTitular(): bool
     {
         return $this->unidadesQueEncabeza()->exists();
+    }
+
+    /** Jefe de área = encabeza al menos una unidad que tiene sub-unidades. */
+    public function esJefeDeArea(): bool
+    {
+        return $this->unidadesDeArea()->exists();
     }
 
     /**

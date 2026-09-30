@@ -142,7 +142,7 @@ class EquipoDelJefeService
     {
         $ids = collect();
 
-        foreach ($user->unidadesQueEncabeza as $unidad) {
+        foreach ($user->unidadesDeArea as $unidad) {
             $ids->push($unidad->id);
             $ids = $ids->merge($unidad->descendantIds());
         }
