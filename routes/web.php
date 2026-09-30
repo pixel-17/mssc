@@ -113,6 +113,16 @@ Route::middleware([
 });
 
 /*
+ * Organigrama visual (solo lectura): admin ve todo, el Jefe de Área ve su
+ * unidad y lo que cuelga de ella. La autorización vive en el componente.
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+])->get('/organigrama', \App\Livewire\Organigrama\OrganigramaArbol::class)->name('organigrama.index');
+
+/*
  * Feriados: cuarto recurso migrado — Blade + Livewire puro
  * (App\Livewire\Feriados\*).
  */

@@ -128,6 +128,10 @@ class NavegacionComposer
             $personas[] = ['label' => 'Trabajadores', 'route' => route('usuarios.index'), 'active' => request()->routeIs('usuarios.*'), 'icon' => 'users'];
         }
 
+        if ($esAdmin || $usuario->esJefeDeArea()) {
+            $personas[] = ['label' => 'Organigrama', 'route' => route('organigrama.index'), 'active' => request()->routeIs('organigrama.*'), 'icon' => 'share'];
+        }
+
         if ($esAdmin) {
             $personas[] = ['label' => 'Cuentas de usuario', 'route' => route('usuarios-admin.index'), 'active' => request()->routeIs('usuarios-admin.*'), 'icon' => 'user-circle'];
         }
