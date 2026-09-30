@@ -3,7 +3,6 @@
 namespace App\Actions\Usuario;
 
 use App\Exceptions\UsuarioException;
-use App\Models\ConfiguracionTurno;
 use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -65,7 +64,9 @@ class CrearUsuarioAction
      */
     public function ejecutar(User $creador, array $datos, bool $esJefeDeArea): User
     {
-        $nuevo = DB::transaction(function () use ($creador, $datos, $esJefeDeArea) {
+        $esJefeInmediatoNuevo = $esJefeDeArea && ($datos['tipo'] ?? 'trabajador') === 'jefe_inmediato';
+
+        $nuevo = DB::transaction(function () use ($creador, $datos, $esJefeDeArea, $esJefeInmediatoNuevo) {
             // Reingreso: si el DNI corresponde a alguien ya desactivado
             // (ver UsuarioAdminIndex::desactivar(), que desactiva en vez de
             // borrar), reactivamos esa misma fila en vez de crear una
@@ -87,7 +88,7 @@ class CrearUsuarioAction
                 'debe_actualizar_password' => true,
                 'activo' => true,
                 'regimen' => $datos['regimen'],
-                'sede_id' => $esJefeDeArea ? ($datos['sede_id'] ?? null) : $creador->sede_id,
+                'sede_id' => $this->resolverSede($creador, $datos, $esJefeDeArea, $esJefeInmediatoNuevo),
                 'unidad_organica_id' => $esJefeDeArea ? $datos['unidad_organica_id'] : $creador->unidad_organica_id,
             ];
 
@@ -110,8 +111,8 @@ class CrearUsuarioAction
                 $nuevo->assignRole('trabajador');
             }
 
-            if ($esJefeDeArea && $datos['tipo'] === 'jefe_inmediato') {
-                $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id'], $datos['regimen'], $datos['turno'] ?? null);
+            if ($esJefeInmediatoNuevo) {
+                $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id'], $datos['regimen']);
             }
 
             if (! $esJefeDeArea) {
@@ -129,7 +130,8 @@ class CrearUsuarioAction
             // exige turno/fecha_ancla cuando regimen es 728, así que acá
             // solo se carga. Reingreso incluido: si vuelve como 728,
             // también necesita su ciclo desde el primer día.
-            if ($datos['regimen'] === '728') {
+            // Un jefe inmediato NO se crea con turno: se programa el suyo.
+            if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo) {
                 $this->generadorTurno->cargarConfiguracion(
                     trabajador: $nuevo,
                     turno: $datos['turno'],
@@ -147,7 +149,7 @@ class CrearUsuarioAction
         // si el envío de la notificación falla, nunca debe revertir el
         // alta ya confirmada en BD. Solo aplica a 728 (jefes_turno no se
         // usa en 276, ver AlertaJefaturaService).
-        if ($datos['regimen'] === '728' && $nuevo->unidadOrganica) {
+        if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo && $nuevo->unidadOrganica) {
             $this->alertaJefatura->avisarSiFaltaJefeDeTurno($nuevo->unidadOrganica, $datos['turno']);
         }
 
@@ -182,7 +184,7 @@ class CrearUsuarioAction
         }
     }
 
-    private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId, string $regimen, ?string $turno): void
+    private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId, string $regimen): void
     {
         $unidad = UnidadOrganica::findOrFail($unidadId);
 
@@ -215,20 +217,32 @@ class CrearUsuarioAction
             );
         }
 
-        // ¿Alguno de los jefes actuales, activo, ya cubre ese turno según
-        // su propia configuración de calendario? Sin bucket manual: el
-        // turno de cada jefe es el que él mismo tiene configurado.
-        $idsActivos = User::whereIn('id', $jefesActuales)->where('activo', true)->pluck('id');
-        $turnoOcupado = ConfiguracionTurno::whereIn('user_id', $idsActivos)->where('turno', $turno)->exists();
+        // Sin chequeo de turno ocupado: el jefe nuevo nace SIN turno y se
+        // programa el suyo después; si dos jefes terminan cubriendo el
+        // mismo turno, AlertaJefaturaService avisa los huecos.
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $nuevo->id]);
+    }
 
-        if ($turnoOcupado) {
-            $etiqueta = ConfiguracionTurno::etiquetaDeTurno($turno);
-
-            throw new UsuarioException(
-                "La unidad \"{$unidad->nombre}\" ya tiene jefe inmediato para el turno {$etiqueta}."
-            );
+    /**
+     * Sede del usuario nuevo (nunca null para un jefe inmediato):
+     * - Jefe inmediato creado por Jefe de Área: la elige el formulario
+     *   (puede ser otra sede); si por algún motivo no llega, cae a la
+     *   del creador en vez de quedar vacía.
+     * - Trabajador: por defecto la sede de su jefe inmediato (jefe_id de
+     *   la unidad) o, si no hay, la del creador. No se elige a mano.
+     */
+    private function resolverSede(User $creador, array $datos, bool $esJefeDeArea, bool $esJefeInmediatoNuevo): ?int
+    {
+        if ($esJefeInmediatoNuevo) {
+            return $datos['sede_id'] ?? $creador->sede_id;
         }
 
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $nuevo->id]);
+        if (! $esJefeDeArea) {
+            return $creador->sede_id;
+        }
+
+        $sedeDelJefe = UnidadOrganica::with('jefe')->find($datos['unidad_organica_id'])?->jefe?->sede_id;
+
+        return $sedeDelJefe ?? $creador->sede_id;
     }
 }

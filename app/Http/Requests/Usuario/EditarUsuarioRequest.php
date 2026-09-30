@@ -45,7 +45,8 @@ class EditarUsuarioRequest extends FormRequest
                 'required', 'string', 'email', 'max:255',
                 Rule::unique('users', 'email')->ignore($trabajador->id),
             ],
-            'sede_id' => $esJefeDeArea ? ['nullable', 'exists:sedes,id'] : ['nullable'],
+            // Nadie queda sin sede: el cierre depende de ella.
+            'sede_id' => $esJefeDeArea ? ['required', 'exists:sedes,id'] : ['nullable'],
             'unidad_organica_id' => $esJefeDeArea
                 ? ['required', Rule::in($unidadesDisponibles->all())]
                 : ['nullable'],

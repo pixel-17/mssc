@@ -81,9 +81,9 @@
                         <x-input-error for="email" class="mt-2" />
                     </div>
 
-                    <div x-show="regimen === '728'" x-cloak
+                    <div x-show="regimen === '728' && tipo !== 'jefe_inmediato'" x-cloak
                          class="rounded-md border border-dashed border-gray-300 dark:border-white/15 p-4 space-y-4">
-                        <p class="text-sm font-medium">Turno inicial (régimen 728)</p>
+                        <p class="text-sm font-medium">Turno inicial (trabajador 728)</p>
                         <p class="text-xs text-gray-500 dark:text-gray-400">
                             Un trabajador 728 necesita su horario cargado desde el primer día: sin esto no podrá
                             crear ninguna papeleta.
@@ -126,16 +126,21 @@
                     </div>
 
                     @if ($esJefeDeArea)
-                        <div>
-                            <x-label for="sede_id" value="Sede (opcional)" />
-                            <select id="sede_id" name="sede_id"
+                        <div x-show="tipo === 'jefe_inmediato'" x-cloak>
+                            <x-label for="sede_id" value="Sede (obligatoria)" />
+                            <select id="sede_id" name="sede_id" x-bind:disabled="tipo !== 'jefe_inmediato'" x-bind:required="tipo === 'jefe_inmediato'"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 sm:text-sm dark:border-white/15 dark:bg-white/5 dark:text-white">
-                                <option value="">— sin sede —</option>
+                                <option value="">Selecciona una sede</option>
                                 @foreach ($sedes as $sede)
-                                    <option value="{{ $sede->id }}" @selected(old('sede_id') == $sede->id)>{{ $sede->nombre }}</option>
+                                    <option value="{{ $sede->id }}" @selected(old('sede_id', auth()->user()->sede_id) == $sede->id)>{{ $sede->nombre }}</option>
                                 @endforeach
                             </select>
+                            <x-input-error for="sede_id" class="mt-2" />
+                            <p class="mt-1 text-xs text-gray-500">Puede ser de otra sede, pero no puede quedar sin sede. No lleva turno: él programa el suyo.</p>
                         </div>
+                        <p class="text-xs text-gray-500" x-show="tipo !== 'jefe_inmediato'">
+                            La sede del trabajador se asigna automáticamente (la de su jefe inmediato).
+                        </p>
                     @endif
 
                     <div class="flex items-center justify-end gap-3">

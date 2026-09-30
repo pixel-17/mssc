@@ -87,7 +87,9 @@ class UsuarioController extends Controller
         $respuesta = redirect()->route('usuarios.index')
             ->with('success', "Usuario {$nuevo->nombre_completo} creado correctamente.");
 
-        $advertencia = $this->advertenciaTurnoSinJefe($nuevo, $request->input('turno'));
+        $advertencia = $request->input('tipo') === 'jefe_inmediato'
+            ? null
+            : $this->advertenciaTurnoSinJefe($nuevo, $request->input('turno'));
 
         return $advertencia ? $respuesta->with('warning', $advertencia) : $respuesta;
     }
