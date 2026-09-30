@@ -13,10 +13,18 @@
     @org-expandir.window="open = true"
     @org-contraer.window="open = false">
 
+    {{-- En modo edición la tarjeta es zona de soltar: soltar NO mueve, pide confirmación (proponerMovimiento). --}}
     <div @class([
         'glass-card p-4 min-w-[18rem] max-w-3xl',
         'opacity-60' => ! $unidad->activo,
-    ])>
+    ])
+        @if ($modoEdicion)
+            :class="sobre === {{ $unidad->id }} && 'ring-2 ring-amber-400'"
+            @dragover.prevent="if (arrastrando) { $event.dataTransfer.dropEffect = 'move'; sobre = {{ $unidad->id }} }"
+            @dragleave="if (! $event.currentTarget.contains($event.relatedTarget)) sobre = null"
+            @drop.prevent="if (arrastrando) { $wire.proponerMovimiento(arrastrando, {{ $unidad->id }}) } arrastrando = null; sobre = null"
+        @endif
+    >
         {{-- Cabecera de la unidad --}}
         <div class="flex items-start gap-2">
             @if ($tieneHijos || $tieneMiembros)
@@ -47,9 +55,13 @@
                 {{-- Jefes de la unidad --}}
                 <div class="mt-3 space-y-1.5">
                     @forelse ($nodo['jefes'] as $jefe)
-                        <div class="flex flex-wrap items-center gap-2 text-sm {{ $jefe->activo ? '' : 'opacity-50' }}">
+                        <div @class([
+                            'org-persona flex flex-wrap items-center gap-2 text-sm',
+                            'opacity-50' => ! $jefe->activo,
+                            'opacity-40' => $nodo['filtro_sede'] && ! in_array($jefe->id, $nodo['jefes_en_filtro'], true),
+                        ])>
                             <span class="inline-flex size-6 items-center justify-center rounded-full bg-tinta-600 text-[10px] font-semibold text-white">{{ mb_strtoupper(mb_substr($jefe->name, 0, 1).mb_substr((string) $jefe->apellido, 0, 1)) }}</span>
-                            <span class="font-medium text-tinta-950 dark:text-white">{{ $jefe->nombre_completo }}</span>
+                            <button type="button" wire:click="verPersona({{ $jefe->id }})" class="font-medium text-tinta-950 hover:underline dark:text-white">{{ $jefe->nombre_completo }}</button>
                             <span class="text-xs text-gray-500 dark:text-tinta-50/60">{{ $jefe->id === $jefePrincipal?->id ? 'Jefe' : 'Jefe de turno' }}</span>
                             @include('livewire.organigrama._chips', ['persona' => $jefe, 'sedeReferencia' => null])
                             @unless ($jefe->activo)<span class="text-[11px] text-red-600">desactivado</span>@endunless
@@ -69,9 +81,15 @@
                 </p>
                 <div class="grid gap-1.5 sm:grid-cols-2">
                     @foreach ($nodo['miembros'] as $m)
-                        <div wire:key="org-m-{{ $m->id }}" class="flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 px-2.5 py-1.5 text-sm dark:bg-white/5 {{ $m->activo ? '' : 'opacity-50' }}">
+                        <div wire:key="org-m-{{ $m->id }}" class="org-persona flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 px-2.5 py-1.5 text-sm dark:bg-white/5 {{ $m->activo ? '' : 'opacity-50' }} {{ $modoEdicion ? 'cursor-grab active:cursor-grabbing' : '' }}"
+                             @if ($modoEdicion)
+                                 draggable="true"
+                                 @dragstart="arrastrando = {{ $m->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $m->id }}')"
+                                 @dragend="arrastrando = null; sobre = null"
+                             @endif
+                        >
                             <span class="inline-block size-2.5 shrink-0 rounded-full bg-emerald-500"></span>
-                            <span class="min-w-0 truncate text-tinta-950 dark:text-white">{{ $m->nombre_completo }}</span>
+                            <button type="button" wire:click="verPersona({{ $m->id }})" class="min-w-0 truncate text-left text-tinta-950 hover:underline dark:text-white">{{ $m->nombre_completo }}</button>
                             @include('livewire.organigrama._chips', ['persona' => $m, 'sedeReferencia' => $sedeJefe])
                             @if ($m->jefesInmediatosAdicionales->isNotEmpty())
                                 <span class="rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100"
