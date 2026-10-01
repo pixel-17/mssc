@@ -143,12 +143,12 @@
                         </p>
                     @endif
 
-                    <div class="flex items-center justify-end gap-3">
+                    <x-admin.barra-flotante>
                         <a href="{{ route('usuarios.index') }}" class="text-sm text-gray-500 hover:text-gray-700">Cancelar</a>
                         <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-tinta-700">
                             Crear
                         </button>
-                    </div>
+                    </x-admin.barra-flotante>
                 </form>
             </div>
         </div>

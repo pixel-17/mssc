@@ -83,10 +83,10 @@
                 </div>
             @endif
 
-            <div class="flex items-center justify-end gap-3">
+            <x-admin.barra-flotante>
                 <a href="{{ route('unidades-organicas.index') }}" class="text-sm text-gray-600 dark:text-gray-400">Cancelar</a>
                 <x-button>Guardar</x-button>
-            </div>
+            </x-admin.barra-flotante>
         </form>
     </div>
 </div>

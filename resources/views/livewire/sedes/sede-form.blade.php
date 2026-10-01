@@ -42,14 +42,14 @@
 
                 <x-admin.campo-checkbox for="activo" wire:model="activo" label="Activa" />
 
-                <div class="flex items-center justify-end gap-3">
+                <x-admin.barra-flotante>
                     <a href="{{ route('sedes.index') }}" class="text-sm text-gray-600 dark:text-gray-400">
                         Cancelar
                     </a>
                     <x-button>
                         {{ $sede ? 'Guardar cambios' : 'Crear sede' }}
                     </x-button>
-                </div>
+                </x-admin.barra-flotante>
             </form>
         </div>
     </div>

@@ -4,6 +4,7 @@ namespace App\Livewire\Organigrama;
 
 use App\Actions\Organigrama\EliminarUnidadOrganicaAction;
 use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
+use App\Actions\Organigrama\JefaturaUnidadService;
 use App\Exceptions\UsuarioException;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
@@ -41,6 +42,9 @@ class UnidadModal extends Component
 
     public bool $activo = true;
 
+    /** Al cambiar de jefe: pasarlo a esta unidad (su superior pasa a ser el de la unidad padre). */
+    public bool $pasarJefe = true;
+
     /** @var list<int|null> */
     public array $jefesAdicionales = [];
 
@@ -50,7 +54,7 @@ class UnidadModal extends Component
     public function abrir(?int $id = null, ?int $parentId = null): void
     {
         $this->autorizarAdmin();
-        $this->reset(['nombre', 'tipo', 'parentId', 'jefeId', 'jefesAdicionales', 'error']);
+        $this->reset(['nombre', 'tipo', 'parentId', 'jefeId', 'jefesAdicionales', 'error', 'pasarJefe']);
         $this->activo = true;
         $this->unidadId = null;
         $this->resetValidation();
@@ -95,6 +99,7 @@ class UnidadModal extends Component
             'parentId' => ['nullable', 'exists:unidad_organicas,id'],
             'jefeId' => ['nullable', 'exists:users,id'],
             'activo' => ['boolean'],
+            'pasarJefe' => ['boolean'],
             'jefesAdicionales.*' => ['nullable', 'exists:users,id'],
         ];
     }
@@ -120,7 +125,7 @@ class UnidadModal extends Component
                 'parent_id' => $datos['parentId'],
                 'jefe_id' => $datos['jefeId'],
                 'activo' => $datos['activo'],
-            ], $unidad ? ($datos['jefesAdicionales'] ?? []) : null);
+            ], $unidad ? ($datos['jefesAdicionales'] ?? []) : null, (bool) $datos['pasarJefe']);
         } catch (UsuarioException $e) {
             $this->error = $e->getMessage();
 
@@ -159,7 +164,7 @@ class UnidadModal extends Component
     public function render(): View
     {
         if (! $this->abierto) {
-            return view('livewire.organigrama.unidad-modal', ['padres' => [], 'jefes' => [], 'resumen' => null, 'contexto' => null]);
+            return view('livewire.organigrama.unidad-modal', ['padres' => [], 'jefes' => [], 'resumen' => null, 'contexto' => null, 'vista' => null]);
         }
 
         $unidad = $this->unidadId ? UnidadOrganica::find($this->unidadId) : null;
@@ -178,6 +183,8 @@ class UnidadModal extends Component
             ->all();
 
         return view('livewire.organigrama.unidad-modal', [
+            // Qué cambia al guardar (jefe, padre, personas) y por qué se rechazaría, antes de pulsar Guardar.
+            'vista' => app(JefaturaUnidadService::class)->previsualizar($unidad, $this->jefeId, $this->parentId, $this->pasarJefe),
             'padres' => $padres,
             'jefes' => $jefes,
             // Para avisar de antemano por qué no se puede eliminar.

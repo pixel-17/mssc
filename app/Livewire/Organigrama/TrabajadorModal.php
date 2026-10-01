@@ -4,6 +4,7 @@ namespace App\Livewire\Organigrama;
 
 use App\Actions\Organigrama\MoverTrabajadorAction;
 use App\Actions\Usuario\AsignarJefeAdicionalAction;
+use App\Actions\Usuario\CambiarEstadoUsuarioAction;
 use App\Actions\Usuario\DesasignarJefeAdicionalAction;
 use App\Exceptions\PapeletaException;
 use App\Exceptions\UsuarioException;
@@ -19,6 +20,11 @@ use Livewire\Component;
 /**
  * Edición rápida de un trabajador dentro del organigrama (solo admin):
  * unidad, sede, estado activo y jefes inmediatos adicionales.
+ *
+ * - Activar/desactivar pasa por CambiarEstadoUsuarioAction (mismas reglas
+ *   que la lista de Usuarios: no al único RR. HH., no a un jefe con
+ *   personas a cargo, se cierran sus tokens). Si no se puede desactivar,
+ *   no se guarda NADA de lo demás.
  *
  * - Cambiar de unidad pasa por MoverTrabajadorAction (mismas reglas e
  *   historial que arrastrar). Aquí NO se cambia la sede ni se quitan
@@ -70,7 +76,7 @@ class TrabajadorModal extends Component
         $this->abierto = false;
     }
 
-    public function guardar(MoverTrabajadorAction $mover): void
+    public function guardar(MoverTrabajadorAction $mover, CambiarEstadoUsuarioAction $estado): void
     {
         $this->autorizarAdmin();
         $this->error = $this->ok = null;
@@ -91,11 +97,24 @@ class TrabajadorModal extends Component
 
         $actor = auth()->user();
 
+        // Validar la desactivación ANTES de tocar nada: si se rechaza, no queda a medias.
+        if ($t->activo && ! $this->activo) {
+            $motivo = $estado->motivoParaNoDesactivar($actor, $t);
+
+            if ($motivo !== null) {
+                $this->error = $motivo;
+
+                return;
+            }
+        }
+
         try {
             // Primero la unidad: es la que puede rechazarse por reglas de negocio.
             if ($this->unidadId !== null && (int) $this->unidadId !== (int) $t->unidad_organica_id) {
                 if ($t->unidad_organica_id === null) {
-                    // Sin unidad de origen no hay "movimiento": se asigna directo.
+                    // Sin unidad de origen no hay "movimiento": se asigna directo,
+                    // pero igual el destino debe tener jefe inmediato.
+                    $mover->exigirJefeInmediato(UnidadOrganica::findOrFail($this->unidadId));
                     $t->unidad_organica_id = $this->unidadId;
                     $t->save(); // UserObserver recalcula jefe inmediato y de área.
                 } else {
@@ -109,7 +128,19 @@ class TrabajadorModal extends Component
             return;
         }
 
-        $t->forceFill(['sede_id' => $this->sedeId, 'activo' => $this->activo])->save();
+        $t->forceFill(['sede_id' => $this->sedeId])->save();
+
+        try {
+            if ($t->activo && ! $this->activo) {
+                $estado->desactivar($actor, $t);
+            } elseif (! $t->activo && $this->activo) {
+                $estado->reactivar($actor, $t);
+            }
+        } catch (UsuarioException $e) {
+            $this->error = $e->getMessage();
+
+            return;
+        }
 
         $this->abierto = false;
         $this->dispatch('org-actualizado', mensaje: 'Trabajador actualizado.');

@@ -5,17 +5,27 @@
     $tieneHijos = $nodo['hijos']->isNotEmpty();
     $tieneMiembros = $nodo['miembros']->isNotEmpty();
     $sedeJefe = $jefePrincipal?->sede_id;
+
+    // Nivel en el árbol (0 = raíz): decide el tono de la tarjeta (degradé de una sola gama).
+    $nivel = $nivel ?? 0;
+
+    // Vista inicial "solo hasta las áreas": la raíz abre para mostrar sus sub-unidades; las demás
+    // abren solo si tienen sub-áreas debajo. Las oficinas (sin sub-unidades) y su gente quedan cerradas.
+    $tieneSubareas = $nodo['hijos']->contains(fn ($h) => $h['hijos']->isNotEmpty());
+    $abiertoInicial = $nivel === 0 ? $tieneHijos : $tieneSubareas;
 @endphp
 
 <li wire:key="org-{{ $unidad->id }}"
-    x-data="{ open: true }"
+    x-data="{ open: {{ $abiertoInicial ? 'true' : 'false' }} }"
     @if ($forzarAbierto) x-init="open = true" @endif
     @org-expandir.window="open = true"
-    @org-contraer.window="open = false">
+    @org-contraer.window="open = false"
+    @org-areas.window="open = {{ $abiertoInicial ? 'true' : 'false' }}">
 
     {{-- En modo edición la tarjeta es zona de soltar: soltar NO mueve, pide confirmación (proponerMovimiento). --}}
     <div @class([
-        'group glass-card p-4 min-w-[18rem] max-w-3xl',
+        'group glass-card org-nivel p-4 min-w-[18rem] max-w-3xl',
+        'org-n'.min($nivel, 5),
         'opacity-60' => ! $unidad->activo,
     ])
         @if ($modoEdicion)
@@ -70,11 +80,21 @@
                 {{-- Jefes de la unidad --}}
                 <div class="mt-3 space-y-1.5">
                     @forelse ($nodo['jefes'] as $jefe)
+                        {{-- Solo el jefe inmediato de una unidad hoja se arrastra (y solo el admin, en modo edición). --}}
+                        @php($puedeArrastrarJefe = $modoEdicion && $esAdmin && ! $tieneHijos && $jefe->id === $jefePrincipal?->id)
                         <div @class([
                             'org-persona flex flex-wrap items-center gap-2 text-sm',
                             'opacity-50' => ! $jefe->activo,
                             'opacity-40' => $nodo['filtro_sede'] && ! in_array($jefe->id, $nodo['jefes_en_filtro'], true),
-                        ])>
+                            'cursor-grab active:cursor-grabbing' => $puedeArrastrarJefe,
+                        ])
+                             @if ($puedeArrastrarJefe)
+                                 draggable="true"
+                                 title="Arrástralo sobre otra área para mover su unidad con su gente"
+                                 @dragstart="arrastrando = {{ $jefe->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $jefe->id }}')"
+                                 @dragend="arrastrando = null; sobre = null"
+                             @endif
+                        >
                             <span class="inline-flex size-6 items-center justify-center rounded-full bg-tinta-600 text-[10px] font-semibold text-white">{{ mb_strtoupper(mb_substr($jefe->name, 0, 1).mb_substr((string) $jefe->apellido, 0, 1)) }}</span>
                             <button type="button" wire:click="verPersona({{ $jefe->id }})" class="font-medium text-tinta-950 hover:underline dark:text-white">{{ $jefe->nombre_completo }}</button>
                             <span class="text-xs text-gray-500 dark:text-tinta-50/60">{{ $jefe->id === $jefePrincipal?->id ? 'Jefe' : 'Jefe de turno' }}</span>
@@ -130,7 +150,7 @@
     @if ($tieneHijos)
         <ul x-show="open" x-collapse>
             @foreach ($nodo['hijos'] as $hijo)
-                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion])
+                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => $nivel + 1])
             @endforeach
         </ul>
     @endif

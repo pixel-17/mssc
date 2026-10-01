@@ -12,6 +12,20 @@
         .org-tree ul > li:last-child::before { bottom: auto; height: 2.1rem; }
         .org-tree ul > li::after { content: ''; position: absolute; left: 0; top: 2.1rem; width: 1.3rem; border-top: 2px solid var(--org-line); }
         .org-editando .org-persona { outline: 1px dashed #f59e0b; outline-offset: 1px; }
+        /* Degradé de UNA sola gama (tinta): cuanto más hondo el nivel, más claro. Borde izquierdo + velo de fondo. */
+        .org-nivel { border-left: 5px solid var(--org-tono); background-image: linear-gradient(90deg, var(--org-velo), transparent 55%); }
+        .org-n0 { --org-tono: #223437; --org-velo: rgba(34, 52, 55, .16); }
+        .org-n1 { --org-tono: #324e52; --org-velo: rgba(50, 78, 82, .13); }
+        .org-n2 { --org-tono: #436164; --org-velo: rgba(67, 97, 100, .11); }
+        .org-n3 { --org-tono: #647d7d; --org-velo: rgba(100, 125, 125, .10); }
+        .org-n4 { --org-tono: #98adab; --org-velo: rgba(152, 173, 171, .12); }
+        .org-n5 { --org-tono: #c3d0ce; --org-velo: rgba(195, 208, 206, .16); }
+        .dark .org-n0 { --org-tono: #c3d0ce; --org-velo: rgba(195, 208, 206, .16); }
+        .dark .org-n1 { --org-tono: #98adab; --org-velo: rgba(152, 173, 171, .13); }
+        .dark .org-n2 { --org-tono: #647d7d; --org-velo: rgba(100, 125, 125, .12); }
+        .dark .org-n3 { --org-tono: #436164; --org-velo: rgba(67, 97, 100, .14); }
+        .dark .org-n4 { --org-tono: #324e52; --org-velo: rgba(50, 78, 82, .16); }
+        .dark .org-n5 { --org-tono: #293f43; --org-velo: rgba(41, 63, 67, .18); }
         .org-tree > ul { margin-left: 0; }
         .org-tree > ul > li { padding-left: 0; }
         .org-tree > ul > li::before, .org-tree > ul > li::after { display: none; }
@@ -48,6 +62,7 @@
                     </div>
                 </div>
             @endif
+            <button type="button" class="btn-secondary text-xs" @click="todos = null; $dispatch('org-areas')">Solo áreas</button>
             <button type="button" class="btn-secondary text-xs" @click="todos = true; $dispatch('org-expandir')">Expandir todo</button>
             <button type="button" class="btn-secondary text-xs" @click="todos = false; $dispatch('org-contraer')">Contraer todo</button>
         </div>
@@ -58,7 +73,7 @@
             <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
             <strong>Modo edición</strong>
             <span class="text-amber-800/80 dark:text-amber-200/80">
-                Arrastra trabajadores entre unidades (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
+                Arrastra trabajadores a una unidad con jefe inmediato{{ $esAdmin ? '; arrastra un jefe inmediato sobre un área con jefe de área para mover su unidad con su gente' : '' }} (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
             </span>
         </div>
     @endif
@@ -122,6 +137,14 @@
         </label>
 
         <div class="ms-auto flex flex-wrap items-center gap-3 pb-2 text-xs text-gray-600 dark:text-tinta-50/70">
+            <span class="inline-flex items-center gap-1" title="Cada nivel del organigrama tiene un tono más claro que el anterior">
+                Nivel
+                <span class="inline-flex overflow-hidden rounded">
+                    @foreach (['#223437', '#324e52', '#436164', '#647d7d', '#98adab', '#c3d0ce'] as $tono)
+                        <span class="inline-block h-2.5 w-3" style="background: {{ $tono }}"></span>
+                    @endforeach
+                </span>
+            </span>
             <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-tinta-600"></span> Jefe</span>
             <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-emerald-500"></span> Trabajador</span>
             <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-amber-500"></span> Sede distinta a la de su jefe</span>
@@ -142,7 +165,7 @@
         <div @class(['org-tree overflow-x-auto pb-4', 'org-editando' => $modoEdicion])>
             <ul>
                 @foreach ($raices as $nodo)
-                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion])
+                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => 0])
                 @endforeach
             </ul>
         </div>
@@ -253,6 +276,50 @@
                 <div class="mt-6 flex justify-end gap-2">
                     <button type="button" wire:click="cancelarMovimiento" class="btn-secondary text-sm">Cancelar</button>
                     <button type="button" wire:click="confirmarMovimiento" wire:loading.attr="disabled" class="btn-primary text-sm">Confirmar movimiento</button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Confirmación del movimiento de un jefe inmediato a otra área --}}
+    @if ($movimientoJefe)
+        <div class="fixed inset-0 z-50" @keydown.escape.window="$wire.cancelarMovimiento()">
+            <div class="absolute inset-0 bg-black/40" wire:click="cancelarMovimiento" aria-hidden="true"></div>
+
+            <div class="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
+                 role="dialog" aria-modal="true" aria-label="Confirmar movimiento de jefe inmediato">
+                <h2 class="text-lg font-semibold text-tinta-950 dark:text-white">Mover jefe inmediato</h2>
+                <p class="mt-2 text-sm text-gray-700 dark:text-tinta-50/80">
+                    <strong>{{ $movimientoJefe['jefe']->nombre_completo }}</strong> se mueve con su unidad
+                    <strong>{{ $movimientoJefe['unidad']->nombre }}</strong>
+                    ({{ $movimientoJefe['personas'] }} {{ $movimientoJefe['personas'] === 1 ? 'persona activa' : 'personas activas' }})
+                    de <strong>{{ $movimientoJefe['origen']?->nombre ?? 'raíz' }}</strong>
+                    a <strong>{{ $movimientoJefe['destino']->nombre }}</strong>.
+                </p>
+
+                <dl class="mt-4 space-y-3 text-sm">
+                    <div>
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefe de área de toda esa gente</dt>
+                        <dd class="mt-0.5 text-tinta-950 dark:text-white">
+                            {{ $movimientoJefe['jefe_area']['antes']?->nombre_completo ?? 'Sin asignar' }} →
+                            <strong>{{ $movimientoJefe['jefe_area']['despues']?->nombre_completo ?? 'Sin asignar' }}</strong>
+                        </dd>
+                    </div>
+                </dl>
+
+                @if ($movimientoJefe['avisos'] !== [])
+                    <ul class="mt-4 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                        @foreach ($movimientoJefe['avisos'] as $aviso)
+                            <li>{{ $aviso }}</li>
+                        @endforeach
+                    </ul>
+                @endif
+
+                <p class="mt-3 text-xs text-gray-500 dark:text-tinta-50/60">Las papeletas ya creadas conservan su jefe. Para revertirlo, arrástralo de nuevo al área anterior.</p>
+
+                <div class="mt-6 flex justify-end gap-2">
+                    <button type="button" wire:click="cancelarMovimiento" class="btn-secondary text-sm">Cancelar</button>
+                    <button type="button" wire:click="confirmarMovimientoJefe" wire:loading.attr="disabled" class="btn-primary text-sm">Confirmar movimiento</button>
                 </div>
             </div>
         </div>

@@ -29,7 +29,7 @@
                 </x-admin.campo>
 
                 <x-admin.campo label="Depende de" for="org-unidad-padre">
-                    <x-organigrama.combobox id="org-unidad-padre" model="parentId" :options="$padres" placeholder="Buscar unidad…" vacio="— Unidad raíz —" />
+                    <x-organigrama.combobox id="org-unidad-padre" model="parentId" :options="$padres" :live="true" placeholder="Buscar unidad…" vacio="— Unidad raíz —" />
                 </x-admin.campo>
             </section>
 
@@ -38,8 +38,48 @@
                 <h3 class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefatura</h3>
 
                 <x-admin.campo label="Jefe inmediato de la unidad" for="org-unidad-jefe" ayuda="Es el jefe inmediato de todos sus trabajadores.">
-                    <x-organigrama.combobox id="org-unidad-jefe" model="jefeId" :options="$jefes" placeholder="Buscar por nombre…" vacio="— Sin jefe —" />
+                    <x-organigrama.combobox id="org-unidad-jefe" model="jefeId" :options="$jefes" :live="true" placeholder="Buscar por nombre…" vacio="— Sin jefe —" />
                 </x-admin.campo>
+
+
+                {{-- Qué cambia al guardar: jefe, padre y personas afectadas (solo al editar una unidad existente) --}}
+                @if ($vista && ($vista['jefe']['cambia'] || $vista['padre']['cambia'] || $vista['error']))
+                    <div class="space-y-2" wire:key="org-unidad-vista">
+                        @if ($vista['error'])
+                            <div class="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-200" role="alert">
+                                <span class="mt-1 inline-block size-2 shrink-0 rounded-full bg-red-500"></span>
+                                <span>{{ $vista['error'] }}</span>
+                            </div>
+                        @endif
+
+                        @if ($vista['jefe']['cambia'])
+                            <div class="rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+                                Jefe de la unidad:
+                                <strong>{{ $vista['jefe']['antes']?->nombre_completo ?? 'nadie' }}</strong>
+                                →
+                                <strong>{{ $vista['jefe']['despues']?->nombre_completo ?? 'nadie' }}</strong>.
+                            </div>
+                        @endif
+
+                        @if ($vista['padre']['cambia'])
+                            <div class="rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+                                Depende de:
+                                <strong>{{ $vista['padre']['antes']?->nombre ?? 'ninguna (unidad raíz)' }}</strong>
+                                →
+                                <strong>{{ $vista['padre']['despues']?->nombre ?? 'ninguna (unidad raíz)' }}</strong>.
+                                Su jefe de área pasa a ser {{ $vista['padre']['despues']?->jefe?->nombre_completo ?? 'nadie' }}.
+                            </div>
+                        @endif
+
+                        @foreach ($vista['avisos'] as $aviso)
+                            <p class="text-xs text-gray-600 dark:text-tinta-50/70">{{ $aviso }}</p>
+                        @endforeach
+
+                        @if ($vista['jefe']['fuera_de_la_unidad'])
+                            <x-organigrama.switch model="pasarJefe" label="Pasarlo a esta unidad" ayuda="Recomendado: su superior pasa a ser el jefe de la unidad padre, no el de la unidad donde estaba." />
+                        @endif
+                    </div>
+                @endif
 
                 @if ($unidadId)
                     <div class="space-y-2">

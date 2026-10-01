@@ -1,4 +1,4 @@
-@props(['model', 'options' => [], 'placeholder' => 'Buscar…', 'vacio' => 'Sin selección', 'limpiable' => true, 'id' => null])
+@props(['model', 'options' => [], 'placeholder' => 'Buscar…', 'vacio' => 'Sin selección', 'limpiable' => true, 'id' => null, 'live' => false])
 
 {{--
     Select con buscador (reemplaza al <select> nativo cuando la lista es larga:
@@ -10,7 +10,7 @@
 --}}
 <div x-data="{
         open: false, q: '', i: 0,
-        value: $wire.$entangle('{{ $model }}'),
+        value: $wire.$entangle('{{ $model }}'){{ $live ? '.live' : '' }},
         options: @js($options),
         get actual() { return this.options.find(o => String(o.id) === String(this.value)) },
         get filtradas() {

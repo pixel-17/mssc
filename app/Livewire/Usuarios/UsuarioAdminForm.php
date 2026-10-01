@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Usuarios;
 
+use App\Actions\Usuario\CambiarEstadoUsuarioAction;
 use App\Models\ConfiguracionTurno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -207,6 +208,17 @@ class UsuarioAdminForm extends Component
             return;
         }
 
+        // Mismas reglas que desactivar desde la lista o el organigrama (jefe con personas a cargo, etc.).
+        if ($this->usuario?->activo && ! $datos['activo']) {
+            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+
+            if ($motivo !== null) {
+                $this->addError('activo', $motivo);
+
+                return;
+            }
+        }
+
         $atributos = [
             'name' => $datos['name'],
             'apellido' => $datos['apellido'],
@@ -228,6 +240,10 @@ class UsuarioAdminForm extends Component
                 }
 
                 $this->usuario->update($atributos);
+
+                if (! $datos['activo']) {
+                    $this->usuario->tokens()->delete();
+                }
             } else {
                 // Alta nueva: la contraseña inicial siempre es el DNI,
                 // nunca lo que se haya escrito en el campo (que ni

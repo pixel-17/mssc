@@ -26,8 +26,10 @@ use Illuminate\Support\Facades\DB;
  * - Régimen: todos los de una unidad comparten el régimen de su jefe
  *   (ver UnidadOrganica::regimen()); no se mueve a un 276 a una unidad
  *   728 ni al revés. Una unidad sin jefe todavía no define régimen.
+ * - La unidad destino debe tener un jefe inmediato activo (jefe_id).
  * - Quien encabeza una unidad (jefe_id o jefes_turno) no se mueve
- *   desde aquí: primero hay que cambiar la jefatura en la unidad.
+ *   desde aquí: un jefe inmediato se mueve entre áreas con
+ *   MoverJefeInmediatoAction; para cambiar la jefatura, desde la unidad.
  *
  * El movimiento cambia `unidad_organica_id`. Los jefes (inmediato y de
  * área) los recalcula UserObserver::saving() con
@@ -268,6 +270,22 @@ class MoverTrabajadorAction
         return [$actual, $anterior];
     }
 
+    /**
+     * Nadie entra a una unidad que no tiene jefe inmediato (activo): sus
+     * papeletas no tendrían a quién llegar. Vale también para el admin.
+     *
+     * @throws UsuarioException
+     */
+    public function exigirJefeInmediato(UnidadOrganica $destino): void
+    {
+        if (! $destino->jefe?->activo) {
+            throw new UsuarioException(
+                'La unidad «'.$destino->nombre.'» no tiene un jefe inmediato activo: '
+                .'asígnaselo en la unidad antes de moverle personas.'
+            );
+        }
+    }
+
     private function origenDe(User $trabajador): UnidadOrganica
     {
         return $trabajador->unidadOrganica
@@ -295,6 +313,8 @@ class MoverTrabajadorAction
         if (! $destino->activo) {
             throw new UsuarioException('La unidad de destino está desactivada.');
         }
+
+        $this->exigirJefeInmediato($destino);
 
         if (! $esAdmin) {
             if ($trabajador->hasRole('admin')) {

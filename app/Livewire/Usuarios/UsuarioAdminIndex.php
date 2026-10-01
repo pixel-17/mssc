@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Usuarios;
 
+use App\Actions\Usuario\CambiarEstadoUsuarioAction;
+use App\Exceptions\UsuarioException;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
@@ -53,41 +55,35 @@ class UsuarioAdminIndex extends Component
      * NUNCA se borra un usuario: papeletas.trabajador_id tiene
      * cascadeOnDelete y borrarlo se llevaría su historial de papeletas,
      * retornos y sustentos (registro de RR. HH. y de planilla). Se
-     * desactiva; EnsureUsuarioActivo y el login ya lo dejan afuera.
+     * desactiva; las reglas están en CambiarEstadoUsuarioAction, la misma
+     * que usan el formulario de edición y el organigrama.
      */
-    public function desactivar(User $usuario): void
+    public function desactivar(User $usuario, CambiarEstadoUsuarioAction $estado): void
     {
         $this->autorizarAdmin();
 
-        if ($usuario->is(auth()->user())) { // evita quedarse sin ningún admin activo
-            session()->flash('error', 'No puedes desactivar tu propia cuenta.');
+        try {
+            $estado->desactivar(auth()->user(), $usuario);
+        } catch (UsuarioException $e) {
+            session()->flash('error', $e->getMessage());
 
             return;
         }
-
-        if ($usuario->esUnicoRrhhActivo()) {
-            session()->flash('error', 'No puedes desactivar al único usuario de RR. HH. activo: sin él, toda papeleta aprobada por el jefe se autorizaría sola. Designa o reactiva primero a otra persona con rol RR. HH.');
-
-            return;
-        }
-
-        if ($usuario->esJefeInmediatoDeAlgunTurno()) {
-            session()->flash('error', 'No puedes desactivar a este usuario: es jefe inmediato de un turno (MAÑANA/TARDE/NOCHE) en su unidad. Reasigna primero ese turno a otro jefe.');
-
-            return;
-        }
-
-        $usuario->forceFill(['activo' => false])->save();
-        $usuario->tokens()->delete();
 
         session()->flash('mensaje', 'Usuario desactivado: ya no podrá iniciar sesión.');
     }
 
-    public function reactivar(User $usuario): void
+    public function reactivar(User $usuario, CambiarEstadoUsuarioAction $estado): void
     {
         $this->autorizarAdmin();
 
-        $usuario->forceFill(['activo' => true])->save();
+        try {
+            $estado->reactivar(auth()->user(), $usuario);
+        } catch (UsuarioException $e) {
+            session()->flash('error', $e->getMessage());
+
+            return;
+        }
 
         session()->flash('mensaje', 'Usuario reactivado.');
     }

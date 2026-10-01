@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Organigrama;
 
+use App\Actions\Organigrama\MoverJefeInmediatoAction;
 use App\Actions\Organigrama\MoverTrabajadorAction;
 use App\Exceptions\UsuarioException;
 use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
@@ -29,6 +30,8 @@ use Livewire\Component;
  *   trabajador a otra unidad. Soltarlo NO mueve nada: abre una
  *   confirmación con lo que cambia (`$propuesta`). Todas las reglas las
  *   valida MoverTrabajadorAction en el servidor; aquí solo se orquesta.
+ * - Un jefe inmediato (admin) se arrastra sobre su nueva área: se mueve su
+ *   unidad con su gente (MoverJefeInmediatoAction), también con confirmación.
  * - Historial: los últimos movimientos (alcance de quien mira), con
  *   opción de deshacer.
  *
@@ -71,6 +74,15 @@ class OrganigramaArbol extends Component
      */
     public ?array $propuesta = null;
 
+    /**
+     * Movimiento de un JEFE INMEDIATO a otra área, pendiente de confirmar, o
+     * null. Solo ids (vienen del navegador): MoverJefeInmediatoAction lo
+     * revalida entero. `origen` = padre actual de su unidad (0 = raíz).
+     *
+     * @var array{jefe: int, origen: int, destino: int}|null
+     */
+    public ?array $propuestaJefe = null;
+
     public ?string $mensajeOk = null;
 
     public ?string $mensajeError = null;
@@ -107,6 +119,7 @@ class OrganigramaArbol extends Component
 
         $this->modoEdicion = ! $this->modoEdicion;
         $this->propuesta = null;
+        $this->propuestaJefe = null;
         $this->mensajeOk = $this->mensajeError = null;
     }
 
@@ -115,6 +128,7 @@ class OrganigramaArbol extends Component
     {
         $usuario = $this->autorizar();
         $this->propuesta = null;
+        $this->propuestaJefe = null;
         $this->mensajeOk = $this->mensajeError = null;
 
         if (! $this->modoEdicion) {
@@ -126,6 +140,13 @@ class OrganigramaArbol extends Component
 
         if (! $trabajador || ! $destino) {
             $this->mensajeError = 'No se encontró a la persona o la unidad.';
+
+            return;
+        }
+
+        // Quien encabeza una unidad es un jefe inmediato: otro flujo (se mueve su unidad entera).
+        if ($trabajador->unidadesQueEncabeza()->exists()) {
+            $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
 
             return;
         }
@@ -156,6 +177,56 @@ class OrganigramaArbol extends Component
     public function cancelarMovimiento(): void
     {
         $this->propuesta = null;
+        $this->propuestaJefe = null;
+    }
+
+    /** Se soltó a un jefe inmediato sobre un área: valida y pide confirmación. No mueve nada. */
+    private function proponerMovimientoJefe(User $usuario, User $jefe, UnidadOrganica $destino): void
+    {
+        try {
+            $vista = app(MoverJefeInmediatoAction::class)->previsualizar($usuario, $jefe, $destino);
+        } catch (UsuarioException $e) {
+            $this->mensajeError = $e->getMessage();
+
+            return;
+        }
+
+        $this->propuestaJefe = [
+            'jefe' => (int) $jefe->id,
+            'origen' => (int) $vista['unidad']->parent_id,
+            'destino' => (int) $destino->id,
+        ];
+    }
+
+    public function confirmarMovimientoJefe(): void
+    {
+        $usuario = $this->autorizar();
+        $propuesta = $this->propuestaJefe;
+        $this->propuesta = null;
+        $this->propuestaJefe = null;
+        $this->mensajeOk = $this->mensajeError = null;
+
+        if (! $this->modoEdicion || ! is_array($propuesta)) {
+            return;
+        }
+
+        try {
+            $unidad = app(MoverJefeInmediatoAction::class)->ejecutar(
+                $usuario,
+                (int) ($propuesta['jefe'] ?? 0),
+                (int) ($propuesta['destino'] ?? 0),
+                (int) ($propuesta['origen'] ?? 0),
+                true,
+            );
+        } catch (UsuarioException $e) {
+            $this->mensajeError = $e->getMessage();
+
+            return;
+        }
+
+        $unidad->load(['jefe', 'padre']);
+        $this->mensajeOk = '«'.$unidad->nombre.'» ('.($unidad->jefe?->nombre_completo ?? 'sin jefe').') ahora depende de '
+            .($unidad->padre?->nombre ?? '—').'.';
     }
 
     public function confirmarMovimiento(): void
@@ -163,6 +234,7 @@ class OrganigramaArbol extends Component
         $usuario = $this->autorizar();
         $propuesta = $this->propuesta;
         $this->propuesta = null;
+        $this->propuestaJefe = null;
         $this->mensajeOk = $this->mensajeError = null;
 
         if (! $this->modoEdicion || ! is_array($propuesta)) {
@@ -194,6 +266,7 @@ class OrganigramaArbol extends Component
     {
         $usuario = $this->autorizar();
         $this->propuesta = null;
+        $this->propuestaJefe = null;
         $this->mensajeOk = $this->mensajeError = null;
 
         if (! $this->modoEdicion) {
@@ -227,6 +300,7 @@ class OrganigramaArbol extends Component
     {
         $this->autorizar();
         $this->propuesta = null;
+        $this->propuestaJefe = null;
         $this->mensajeError = null;
 
         if ($mensaje !== null) {
@@ -294,6 +368,7 @@ class OrganigramaArbol extends Component
             'conteoSedes' => $conteoSedes,
             'ficha' => $this->fichaDe($unidades, $enAlcance),
             'movimiento' => $this->vistaPreviaMovimiento($usuario),
+            'movimientoJefe' => $this->vistaPreviaMovimientoJefe($usuario),
             'historial' => $this->historialDe($usuario, $enAlcance),
         ]);
     }
@@ -410,6 +485,33 @@ class OrganigramaArbol extends Component
             ->count();
 
         return $vista;
+    }
+
+    /**
+     * Datos de la ventana de confirmación del movimiento de un jefe
+     * inmediato, o null (se recalcula en cada render; si dejó de ser
+     * válido, no se muestra).
+     *
+     * @return array<string, mixed>|null
+     */
+    private function vistaPreviaMovimientoJefe(User $usuario): ?array
+    {
+        if ($this->propuestaJefe === null) {
+            return null;
+        }
+
+        $jefe = User::find((int) ($this->propuestaJefe['jefe'] ?? 0));
+        $destino = UnidadOrganica::find((int) ($this->propuestaJefe['destino'] ?? 0));
+
+        if (! $jefe || ! $destino) {
+            return null;
+        }
+
+        try {
+            return app(MoverJefeInmediatoAction::class)->previsualizar($usuario, $jefe, $destino);
+        } catch (UsuarioException) {
+            return null;
+        }
     }
 
     /**

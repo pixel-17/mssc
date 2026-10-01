@@ -37,10 +37,10 @@
                 <x-admin.campo-checkbox for="esDestinoReclasificacion" wire:model="esDestinoReclasificacion" label="Es el destino de reclasificación (Particular) — debe estar activo en exactamente un motivo" />
             </div>
 
-            <div class="flex items-center justify-end gap-3">
+            <x-admin.barra-flotante>
                 <a href="{{ route('motivos.index') }}" class="text-sm text-gray-600 dark:text-gray-400">Cancelar</a>
                 <x-button>Guardar</x-button>
-            </div>
+            </x-admin.barra-flotante>
         </form>
     </div>
 </div>

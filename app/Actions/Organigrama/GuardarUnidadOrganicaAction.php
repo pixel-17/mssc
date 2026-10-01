@@ -15,16 +15,22 @@ use Illuminate\Support\Facades\DB;
  *
  * Solo admin. UnidadOrganicaObserver recalcula jefe_inmediato_id /
  * jefe_area_id del subárbol cuando cambian jefe_id o parent_id.
+ *
+ * Cambiar el jefe o el padre pasa por JefaturaUnidadService::validar()
+ * (jefe activo, régimen compatible, destino activo). Con $ubicarJefe el
+ * jefe nuevo pasa a pertenecer a la unidad, para que su propio superior
+ * sea el de la unidad padre y no el de la unidad donde estaba antes.
  */
 class GuardarUnidadOrganicaAction
 {
     /**
      * @param  array{nombre:string,tipo:?string,parent_id:?int,jefe_id:?int,activo:bool}  $datos
      * @param  list<int|null>|null  $jefesAdicionales  null = no tocar los existentes
+     * @param  bool  $ubicarJefe  pasar al jefe nuevo a esta unidad si estaba en otra
      *
      * @throws UsuarioException
      */
-    public function ejecutar(User $actor, ?UnidadOrganica $unidad, array $datos, ?array $jefesAdicionales = null): UnidadOrganica
+    public function ejecutar(User $actor, ?UnidadOrganica $unidad, array $datos, ?array $jefesAdicionales = null, bool $ubicarJefe = false): UnidadOrganica
     {
         if (! $actor->hasRole('admin')) {
             throw new UsuarioException('Solo un administrador puede editar unidades orgánicas.');
@@ -39,7 +45,15 @@ class GuardarUnidadOrganicaAction
             }
         }
 
-        return DB::transaction(function () use ($unidad, $datos, $jefesAdicionales) {
+        $jefaturas = app(JefaturaUnidadService::class);
+        $jefaturas->validar(
+            $unidad,
+            isset($datos['jefe_id']) ? (int) $datos['jefe_id'] : null,
+            isset($datos['parent_id']) ? (int) $datos['parent_id'] : null,
+            $ubicarJefe,
+        );
+
+        return DB::transaction(function () use ($unidad, $datos, $jefesAdicionales, $ubicarJefe, $jefaturas) {
             $atributos = [
                 'nombre' => $datos['nombre'],
                 'tipo' => $datos['tipo'],
@@ -54,6 +68,10 @@ class GuardarUnidadOrganicaAction
 
             if ($jefesAdicionales !== null) {
                 $this->sincronizarJefesDeTurno($unidad, $jefesAdicionales);
+            }
+
+            if ($ubicarJefe) {
+                $jefaturas->ubicarJefe($unidad->fresh());
             }
 
             return $unidad;
