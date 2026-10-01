@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Organigrama;
 
+use App\Actions\Organigrama\MoverJefeComoTrabajadorAction;
 use App\Actions\Organigrama\MoverJefeInmediatoAction;
 use App\Actions\Organigrama\MoverTrabajadorAction;
 use App\Exceptions\UsuarioException;
@@ -83,6 +84,32 @@ class OrganigramaArbol extends Component
      */
     public ?array $propuestaJefe = null;
 
+    /**
+     * Cómo se mueve un jefe soltado sobre otra unidad. '' = todavía no eligió
+     * (no se mueve nada hasta que elija): 'trabajador' (entra como trabajador),
+     * 'jefe' (entra como jefe inmediato de esa unidad) o 'unidad' (se mueve su
+     * unidad entera con su gente). Viene del navegador: se revalida.
+     */
+    public string $modoJefe = '';
+
+    /** Jefe actual del destino al que releva el que llega (solo si el destino no tiene lugar libre). */
+    public string|int|null $reemplazaDestino = null;
+
+    /**
+     * Reemplazo elegido por unidad que deja el jefe: unidad_id => user_id.
+     * Lo revalida MoverJefeComoTrabajadorAction.
+     *
+     * @var array<int|string, int|string|null>
+     */
+    public array $reemplazos = [];
+
+    /**
+     * Turno del jefe 728 al pasar a trabajador (los jefes no tienen turno).
+     *
+     * @var array{turno: ?string, fecha_ancla: ?string, dias_trabajo: int|string, dias_descanso: int|string}
+     */
+    public array $turnoJefe = ['turno' => null, 'fecha_ancla' => null, 'dias_trabajo' => 6, 'dias_descanso' => 1];
+
     public ?string $mensajeOk = null;
 
     public ?string $mensajeError = null;
@@ -151,14 +178,30 @@ class OrganigramaArbol extends Component
             return;
         }
 
-        // Soltarlo en su misma unidad no es un movimiento.
+        // Soltarlo en su misma unidad no es un movimiento como trabajador; el admin sí puede
+        // ascenderlo a jefe inmediato de esa unidad.
         if ((int) $trabajador->unidad_organica_id === (int) $destino->id) {
+            if ($usuario->hasRole('admin')) {
+                $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
+            }
+
             return;
         }
 
         try {
             $vista = app(MoverTrabajadorAction::class)->previsualizar($usuario, $trabajador, $destino);
         } catch (UsuarioException $e) {
+            // Como trabajador no entra (p. ej. la unidad no tiene jefe), pero el admin aún puede ponerlo de jefe.
+            if ($usuario->hasRole('admin')) {
+                $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
+
+                if ($this->propuestaJefe !== null) {
+                    $this->mensajeError = null;
+
+                    return;
+                }
+            }
+
             $this->mensajeError = $e->getMessage();
 
             return;
@@ -174,26 +217,82 @@ class OrganigramaArbol extends Component
         ];
     }
 
+    /** Desde la ventana de un trabajador: en vez de moverlo como trabajador, ponerlo de jefe inmediato del destino. */
+    public function ascenderTrabajador(): void
+    {
+        $usuario = $this->autorizar();
+        $propuesta = $this->propuesta;
+
+        if (! $this->modoEdicion || ! is_array($propuesta)) {
+            return;
+        }
+
+        $trabajador = User::find((int) ($propuesta['trabajador'] ?? 0));
+        $destino = UnidadOrganica::find((int) ($propuesta['destino'] ?? 0));
+
+        if (! $trabajador || ! $destino) {
+            return;
+        }
+
+        $this->mensajeOk = $this->mensajeError = null;
+        $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
+
+        if ($this->propuestaJefe !== null) {
+            $this->propuesta = null;
+        }
+    }
+
     public function cancelarMovimiento(): void
     {
         $this->propuesta = null;
         $this->propuestaJefe = null;
     }
 
-    /** Se soltó a un jefe inmediato sobre un área: valida y pide confirmación. No mueve nada. */
+    /**
+     * Se soltó a un jefe (inmediato o de área) sobre una unidad: valida y pide
+     * confirmación. No mueve nada. La ventana deja elegir cómo moverlo (como
+     * trabajador, como jefe inmediato de esa unidad, o su unidad entera) y
+     * solo ofrece las formas que las reglas permiten.
+     */
     private function proponerMovimientoJefe(User $usuario, User $jefe, UnidadOrganica $destino): void
     {
+        $errores = [];
+        $posibles = [];
+        $unidad = null;
+
+        foreach ([MoverJefeComoTrabajadorAction::COMO_TRABAJADOR, MoverJefeComoTrabajadorAction::COMO_JEFE] as $modo) {
+            try {
+                app(MoverJefeComoTrabajadorAction::class)->previsualizar($usuario, $jefe, $destino, $modo);
+                $posibles[] = $modo;
+            } catch (UsuarioException $e) {
+                $errores[] = $e->getMessage();
+            }
+        }
+
         try {
-            $vista = app(MoverJefeInmediatoAction::class)->previsualizar($usuario, $jefe, $destino);
+            $unidad = app(MoverJefeInmediatoAction::class)->previsualizar($usuario, $jefe, $destino);
+            $posibles[] = 'unidad';
         } catch (UsuarioException $e) {
-            $this->mensajeError = $e->getMessage();
+            $errores[] = $e->getMessage();
+        }
+
+        if ($posibles === []) {
+            $this->mensajeError = implode(' ', array_unique($errores));
 
             return;
         }
 
+        // Nunca se elige por él: solo si hay una única forma posible queda marcada.
+        $this->modoJefe = count($posibles) === 1 ? $posibles[0] : '';
+        $this->reemplazos = [];
+        $this->reemplazaDestino = null;
+        $this->turnoJefe = ['turno' => null, 'fecha_ancla' => now()->toDateString(), 'dias_trabajo' => 6, 'dias_descanso' => 1];
+
         $this->propuestaJefe = [
             'jefe' => (int) $jefe->id,
-            'origen' => (int) $vista['unidad']->parent_id,
+            'origen' => (int) ($unidad !== null
+                ? $unidad['unidad']->parent_id
+                : ($jefe->unidadesQueEncabeza()->value('parent_id') ?? 0)),
             'destino' => (int) $destino->id,
         ];
     }
@@ -202,31 +301,77 @@ class OrganigramaArbol extends Component
     {
         $usuario = $this->autorizar();
         $propuesta = $this->propuestaJefe;
-        $this->propuesta = null;
-        $this->propuestaJefe = null;
-        $this->mensajeOk = $this->mensajeError = null;
+        $modo = $this->modoJefe;
+        $reemplazos = $this->reemplazos;
+        $reemplazaDestino = ($this->reemplazaDestino !== null && $this->reemplazaDestino !== '') ? (int) $this->reemplazaDestino : null;
+        $turno = $this->turnoJefe;
 
         if (! $this->modoEdicion || ! is_array($propuesta)) {
             return;
         }
 
+        $persona = User::find((int) ($propuesta['jefe'] ?? 0));
+        $eraJefe = $persona && ($persona->unidadesQueEncabeza()->exists() || $persona->turnosQueEncabeza()->exists());
+
+        $this->mensajeOk = $this->mensajeError = null;
+
+        if (! in_array($modo, ['trabajador', 'jefe', 'unidad'], true)) {
+            $this->mensajeError = 'Elige cómo quieres mover a la persona.';
+
+            return;
+        }
+
+        $this->propuesta = null;
+        $this->propuestaJefe = null;
+
+        if ($modo === 'unidad') {
+            try {
+                $unidad = app(MoverJefeInmediatoAction::class)->ejecutar(
+                    $usuario,
+                    (int) ($propuesta['jefe'] ?? 0),
+                    (int) ($propuesta['destino'] ?? 0),
+                    (int) ($propuesta['origen'] ?? 0),
+                    true,
+                );
+            } catch (UsuarioException $e) {
+                $this->mensajeError = $e->getMessage();
+
+                return;
+            }
+
+            $unidad->load(['jefe', 'padre']);
+            $this->mensajeOk = '«'.$unidad->nombre.'» ('.($unidad->jefe?->nombre_completo ?? 'sin jefe').') ahora depende de '
+                .($unidad->padre?->nombre ?? '—').'.';
+
+            return;
+        }
+
         try {
-            $unidad = app(MoverJefeInmediatoAction::class)->ejecutar(
+            $movimiento = app(MoverJefeComoTrabajadorAction::class)->ejecutar(
                 $usuario,
                 (int) ($propuesta['jefe'] ?? 0),
                 (int) ($propuesta['destino'] ?? 0),
-                (int) ($propuesta['origen'] ?? 0),
+                $reemplazos,
+                $turno,
                 true,
+                $modo,
+                $reemplazaDestino,
             );
         } catch (UsuarioException $e) {
+            // Se vuelve a mostrar la ventana con lo que ya había elegido, para corregirlo.
+            $this->propuestaJefe = $propuesta;
             $this->mensajeError = $e->getMessage();
 
             return;
         }
 
-        $unidad->load(['jefe', 'padre']);
-        $this->mensajeOk = '«'.$unidad->nombre.'» ('.($unidad->jefe?->nombre_completo ?? 'sin jefe').') ahora depende de '
-            .($unidad->padre?->nombre ?? '—').'.';
+        $this->reemplazos = [];
+        $this->reemplazaDestino = null;
+        $movimiento->load(['trabajador', 'unidadAnterior', 'unidadNueva']);
+        $this->mensajeOk = $movimiento->trabajador?->nombre_completo
+            .($modo === 'jefe' ? ' pasó a ser jefe inmediato de ' : ' pasó a ser trabajador de ')
+            .($movimiento->unidadNueva?->nombre ?? '—')
+            .($eraJefe ? '; su unidad anterior conserva a su gente.' : '.');
     }
 
     public function confirmarMovimiento(): void
@@ -507,11 +652,23 @@ class OrganigramaArbol extends Component
             return null;
         }
 
-        try {
-            return app(MoverJefeInmediatoAction::class)->previsualizar($usuario, $jefe, $destino);
-        } catch (UsuarioException) {
-            return null;
+        $vista = ['jefe' => $jefe, 'es_jefe' => $jefe->unidadesQueEncabeza()->exists() || $jefe->turnosQueEncabeza()->exists(), 'destino' => $destino, 'trabajador' => null, 'como_jefe' => null, 'unidad' => null, 'errores' => []];
+
+        foreach (['trabajador' => MoverJefeComoTrabajadorAction::COMO_TRABAJADOR, 'como_jefe' => MoverJefeComoTrabajadorAction::COMO_JEFE] as $clave => $modo) {
+            try {
+                $vista[$clave] = app(MoverJefeComoTrabajadorAction::class)->previsualizar($usuario, $jefe, $destino, $modo);
+            } catch (UsuarioException $e) {
+                $vista['errores'][$clave] = $e->getMessage();
+            }
         }
+
+        try {
+            $vista['unidad'] = app(MoverJefeInmediatoAction::class)->previsualizar($usuario, $jefe, $destino);
+        } catch (UsuarioException $e) {
+            $vista['errores']['unidad'] = $e->getMessage();
+        }
+
+        return $vista['trabajador'] === null && $vista['como_jefe'] === null && $vista['unidad'] === null ? null : $vista;
     }
 
     /**

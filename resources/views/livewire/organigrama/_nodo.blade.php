@@ -80,8 +80,8 @@
                 {{-- Jefes de la unidad --}}
                 <div class="mt-3 space-y-1.5">
                     @forelse ($nodo['jefes'] as $jefe)
-                        {{-- Solo el jefe inmediato de una unidad hoja se arrastra (y solo el admin, en modo edición). --}}
-                        @php($puedeArrastrarJefe = $modoEdicion && $esAdmin && ! $tieneHijos && $jefe->id === $jefePrincipal?->id)
+                        {{-- Se arrastra el jefe titular de la unidad, inmediato o de área (solo el admin, en modo edición). --}}
+                        @php($puedeArrastrarJefe = $modoEdicion && $esAdmin && $jefe->id === $jefePrincipal?->id)
                         <div @class([
                             'org-persona flex flex-wrap items-center gap-2 text-sm',
                             'opacity-50' => ! $jefe->activo,
@@ -90,7 +90,7 @@
                         ])
                              @if ($puedeArrastrarJefe)
                                  draggable="true"
-                                 title="Arrástralo sobre otra área para mover su unidad con su gente"
+                                 title="Arrástralo sobre otra unidad: puedes mover solo a la persona (pasa a trabajador) o su unidad entera"
                                  @dragstart="arrastrando = {{ $jefe->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $jefe->id }}')"
                                  @dragend="arrastrando = null; sobre = null"
                              @endif

@@ -218,6 +218,15 @@
                     <strong>{{ $movimiento['destino']->nombre }}</strong>.
                 </p>
 
+                @if ($esAdmin)
+                    <div class="mt-3 flex flex-wrap gap-2 text-xs" role="group" aria-label="Cómo moverlo">
+                        <span class="rounded-full bg-tinta-600 px-3 py-1 font-medium text-white">Como trabajador</span>
+                        <button type="button" wire:click="ascenderTrabajador" class="rounded-full border border-gray-300 px-3 py-1 font-medium text-tinta-950 hover:bg-gray-50 dark:border-white/20 dark:text-white dark:hover:bg-white/5">
+                            Como jefe inmediato de {{ $movimiento['destino']->nombre }}
+                        </button>
+                    </div>
+                @endif
+
                 <dl class="mt-4 space-y-3 text-sm">
                     @foreach ([['Jefe inmediato', $movimiento['jefe_inmediato']], ['Jefe de área', $movimiento['jefe_area']]] as [$etiqueta, $fila])
                         <div>
@@ -281,45 +290,177 @@
         </div>
     @endif
 
-    {{-- Confirmación del movimiento de un jefe inmediato a otra área --}}
+    {{-- Pantalla de carga mientras se confirma cualquier movimiento --}}
+    <div wire:loading.flex wire:target="confirmarMovimiento,confirmarMovimientoJefe,deshacerMovimiento"
+         class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50" role="status" aria-live="polite">
+        <div class="flex items-center gap-3 rounded-2xl bg-white px-6 py-4 text-sm font-medium text-tinta-950 shadow-xl dark:bg-gray-900 dark:text-white">
+            <svg class="size-5 animate-spin text-tinta-600" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" class="opacity-25"/>
+                <path d="M4 12a8 8 0 018-8" stroke="currentColor" stroke-width="4" stroke-linecap="round" class="opacity-75"/>
+            </svg>
+            Moviendo y recalculando jefes…
+        </div>
+    </div>
+
+    {{-- Movimiento de un jefe (inmediato o de área): como trabajador, como jefe inmediato de la otra unidad, o su unidad entera --}}
     @if ($movimientoJefe)
+        @php($mt = $movimientoJefe['trabajador'])
+        @php($mj = $movimientoJefe['como_jefe'])
+        @php($mu = $movimientoJefe['unidad'])
+        @php($base = $mt ?? $mj)
         <div class="fixed inset-0 z-50" @keydown.escape.window="$wire.cancelarMovimiento()">
             <div class="absolute inset-0 bg-black/40" wire:click="cancelarMovimiento" aria-hidden="true"></div>
 
-            <div class="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
-                 role="dialog" aria-modal="true" aria-label="Confirmar movimiento de jefe inmediato">
-                <h2 class="text-lg font-semibold text-tinta-950 dark:text-white">Mover jefe inmediato</h2>
-                <p class="mt-2 text-sm text-gray-700 dark:text-tinta-50/80">
-                    <strong>{{ $movimientoJefe['jefe']->nombre_completo }}</strong> se mueve con su unidad
-                    <strong>{{ $movimientoJefe['unidad']->nombre }}</strong>
-                    ({{ $movimientoJefe['personas'] }} {{ $movimientoJefe['personas'] === 1 ? 'persona activa' : 'personas activas' }})
-                    de <strong>{{ $movimientoJefe['origen']?->nombre ?? 'raíz' }}</strong>
-                    a <strong>{{ $movimientoJefe['destino']->nombre }}</strong>.
-                </p>
+            <div class="absolute left-1/2 top-1/2 max-h-[90vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
+                 role="dialog" aria-modal="true" aria-label="Mover jefe">
+                <h2 class="text-lg font-semibold text-tinta-950 dark:text-white">{{ $movimientoJefe['es_jefe'] ? 'Mover a' : 'Hacer jefe inmediato a' }} {{ $movimientoJefe['jefe']->nombre_completo }}</h2>
+                <p class="mt-1 text-sm text-gray-700 dark:text-tinta-50/80">Destino: <strong>{{ $movimientoJefe['destino']->nombre }}</strong></p>
 
-                <dl class="mt-4 space-y-3 text-sm">
-                    <div>
-                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefe de área de toda esa gente</dt>
-                        <dd class="mt-0.5 text-tinta-950 dark:text-white">
-                            {{ $movimientoJefe['jefe_area']['antes']?->nombre_completo ?? 'Sin asignar' }} →
-                            <strong>{{ $movimientoJefe['jefe_area']['despues']?->nombre_completo ?? 'Sin asignar' }}</strong>
-                        </dd>
-                    </div>
-                </dl>
-
-                @if ($movimientoJefe['avisos'] !== [])
-                    <ul class="mt-4 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
-                        @foreach ($movimientoJefe['avisos'] as $aviso)
-                            <li>{{ $aviso }}</li>
-                        @endforeach
-                    </ul>
+                @if ($mensajeError)
+                    <p class="mt-3 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-800 dark:bg-red-500/10 dark:text-red-200" role="alert">{{ $mensajeError }}</p>
                 @endif
 
-                <p class="mt-3 text-xs text-gray-500 dark:text-tinta-50/60">Las papeletas ya creadas conservan su jefe. Para revertirlo, arrástralo de nuevo al área anterior.</p>
+                <fieldset class="mt-4 space-y-2 text-sm">
+                    <legend class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">¿Cómo quieres moverlo?</legend>
+
+                    @if ($movimientoJefe['es_jefe'])
+                    <label class="flex items-start gap-2 {{ $mt ? '' : 'opacity-50' }}">
+                        <input type="radio" wire:model.live="modoJefe" value="trabajador" class="mt-1" @disabled(! $mt)>
+                        <span><strong>Como trabajador.</strong> Pasa a ser trabajador de {{ $movimientoJefe['destino']->nombre }}; su unidad se queda con su gente y un reemplazo.
+                            @unless ($mt)<span class="block text-xs text-gray-500">No disponible: {{ $movimientoJefe['errores']['trabajador'] ?? '' }}</span>@endunless</span>
+                    </label>
+
+                    @endif
+
+                    <label class="flex items-start gap-2 {{ $mj ? '' : 'opacity-50' }}">
+                        <input type="radio" wire:model.live="modoJefe" value="jefe" class="mt-1" @disabled(! $mj)>
+                        <span><strong>Como jefe inmediato de {{ $movimientoJefe['destino']->nombre }}.</strong> {{ $movimientoJefe['es_jefe'] ? 'Pasa a esa oficina como jefe; su unidad se queda con su gente y un reemplazo.' : 'Pasa a encabezar esa oficina.' }} Conserva su sede.
+                            @unless ($mj)<span class="block text-xs text-gray-500">No disponible: {{ $movimientoJefe['errores']['como_jefe'] ?? '' }}</span>@endunless</span>
+                    </label>
+
+                    @if ($movimientoJefe['es_jefe'])
+                    <label class="flex items-start gap-2 {{ $mu ? '' : 'opacity-50' }}">
+                        <input type="radio" wire:model.live="modoJefe" value="unidad" class="mt-1" @disabled(! $mu)>
+                        <span><strong>La unidad completa.</strong> Se mueve con su jefe y todo su personal.
+                            @unless ($mu)<span class="block text-xs text-gray-500">No disponible: {{ $movimientoJefe['errores']['unidad'] ?? '' }}</span>@endunless</span>
+                    </label>
+                    @endif
+                </fieldset>
+
+                @if (in_array($modoJefe, ['trabajador', 'jefe'], true) && ($modoJefe === 'trabajador' ? $mt : $mj))
+                    @php($mp = $modoJefe === 'trabajador' ? $mt : $mj)
+
+                    {{-- Reemplazo obligatorio por cada unidad que deja --}}
+                    @foreach ($mp['unidades'] as $fila)
+                        <div class="mt-4 rounded-lg border border-gray-200 p-3 text-sm dark:border-white/10" wire:key="reemplazo-{{ $fila['unidad']->id }}">
+                            <p class="text-tinta-950 dark:text-white">
+                                Deja de encabezar <strong>{{ $fila['unidad']->nombre }}</strong>
+                                ({{ $fila['es_area'] ? $fila['subunidades'].' sub-unidades · ' : '' }}{{ $fila['personas'] }} {{ $fila['personas'] === 1 ? 'persona activa' : 'personas activas' }}).
+                            </p>
+
+                            @if ($fila['requiere_reemplazo'])
+                                <label class="mt-2 block text-xs font-semibold text-gray-600 dark:text-tinta-50/70" for="reemplazo-{{ $fila['unidad']->id }}">
+                                    {{ $fila['es_area'] ? 'Nuevo jefe de área (obligatorio)' : 'Nuevo jefe inmediato (obligatorio)' }}
+                                </label>
+                                <select id="reemplazo-{{ $fila['unidad']->id }}" wire:model="reemplazos.{{ $fila['unidad']->id }}" class="mt-1 w-full rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
+                                    <option value="">Elige a su reemplazo…</option>
+                                    @foreach ($fila['candidatos'] as $c)
+                                        <option value="{{ $c->id }}">{{ $c->nombre_completo }}</option>
+                                    @endforeach
+                                </select>
+                                @if ($fila['candidatos']->isEmpty())
+                                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Nadie de la unidad puede relevarlo ahora (régimen distinto, o ya encabeza otra unidad). Cámbialo desde la ficha de la unidad.</p>
+                                @endif
+                            @elseif ($fila['promueve'])
+                                <p class="mt-2 text-xs text-gray-600 dark:text-tinta-50/70">Lo releva <strong>{{ $fila['promueve']->nombre_completo }}</strong>, que ya es jefe de turno de la unidad.</p>
+                            @endif
+                        </div>
+                    @endforeach
+
+                    @if ($modoJefe === 'jefe')
+                        <div class="mt-4 rounded-lg border border-gray-200 p-3 text-sm dark:border-white/10">
+                            <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefes de {{ $movimientoJefe['destino']->nombre }}</p>
+                            <p class="mt-1 text-tinta-950 dark:text-white">
+                                {{ $mp['jefes_destino']->isEmpty() ? 'Todavía no tiene jefe: quedará como su jefe inmediato.' : $mp['jefes_destino']->pluck('nombre_completo')->join(', ') }}
+                            </p>
+
+                            @if ($mp['requiere_reemplazar_destino'])
+                                <label class="mt-2 block text-xs font-semibold text-gray-600 dark:text-tinta-50/70" for="reemplaza-destino">
+                                    {{ $mp['jefes_destino']->count() > 1 ? 'No hay lugar libre: ¿a cuál jefe releva? (obligatorio)' : 'Solo admite un jefe: releva a' }}
+                                </label>
+                                <select id="reemplaza-destino" wire:model="reemplazaDestino" class="mt-1 w-full rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
+                                    @if ($mp['jefes_destino']->count() > 1)<option value="">Elige…</option>@endif
+                                    @foreach ($mp['jefes_destino'] as $jd)
+                                        <option value="{{ $jd->id }}" @selected($mp['jefes_destino']->count() === 1)>{{ $jd->nombre_completo }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <p class="mt-1 text-xs text-gray-600 dark:text-tinta-50/70">Hay lugar libre: se suma como un jefe más de la oficina, sin sacar a nadie.</p>
+                            @endif
+                        </div>
+                    @else
+                        <dl class="mt-4 space-y-3 text-sm">
+                            <div>
+                                <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Como trabajador de {{ $movimientoJefe['destino']->nombre }}</dt>
+                                <dd class="mt-0.5 text-tinta-950 dark:text-white">
+                                    Su jefe inmediato será <strong>{{ $movimientoJefe['destino']->jefe?->nombre_completo ?? '—' }}</strong>
+                                    @if ($mp['sede']['propuesta'])
+                                        · sede: {{ $mp['sede']['actual']?->nombre ?? 'sin sede' }} → <strong>{{ $mp['sede']['propuesta']->nombre }}</strong>
+                                    @endif
+                                </dd>
+                            </div>
+                        </dl>
+
+                        @if ($mp['necesita_turno'])
+                            <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
+                                <div class="col-span-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Turno como trabajador (728)</div>
+                                <select wire:model="turnoJefe.turno" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
+                                    <option value="">Turno…</option>
+                                    @foreach ($mp['turnos_validos'] as $codigo)
+                                        <option value="{{ $codigo }}">{{ $etiquetasTurno[$codigo] ?? $codigo }}</option>
+                                    @endforeach
+                                </select>
+                                <input type="date" wire:model="turnoJefe.fecha_ancla" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800" aria-label="Inicio del ciclo">
+                                <input type="number" min="1" wire:model="turnoJefe.dias_trabajo" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800" aria-label="Días de trabajo">
+                                <input type="number" min="0" wire:model="turnoJefe.dias_descanso" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800" aria-label="Días de descanso">
+                            </div>
+                        @endif
+                    @endif
+
+                    @if ($mp['avisos'] !== [])
+                        <ul class="mt-4 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                            @foreach ($mp['avisos'] as $aviso)
+                                <li>{{ $aviso }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                @elseif ($modoJefe === 'unidad' && $mu)
+                    <p class="mt-4 text-sm text-gray-700 dark:text-tinta-50/80">
+                        <strong>{{ $mu['jefe']->nombre_completo }}</strong> se mueve con su unidad
+                        <strong>{{ $mu['unidad']->nombre }}</strong>
+                        ({{ $mu['personas'] }} {{ $mu['personas'] === 1 ? 'persona activa' : 'personas activas' }})
+                        de <strong>{{ $mu['origen']?->nombre ?? 'raíz' }}</strong> a <strong>{{ $mu['destino']->nombre }}</strong>.
+                        Jefe de área de esa gente: {{ $mu['jefe_area']['antes']?->nombre_completo ?? 'Sin asignar' }} →
+                        <strong>{{ $mu['jefe_area']['despues']?->nombre_completo ?? 'Sin asignar' }}</strong>.
+                    </p>
+                    @if ($mu['avisos'] !== [])
+                        <ul class="mt-3 space-y-1 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200">
+                            @foreach ($mu['avisos'] as $aviso)
+                                <li>{{ $aviso }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                @endif
+
+                <p class="mt-3 text-xs text-gray-500 dark:text-tinta-50/60">Las papeletas ya creadas conservan su jefe.</p>
 
                 <div class="mt-6 flex justify-end gap-2">
                     <button type="button" wire:click="cancelarMovimiento" class="btn-secondary text-sm">Cancelar</button>
-                    <button type="button" wire:click="confirmarMovimientoJefe" wire:loading.attr="disabled" class="btn-primary text-sm">Confirmar movimiento</button>
+                    <button type="button" wire:click="confirmarMovimientoJefe" wire:loading.attr="disabled" wire:target="confirmarMovimientoJefe"
+                            @disabled(! in_array($modoJefe, ['trabajador', 'jefe', 'unidad'], true)) class="btn-primary text-sm disabled:opacity-50">
+                        <span wire:loading.remove wire:target="confirmarMovimientoJefe">Confirmar movimiento</span>
+                        <span wire:loading wire:target="confirmarMovimientoJefe">Moviendo…</span>
+                    </button>
                 </div>
             </div>
         </div>
