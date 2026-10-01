@@ -2,11 +2,11 @@
 
 namespace App\Livewire\UnidadesOrganicas;
 
-use App\Models\JefeTurno;
+use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
+use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
@@ -129,63 +129,30 @@ class UnidadOrganicaForm extends Component
         ];
     }
 
-    public function guardar(): void
+    public function guardar(GuardarUnidadOrganicaAction $guardar): void
     {
         $this->autorizarAdmin();
 
         $datos = $this->validate();
 
-        // No puede ser su propio padre ni el de ninguno de sus
-        // descendientes, o el árbol se vuelve cíclico.
-        if ($this->unidad && $datos['parentId']) {
-            $prohibidos = [$this->unidad->id, ...$this->unidad->descendantIds()];
+        $esNueva = $this->unidad === null;
 
-            if (in_array((int) $datos['parentId'], $prohibidos, true)) {
-                $this->addError('parentId', 'Esa unidad no puede ser su propio padre ni el de un descendiente suyo.');
+        try {
+            $guardar->ejecutar(auth()->user(), $this->unidad, [
+                'nombre' => $datos['nombre'],
+                'tipo' => $datos['tipo'],
+                'parent_id' => $datos['parentId'],
+                'jefe_id' => $datos['jefeId'],
+                'activo' => $datos['activo'],
+            ], $esNueva ? null : ($datos['jefesAdicionales'] ?? []));
+        } catch (UsuarioException $e) {
+            $this->addError('parentId', $e->getMessage());
 
-                return;
-            }
+            return;
         }
 
-        $atributos = [
-            'nombre' => $datos['nombre'],
-            'tipo' => $datos['tipo'],
-            'parent_id' => $datos['parentId'],
-            'jefe_id' => $datos['jefeId'],
-            'activo' => $datos['activo'],
-        ];
-
-        DB::transaction(function () use ($atributos, $datos) {
-            $unidad = $this->unidad
-                ? tap($this->unidad)->update($atributos)
-                : UnidadOrganica::create($atributos);
-
-            if (! $this->unidad) {
-                return; // Crear primero; los jefes adicionales se asignan editando.
-            }
-
-            // Slots sin elegir (fila añadida y dejada en blanco) y
-            // duplicados (mismo jefe elegido dos veces) se descartan
-            // aquí; el unique de BD es (unidad, jefe_id). Con la lista vacía
-            // validate() no devuelve la clave (solo hay regla 'jefesAdicionales.*'),
-            // y eso significa "ningún otro jefe": se quitan los existentes.
-            $idsDeseados = collect($datos['jefesAdicionales'] ?? [])->filter()->unique()->values();
-
-            $idsActuales = JefeTurno::where('unidad_organica_id', $unidad->id)->pluck('jefe_id');
-
-            JefeTurno::where('unidad_organica_id', $unidad->id)
-                ->whereIn('jefe_id', $idsActuales->diff($idsDeseados))
-                ->delete();
-
-            foreach ($idsDeseados->diff($idsActuales) as $jefeId) {
-                JefeTurno::create([
-                    'unidad_organica_id' => $unidad->id,
-                    'jefe_id' => $jefeId,
-                ]);
-            }
-        });
-
-        session()->flash('mensaje', $this->unidad ? 'Unidad orgánica actualizada.' : 'Unidad orgánica creada.');
+        // Crear primero; los jefes adicionales se asignan editando (jefes_turno exige la unidad).
+        session()->flash('mensaje', $esNueva ? 'Unidad orgánica creada.' : 'Unidad orgánica actualizada.');
 
         $this->redirectRoute('unidades-organicas.index', navigate: false);
     }

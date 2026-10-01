@@ -15,7 +15,7 @@
 
     {{-- En modo edición la tarjeta es zona de soltar: soltar NO mueve, pide confirmación (proponerMovimiento). --}}
     <div @class([
-        'glass-card p-4 min-w-[18rem] max-w-3xl',
+        'group glass-card p-4 min-w-[18rem] max-w-3xl',
         'opacity-60' => ! $unidad->activo,
     ])
         @if ($modoEdicion)
@@ -44,6 +44,21 @@
                         <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] text-gray-700">Unidad desactivada</span>
                     @endunless
                     <span class="ms-auto text-xs text-gray-500 dark:text-tinta-50/60">{{ $nodo['total'] }} {{ $nodo['total'] === 1 ? 'persona' : 'personas' }}</span>
+                    @if ($modoEdicion && $esAdmin)
+                        <div class="flex items-center gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                            <button type="button" title="Editar unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                                    @click="$dispatch('org-unidad-abrir', { id: {{ $unidad->id }}, parentId: null })">
+                                <x-icon name="pencil" class="size-4" /><span class="sr-only">Editar unidad</span>
+                            </button>
+                            <button type="button" title="Agregar sub-unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                                    @click="$dispatch('org-unidad-abrir', { id: null, parentId: {{ $unidad->id }} })">
+                                <x-icon name="plus-circle" class="size-4" /><span class="sr-only">Agregar sub-unidad</span>
+                            </button>
+                            <a href="{{ route('usuarios-admin.crear', ['unidad' => $unidad->id]) }}" title="Agregar trabajador a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10">
+                                <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador</span>
+                            </a>
+                        </div>
+                    @endif
                 </div>
 
                 @if ($nodo['turnos_sin_jefe'] !== [])
@@ -98,6 +113,12 @@
                                 </span>
                             @endif
                             @unless ($m->activo)<span class="text-[11px] text-red-600">desactivado</span>@endunless
+                            @if ($modoEdicion && $esAdmin)
+                                <button type="button" title="Editar trabajador" class="ms-auto rounded-lg p-1 text-gray-400 opacity-70 hover:bg-white hover:text-tinta-700 hover:opacity-100 dark:hover:bg-white/10"
+                                        @click="$dispatch('org-trabajador-abrir', { id: {{ $m->id }} })">
+                                    <x-icon name="pencil" class="size-3.5" /><span class="sr-only">Editar trabajador</span>
+                                </button>
+                            @endif
                         </div>
                     @endforeach
                 </div>
@@ -109,7 +130,7 @@
     @if ($tieneHijos)
         <ul x-show="open" x-collapse>
             @foreach ($nodo['hijos'] as $hijo)
-                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $forzarAbierto])
+                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion])
             @endforeach
         </ul>
     @endif

@@ -104,6 +104,16 @@ class UsuarioAdminForm extends Component
                 $this->diasTrabajo = $config->dias_trabajo;
                 $this->diasDescanso = $config->dias_descanso;
             }
+        } else {
+            // Alta desde el organigrama: ?unidad=ID preselecciona la unidad
+            // y, si su jefe tiene sede, la propone como sede.
+            $unidadId = request()->integer('unidad') ?: null;
+            $unidad = $unidadId ? UnidadOrganica::with('jefe')->find($unidadId) : null;
+
+            if ($unidad) {
+                $this->unidadOrganicaId = $unidad->id;
+                $this->sedeId = $unidad->jefe?->sede_id;
+            }
         }
     }
 

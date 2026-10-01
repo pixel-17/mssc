@@ -14,6 +14,7 @@ use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -218,6 +219,19 @@ class OrganigramaArbol extends Component
         $reversion->load(['trabajador', 'unidadNueva']);
         $this->mensajeOk = 'Se deshizo el movimiento: '.$reversion->trabajador?->nombre_completo
             .' volvió a '.($reversion->unidadNueva?->nombre ?? '—').'.';
+    }
+
+    /** Un modal de edición (unidad/trabajador) guardó algo: se repinta el árbol y se muestra el aviso. */
+    #[On('org-actualizado')]
+    public function alActualizar(?string $mensaje = null): void
+    {
+        $this->autorizar();
+        $this->propuesta = null;
+        $this->mensajeError = null;
+
+        if ($mensaje !== null) {
+            $this->mensajeOk = $mensaje;
+        }
     }
 
     public function verPersona(int $id): void

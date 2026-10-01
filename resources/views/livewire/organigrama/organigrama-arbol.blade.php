@@ -29,23 +29,65 @@
                     ])>
                 {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
             </button>
+            @if ($modoEdicion && $esAdmin)
+                <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
+                    <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">
+                        <x-icon name="plus-circle" class="size-4" /> Agregar
+                    </button>
+                    <div x-show="m" x-cloak x-transition.opacity.duration.120ms class="absolute right-0 z-30 mt-1 w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-gray-800">
+                        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                                @click="m = false; $dispatch('org-unidad-abrir', { id: null, parentId: null })">
+                            <x-icon name="building" class="size-4" /> Unidad orgánica
+                        </button>
+                        <a href="{{ route('usuarios-admin.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
+                            <x-icon name="users" class="size-4" /> Trabajador
+                        </a>
+                        <a href="{{ route('sedes.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
+                            <x-icon name="map-pin" class="size-4" /> Sede
+                        </a>
+                    </div>
+                </div>
+            @endif
             <button type="button" class="btn-secondary text-xs" @click="todos = true; $dispatch('org-expandir')">Expandir todo</button>
             <button type="button" class="btn-secondary text-xs" @click="todos = false; $dispatch('org-contraer')">Contraer todo</button>
         </div>
     </x-admin.encabezado>
 
     @if ($modoEdicion)
-        <div class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="status">
-            <strong>Modo edición activo.</strong> Arrastra a un trabajador sobre otra unidad; antes de mover nada se te mostrará lo que cambia y tendrás que confirmar. Sal del modo cuando termines para no mover a nadie por accidente.
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+            <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
+            <strong>Modo edición</strong>
+            <span class="text-amber-800/80 dark:text-amber-200/80">
+                Arrastra trabajadores entre unidades (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
+            </span>
         </div>
     @endif
 
-    @if ($mensajeOk)
-        <div class="rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200" role="status">{{ $mensajeOk }}</div>
-    @endif
+    {{-- Toast de éxito: aparece al cambiar $mensajeOk y se oculta solo. --}}
+    <div x-data="{ show: false, texto: '', t: null,
+                   init() {
+                       this.$wire.$watch('mensajeOk', v => {
+                           if (! v) return;
+                           this.texto = v; this.show = true; clearTimeout(this.t);
+                           this.t = setTimeout(() => { this.show = false; this.$wire.set('mensajeOk', null, false) }, 4500);
+                       });
+                   } }"
+         class="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4">
+        <div x-show="show" x-cloak
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-y-2 opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
+             x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+             class="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-sm text-white shadow-xl dark:bg-white dark:text-gray-900" role="status">
+            <svg class="size-5 shrink-0 text-emerald-400 dark:text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            <span x-text="texto"></span>
+            <button type="button" @click="show = false" class="ms-1 opacity-60 hover:opacity-100" aria-label="Cerrar aviso">✕</button>
+        </div>
+    </div>
 
     @if ($mensajeError)
-        <div class="rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200" role="alert">{{ $mensajeError }}</div>
+        <div class="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200" role="alert" x-data="{ v: true }" x-show="v">
+            <span class="flex-1">{{ $mensajeError }}</span>
+            <button type="button" @click="v = false" class="opacity-60 hover:opacity-100" aria-label="Cerrar aviso">✕</button>
+        </div>
     @endif
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -90,12 +132,17 @@
     @if ($raices->isEmpty())
         <div class="glass-card p-8 text-center text-sm text-gray-500 dark:text-tinta-50/70">
             {{ $buscar !== '' || $sede !== '' ? 'Nada coincide con los filtros.' : 'Todavía no hay unidades orgánicas para mostrar.' }}
+            @if ($esAdmin && $buscar === '' && $sede === '')
+                <div class="mt-4">
+                    <button type="button" class="btn-primary text-sm" @click="$dispatch('org-unidad-abrir', { id: null, parentId: null })">Crear la primera unidad</button>
+                </div>
+            @endif
         </div>
     @else
         <div @class(['org-tree overflow-x-auto pb-4', 'org-editando' => $modoEdicion])>
             <ul>
                 @foreach ($raices as $nodo)
-                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $buscar !== '' || $sede !== ''])
+                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion])
                 @endforeach
             </ul>
         </div>
@@ -224,6 +271,9 @@
                         <h2 class="truncate text-lg font-semibold text-tinta-950 dark:text-white">{{ $p->nombre_completo }}</h2>
                         <p class="text-sm text-gray-500 dark:text-tinta-50/60">DNI {{ $p->dni ?? '—' }}</p>
                     </div>
+                    @if ($esAdmin)
+                        <button type="button" class="btn-secondary shrink-0 text-xs" @click="$dispatch('org-trabajador-abrir', { id: {{ $p->id }} }); $wire.cerrarPersona()">Editar</button>
+                    @endif
                     <button type="button" wire:click="cerrarPersona" class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10" aria-label="Cerrar">
                         <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
                     </button>
@@ -301,5 +351,10 @@
                 </dl>
             </aside>
         </div>
+    @endif
+
+    @if ($esAdmin)
+        <livewire:organigrama.unidad-modal />
+        <livewire:organigrama.trabajador-modal />
     @endif
 </div>
