@@ -282,13 +282,7 @@ class MoverJefeComoTrabajadorAction
             app(MoverTrabajadorAction::class)->exigirJefeInmediato($destino);
         }
 
-        $regimenDestino = $destino->regimen();
-        if ($regimenDestino !== null && $jefe->regimen !== $regimenDestino) {
-            throw new UsuarioException(
-                'El régimen de '.$jefe->nombre_completo.' ('.($jefe->regimen ?? 'sin régimen')
-                .') no coincide con el de la unidad de destino (régimen '.$regimenDestino.').'
-            );
-        }
+        app(ReglasOrganigrama::class)->exigirRegimenCompatible($jefe, $destino);
 
         return $unidades;
     }

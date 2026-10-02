@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Actions\Organigrama\ReglasOrganigrama;
 use App\Models\User;
 
 /**
@@ -122,20 +123,10 @@ class UserPolicy
     /**
      * ¿$user encabeza la unidad orgánica $unidadId, o alguna unidad
      * ancestro de ella? (jefe de área aplica también a sub-unidades).
+     * La regla vive en ReglasOrganigrama, compartida con las Actions de mover.
      */
     protected function esJefeDeAreaDe(User $user, int $unidadId): bool
     {
-        $unidad = \App\Models\UnidadOrganica::find($unidadId);
-
-        while ($unidad) {
-            if ($unidad->jefe_id === $user->id && $unidad->hijos()->exists()) {
-                return true;
-            }
-            $unidad = $unidad->parent_id
-                ? \App\Models\UnidadOrganica::find($unidad->parent_id)
-                : null;
-        }
-
-        return false;
+        return app(ReglasOrganigrama::class)->esJefeDeAreaDe($user, $unidadId);
     }
 }

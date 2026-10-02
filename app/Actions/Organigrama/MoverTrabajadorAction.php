@@ -330,48 +330,19 @@ class MoverTrabajadorAction
             throw new UsuarioException('Quien encabeza una unidad no se mueve desde el organigrama: cambia primero su jefatura en la unidad.');
         }
 
-        $regimenDestino = $destino->regimen();
-        if ($regimenDestino !== null && $trabajador->regimen !== $regimenDestino) {
-            throw new UsuarioException(
-                'El régimen de '.$trabajador->nombre_completo.' ('.($trabajador->regimen ?? 'sin régimen')
-                .') no coincide con el de la unidad de destino (régimen '.$regimenDestino.').'
-            );
-        }
+        app(ReglasOrganigrama::class)->exigirRegimenCompatible($trabajador, $destino);
 
         if (! $esAdmin) {
-            $areaOrigen = $this->areaDe($actor, $origen);
+            $areaOrigen = app(ReglasOrganigrama::class)->areaDe($actor, $origen);
 
             if ($areaOrigen === null) {
                 throw new UsuarioException('Esa persona está fuera de tu área.');
             }
 
-            if ($areaOrigen !== $this->areaDe($actor, $destino)) {
+            if ($areaOrigen !== app(ReglasOrganigrama::class)->areaDe($actor, $destino)) {
                 throw new UsuarioException('Solo un administrador puede mover personas entre áreas.');
             }
         }
-    }
-
-    /**
-     * Área de $jefe a la que pertenece $unidad: la unidad más alta de la
-     * cadena (la unidad misma y sus ancestros) que $jefe encabeza y que
-     * tiene sub-unidades. null = la unidad no cuelga de ninguna área
-     * suya. Mismo criterio que UserPolicy::esJefeDeAreaDe() y que las
-     * raíces del organigrama.
-     */
-    private function areaDe(User $jefe, UnidadOrganica $unidad): ?int
-    {
-        $area = null;
-        $vistas = [];
-
-        for ($u = $unidad; $u && ! isset($vistas[$u->id]); $u = $u->parent_id ? UnidadOrganica::find($u->parent_id) : null) {
-            $vistas[$u->id] = true;
-
-            if ((int) $u->jefe_id === (int) $jefe->id && $u->hijos()->exists()) {
-                $area = (int) $u->id;
-            }
-        }
-
-        return $area;
     }
 
     /**

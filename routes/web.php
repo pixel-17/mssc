@@ -113,8 +113,9 @@ Route::middleware([
 });
 
 /*
- * Organigrama visual (solo lectura): admin ve todo, el Jefe de Área ve su
- * unidad y lo que cuelga de ella. La autorización vive en el componente.
+ * Organigrama visual y editable (mover trabajadores y jefes, editar unidades
+ * y personas): admin ve y edita todo; el Jefe de Área, su unidad y lo que
+ * cuelga de ella. La autorización vive en el componente y en las Actions.
  */
 Route::middleware([
     'auth:sanctum',
@@ -249,8 +250,8 @@ Route::middleware([
 
     /*
      * Alta, edición y vinculación de jefe inmediato por Jefe de Área /
-     * Jefe Inmediato (Admin NO pasa por aquí: usa el UserResource de
-     * Filament). Sin middleware de rol por el mismo motivo que
+     * Jefe Inmediato (Admin NO pasa por aquí: gestiona usuarios desde el
+     * panel de administración / el organigrama). Sin middleware de rol por el mismo motivo que
      * jefes-adicionales: la autorización real vive en UserPolicy
      * (ver UserPolicy::editar() para el alcance de edit/update).
      */
