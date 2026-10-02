@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a ConfiguracionResource::form() de Filament. Admin solo
+ * Formulario de Configuraciones. Admin solo
  * puede EDITAR el valor de cada clave (reloj del jefe, tope de
  * observaciones, bloque de almuerzo, horas de sustento, días de
  * subsanación), nunca crear ni borrar filas — por eso este componente

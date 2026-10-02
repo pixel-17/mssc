@@ -11,8 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a MotivoResource::form() de Filament. El catálogo de
- * Motivos ahora vive acá, en Blade + Livewire puro (ver rutas
+ * Formulario del catálogo de Motivos, en Blade + Livewire puro (ver rutas
  * 'motivos.*' en routes/web.php, middleware role:admin).
  *
  * Las banderas de reglas de negocio (suma_descuento, cierre sin retorno, etc.)

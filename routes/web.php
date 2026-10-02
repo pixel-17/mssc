@@ -28,17 +28,11 @@ Route::get('/', function () {
  * Todo el catálogo de administración (Sedes, Motivos, Turnos,
  * Feriados, Unidades orgánicas, Configuraciones, Horario de RRHH,
  * Usuarios) ya vive en Blade + Livewire puro, uno por uno, en los
- * bloques de abajo. Filament ya no se usa en este proyecto —
- * AdminPanelProvider fue retirado de bootstrap/providers.php, la
- * dependencia se sacó de composer.json y no quedan carpetas
- * app/Filament/Resources/* ni assets compilados en public/ (css/js/
- * fonts/filament): la limpieza ya se hizo, no queda nada pendiente.
+ * bloques de abajo.
  */
 /*
- * Sedes: primer recurso del catálogo de administración ya migrado
- * fuera de Filament, a pedido — vive en Blade + Livewire puro
- * (App\Livewire\Sedes\*). Prefijo 'sedes' (no 'admin/sedes') para no
- * pisar la ruta del panel.
+ * Sedes: catálogo de administración en Blade + Livewire puro
+ * (App\Livewire\Sedes\*).
  */
 Route::middleware([
     'auth:sanctum',
@@ -52,8 +46,7 @@ Route::middleware([
 });
 
 /*
- * Motivos: segundo recurso del catálogo de administración migrado
- * fuera de Filament — vive en Blade + Livewire puro
+ * Motivos: catálogo de administración en Blade + Livewire puro
  * (App\Livewire\Motivos\*), mismo patrón que Sedes.
  */
 Route::middleware([

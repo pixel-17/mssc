@@ -14,8 +14,7 @@ use Livewire\WithPagination;
 use Spatie\Permission\Models\Role;
 
 /**
- * Listado de Usuarios en Blade + Livewire puro (reemplaza a
- * UserResource::table() de Filament). Gestión SOLO para admin — ver
+ * Listado de Usuarios en Blade + Livewire puro. Gestión SOLO para admin — ver
  * App\Livewire\Usuarios\UsuarioAdminForm para crear/editar.
  *
  * No confundir con App\Http\Controllers\Usuario\UsuarioController

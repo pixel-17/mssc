@@ -18,8 +18,7 @@ use Illuminate\View\View;
 
 /**
  * Alta de usuarios para Jefe de Área y Jefe Inmediato. Admin NO pasa
- * por aquí: gestiona usuarios desde el UserResource de Filament (ver
- * comentario en User::canAccessPanel()). RRHH tampoco: no crea
+ * por aquí: gestiona usuarios desde App\Livewire\Usuarios\UsuarioAdminIndex/Form. RRHH tampoco: no crea
  * usuarios (ver UserPolicy).
  *
  * "Jefe de Área" y "Jefe Inmediato" no son roles de Spatie, son

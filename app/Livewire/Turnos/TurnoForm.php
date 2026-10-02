@@ -14,7 +14,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a TurnoResource::form() de Filament. Único índice
+ * Formulario de Turnos. Único índice
  * user_id+fecha (ver migración) — la validación de abajo replica esa
  * misma restricción.
  */

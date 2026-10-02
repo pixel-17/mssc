@@ -14,7 +14,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a UnidadOrganicaResource::form() de Filament. El jefe_id
+ * Formulario de Unidades Orgánicas. El jefe_id
  * de esta unidad es el Jefe Inmediato de sus miembros; el jefe_id de
  * la unidad padre es el Jefe de Área (ver UnidadOrganica::jefeInmediato()
  * / jefeArea()). `tipo` es solo decorativo, nunca condiciona el

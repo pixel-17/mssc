@@ -22,7 +22,7 @@ use Livewire\Component;
 use Spatie\Permission\Models\Role;
 
 /**
- * Reemplaza a UserResource::form() de Filament. Gestión SOLO para
+ * Formulario de Usuarios. Gestión SOLO para
  * admin — es el fin de la pirámide (ver UserPolicy), puede crear
  * cualquier usuario en cualquier unidad y con cualquier rol, sin las
  * restricciones de área que sí aplican a Jefe de Área / Jefe

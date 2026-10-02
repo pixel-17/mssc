@@ -11,9 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a SedeResource::form() de Filament para el admin que "no
- * quiere saber nada de Filament". El catálogo de Sedes ahora vive acá,
- * en Blade + Livewire puro (ver rutas 'sedes.*' en routes/web.php,
+ * Formulario del catálogo de Sedes, en Blade + Livewire puro (ver rutas 'sedes.*' en routes/web.php,
  * middleware role:admin).
  *
  * La ubicación (latitud/longitud) se marca EXCLUSIVAMENTE en el mapa

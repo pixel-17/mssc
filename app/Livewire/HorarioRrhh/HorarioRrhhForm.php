@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a HorarioRrhhResource::form() de Filament. Se consulta en
+ * Formulario del Horario de RRHH. Se consulta en
  * cada aprobación de jefe (RrhhHorarioService) — admin solo edita
  * hora_inicio/hora_fin/activo, nunca crea ni borra días, por eso este
  * componente exige un registro existente.

@@ -8,9 +8,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Punto de entrada único a los catálogos de administración, en
- * reemplazo del panel de Filament (/admin), que ya fue retirado del
- * proyecto.
+ * Punto de entrada único a los catálogos de administración.
  *
  * Los 7 catálogos ya viven en Blade + Livewire puro, uno por uno,
  * cada uno con su propio par Index/Form (ver App\Livewire\Sedes,
@@ -18,11 +16,8 @@ use Livewire\Component;
  * Usuarios). El horario de RRHH ya no es un catálogo: se deriva del
  * horario ordinario de Configuraciones (ver RrhhHorarioService).
  *
- * La migración fuera de Filament ya terminó — por eso esta vista dejó
- * de marcar "Listo" vs. "En Filament" (los 7 quedaron "Listo" desde
- * hace rato, el badge ya no aportaba nada) y ahora solo es un acceso
- * rápido con ícono + descripción de una línea, mismo criterio que el
- * sidebar (ver NavegacionComposer).
+ * Es solo un acceso rápido con ícono + descripción de una línea, mismo
+ * criterio que el sidebar (ver NavegacionComposer).
  */
 #[Layout('layouts.app')]
 #[Title('Catálogos')]

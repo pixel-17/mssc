@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Todo número "parametrizable" del documento, sembrado como fila
- * editable en Filament (ConfiguracionResource) en vez de vivir
+ * editable desde Configuraciones (admin) en vez de vivir
  * hardcodeado en las Actions.
  */
 class ConfiguracionSeeder extends Seeder

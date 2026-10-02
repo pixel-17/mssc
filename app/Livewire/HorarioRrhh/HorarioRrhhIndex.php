@@ -9,8 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Listado del Horario de RRHH en Blade + Livewire puro (reemplaza a
- * HorarioRrhhResource::table() de Filament). Filas fijas por día de
+ * Listado del Horario de RRHH en Blade + Livewire puro. Filas fijas por día de
  * semana sembradas por HorarioRrhhSeeder — no hay creación ni borrado
  * aquí, solo edición (ver HorarioRrhhForm).
  */

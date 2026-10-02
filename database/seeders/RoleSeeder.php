@@ -9,7 +9,7 @@ use Spatie\Permission\Models\Role;
  * Los 3 roles reales del sistema. "jefe" NO es un rol de Spatie: un
  * jefe es un trabajador cualquiera al que otros usuarios apuntan vía
  * jefe_inmediato_id/jefe_area_id (ver PapeletaPolicy). admin nunca
- * decide papeletas, solo administra catálogos vía Filament.
+ * decide papeletas, solo administra catálogos.
  */
 class RoleSeeder extends Seeder
 {

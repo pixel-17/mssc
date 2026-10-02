@@ -11,8 +11,7 @@ use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**
- * Listado del catálogo de Motivos en Blade + Livewire puro (reemplaza
- * a MotivoResource::table() de Filament). Ver App\Livewire\Motivos\MotivoForm
+ * Listado del catálogo de Motivos en Blade + Livewire puro. Ver App\Livewire\Motivos\MotivoForm
  * para crear/editar. Patrón calcado de App\Livewire\Sedes.
  */
 #[Layout('layouts.app')]

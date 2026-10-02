@@ -10,7 +10,7 @@ use Livewire\Component;
 
 /**
  * Listado del catálogo de Configuraciones en Blade + Livewire puro
- * (reemplaza a ConfiguracionResource::table() de Filament). Filas
+ * Filas
  * fijas sembradas por ConfiguracionSeeder — no hay creación ni borrado
  * aquí, solo edición del valor (ver ConfiguracionForm).
  */

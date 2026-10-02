@@ -12,8 +12,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Listado del catálogo de Turnos en Blade + Livewire puro (reemplaza
- * a TurnoResource::table() de Filament). Ver App\Livewire\Turnos\TurnoForm
+ * Listado del catálogo de Turnos en Blade + Livewire puro. Ver App\Livewire\Turnos\TurnoForm
  * para crear/editar. Patrón calcado de App\Livewire\Sedes.
  */
 #[Layout('layouts.app')]

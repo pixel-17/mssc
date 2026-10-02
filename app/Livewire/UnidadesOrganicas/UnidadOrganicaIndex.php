@@ -11,8 +11,7 @@ use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**
- * Listado del catálogo de Unidades Orgánicas en Blade + Livewire puro
- * (reemplaza a UnidadOrganicaResource::table() de Filament). Ver
+ * Listado del catálogo de Unidades Orgánicas en Blade + Livewire puro. Ver
  * App\Livewire\UnidadesOrganicas\UnidadOrganicaForm para crear/editar.
  */
 #[Layout('layouts.app')]

@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Component;
 
 /**
- * Reemplaza a FeriadoResource::form() de Filament. Este catálogo lo
+ * Formulario del catálogo de Feriados. Este catálogo lo
  * usa CalculadorDiasHabiles para las 48h hábiles de sustento (Salud).
  */
 #[Layout('layouts.app')]

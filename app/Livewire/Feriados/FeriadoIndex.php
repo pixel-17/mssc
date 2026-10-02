@@ -10,8 +10,7 @@ use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**
- * Listado del catálogo de Feriados en Blade + Livewire puro (reemplaza
- * a FeriadoResource::table() de Filament). Ver App\Livewire\Feriados\FeriadoForm
+ * Listado del catálogo de Feriados en Blade + Livewire puro. Ver App\Livewire\Feriados\FeriadoForm
  * para crear/editar.
  */
 #[Layout('layouts.app')]

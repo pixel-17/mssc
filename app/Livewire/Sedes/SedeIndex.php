@@ -11,8 +11,7 @@ use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**
- * Listado del catálogo de Sedes en Blade + Livewire puro (reemplaza a
- * SedeResource::table() de Filament). Ver App\Livewire\Sedes\SedeForm
+ * Listado del catálogo de Sedes en Blade + Livewire puro. Ver App\Livewire\Sedes\SedeForm
  * para crear/editar.
  */
 #[Layout('layouts.app')]

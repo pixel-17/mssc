@@ -6,8 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 
 /**
- * Usuario de prueba con rol "admin". Solo administra catálogos vía
- * Filament (unidades orgánicas, sedes, motivos, horario RRHH); nunca
+ * Usuario de prueba con rol "admin". Solo administra catálogos (unidades orgánicas, sedes, motivos, horario RRHH); nunca
  * decide papeletas (ver RoleSeeder).
  */
 class AdminUserSeeder extends Seeder
