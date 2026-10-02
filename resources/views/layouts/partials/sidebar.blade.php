@@ -57,7 +57,11 @@
             href="{{ route('profile.show') }}"
             @class(['sidebar-link', 'is-active' => request()->routeIs('profile.show')])
         >
-            <x-icon name="user-circle" class="sidebar-icon" />
+            @if (auth()->user()?->profile_photo_path)
+                <x-avatar :user="auth()->user()" size="size-6" class="sidebar-icon !size-6" />
+            @else
+                <x-icon name="user-circle" class="sidebar-icon" />
+            @endif
             <span class="truncate">Mi perfil</span>
         </a>
 

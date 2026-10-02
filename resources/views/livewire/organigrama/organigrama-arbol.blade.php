@@ -475,7 +475,8 @@
             <aside class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl dark:bg-gray-900"
                    role="dialog" aria-modal="true" aria-label="Ficha de {{ $p->nombre_completo }}">
                 <div class="flex items-start justify-between gap-3">
-                    <div class="min-w-0">
+                    <x-avatar :user="$p" size="size-14" class="text-lg" />
+                    <div class="min-w-0 flex-1">
                         <h2 class="truncate text-lg font-semibold text-tinta-950 dark:text-white">{{ $p->nombre_completo }}</h2>
                         <p class="text-sm text-gray-500 dark:text-tinta-50/60">DNI {{ $p->dni ?? '—' }}</p>
                     </div>

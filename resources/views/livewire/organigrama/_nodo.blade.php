@@ -95,7 +95,7 @@
                                  @dragend="arrastrando = null; sobre = null"
                              @endif
                         >
-                            <span class="inline-flex size-6 items-center justify-center rounded-full bg-tinta-600 text-[10px] font-semibold text-white">{{ mb_strtoupper(mb_substr($jefe->name, 0, 1).mb_substr((string) $jefe->apellido, 0, 1)) }}</span>
+                            <x-avatar :user="$jefe" />
                             <button type="button" wire:click="verPersona({{ $jefe->id }})" class="font-medium text-tinta-950 hover:underline dark:text-white">{{ $jefe->nombre_completo }}</button>
                             <span class="text-xs text-gray-500 dark:text-tinta-50/60">{{ $jefe->id === $jefePrincipal?->id ? 'Jefe' : 'Jefe de turno' }}</span>
                             @include('livewire.organigrama._chips', ['persona' => $jefe, 'sedeReferencia' => null])
@@ -123,7 +123,7 @@
                                  @dragend="arrastrando = null; sobre = null"
                              @endif
                         >
-                            <span class="inline-block size-2.5 shrink-0 rounded-full bg-emerald-500"></span>
+                            <x-avatar :user="$m" class="ring-2 ring-emerald-500" />
                             <button type="button" wire:click="verPersona({{ $m->id }})" class="min-w-0 truncate text-left text-tinta-950 hover:underline dark:text-white">{{ $m->nombre_completo }}</button>
                             @include('livewire.organigrama._chips', ['persona' => $m, 'sedeReferencia' => $sedeJefe])
                             @if ($m->jefesInmediatosAdicionales->isNotEmpty())
