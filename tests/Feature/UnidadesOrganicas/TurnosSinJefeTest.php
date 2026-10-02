@@ -10,6 +10,7 @@ use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
@@ -58,6 +59,26 @@ class TurnosSinJefeTest extends TestCase
         $this->asignarJefeConTurno($unidad, $jefe, 'MANANA');
 
         $this->assertSame(['TARDE', 'NOCHE'], $unidad->fresh()->turnosSinJefe());
+    }
+
+    public function test_con_el_mapa_precargado_no_consulta_configuraciones_por_unidad(): void
+    {
+        $jefe = $this->usuarioDePrueba(['regimen' => '728']);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
+        $this->asignarJefeConTurno($unidad, $jefe, 'MANANA');
+
+        $unidad = UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])->find($unidad->id);
+        $mapa = ConfiguracionTurno::idsPorTurno([$jefe->id]);
+
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $conMapa = $unidad->turnosSinJefe($mapa);
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        $this->assertSame([], $queries);
+        $this->assertSame(['TARDE', 'NOCHE'], $conMapa);
+        $this->assertSame($conMapa, $unidad->turnosSinJefe());
     }
 
     public function test_una_unidad_728_completa_no_tiene_turnos_sin_jefe(): void

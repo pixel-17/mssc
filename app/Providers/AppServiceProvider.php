@@ -9,6 +9,7 @@ use App\Observers\UnidadOrganicaObserver;
 use App\Observers\UserObserver;
 use App\Policies\PapeletaPolicy;
 use App\View\Composers\NavegacionComposer;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -28,6 +29,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Detecta lazy loading (N+1) fuera de producción. Solo registra un
+        // warning en el log (no lanza excepción) para no tumbar flujos que
+        // aún lo hagan; para que falle en tests/local, quitar el handler.
+        Model::preventLazyLoading(! $this->app->isProduction());
+        Model::handleLazyLoadingViolationUsing(function (Model $model, string $relation): void {
+            logger()->warning(sprintf('Lazy loading: [%s] en %s', $relation, $model::class));
+        });
+
         User::observe(UserObserver::class);
         UnidadOrganica::observe(UnidadOrganicaObserver::class);
 

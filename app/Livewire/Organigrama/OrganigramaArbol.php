@@ -480,12 +480,12 @@ class OrganigramaArbol extends Component
     {
         $usuario = $this->autorizar();
 
+        // Las unidades (oficinas) son pocas: se traen todas, pero SOLO con
+        // jefesTurno (lo que necesitan raicesPara y la ficha). Los jefes con
+        // su sede y los trabajadores —el volumen grande— se cargan más abajo
+        // únicamente para la rama que quien mira puede ver.
         $unidades = UnidadOrganica::query()
-            ->with([
-                'jefe.sede',
-                'jefesTurno.jefe.sede',
-                'miembros' => fn ($q) => $q->with(['sede', 'jefesInmediatosAdicionales'])->orderBy('name')->orderBy('apellido'),
-            ])
+            ->with('jefesTurno')
             ->orderBy('nombre')
             ->get();
 
@@ -499,8 +499,11 @@ class OrganigramaArbol extends Component
         $raicesDeAlcance = $this->raicesPara($usuario, $unidades, $porPadre);
         $enAlcance = $this->idsEnAlcance($raicesDeAlcance, $porPadre);
 
+        $this->cargarRama($unidades, $enAlcance);
+        $configurados = $this->turnosConfiguradosDeJefes($unidades, $enAlcance);
+
         $raices = $raicesDeAlcance
-            ->map(fn (UnidadOrganica $u) => $this->construirNodo($u, $porPadre, $stats, $conteoSedes))
+            ->map(fn (UnidadOrganica $u) => $this->construirNodo($u, $porPadre, $stats, $conteoSedes, $configurados))
             ->filter()
             ->values();
 
@@ -516,6 +519,49 @@ class OrganigramaArbol extends Component
             'movimientoJefe' => $this->vistaPreviaMovimientoJefe($usuario),
             'historial' => $this->historialDe($usuario, $enAlcance),
         ]);
+    }
+
+    /**
+     * Carga jefes (con sede), jefes de turno y trabajadores SOLO de las
+     * unidades dentro del alcance de quien mira. Un Jefe de Área ya no
+     * trae a todos los trabajadores de la municipalidad para pintar su
+     * rama. Las relaciones quedan en las mismas instancias que usa
+     * $porPadre, así que construirNodo() las ve sin más queries.
+     *
+     * @param  array<int, true>  $enAlcance
+     */
+    private function cargarRama(Collection $unidades, array $enAlcance): void
+    {
+        $unidades
+            ->filter(fn (UnidadOrganica $u) => isset($enAlcance[$u->id]))
+            ->loadMissing([
+                'jefe.sede',
+                'jefesTurno.jefe.sede',
+                'miembros' => fn ($q) => $q
+                    // Los inactivos solo se piden si el interruptor está activo
+                    // (construirNodo también los descarta en memoria; es el mismo criterio).
+                    ->when(! $this->verInactivos, fn ($q) => $q->where('activo', true))
+                    ->with(['sede', 'jefesInmediatosAdicionales'])
+                    ->orderBy('name')
+                    ->orderBy('apellido'),
+            ]);
+    }
+
+    /**
+     * Turnos configurados de los jefes de la rama, en UNA query, para que
+     * turnosSinJefe() no consulte `configuraciones_turno` por cada unidad
+     * y turno en cada interacción de Livewire.
+     *
+     * @param  array<int, true>  $enAlcance
+     * @return array<string, array<int, true>>
+     */
+    private function turnosConfiguradosDeJefes(Collection $unidades, array $enAlcance): array
+    {
+        $jefeIds = $unidades
+            ->filter(fn (UnidadOrganica $u) => isset($enAlcance[$u->id]))
+            ->flatMap(fn (UnidadOrganica $u) => [$u->jefe_id, ...$u->jefesTurno->pluck('jefe_id')]);
+
+        return ConfiguracionTurno::idsPorTurno($jefeIds);
     }
 
     /**
@@ -588,6 +634,12 @@ class OrganigramaArbol extends Component
 
         while ($pendientes) {
             $id = array_pop($pendientes);
+
+            // Ya visitada: evita el bucle infinito si hubiera un ciclo en BD.
+            if (isset($enAlcance[$id])) {
+                continue;
+            }
+
             $enAlcance[$id] = true;
             foreach ($porPadre->get($id, []) as $hijo) {
                 $pendientes[] = $hijo->id;
@@ -739,9 +791,10 @@ class OrganigramaArbol extends Component
      * de abajo quedan fuera del resultado.
      *
      * @param  array<string, int>  $conteoSedes
+     * @param  array<string, array<int, true>>  $configurados  ver turnosConfiguradosDeJefes()
      * @return array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, turnos_sin_jefe: list<string>}|null
      */
-    private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?array
+    private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes, array $configurados): ?array
     {
         $q = mb_strtolower(trim($this->buscar));
         $hayFiltroSede = $this->sede !== '';
@@ -789,7 +842,7 @@ class OrganigramaArbol extends Component
         $jefesEnFiltro = $jefes->filter($enSede)->values();
 
         $hijos = $porPadre->get($unidad->id, collect())
-            ->map(fn (UnidadOrganica $h) => $this->construirNodo($h, $porPadre, $stats, $conteoSedes))
+            ->map(fn (UnidadOrganica $h) => $this->construirNodo($h, $porPadre, $stats, $conteoSedes, $configurados))
             ->filter()
             ->values();
 
@@ -800,7 +853,7 @@ class OrganigramaArbol extends Component
             return null;
         }
 
-        $turnosSinJefe = $unidad->turnosSinJefe();
+        $turnosSinJefe = $unidad->turnosSinJefe($configurados);
 
         $stats['unidades']++;
         $stats['personas'] += $miembros->count() + $jefesEnFiltro->count();

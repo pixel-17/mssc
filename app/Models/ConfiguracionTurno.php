@@ -40,6 +40,38 @@ class ConfiguracionTurno extends Model
 
     public const TURNO_276 = 'DIA';
 
+    /**
+     * user_id con turno rotativo configurado, agrupados por turno, en UNA
+     * sola query: ['MANANA' => [12 => true], 'TARDE' => [...], 'NOCHE' => [...]].
+     *
+     * Existe para no consultar `configuraciones_turno` una vez por turno
+     * y por unidad al pintar el organigrama o los avisos de "falta jefe":
+     * se calcula una vez para todos los jefes involucrados y se pasa a
+     * UnidadOrganica::turnosSinJefe(). Sin $userIds no hay query.
+     *
+     * @param  iterable<int>  $userIds  usuarios a considerar (los jefes inmediatos)
+     * @return array<string, array<int, true>>
+     */
+    public static function idsPorTurno(iterable $userIds): array
+    {
+        $mapa = array_fill_keys(self::TURNOS_728, []);
+        $ids = collect($userIds)->filter()->unique()->values();
+
+        if ($ids->isEmpty()) {
+            return $mapa;
+        }
+
+        static::query()
+            ->whereIn('turno', self::TURNOS_728)
+            ->whereIn('user_id', $ids)
+            ->get(['user_id', 'turno'])
+            ->each(function (self $config) use (&$mapa) {
+                $mapa[$config->turno][(int) $config->user_id] = true;
+            });
+
+        return $mapa;
+    }
+
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

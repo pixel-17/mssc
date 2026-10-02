@@ -64,17 +64,29 @@ class UnidadOrganica extends Model
      * activo (sin fila en jefes_turno, o con el jefe desactivado). Vacío
      * para unidades 276 o sin jefe: ahí la regla de turnos no aplica.
      *
+     * Requiere `jefe` y `jefesTurno.jefe` cargados (si no, se leen perezosamente).
+     * Quien llama en bucle (organigrama, avisos del listado) debe pasar
+     * $configuradosPorTurno, calculado UNA vez con
+     * ConfiguracionTurno::idsPorTurno() para todos los jefes; sin él se
+     * hace una sola query por llamada (antes eran tres, una por turno).
+     *
+     * @param  array<string, array<int, true>>|null  $configuradosPorTurno
      * @return list<string>
      */
-    public function turnosSinJefe(): array
+    public function turnosSinJefe(?array $configuradosPorTurno = null): array
     {
         if ($this->regimen() !== '728') {
             return [];
         }
 
+        $jefes = $this->jefesInmediatos728();
+        $configurados = $configuradosPorTurno ?? ConfiguracionTurno::idsPorTurno($jefes->pluck('id'));
+
         return array_values(array_filter(
             ConfiguracionTurno::TURNOS_728,
-            fn (string $turno) => $this->resolverJefeInmediato($turno) === null,
+            fn (string $turno) => ! $jefes->contains(
+                fn (User $jefe) => isset($configurados[$turno][(int) $jefe->id])
+            ),
         ));
     }
 
@@ -111,10 +123,17 @@ class UnidadOrganica extends Model
      */
     private function jefesConfiguradosPara(string $turno): \Illuminate\Support\Collection
     {
-        $jefeIdsDelTurno = ConfiguracionTurno::where('turno', $turno)->pluck('user_id');
+        $jefes = $this->jefesInmediatos728();
 
-        return $this->jefesInmediatos728()
-            ->filter(fn (User $jefe) => $jefeIdsDelTurno->contains($jefe->id));
+        if ($jefes->isEmpty()) {
+            return $jefes;
+        }
+
+        $jefeIdsDelTurno = ConfiguracionTurno::where('turno', $turno)
+            ->whereIn('user_id', $jefes->pluck('id'))
+            ->pluck('user_id');
+
+        return $jefes->filter(fn (User $jefe) => $jefeIdsDelTurno->contains($jefe->id));
     }
 
     /**
@@ -286,6 +305,27 @@ class UnidadOrganica extends Model
     }
 
     /**
+     * Todas las unidades en memoria, por id, con lo que jefaturasDe()
+     * necesita ya cargado: `jefe`, `jefesTurno` y `padre` enlazado a la
+     * misma instancia del mapa (así padre->padre es gratis). Son 2 queries
+     * fijas en total, en vez de varias por cada usuario al recalcular
+     * jefaturas de un subárbol (UnidadOrganicaObserver, jefaturas:recalcular).
+     * Las unidades son oficinas, un volumen chico.
+     *
+     * @return \Illuminate\Support\Collection<int, UnidadOrganica>
+     */
+    public static function arbolEnMemoria(): \Illuminate\Support\Collection
+    {
+        $porId = static::query()->with(['jefe', 'jefesTurno'])->get()->keyBy('id');
+
+        foreach ($porId as $unidad) {
+            $unidad->setRelation('padre', $unidad->parent_id !== null ? $porId->get($unidad->parent_id) : null);
+        }
+
+        return $porId;
+    }
+
+    /**
      * IDs de todos los descendientes (hijos, nietos, etc). Se usa para
      * impedir que al editar una unidad se le asigne como padre a sí misma
      * o a cualquiera de sus propios descendientes, lo que crearía un
@@ -308,12 +348,21 @@ class UnidadOrganica extends Model
             ->groupBy('parent_id');
 
         $ids = [];
+        // Conjunto de visitados: si por edición directa en BD, un seeder o dos
+        // admins a la vez llegara a existir un ciclo, el recorrido termina en
+        // vez de colgar el request.
+        $visitados = [$this->id => true];
         $pendientes = [$this->id];
 
         while ($pendientes) {
             $idActual = array_pop($pendientes);
 
             foreach ($porPadre->get($idActual, []) as $hijo) {
+                if (isset($visitados[$hijo->id])) {
+                    continue;
+                }
+
+                $visitados[$hijo->id] = true;
                 $ids[] = $hijo->id;
                 $pendientes[] = $hijo->id;
             }

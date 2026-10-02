@@ -36,15 +36,6 @@ class GuardarUnidadOrganicaAction
             throw new UsuarioException('Solo un administrador puede editar unidades orgánicas.');
         }
 
-        // Sin ciclos: ni su propio padre ni el de un descendiente suyo.
-        if ($unidad && $datos['parent_id']) {
-            $prohibidos = [$unidad->id, ...$unidad->descendantIds()];
-
-            if (in_array((int) $datos['parent_id'], $prohibidos, true)) {
-                throw new UsuarioException('Esa unidad no puede ser su propio padre ni el de un descendiente suyo.');
-            }
-        }
-
         $jefaturas = app(JefaturaUnidadService::class);
         $jefaturas->validar(
             $unidad,
@@ -54,6 +45,8 @@ class GuardarUnidadOrganicaAction
         );
 
         return DB::transaction(function () use ($unidad, $datos, $jefesAdicionales, $ubicarJefe, $jefaturas) {
+            $this->validarSinCiclos($unidad, $datos['parent_id'] ?? null);
+
             $atributos = [
                 'nombre' => $datos['nombre'],
                 'tipo' => $datos['tipo'],
@@ -76,6 +69,31 @@ class GuardarUnidadOrganicaAction
 
             return $unidad;
         });
+    }
+
+    /**
+     * Sin ciclos: ni su propio padre ni el de un descendiente suyo.
+     *
+     * Va dentro de la transacción y bloquea el árbol (solo id y parent_id,
+     * son pocas filas) antes de recorrerlo: así dos admins moviendo
+     * unidades a la vez se serializan y el segundo ve el árbol ya
+     * modificado por el primero, en vez de validar contra un estado viejo.
+     *
+     * @throws UsuarioException
+     */
+    private function validarSinCiclos(?UnidadOrganica $unidad, mixed $parentId): void
+    {
+        if (! $unidad || ! $parentId) {
+            return;
+        }
+
+        UnidadOrganica::query()->select('id', 'parent_id')->lockForUpdate()->get();
+
+        $prohibidos = [$unidad->id, ...$unidad->descendantIds()];
+
+        if (in_array((int) $parentId, $prohibidos, true)) {
+            throw new UsuarioException('Esa unidad no puede ser su propio padre ni el de un descendiente suyo.');
+        }
     }
 
     /** @param  list<int|null>  $jefesAdicionales */

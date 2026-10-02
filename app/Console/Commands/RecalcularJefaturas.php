@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Papeleta;
+use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Observers\UserObserver;
 use Illuminate\Console\Command;
@@ -33,11 +34,12 @@ class RecalcularJefaturas extends Command
     {
         $simulacion = (bool) $this->option('dry-run');
         $usuariosCambiados = 0;
+        $arbol = UnidadOrganica::arbolEnMemoria();
 
         User::whereNotNull('unidad_organica_id')
-            ->chunkById(200, function ($usuarios) use ($observer, $simulacion, &$usuariosCambiados) {
+            ->chunkById(200, function ($usuarios) use ($observer, $arbol, $simulacion, &$usuariosCambiados) {
                 foreach ($usuarios as $usuario) {
-                    $observer->resincronizar($usuario);
+                    $observer->resincronizar($usuario, $arbol->get($usuario->unidad_organica_id));
 
                     if (! $usuario->isDirty(['jefe_inmediato_id', 'jefe_area_id'])) {
                         continue;

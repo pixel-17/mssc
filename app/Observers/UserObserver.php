@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Models\UnidadOrganica;
 use App\Models\User;
 
 /**
@@ -31,11 +32,19 @@ class UserObserver
         $this->resincronizar($user);
     }
 
-    public function resincronizar(User $user): void
+    /**
+     * @param  UnidadOrganica|null  $unidad  unidad del usuario ya cargada (con `jefe`,
+     *                                       `jefesTurno` y `padre`, ver UnidadOrganica::arbolEnMemoria()).
+     *                                       Quien recalcula muchos usuarios la pasa para no
+     *                                       hacer queries por usuario; sin ella se busca.
+     */
+    public function resincronizar(User $user, ?UnidadOrganica $unidad = null): void
     {
-        $unidad = $user->unidad_organica_id
-            ? \App\Models\UnidadOrganica::find($user->unidad_organica_id)
-            : null;
+        if (! $user->unidad_organica_id) {
+            $unidad = null;
+        } else {
+            $unidad ??= UnidadOrganica::find($user->unidad_organica_id);
+        }
 
         [$user->jefe_inmediato_id, $user->jefe_area_id] = $unidad
             ? $unidad->jefaturasDe($user)

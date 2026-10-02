@@ -38,9 +38,18 @@ class UnidadOrganicaObserver
     {
         $unidadIds = [$unidad->id, ...$unidad->descendantIds()];
 
-        User::whereIn('unidad_organica_id', $unidadIds)->each(function (User $usuario) {
-            app(UserObserver::class)->resincronizar($usuario);
-            $usuario->saveQuietly();
-        });
+        // Árbol cargado una sola vez: jefaturasDe() lee padre, padre->padre,
+        // jefe y jefesTurno, y sin esto cada usuario del subárbol los
+        // consultaba por su cuenta (N+1).
+        $arbol = UnidadOrganica::arbolEnMemoria();
+        $observer = app(UserObserver::class);
+
+        User::whereIn('unidad_organica_id', $unidadIds)
+            ->chunkById(500, function ($usuarios) use ($arbol, $observer) {
+                foreach ($usuarios as $usuario) {
+                    $observer->resincronizar($usuario, $arbol->get($usuario->unidad_organica_id));
+                    $usuario->saveQuietly();
+                }
+            });
     }
 }

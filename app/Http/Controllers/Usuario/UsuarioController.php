@@ -163,12 +163,19 @@ class UsuarioController extends Controller
             return [];
         }
 
-        return UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])
+        $unidades = UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])
             ->whereIn('id', $unidadIds)
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get()
-            ->map(fn (UnidadOrganica $unidad) => [$unidad, $unidad->turnosSinJefe()])
+            ->get();
+
+        // Una sola query de configuraciones para todas las unidades (no 3 por unidad).
+        $configurados = \App\Models\ConfiguracionTurno::idsPorTurno(
+            $unidades->flatMap(fn (UnidadOrganica $u) => [$u->jefe_id, ...$u->jefesTurno->pluck('jefe_id')])
+        );
+
+        return $unidades
+            ->map(fn (UnidadOrganica $unidad) => [$unidad, $unidad->turnosSinJefe($configurados)])
             ->filter(fn (array $par) => $par[1] !== [])
             ->map(fn (array $par) => "{$par[0]->nombre}: falta jefe inmediato para ".
                 collect($par[1])->map(fn (string $t) => UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ').'.')
