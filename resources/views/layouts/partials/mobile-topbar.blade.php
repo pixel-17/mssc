@@ -22,10 +22,20 @@
                 <p class="font-display font-semibold text-lg leading-tight text-tinta-950 dark:text-white truncate">{{ $titulo }}</p>
             </div>
         @else
-            <p class="text-xs text-tinta-500 dark:text-tinta-300">Hola,</p>
-            <p class="truncate text-lg font-display font-semibold leading-tight text-tinta-950 dark:text-white">
-                {{ $titulo ?: ($usuario ? explode(' ', $usuario->name)[0] : 'Bienvenido') }}
-            </p>
+            <div class="flex items-center gap-3 min-w-0">
+                @if ($usuario)
+                    <x-avatar :user="$usuario" size="size-11" class="!text-sm" />
+                @endif
+                <div class="min-w-0">
+                    <p class="text-xs text-tinta-500 dark:text-tinta-300">Hola,</p>
+                    <p class="truncate text-lg font-display font-semibold leading-tight text-tinta-950 dark:text-white">
+                        {{ $titulo ?: ($usuario ? explode(' ', $usuario->name)[0] : 'Bienvenido') }}
+                    </p>
+                    @if ($usuario)
+                        <x-tipo-usuario :user="$usuario" class="mt-0.5" />
+                    @endif
+                </div>
+            </div>
         @endif
     </div>
 

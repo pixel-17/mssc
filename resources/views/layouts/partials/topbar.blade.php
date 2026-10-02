@@ -16,9 +16,10 @@
             </svg>
         </button>
 
+        <x-avatar :user="$usuario" size="size-9" class="!text-xs" />
         <div class="min-w-0">
-            <p class="text-[11px] font-semibold uppercase tracking-wide text-tinta-500 dark:text-tinta-300">{{ $rolLabel }}</p>
             <p class="truncate text-sm font-bold text-tinta-950 dark:text-white">{{ $usuario->name }} {{ $usuario->apellido }}</p>
+            <x-tipo-usuario :user="$usuario" class="mt-0.5" />
         </div>
     </div>
 

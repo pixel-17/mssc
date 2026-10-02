@@ -28,13 +28,14 @@
 
                 <!-- Current Profile Photo -->
                 <div class="mt-2" x-show="! photoPreview">
-                    <img src="{{ $this->user->profile_photo_url }}" alt="{{ $this->user->name }}" class="rounded-full size-20 object-cover">
+                    <img src="{{ $this->user->profile_photo_url }}" alt="{{ $this->user->name }}" width="80" height="80" style="width: 80px; height: 80px; max-width: none;" class="rounded-full size-20 object-cover">
                 </div>
 
                 <!-- New Profile Photo Preview -->
                 <div class="mt-2" x-show="photoPreview" style="display: none;">
                     <span class="block rounded-full size-20 bg-cover bg-no-repeat bg-center"
-                          x-bind:style="'background-image: url(\'' + photoPreview + '\');'">
+                          style="width: 80px; height: 80px;"
+                          x-bind:style="'width: 80px; height: 80px; background-image: url(\'' + photoPreview + '\');'">
                     </span>
                 </div>
 

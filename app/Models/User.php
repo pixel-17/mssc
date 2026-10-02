@@ -144,6 +144,41 @@ class User extends Authenticatable
         return $this->unidadesQueEncabeza()->exists();
     }
 
+    /** Tipos de usuario que se muestran en pantalla (clave => etiqueta). */
+    public const TIPOS_USUARIO = [
+        'admin' => 'Administrador',
+        'rrhh' => 'RRHH',
+        'jefe_area' => 'Jefe de área',
+        'jefe_inmediato' => 'Jefe inmediato',
+        'trabajador' => 'Trabajador',
+    ];
+
+    private ?string $tipoUsuarioMemo = null;
+
+    /**
+     * Clave del tipo de usuario para mostrarlo en pantalla (la más alta que
+     * aplique): admin > rrhh > jefe de área > jefe inmediato > trabajador.
+     * Es solo una etiqueta visual; los permisos siguen en policies y roles.
+     * Se memoiza por instancia (hasta 3 consultas la primera vez).
+     *
+     * @return 'admin'|'rrhh'|'jefe_area'|'jefe_inmediato'|'trabajador'
+     */
+    public function tipoUsuario(): string
+    {
+        return $this->tipoUsuarioMemo ??= match (true) {
+            $this->hasRole('admin') => 'admin',
+            $this->hasRole('rrhh') => 'rrhh',
+            $this->esJefeDeArea() => 'jefe_area',
+            $this->esJefeTitular() || $this->esJefeInmediatoDeAlgunTurno() => 'jefe_inmediato',
+            default => 'trabajador',
+        };
+    }
+
+    public function etiquetaTipoUsuario(): string
+    {
+        return self::TIPOS_USUARIO[$this->tipoUsuario()];
+    }
+
     /** Jefe de área = encabeza al menos una unidad que tiene sub-unidades. */
     public function esJefeDeArea(): bool
     {

@@ -19,7 +19,15 @@
         </div>
     </div>
 
-    <p class="relative mt-6 text-white/80 leading-relaxed max-w-2xl text-sm">
+    <div class="relative mt-6 flex items-center gap-3">
+        <x-avatar :user="auth()->user()" size="size-12" class="!text-sm ring-2 ring-white/40" />
+        <div>
+            <p class="font-semibold text-white">{{ auth()->user()->nombre_completo }}</p>
+            <x-tipo-usuario :user="auth()->user()" class="mt-0.5" />
+        </div>
+    </div>
+
+    <p class="relative mt-4 text-white/80 leading-relaxed max-w-2xl text-sm">
         Bienvenido(a), <span class="font-semibold text-white">{{ auth()->user()->name }}</span>.
         Desde aquí puedes gestionar tus permisos de salida y retorno, revisar tu bandeja de aprobaciones
         y hacer seguimiento del estado de tus trámites.
