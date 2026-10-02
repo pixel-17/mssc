@@ -2,7 +2,7 @@
     <button
         @click="open = ! open"
         type="button"
-        class="relative inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 focus:outline-none transition"
+        class="relative inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-white/10 focus:outline-none transition"
         aria-label="{{ __('Notificaciones') }}"
         aria-haspopup="true"
         :aria-expanded="open"
@@ -55,7 +55,7 @@
                     >
                         <p class="font-medium text-gray-800">{{ $notificacion->data['titulo'] ?? '' }}</p>
                         <p class="text-gray-500 mt-0.5">{{ $notificacion->data['mensaje'] ?? '' }}</p>
-                        <p class="text-gray-400 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
+                        <p class="text-gray-500 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
                     </a>
                 @else
                     {{-- Sin url: no es un enlace navegable, solo se marca como leída al tocarla. --}}
@@ -66,11 +66,11 @@
                     >
                         <p class="font-medium text-gray-800">{{ $notificacion->data['titulo'] ?? '' }}</p>
                         <p class="text-gray-500 mt-0.5">{{ $notificacion->data['mensaje'] ?? '' }}</p>
-                        <p class="text-gray-400 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
+                        <p class="text-gray-500 text-xs mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
                     </button>
                 @endif
             @empty
-                <p class="px-4 py-6 text-sm text-gray-400 text-center">{{ __('Sin notificaciones por ahora.') }}</p>
+                <p class="px-4 py-6 text-sm text-gray-500 text-center">{{ __('Sin notificaciones por ahora.') }}</p>
             @endforelse
         </div>
     </div>

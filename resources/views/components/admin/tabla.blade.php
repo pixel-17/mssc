@@ -11,15 +11,15 @@
 --}}
 
 <div class="glass-card overflow-x-auto">
-    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+    <table class="min-w-full divide-y divide-tinta-100 dark:divide-white/10">
         <thead>
-            <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
+            <tr class="text-left text-xs uppercase text-tinta-500 dark:text-tinta-200">
                 @foreach ($columnas as $columna)
                     <th scope="col" class="px-4 py-3">{{ $columna }}</th>
                 @endforeach
             </tr>
         </thead>
-        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+        <tbody class="divide-y divide-tinta-100 dark:divide-white/10">
             {{ $slot }}
         </tbody>
     </table>

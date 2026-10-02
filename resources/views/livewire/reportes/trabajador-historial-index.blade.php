@@ -36,7 +36,7 @@
                                     class="w-full text-left px-3 py-2 hover:bg-tinta-50 dark:hover:bg-gray-800 rounded-md text-sm"
                                 >
                                     <span class="font-medium text-gray-900 dark:text-white">{{ trim($s->name.' '.$s->apellido) }}</span>
-                                    <span class="text-gray-400 text-xs ml-2">{{ $s->dni }}</span>
+                                    <span class="text-gray-500 text-xs ml-2">{{ $s->dni }}</span>
                                 </button>
                             </li>
                         @endforeach

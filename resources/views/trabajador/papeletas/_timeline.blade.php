@@ -19,10 +19,10 @@
                     <p class="text-sm text-gray-500 dark:text-tinta-100/60 italic mt-0.5">"{{ $evento->justificacion }}"</p>
                 @endif
 
-                <p class="text-xs text-gray-400 dark:text-tinta-100/40 mt-1">{{ $evento->created_at->format('d/m/Y H:i') }}</p>
+                <p class="text-xs text-gray-500 dark:text-tinta-100/60 mt-1">{{ $evento->created_at->format('d/m/Y H:i') }}</p>
             </li>
         @empty
-            <li class="pl-5 text-sm text-gray-400 dark:text-tinta-100/40">Sin eventos registrados.</li>
+            <li class="pl-5 text-sm text-gray-500 dark:text-tinta-100/60">Sin eventos registrados.</li>
         @endforelse
     </ol>
 </div>

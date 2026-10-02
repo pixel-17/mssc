@@ -1,5 +1,17 @@
 <x-trabajador-layout titulo="Nueva papeleta" :volver-a="route('trabajador.papeletas.index')">
-    <div x-data="{ motivoId: '{{ old('motivo_id') }}', motivos: {{ $motivos->toJson() }}, archivo: null, get pideAdjunto() { const m = this.motivos.find(m => m.id == this.motivoId); return !m || m.adjunto !== 'no'; } }">
+    <div x-data="{ motivoId: '{{ old('motivo_id') }}', motivos: {{ $motivos->toJson() }}, archivo: null, errorArchivo: null, enviando: false,
+        elegirArchivo(ev) {
+            const f = ev.target.files[0] ?? null;
+            this.errorArchivo = null;
+            if (f && f.size > 10 * 1024 * 1024) {
+                this.errorArchivo = 'El archivo pesa más de 10 MB. Elige uno más liviano.';
+                ev.target.value = '';
+                this.archivo = null;
+                return;
+            }
+            this.archivo = f ? f.name : null;
+        },
+        get pideAdjunto() { const m = this.motivos.find(m => m.id == this.motivoId); return !m || m.adjunto !== 'no'; } }">
         <x-flash-messages />
 
         {{--
@@ -9,7 +21,8 @@
             serif marca el orden real de llenado (motivo → justificación
             → hora → adjunto), no es decoración.
         --}}
-        <form method="POST" action="{{ route('trabajador.papeletas.store') }}" enctype="multipart/form-data" class="mt-4">
+        <form method="POST" action="{{ route('trabajador.papeletas.store') }}" enctype="multipart/form-data" class="mt-4"
+              @submit="enviando = true" @pageshow.window="enviando = false">
             @csrf
 
             <div class="glass-card divide-y divide-tinta-100/70 dark:divide-white/10 px-4 sm:px-5">
@@ -99,7 +112,7 @@
                                 "
                                 class="input-glass @error('hora_retorno_estimado') !border-alarma-500 @enderror"
                             >
-                            <p class="text-xs text-gray-400 dark:text-tinta-100/40">Solo informativa, para que tu jefe sepa cuándo esperarte.</p>
+                            <p class="text-xs text-gray-500 dark:text-tinta-100/60">Solo informativa, para que tu jefe sepa cuándo esperarte.</p>
                             <x-input-error for="hora_retorno_estimado" class="mt-1" />
                         </div>
                     </div>
@@ -109,26 +122,28 @@
                     <div class="flex items-baseline gap-2.5">
                         <span class="font-display text-sello-500 dark:text-sello-300 font-semibold shrink-0">4</span>
                         <div class="w-full space-y-2">
-                            <x-label value="Adjunto" />
+                            <x-label for="adjunto_inicial_path" value="Adjunto" />
 
                             <label
                                 for="adjunto_inicial_path"
-                                class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed @error('adjunto_inicial_path') border-alarma-400 @else border-tinta-200 @enderror dark:border-white/15 bg-tinta-50/40 dark:bg-white/5 py-6 text-center cursor-pointer hover:border-sello-400 dark:hover:border-sello-400/60 transition"
+                                class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed @error('adjunto_inicial_path') border-alarma-400 @else border-tinta-200 @enderror dark:border-white/15 bg-tinta-50/40 dark:bg-white/5 py-6 text-center cursor-pointer hover:border-sello-400 dark:hover:border-sello-400/60 focus-within:border-sello-500 focus-within:ring-2 focus-within:ring-sello-300 transition"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 text-tinta-500">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                                 </svg>
                                 <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Toca para adjuntar un archivo'"></span>
-                                <span class="text-xs text-gray-400 dark:text-tinta-100/40">Máximo 10 MB</span>
+                                <span class="text-xs text-gray-500 dark:text-tinta-100/60">PDF, JPG o PNG · máximo 10 MB</span>
                                 <input
                                     type="file"
                                     id="adjunto_inicial_path"
                                     name="adjunto_inicial_path"
                                     :disabled="!pideAdjunto"
-                                    class="hidden"
-                                    @change="archivo = $event.target.files[0]?.name ?? null"
+                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                    class="sr-only"
+                                    @change="elegirArchivo($event)"
                                 >
                             </label>
+                            <p x-show="errorArchivo" x-cloak x-text="errorArchivo" role="alert" class="mt-1 text-sm text-red-600"></p>
                             <x-input-error for="adjunto_inicial_path" class="mt-1" />
                         </div>
                     </div>
@@ -137,8 +152,9 @@
             </div>
 
             <div class="pt-4">
-                <button type="submit" class="btn-primary w-full text-sm py-3">
-                    Crear papeleta
+                <button type="submit" x-bind:disabled="enviando" class="btn-primary w-full text-sm py-3 disabled:cursor-not-allowed disabled:opacity-60">
+                    <span x-show="! enviando">Crear papeleta</span>
+                    <span x-show="enviando" x-cloak>Enviando…</span>
                 </button>
             </div>
         </form>

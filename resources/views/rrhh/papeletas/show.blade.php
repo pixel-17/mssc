@@ -51,7 +51,7 @@
                         <x-accion-comentario :action="route('rrhh.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                     </div>
                     @if ($papeleta->contador_observaciones_rrhh > 0)
-                        <p class="text-xs text-gray-400 mt-2">Observaciones previas de RRHH: {{ $papeleta->contador_observaciones_rrhh }}/3</p>
+                        <p class="text-xs text-gray-500 mt-2">Observaciones previas de RRHH: {{ $papeleta->contador_observaciones_rrhh }}/3</p>
                     @endif
                 </div>
             @endif
@@ -72,7 +72,7 @@
                         </div>
                     @endif
                     @if ($papeleta->contador_observaciones_posthoc > 0)
-                        <p class="text-xs text-gray-400 mb-3">
+                        <p class="text-xs text-gray-500 mb-3">
                             Observaciones post-hoc: {{ $papeleta->contador_observaciones_posthoc }}/{{ $topePosthoc }}.
                             @if ($papeleta->contador_observaciones_posthoc >= $topePosthoc - 1)
                                 Si observas de nuevo, quedará como reparo definitivo, sin más respuestas.

@@ -34,10 +34,10 @@
                 @if ($evento->justificacion)
                     <p class="text-gray-500 dark:text-tinta-100/60 italic">"{{ $evento->justificacion }}"</p>
                 @endif
-                <p class="text-xs text-gray-400 dark:text-tinta-100/40">{{ $evento->created_at->format('d/m/Y H:i') }}</p>
+                <p class="text-xs text-gray-500 dark:text-tinta-100/60">{{ $evento->created_at->format('d/m/Y H:i') }}</p>
             </li>
         @empty
-            <li class="text-sm text-gray-400 dark:text-tinta-100/40">Sin eventos registrados.</li>
+            <li class="text-sm text-gray-500 dark:text-tinta-100/60">Sin eventos registrados.</li>
         @endforelse
     </ol>
 </div>

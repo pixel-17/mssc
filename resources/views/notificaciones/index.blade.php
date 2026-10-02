@@ -29,7 +29,7 @@
                 <div class="min-w-0 flex-1">
                     <p class="text-sm font-semibold text-gray-800 truncate">{{ $notificacion->titulo }}</p>
                     <p class="text-xs text-gray-500 mt-0.5 line-clamp-2">{{ $notificacion->mensaje }}</p>
-                    <p class="text-[11px] text-gray-400 mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
+                    <p class="text-[11px] text-gray-500 mt-1">{{ $notificacion->created_at->diffForHumans() }}</p>
                 </div>
                 @if(! $notificacion->leida_at)
                     <span class="w-2 h-2 rounded-full bg-sello-500 shrink-0 mt-1.5"></span>

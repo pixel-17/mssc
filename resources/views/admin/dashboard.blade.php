@@ -84,7 +84,7 @@
                     <span class="text-sm font-bold text-gray-800">{{ $fila->total }}</span>
                 </div>
             @empty
-                <p class="text-sm text-gray-400">Aún no hay papeletas registradas.</p>
+                <p class="text-sm text-gray-500">Aún no hay papeletas registradas.</p>
             @endforelse
         </div>
 
@@ -97,7 +97,7 @@
                     <span class="text-sm font-bold text-gray-800">{{ $fila->total }}</span>
                 </div>
             @empty
-                <p class="text-sm text-gray-400">Aún no hay papeletas registradas.</p>
+                <p class="text-sm text-gray-500">Aún no hay papeletas registradas.</p>
             @endforelse
         </div>
     </div>

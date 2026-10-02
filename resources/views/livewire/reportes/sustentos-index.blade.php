@@ -86,7 +86,7 @@
                             <tr wire:key="sustento-{{ $sustento->id }}">
                                 <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">
                                     {{ $sustento->papeleta->trabajador->nombre_completo }}
-                                    <span class="block text-xs text-gray-400">DNI {{ $sustento->papeleta->trabajador->dni ?? '—' }}</span>
+                                    <span class="block text-xs text-gray-500">DNI {{ $sustento->papeleta->trabajador->dni ?? '—' }}</span>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->papeleta->trabajador->sede?->nombre ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->papeleta->dia_operativo->format('d/m/Y') }} · {{ $sustento->papeleta->motivo->nombre }}</td>

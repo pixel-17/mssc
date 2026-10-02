@@ -13,7 +13,7 @@
                 Elige un turno y haz clic o arrastra sobre las celdas. Al guardar se reemplaza el mes completo
                 de cada trabajador que modifiques; los demás no se tocan.
                 @if ($sinProgramacionDiaria > 0)
-                    <span class="text-gray-400">({{ $sinProgramacionDiaria }} {{ $sinProgramacionDiaria === 1 ? 'persona no aparece' : 'personas no aparecen' }}: régimen 276 o inactivas.)</span>
+                    <span class="text-gray-500">({{ $sinProgramacionDiaria }} {{ $sinProgramacionDiaria === 1 ? 'persona no aparece' : 'personas no aparecen' }}: régimen 276 o inactivas.)</span>
                 @endif
             </p>
         </div>

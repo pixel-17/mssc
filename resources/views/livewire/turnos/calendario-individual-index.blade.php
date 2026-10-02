@@ -68,7 +68,7 @@
                                                 {{ $turno ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : '' }}
                                                 {{ $esHoy ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : '' }}"
                                         >
-                                            <div class="text-xs {{ $esHoy ? 'font-bold' : 'text-gray-400' }}">
+                                            <div class="text-xs {{ $esHoy ? 'font-bold' : 'text-gray-500' }}">
                                                 {{ $dia }}
                                             </div>
                                             <div class="font-semibold text-right">

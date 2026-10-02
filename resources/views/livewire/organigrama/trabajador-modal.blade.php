@@ -62,7 +62,7 @@
                         <span class="text-tinta-950 dark:text-white">{{ $a->nombre_completo }}
                             <span class="ml-1 rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100">adicional</span>
                         </span>
-                        <button type="button" wire:click="quitarJefe({{ $a->id }})" wire:confirm="¿Quitar a este jefe adicional?" class="rounded-lg p-1.5 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10" aria-label="Quitar jefe adicional">
+                        <button type="button" wire:click="quitarJefe({{ $a->id }})" wire:confirm="¿Quitar a este jefe adicional?" class="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10" aria-label="Quitar jefe adicional">
                             <x-icon name="trash" class="size-4" />
                         </button>
                     </div>

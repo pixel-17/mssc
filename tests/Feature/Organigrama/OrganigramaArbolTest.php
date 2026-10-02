@@ -146,6 +146,68 @@ class OrganigramaArbolTest extends TestCase
             ->assertSet('modoEdicion', false);
     }
 
+    // ---- «Mover a otra unidad» desde la ficha (alternativa al arrastre) ----
+
+    public function test_desde_la_ficha_se_propone_el_movimiento_sin_arrastrar(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(OrganigramaArbol::class)
+            ->call('alternarEdicion')
+            ->call('verPersona', $this->trabajadorCentral->id)
+            ->set('destinoMover', $this->oficinaB->id)
+            ->call('moverDesdeFicha')
+            // La ficha se cierra para que la confirmación no quede apilada sobre ella.
+            ->assertSet('personaId', null)
+            ->assertSet('destinoMover', null)
+            ->assertSet('propuesta.trabajador', $this->trabajadorCentral->id)
+            ->assertSet('propuesta.origen', $this->oficinaA->id)
+            ->assertSet('propuesta.destino', $this->oficinaB->id)
+            ->assertSee('Confirmar movimiento');
+
+        // Solo es una propuesta: nadie se mueve hasta confirmar.
+        $this->assertSame($this->oficinaA->id, $this->trabajadorCentral->fresh()->unidad_organica_id);
+    }
+
+    public function test_desde_la_ficha_sin_elegir_destino_avisa_y_no_cierra_la_ficha(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(OrganigramaArbol::class)
+            ->call('alternarEdicion')
+            ->call('verPersona', $this->trabajadorCentral->id)
+            ->call('moverDesdeFicha')
+            ->assertHasErrors(['destinoMover'])
+            ->assertSet('personaId', $this->trabajadorCentral->id)
+            ->assertSet('propuesta', null);
+    }
+
+    public function test_desde_la_ficha_no_mueve_fuera_del_modo_edicion(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(OrganigramaArbol::class)
+            ->call('verPersona', $this->trabajadorCentral->id)
+            ->set('destinoMover', $this->oficinaB->id)
+            ->call('moverDesdeFicha')
+            ->assertSet('propuesta', null)
+            ->assertSet('personaId', $this->trabajadorCentral->id);
+    }
+
+    public function test_los_destinos_de_la_ficha_solo_salen_en_modo_edicion_y_excluyen_la_unidad_actual(): void
+    {
+        $componente = Livewire::actingAs($this->admin)
+            ->test(OrganigramaArbol::class)
+            ->call('verPersona', $this->trabajadorCentral->id)
+            ->assertViewHas('destinosMover', []);
+
+        $componente
+            ->call('alternarEdicion')
+            ->assertViewHas('destinosMover', function (array $destinos) {
+                $ids = array_column($destinos, 'id');
+
+                return in_array($this->oficinaB->id, $ids, true)
+                    && ! in_array($this->oficinaA->id, $ids, true);
+            });
+    }
+
     public function test_un_trabajador_comun_recibe_403(): void
     {
         Livewire::actingAs($this->trabajadorCentral)

@@ -26,7 +26,7 @@
         <span class="text-gray-500 dark:text-tinta-100/50 truncate">
             {{ $papeleta->sede->nombre ?? 'Sin sede asignada' }}
         </span>
-        <span class="text-gray-400 dark:text-tinta-100/40 shrink-0 ms-3">
+        <span class="text-gray-500 dark:text-tinta-100/60 shrink-0 ms-3">
             {{ $papeleta->dia_operativo?->format('d/m/Y') ?? '—' }}
         </span>
     </div>

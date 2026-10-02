@@ -24,7 +24,7 @@
                         <td class="px-4 py-3">
                             {{ $usuario->nombre_completo }}
                             @unless ($usuario->activo)
-                                <span class="ml-1 text-xs text-gray-400">(inactivo)</span>
+                                <span class="ml-1 text-xs text-gray-500">(inactivo)</span>
                             @endunless
                         </td>
                         <td class="px-4 py-3">{{ $usuario->dni }}</td>

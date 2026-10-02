@@ -14,6 +14,7 @@ use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Services\Organigrama\ArmadorOrganigrama;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
@@ -60,6 +61,14 @@ class OrganigramaArbol extends Component
     public ?int $personaId = null;
 
     public bool $modoEdicion = false;
+
+    /**
+     * Unidad elegida en «Mover a otra unidad» de la ficha (alternativa al
+     * arrastre, que no funciona en táctil ni con teclado). Viene del
+     * navegador: solo se usa como id para proponerMovimiento(), que lo
+     * revalida entero.
+     */
+    public ?int $destinoMover = null;
 
     /**
      * Movimiento pendiente de confirmar, o null. Solo guarda ids; viene
@@ -448,11 +457,42 @@ class OrganigramaArbol extends Component
     public function verPersona(int $id): void
     {
         $this->personaId = $id;
+        $this->destinoMover = null;
+        $this->resetErrorBag('destinoMover');
     }
 
     public function cerrarPersona(): void
     {
         $this->personaId = null;
+        $this->destinoMover = null;
+        $this->resetErrorBag('destinoMover');
+    }
+
+    /**
+     * «Mover a otra unidad» desde la ficha: misma confirmación que al soltar
+     * una persona sobre una unidad (proponerMovimiento), pero sin arrastrar.
+     * Se cierra la ficha para que la ventana de confirmación no quede
+     * apilada encima de ella.
+     */
+    public function moverDesdeFicha(): void
+    {
+        $this->autorizar();
+
+        $personaId = $this->personaId;
+        $destinoId = $this->destinoMover;
+
+        if (! $this->modoEdicion || $personaId === null) {
+            return;
+        }
+
+        if ($destinoId === null) {
+            $this->addError('destinoMover', 'Elige la unidad de destino.');
+
+            return;
+        }
+
+        $this->cerrarPersona();
+        $this->proponerMovimiento($personaId, $destinoId);
     }
 
     private function autorizar(): User
@@ -475,6 +515,8 @@ class OrganigramaArbol extends Component
         $armador = new ArmadorOrganigrama($this->buscar, $this->sede, $this->verInactivos);
         ['raices' => $raices, 'stats' => $stats, 'conteoSedes' => $conteoSedes, 'unidades' => $unidades, 'enAlcance' => $enAlcance] = $armador->armar($usuario);
 
+        $ficha = $armador->fichaDe($this->personaId, $unidades, $enAlcance);
+
         return view('livewire.organigrama.organigrama-arbol', [
             'raices' => $raices,
             'stats' => $stats,
@@ -482,7 +524,8 @@ class OrganigramaArbol extends Component
             'etiquetasTurno' => UnidadOrganicaForm::TURNOS,
             'sedes' => Sede::orderBy('nombre')->get(['id', 'nombre']),
             'conteoSedes' => $conteoSedes,
-            'ficha' => $armador->fichaDe($this->personaId, $unidades, $enAlcance),
+            'ficha' => $ficha,
+            'destinosMover' => $this->destinosParaMover($ficha, $unidades, $enAlcance),
             'movimiento' => $this->vistaPreviaMovimiento($usuario),
             'movimientoJefe' => $this->vistaPreviaMovimientoJefe($usuario),
             'historial' => $armador->historialDe($usuario, $enAlcance, $this->modoEdicion),
@@ -561,5 +604,34 @@ class OrganigramaArbol extends Component
         }
 
         return $vista['trabajador'] === null && $vista['como_jefe'] === null && $vista['unidad'] === null ? null : $vista;
+    }
+
+    /**
+     * Unidades a las que se puede proponer mover a la persona de la ficha:
+     * activas, dentro del alcance de quien mira y distintas de la actual.
+     * Solo es una lista para elegir; las reglas las valida el servidor.
+     *
+     * @param  array<string, mixed>|null  $ficha
+     * @param  Collection<int, UnidadOrganica>  $unidades
+     * @param  array<int, true>  $enAlcance
+     * @return list<array{id: int, label: string, hint: string}>
+     */
+    private function destinosParaMover(?array $ficha, Collection $unidades, array $enAlcance): array
+    {
+        if (! $this->modoEdicion || $ficha === null) {
+            return [];
+        }
+
+        $actual = (int) $ficha['persona']->unidad_organica_id;
+
+        return $unidades
+            ->filter(fn (UnidadOrganica $u) => isset($enAlcance[$u->id]) && $u->activo && (int) $u->id !== $actual)
+            ->map(fn (UnidadOrganica $u) => [
+                'id' => (int) $u->id,
+                'label' => $u->nombre,
+                'hint' => $u->jefe?->nombre_completo ?? 'sin jefe',
+            ])
+            ->values()
+            ->all();
     }
 }

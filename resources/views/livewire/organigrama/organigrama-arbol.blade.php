@@ -74,6 +74,7 @@
             <strong>Modo edición</strong>
             <span class="text-amber-800/80 dark:text-amber-200/80">
                 Arrastra trabajadores a una unidad con jefe inmediato{{ $esAdmin ? '; arrastra un jefe inmediato sobre un área con jefe de área para mover su unidad con su gente' : '' }} (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
+                Sin arrastrar (táctil o teclado): abre a la persona con clic en su nombre y usa «Mover a otra unidad».
             </span>
         </div>
     @endif
@@ -210,7 +211,8 @@
             <div class="absolute inset-0 bg-black/40" wire:click="cancelarMovimiento" aria-hidden="true"></div>
 
             <div class="absolute left-1/2 top-1/2 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
-                 role="dialog" aria-modal="true" aria-label="Confirmar movimiento">
+                 role="dialog" aria-modal="true" aria-label="Confirmar movimiento"
+                 x-trap.noscroll="true">
                 <h2 class="text-lg font-semibold text-tinta-950 dark:text-white">Confirmar movimiento</h2>
                 <p class="mt-2 text-sm text-gray-700 dark:text-tinta-50/80">
                     Vas a mover a <strong>{{ $t->nombre_completo }}</strong> de
@@ -312,7 +314,8 @@
             <div class="absolute inset-0 bg-black/40" wire:click="cancelarMovimiento" aria-hidden="true"></div>
 
             <div class="absolute left-1/2 top-1/2 max-h-[90vh] w-full max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-2xl bg-white p-6 shadow-xl dark:bg-gray-900"
-                 role="dialog" aria-modal="true" aria-label="Mover jefe">
+                 role="dialog" aria-modal="true" aria-label="Mover jefe"
+                 x-trap.noscroll="true">
                 <h2 class="text-lg font-semibold text-tinta-950 dark:text-white">{{ $movimientoJefe['es_jefe'] ? 'Mover a' : 'Hacer jefe inmediato a' }} {{ $movimientoJefe['jefe']->nombre_completo }}</h2>
                 <p class="mt-1 text-sm text-gray-700 dark:text-tinta-50/80">Destino: <strong>{{ $movimientoJefe['destino']->nombre }}</strong></p>
 
@@ -473,7 +476,8 @@
             <div class="absolute inset-0 bg-black/30" wire:click="cerrarPersona" aria-hidden="true"></div>
 
             <aside class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl dark:bg-gray-900"
-                   role="dialog" aria-modal="true" aria-label="Ficha de {{ $p->nombre_completo }}">
+                   role="dialog" aria-modal="true" aria-label="Ficha de {{ $p->nombre_completo }}"
+                   x-trap.noscroll="true">
                 <div class="flex items-start justify-between gap-3">
                     <x-avatar :user="$p" size="size-14" class="text-lg" />
                     <div class="min-w-0 flex-1">
@@ -558,6 +562,26 @@
                         </dd>
                     </div>
                 </dl>
+
+                {{-- Alternativa al arrastre (táctil / teclado): misma confirmación que al soltar sobre una unidad. --}}
+                @if ($modoEdicion && $destinosMover !== [])
+                    <section class="mt-6 border-t border-gray-100 pt-5 dark:border-white/10">
+                        <label for="mover-destino" class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Mover a otra unidad</label>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-tinta-50/60">Elige el destino. Antes de mover se te pide confirmación.</p>
+
+                        <div class="mt-2">
+                            <x-organigrama.combobox model="destinoMover" id="mover-destino" :options="$destinosMover" :limpiable="false"
+                                                    placeholder="Buscar unidad…" vacio="Elige la unidad de destino" />
+                        </div>
+                        <x-input-error for="destinoMover" class="mt-1" />
+
+                        <button type="button" wire:click="moverDesdeFicha" wire:loading.attr="disabled" wire:target="moverDesdeFicha"
+                                class="btn-primary mt-3 w-full text-sm">
+                            <span wire:loading.remove wire:target="moverDesdeFicha">Continuar</span>
+                            <span wire:loading wire:target="moverDesdeFicha">Revisando…</span>
+                        </button>
+                    </section>
+                @endif
             </aside>
         </div>
     @endif

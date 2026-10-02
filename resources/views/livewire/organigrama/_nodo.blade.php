@@ -134,7 +134,7 @@
                             @endif
                             @unless ($m->activo)<span class="text-[11px] text-red-600">desactivado</span>@endunless
                             @if ($modoEdicion && $esAdmin)
-                                <button type="button" title="Editar trabajador" class="ms-auto rounded-lg p-1 text-gray-400 opacity-70 hover:bg-white hover:text-tinta-700 hover:opacity-100 dark:hover:bg-white/10"
+                                <button type="button" title="Editar trabajador" class="ms-auto rounded-lg p-1 text-gray-500 opacity-70 hover:bg-white hover:text-tinta-700 hover:opacity-100 dark:hover:bg-white/10"
                                         @click="$dispatch('org-trabajador-abrir', { id: {{ $m->id }} })">
                                     <x-icon name="pencil" class="size-3.5" /><span class="sr-only">Editar trabajador</span>
                                 </button>

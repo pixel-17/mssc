@@ -130,7 +130,7 @@
             </div>
             <div class="glass-card p-4">
                 <p class="text-xs uppercase text-gray-500">Horas con descuento</p>
-                <p class="text-2xl font-bold {{ $resumen->sum('minutos_con_descuento') > 0 ? 'text-red-600' : 'text-gray-400' }}">
+                <p class="text-2xl font-bold {{ $resumen->sum('minutos_con_descuento') > 0 ? 'text-red-600' : 'text-gray-500' }}">
                     {{ $fmtHoras((int) $resumen->sum('minutos_con_descuento')) }}
                 </p>
             </div>
@@ -140,7 +140,7 @@
                     <p class="text-sm font-bold text-tinta-950 dark:text-white truncate" title="{{ $mayor['trabajador'] }}">{{ $mayor['trabajador'] }}</p>
                     <p class="text-xs text-gray-500">{{ $fmtHoras((int) $mayor['minutos_totales']) }}</p>
                 @else
-                    <p class="text-sm text-gray-400">—</p>
+                    <p class="text-sm text-gray-500">—</p>
                 @endif
             </div>
         </div>
@@ -196,7 +196,7 @@
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white font-medium">
                                         {{ $fila['trabajador'] }}
-                                        <span class="block text-xs text-gray-400 font-normal">DNI {{ $fila['dni'] ?? '—' }}</span>
+                                        <span class="block text-xs text-gray-500 font-normal">DNI {{ $fila['dni'] ?? '—' }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['sede'] ?? '—' }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500">{{ $fila['unidad_organica'] ?? '—' }}</td>
@@ -204,9 +204,9 @@
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white text-right font-semibold">
                                         {{ intdiv($fila['minutos_totales'], 60) }}h {{ str_pad($fila['minutos_totales'] % 60, 2, '0', STR_PAD_LEFT) }}m
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-right {{ $fila['minutos_con_descuento'] > 0 ? 'text-red-600 font-semibold' : 'text-gray-400' }}">
+                                    <td class="px-4 py-3 text-sm text-right {{ $fila['minutos_con_descuento'] > 0 ? 'text-red-600 font-semibold' : 'text-gray-500' }}">
                                         {{ intdiv($fila['minutos_con_descuento'], 60) }}h {{ str_pad($fila['minutos_con_descuento'] % 60, 2, '0', STR_PAD_LEFT) }}m
-                                        <span class="text-xs text-gray-400">({{ $fila['papeletas_con_descuento'] }})</span>
+                                        <span class="text-xs text-gray-500">({{ $fila['papeletas_con_descuento'] }})</span>
                                     </td>
                                     <td class="px-4 py-3 text-sm print:hidden">
                                         <a href="{{ route('reportes.sustentos', ['trabajadorId' => $fila['trabajador_id']]) }}" class="text-tinta-600 hover:text-tinta-900 underline">Ver adjuntos</a>

@@ -95,7 +95,7 @@
                                 <div class="min-w-0 flex-1">
                                     <x-organigrama.combobox :model="'jefesAdicionales.'.$indice" :options="$jefes" placeholder="Buscar por nombre…" vacio="Elegir jefe…" :limpiable="false" />
                                 </div>
-                                <button type="button" wire:click="quitarJefeAdicional({{ $indice }})" class="rounded-lg p-2 text-gray-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10" aria-label="Quitar jefe">
+                                <button type="button" wire:click="quitarJefeAdicional({{ $indice }})" class="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10" aria-label="Quitar jefe">
                                     <x-icon name="trash" class="size-4" />
                                 </button>
                             </div>

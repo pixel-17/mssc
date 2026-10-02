@@ -915,3 +915,39 @@ body.app-bg {
         padding: 1.5rem;
     }
 }
+
+/* Barra de carga global de Livewire (resources/js/livewire-progreso.js).
+   Aparece solo si la respuesta tarda; usa el color de sello. */
+html::after {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 3px;
+    z-index: 70;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(90deg, transparent, #b8792f, transparent) no-repeat;
+    background-size: 40% 100%;
+    transition: opacity 0.15s ease;
+}
+
+html.lw-cargando {
+    cursor: progress;
+}
+
+html.lw-cargando::after {
+    opacity: 1;
+    animation: lw-barra 1s ease-in-out infinite;
+}
+
+@keyframes lw-barra {
+    from { background-position: -40% 0; }
+    to   { background-position: 140% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html.lw-cargando::after {
+        animation: none;
+        background-size: 100% 100%;
+    }
+}

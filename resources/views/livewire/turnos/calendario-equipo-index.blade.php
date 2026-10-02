@@ -201,7 +201,7 @@
                                             {{ $trabajador->nombre_completo }}
                                         </a>
                                     @endif
-                                    <span class="text-xs text-gray-400">({{ $trabajador->regimen }})</span>
+                                    <span class="text-xs text-gray-500">({{ $trabajador->regimen }})</span>
                                     @if (in_array($trabajador->id, $idsJefes, true))
                                         <span class="ml-1 inline-flex items-center rounded bg-tinta-100 dark:bg-tinta-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-tinta-800 dark:text-tinta-200">Jefe</span>
                                     @endif
@@ -258,7 +258,7 @@
                                 @endif
                                 <td class="px-3 py-2 text-right whitespace-nowrap align-middle">
                                     @if (in_array($trabajador->id, $soloLectura, true))
-                                        <span class="text-xs text-gray-400">Solo lectura</span>
+                                        <span class="text-xs text-gray-500">Solo lectura</span>
                                     @elseif ($trabajador->regimen === '728')
                                         <label class="inline-flex items-center gap-1 text-xs text-gray-500 mr-2">
                                             <input type="checkbox" class="rounded border-gray-300" value="{{ $trabajador->id }}" x-model="seleccion">

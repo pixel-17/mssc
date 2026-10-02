@@ -28,8 +28,8 @@
     <button type="button" @if ($id) id="{{ $id }}" @endif @click="open ? cerrar() : abrir()"
             :aria-expanded="open" aria-haspopup="listbox"
             class="flex w-full items-center justify-between gap-2 rounded-xl border border-tinta-200 bg-white/70 px-3 py-2 text-left text-sm shadow-sm transition focus:border-tinta-500 focus:outline-none focus:ring-1 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/10 dark:text-white">
-        <span class="min-w-0 flex-1 truncate" :class="actual ? '' : 'text-gray-400 dark:text-white/40'" x-text="actual ? actual.label : '{{ $vacio }}'"></span>
-        <span class="flex items-center gap-1 text-gray-400">
+        <span class="min-w-0 flex-1 truncate" :class="actual ? '' : 'text-gray-500 dark:text-white/40'" x-text="actual ? actual.label : '{{ $vacio }}'"></span>
+        <span class="flex items-center gap-1 text-gray-500">
             @if ($limpiable)
                 <span x-show="actual" x-cloak role="button" tabindex="-1" @click.stop="elegir(null)" class="rounded p-0.5 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10" aria-label="Quitar selección">
                     <svg class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>

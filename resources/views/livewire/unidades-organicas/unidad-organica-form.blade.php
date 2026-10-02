@@ -78,7 +78,7 @@
                         </div>
                         @error("jefesAdicionales.{$indice}") <span class="text-sm text-red-600">{{ $message }}</span> @enderror
                     @empty
-                        <p class="text-xs text-gray-400">Sin otros jefes inmediatos asignados.</p>
+                        <p class="text-xs text-gray-500">Sin otros jefes inmediatos asignados.</p>
                     @endforelse
                 </div>
             @endif

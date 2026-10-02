@@ -86,7 +86,7 @@
                         <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                     </div>
                     @if ($papeleta->contador_observaciones_jefe > 0)
-                        <p class="text-xs text-gray-400 dark:text-tinta-100/40 mt-2">Observaciones previas del jefe: {{ $papeleta->contador_observaciones_jefe }}/{{ $topeObservaciones }}</p>
+                        <p class="text-xs text-gray-500 dark:text-tinta-100/60 mt-2">Observaciones previas del jefe: {{ $papeleta->contador_observaciones_jefe }}/{{ $topeObservaciones }}</p>
                     @endif
                 </div>
             @endif
@@ -120,7 +120,7 @@
                         <div>
                             <label for="archivo-posthoc" class="block text-sm font-medium text-gray-700 dark:text-tinta-50/80 mb-1">Sustento (opcional)</label>
                             <input id="archivo-posthoc" type="file" name="archivo" accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-sm text-gray-600 dark:text-tinta-100/70">
-                            <p class="mt-1 text-xs text-gray-400">PDF, JPG o PNG, hasta 10 MB.</p>
+                            <p class="mt-1 text-xs text-gray-500">PDF, JPG o PNG, hasta 10 MB.</p>
                             @error('archivo') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
                         </div>
                         <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }"
