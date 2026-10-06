@@ -91,7 +91,7 @@ class UsuarioAdminForm extends Component
             $this->apellido = $usuario->apellido;
             $this->dni = $usuario->dni;
             $this->email = $usuario->email;
-            $this->regimen = $usuario->regimen;
+            $this->regimen = $usuario->regimen ?? '';
             $this->sedeId = $usuario->sede_id;
             $this->unidadOrganicaId = $usuario->unidad_organica_id;
             $this->rolesSeleccionados = $usuario->roles->pluck('id')->all();
@@ -128,6 +128,18 @@ class UsuarioAdminForm extends Component
      * crear siempre, y al editar solo si todavía no tiene ninguna
      * (para no obligar a re-cargarla cada vez que se edita otra cosa).
      */
+    /**
+     * ¿Los roles elegidos son únicamente el de administrador? El admin no
+     * marca papeletas ni tiene turno, así que el régimen es opcional para él.
+     */
+    protected function esSoloAdmin(): bool
+    {
+        $adminId = (int) Role::where('name', 'admin')->value('id');
+        $roles = array_map('intval', $this->rolesSeleccionados);
+
+        return $adminId > 0 && $roles !== [] && array_diff($roles, [$adminId]) === [];
+    }
+
     protected function requiereConfiguracionTurno(): bool
     {
         if ($this->regimen !== '728') {
@@ -155,10 +167,10 @@ class UsuarioAdminForm extends Component
                 Rule::unique('users', 'email')->ignore($this->usuario?->id),
             ],
             'password' => ['nullable', 'string', 'min:8'],
-            'regimen' => ['required', 'in:276,728'],
+            'regimen' => [$this->esSoloAdmin() ? 'nullable' : 'required', 'in:276,728'],
             'sedeId' => ['nullable', 'exists:sedes,id'],
             'unidadOrganicaId' => ['nullable', 'exists:unidad_organicas,id'],
-            'rolesSeleccionados' => ['array'],
+            'rolesSeleccionados' => ['required', 'array', 'min:1'],
             'rolesSeleccionados.*' => ['exists:roles,id'],
             'activo' => ['boolean'],
         ];
@@ -174,6 +186,8 @@ class UsuarioAdminForm extends Component
     }
 
     protected $messages = [
+        'rolesSeleccionados.required' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',
+        'rolesSeleccionados.min' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',
         'dni.digits' => 'El DNI debe tener 8 dígitos.',
     ];
 
@@ -224,7 +238,7 @@ class UsuarioAdminForm extends Component
             'apellido' => $datos['apellido'],
             'dni' => $datos['dni'],
             'email' => $datos['email'],
-            'regimen' => $datos['regimen'],
+            'regimen' => $datos['regimen'] ?: null,
             'sede_id' => $datos['sedeId'],
             'unidad_organica_id' => $datos['unidadOrganicaId'],
             'activo' => $datos['activo'],

@@ -37,7 +37,7 @@
                     </div>
                 @endif
 
-                <x-admin.campo label="Régimen" for="usuario-admin-form-regimen">
+                <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" ayuda="Opcional solo si el usuario es únicamente administrador.">
                     <x-select id="usuario-admin-form-regimen" wire:model.live="regimen">
                         <option value="">— Selecciona —</option>
                         <option value="276">276 (día)</option>

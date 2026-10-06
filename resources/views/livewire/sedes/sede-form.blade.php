@@ -37,7 +37,7 @@
                     for="radioMetros"
                     ayuda="Radio alrededor de la sede dentro del cual el retorno se marca como &quot;dentro de radio&quot;. El círculo del mapa se ajusta al escribir."
                 >
-                    <x-input id="radioMetros" type="number" min="10" class="w-full" wire:model.live="radioMetros" />
+                    <x-input id="radioMetros" type="number" min="10" max="1000" class="w-full" wire:model.live="radioMetros" />
                 </x-admin.campo>
 
                 <x-admin.campo-checkbox for="activo" wire:model="activo" label="Activa" />

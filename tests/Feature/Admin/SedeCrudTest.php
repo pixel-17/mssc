@@ -183,4 +183,29 @@ class SedeCrudTest extends TestCase
         $this->assertModelExists($sede);
         $this->assertFalse(Sede::where('nombre', 'Colada')->exists());
     }
+
+    public function test_el_radio_de_la_sede_tiene_un_maximo(): void
+    {
+        $n = Sede::count();
+
+        Livewire::actingAs($this->admin)
+            ->test(SedeForm::class)
+            ->set('nombre', 'Sede enorme')
+            ->set('latitud', -13.52)
+            ->set('longitud', -71.97)
+            ->set('radioMetros', 1001)
+            ->call('guardar')
+            ->assertHasErrors(['radioMetros']);
+
+        $this->assertSame($n, Sede::count());
+
+        Livewire::actingAs($this->admin)
+            ->test(SedeForm::class)
+            ->set('nombre', 'Sede en el tope')
+            ->set('latitud', -13.52)
+            ->set('longitud', -71.97)
+            ->set('radioMetros', 1000)
+            ->call('guardar')
+            ->assertHasNoErrors();
+    }
 }

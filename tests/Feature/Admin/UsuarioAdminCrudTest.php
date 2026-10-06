@@ -60,6 +60,7 @@ class UsuarioAdminCrudTest extends TestCase
             'dni' => '12345678',
             'email' => 'lucia@example.com',
             'regimen' => '276',
+            'rolesSeleccionados' => [$this->rolId('trabajador')],
             ...$datos,
         ];
 
@@ -97,6 +98,65 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertTrue($usuario->hasRole('trabajador'));
         $this->assertTrue(Hash::check('12345678', $usuario->password), 'la contraseña inicial es el DNI');
         $this->assertTrue((bool) $usuario->debe_actualizar_password);
+    }
+
+    public function test_no_se_puede_crear_un_usuario_sin_ningun_rol(): void
+    {
+        $this->formularioDeAlta(['rolesSeleccionados' => []])
+            ->call('guardar')
+            ->assertHasErrors(['rolesSeleccionados']);
+
+        $this->assertNull(User::where('dni', '12345678')->first());
+    }
+
+    public function test_no_se_puede_dejar_a_un_usuario_sin_roles_al_editarlo(): void
+    {
+        $usuario = $this->usuarioDePrueba(['regimen' => '276'], ['trabajador']);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario])
+            ->set('rolesSeleccionados', [])
+            ->call('guardar')
+            ->assertHasErrors(['rolesSeleccionados']);
+
+        $this->assertTrue($usuario->fresh()->hasRole('trabajador'));
+    }
+
+    public function test_el_admin_puede_abrir_y_guardar_su_propio_usuario_sin_regimen(): void
+    {
+        $this->admin->update(['regimen' => null]);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $this->admin->fresh()])
+            ->assertOk()
+            ->set('name', 'Admin renombrado')
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertSame('Admin renombrado', $this->admin->fresh()->name);
+        $this->assertNull($this->admin->fresh()->regimen);
+    }
+
+    public function test_un_usuario_solo_admin_se_crea_sin_regimen(): void
+    {
+        $this->formularioDeAlta(['regimen' => '', 'rolesSeleccionados' => [$this->rolId('admin')]])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertNull(User::where('dni', '12345678')->firstOrFail()->regimen);
+    }
+
+    public function test_el_regimen_sigue_siendo_obligatorio_si_el_usuario_no_es_solo_admin(): void
+    {
+        $this->formularioDeAlta(['regimen' => '', 'rolesSeleccionados' => [$this->rolId('admin'), $this->rolId('trabajador')]])
+            ->call('guardar')
+            ->assertHasErrors(['regimen']);
+
+        $this->formularioDeAlta(['regimen' => '', 'rolesSeleccionados' => [$this->rolId('trabajador')]])
+            ->call('guardar')
+            ->assertHasErrors(['regimen']);
+
+        $this->assertNull(User::where('dni', '12345678')->first());
     }
 
     public function test_al_crear_se_ignora_la_contrasena_escrita_y_se_usa_el_dni(): void

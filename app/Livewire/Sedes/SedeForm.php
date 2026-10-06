@@ -39,6 +39,9 @@ class SedeForm extends Component
 
     public bool $activo = true;
 
+    /** Tope del radio de la geocerca (metros). */
+    public const RADIO_MAXIMO_METROS = 1000;
+
     public function mount(?Sede $sede = null): void
     {
         if ($sede?->exists) {
@@ -59,12 +62,14 @@ class SedeForm extends Component
             'direccion' => ['nullable', 'string', 'max:255'],
             'latitud' => ['required', 'numeric', 'between:-90,90'],
             'longitud' => ['required', 'numeric', 'between:-180,180'],
-            'radioMetros' => ['required', 'integer', 'min:10'],
+            'radioMetros' => ['required', 'integer', 'min:10', 'max:'.self::RADIO_MAXIMO_METROS],
             'activo' => ['boolean'],
         ];
     }
 
     protected $messages = [
+        'radioMetros.max' => 'El radio no puede superar los '.self::RADIO_MAXIMO_METROS.' metros.',
+        'radioMetros.min' => 'El radio mínimo es de 10 metros.',
         'latitud.required' => 'Marca la ubicación en el mapa antes de guardar.',
         'longitud.required' => 'Marca la ubicación en el mapa antes de guardar.',
     ];
