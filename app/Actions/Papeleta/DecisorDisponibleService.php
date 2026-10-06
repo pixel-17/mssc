@@ -12,8 +12,7 @@ use Illuminate\Support\Carbon;
  * ver PapeletaPolicy) actuar AHORA sobre una papeleta?
  *
  * Estar asignado en la BD (jefe_inmediato_id resuelto) no implica estar
- * disponible: un decisor 276 fuera de su horario ordinario (o en
- * feriado) no puede aprobar/rechazar/observar en tiempo real. Antes
+ * disponible: un decisor 276 fuera de su horario ordinario no puede aprobar/rechazar/observar en tiempo real. Antes
  * CrearPapeletaAction asumía disponibilidad permanente de quien
  * jefaturasDe() resolviera; con esto, la creación puede saltarlo si no
  * está en condición de decidir — mismo criterio que RrhhHorarioService
@@ -31,7 +30,7 @@ use Illuminate\Support\Carbon;
  *   no puede decidir ahora. Sin programación cargada se asume disponible
  *   (no se puede afirmar que descansa).
  * - Decisor 276 (ordinario): disponible solo dentro de la ventana de
- *   HorarioOrdinarioService (que ya excluye días no laborables y feriados).
+ *   HorarioOrdinarioService (que ya excluye días no laborables).
  * - Decisor sin régimen 276/728: nunca disponible.
  * - Sin decisor (null, p. ej. el tope del organigrama sin jefatura):
  *   nunca disponible — no hay a quién esperar.
@@ -61,7 +60,7 @@ class DecisorDisponibleService
         // se asume disponible ni se trata como 276 por descarte.
         return match ($decisor->regimen) {
             '728' => ! $this->estaDeDescanso($decisor, $momento),
-            // estaDentroDeVentana() ya descarta días no laborables y feriados.
+            // estaDentroDeVentana() ya descarta días no laborables.
             '276' => $this->horarioOrdinario->estaDentroDeVentana($momento),
             default => false,
         };

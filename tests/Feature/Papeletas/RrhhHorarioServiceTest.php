@@ -4,7 +4,6 @@ namespace Tests\Feature\Papeletas;
 
 use App\Actions\Papeleta\RrhhHorarioService;
 use App\Models\Configuracion;
-use App\Models\Feriado;
 use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -13,8 +12,8 @@ use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
 /**
- * RRHH está "en horario" si: hay personal RRHH activo, el día es laborable,
- * no es feriado y la hora cae en el horario ordinario (07:45-16:15 sembrado,
+ * RRHH está "en horario" si: hay personal RRHH activo, el día es laborable
+ * y la hora cae en el horario ordinario (07:45-16:15 sembrado,
  * minuto final incluido). Lunes de referencia: 2026-09-21.
  */
 class RrhhHorarioServiceTest extends TestCase
@@ -55,14 +54,6 @@ class RrhhHorarioServiceTest extends TestCase
     public function test_fin_de_semana_no_esta_en_horario(): void
     {
         $this->assertFalse($this->enHorario('2026-09-26 10:00:00'));
-    }
-
-    public function test_un_feriado_no_esta_en_horario(): void
-    {
-        Feriado::create(['fecha' => '2026-09-21', 'descripcion' => 'Feriado de prueba']);
-
-        $this->assertFalse($this->enHorario('2026-09-21 10:00:00'));
-        $this->assertTrue($this->enHorario('2026-09-22 10:00:00'));
     }
 
     public function test_sin_personal_rrhh_activo_nunca_esta_en_horario(): void

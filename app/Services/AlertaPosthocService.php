@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Notification;
  * Avisa cuando la cola de revisión post-hoc de RRHH se acumula.
  *
  * Toda salida autorizada con RRHH fuera de horario (papeleta de un 728 de
- * noche, fin de semana o feriado, o de cualquier jefe cuando RRHH no
+ * noche o fin de semana, o de cualquier jefe cuando RRHH no
  * atiende) queda con `revision_posthoc_estado = 'pendiente'` y RRHH debe
  * revisarla. Cada una ya avisa individualmente al crearse
  * (NotificarPapeletaService::revisionPosthocPendiente); lo que faltaba era

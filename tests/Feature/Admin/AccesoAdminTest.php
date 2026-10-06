@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 /**
  * Las pantallas del catálogo de administración (Sedes, Motivos, Turnos,
- * Feriados, Unidades orgánicas, Configuraciones, Usuarios) cuelgan todas
+ * Unidades orgánicas, Configuraciones, Usuarios) cuelgan todas
  * del middleware `role:admin`: invitado -> login, cualquier otro rol -> 403,
  * admin -> 200. Se recorren de una sola vez porque comparten la misma regla.
  */
@@ -25,8 +25,6 @@ class AccesoAdminTest extends TestCase
         'motivos.index',
         'motivos.crear',
         'turnos.index',
-        'feriados.index',
-        'feriados.crear',
         'unidades-organicas.index',
         'unidades-organicas.crear',
         'configuraciones.index',
@@ -68,7 +66,7 @@ class AccesoAdminTest extends TestCase
         }
     }
 
-    public function test_el_indice_de_catalogos_enlaza_a_los_siete_catalogos(): void
+    public function test_el_indice_de_catalogos_enlaza_a_los_seis_catalogos(): void
     {
         $admin = $this->usuarioDePrueba([], ['admin']);
 
@@ -77,7 +75,6 @@ class AccesoAdminTest extends TestCase
             ->assertSee('Sedes')
             ->assertSee('Motivos')
             ->assertSee('Turnos')
-            ->assertSee('Feriados')
             ->assertSee('Unidades orgánicas')
             ->assertSee('Configuraciones')
             ->assertSee('Usuarios');

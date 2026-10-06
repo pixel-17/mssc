@@ -147,7 +147,6 @@ class NavegacionComposer
                 ['label' => 'Unidades orgánicas', 'route' => route('unidades-organicas.index'), 'active' => request()->routeIs('unidades-organicas.*'), 'icon' => 'building'],
                 ['label' => 'Motivos', 'route' => route('motivos.index'), 'active' => request()->routeIs('motivos.*'), 'icon' => 'tag'],
                 ['label' => 'Turnos', 'route' => route('turnos.index'), 'active' => request()->routeIs('turnos.index', 'turnos.crear', 'turnos.editar'), 'icon' => 'clock'],
-                ['label' => 'Feriados', 'route' => route('feriados.index'), 'active' => request()->routeIs('feriados.*'), 'icon' => 'calendar'],
             ]];
 
             $secciones[] = ['label' => 'Sistema', 'items' => [

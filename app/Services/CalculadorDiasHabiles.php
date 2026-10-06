@@ -3,13 +3,12 @@
 namespace App\Services;
 
 use App\Models\Configuracion;
-use App\Models\Feriado;
 use Carbon\Carbon;
 
 /**
  * ÚNICA definición de "día hábil" del sistema: día laborable según
- * Configuraciones (HORARIO_ORDINARIO_DIAS_LABORABLES) y que no sea un
- * feriado cargado por el admin en /feriados. Lo usan:
+ * Configuraciones (HORARIO_ORDINARIO_DIAS_LABORABLES). Los feriados no se
+ * consideran. Lo usan:
  * - HorarioOrdinarioService (ventana de 276, disponibilidad de RRHH y
  *   de decisores 276).
  * - Los plazos en horas/días hábiles (sustento de Salud: 48h hábiles).
@@ -21,13 +20,12 @@ class CalculadorDiasHabiles
 {
     public function esHabil(Carbon $fecha): bool
     {
-        return $this->esDiaLaborable($fecha) && ! $this->esFeriado($fecha);
+        return $this->esDiaLaborable($fecha);
     }
 
     /**
      * ¿El día de la semana está entre los laborables configurados
-     * (ISO: 1 = lunes ... 7 = domingo)? No mira feriados: para eso,
-     * esHabil().
+     * (ISO: 1 = lunes ... 7 = domingo)?
      */
     public function esDiaLaborable(Carbon $fecha): bool
     {
@@ -39,14 +37,9 @@ class CalculadorDiasHabiles
         return in_array((string) $fecha->isoWeekday(), $dias, true);
     }
 
-    public function esFeriado(Carbon $fecha): bool
-    {
-        return Feriado::whereDate('fecha', $fecha->toDateString())->exists();
-    }
-
     /**
      * Suma N días hábiles completos a partir de una fecha, saltando
-     * fines de semana y feriados.
+     * los días no laborables.
      */
     public function agregarDiasHabiles(Carbon $desde, int $dias): Carbon
     {

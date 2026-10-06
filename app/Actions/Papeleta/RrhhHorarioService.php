@@ -3,7 +3,6 @@
 namespace App\Actions\Papeleta;
 
 use App\Models\User;
-use App\Services\CalculadorDiasHabiles;
 use App\Services\HorarioOrdinarioService;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Carbon;
@@ -16,13 +15,12 @@ use Illuminate\Support\Carbon;
  * Antes esto se leía de una tabla `horarios_rrhh` editada a mano por el
  * admin, duplicando el mismo horario que ya existe parametrizado para
  * el régimen 276 (Configuracion::HORARIO_ORDINARIO_*). Ahora RRHH está
- * "en horario" cuando se cumplen las tres cosas:
+ * "en horario" cuando se cumplen las dos cosas:
  *
  *  1. Es un momento dentro del horario ordinario de 276 (días laborables
  *     y horas de HorarioOrdinarioService: mismas claves que ya usa el
  *     resto del sistema para validar la ventana de creación de papeletas).
- *  2. El día no es un feriado cargado en /feriados.
- *  3. Existe al menos un trabajador con rol 'rrhh' ACTIVO — RRHH se arma
+ *  2. Existe al menos un trabajador con rol 'rrhh' ACTIVO — RRHH se arma
  *     DESIGNANDO trabajadores de régimen 276 (rol 'rrhh'), no escribiendo
  *     un horario suelto sin relación con el personal real. Si no hay nadie
  *     designado y activo, RRHH nunca está "en horario".
@@ -31,7 +29,6 @@ class RrhhHorarioService
 {
     public function __construct(
         private HorarioOrdinarioService $horarioOrdinario,
-        private CalculadorDiasHabiles $diasHabiles,
     ) {}
 
     public function estaEnHorarioAhora(): bool
@@ -45,10 +42,6 @@ class RrhhHorarioService
         $momento = Carbon::instance($momento);
 
         if (! $this->hayPersonalRrhhDesignado()) {
-            return false;
-        }
-
-        if ($this->diasHabiles->esFeriado($momento)) {
             return false;
         }
 

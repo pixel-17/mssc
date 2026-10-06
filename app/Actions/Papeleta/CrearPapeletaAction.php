@@ -39,7 +39,7 @@ use Illuminate\Support\Facades\DB;
  *   crea esperando a alguien que no existe.
  * - Trabajador raso (no es jefe de nadie): SIEMPRE PENDIENTE_JEFE, sin
  *   importar si su jefe inmediato está "disponible ahora" (fuera de
- *   horario ordinario, feriado, etc. — ver DecisorDisponibleService).
+ *   horario ordinario, etc. — ver DecisorDisponibleService).
  *   Nunca salta a RRHH y el sistema nunca la autoriza por sí solo: si
  *   el jefe no decide a tiempo, la papeleta simplemente vence (ver
  *   ProcesarVencimientosPapeletas), nunca escala a nadie más.

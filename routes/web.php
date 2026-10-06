@@ -26,7 +26,7 @@ Route::get('/', function () {
 
 /*
  * Todo el catálogo de administración (Sedes, Motivos, Turnos,
- * Feriados, Unidades orgánicas, Configuraciones, Horario de RRHH,
+ * Unidades orgánicas, Configuraciones, Horario de RRHH,
  * Usuarios) ya vive en Blade + Livewire puro, uno por uno, en los
  * bloques de abajo.
  */
@@ -115,21 +115,6 @@ Route::middleware([
     config('jetstream.auth_session'),
     'verified',
 ])->get('/organigrama', \App\Livewire\Organigrama\OrganigramaArbol::class)->name('organigrama.index');
-
-/*
- * Feriados: cuarto recurso migrado — Blade + Livewire puro
- * (App\Livewire\Feriados\*).
- */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('feriados')->name('feriados.')->group(function () {
-    Route::get('/', \App\Livewire\Feriados\FeriadoIndex::class)->name('index');
-    Route::get('/crear', \App\Livewire\Feriados\FeriadoForm::class)->name('crear');
-    Route::get('/{feriado}/editar', \App\Livewire\Feriados\FeriadoForm::class)->name('editar');
-});
 
 /*
  * Unidades orgánicas: quinto recurso migrado — Blade + Livewire puro

@@ -2,7 +2,7 @@
 
 {{--
     Encabezado de las 8 pantallas "índice" del catálogo de administración
-    (Sedes, Motivos, Turnos, Feriados, Unidades orgánicas, Configuraciones,
+    (Sedes, Motivos, Turnos, Unidades orgánicas, Configuraciones,
     Usuarios y el hub /catalogos). Antes cada vista repetía el mismo <h2> y
     el mismo <a> con Tailwind suelto (bg-tinta-800 rounded-md...) en vez de
     usar <x-button>/btn-primary — con el tiempo cada módulo fue quedando

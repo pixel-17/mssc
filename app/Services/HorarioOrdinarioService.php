@@ -34,7 +34,7 @@ class HorarioOrdinarioService
     public const HORA_FIN_DEFECTO = '16:15';
 
     /**
-     * ¿El momento cae en día hábil (laborable configurado y no feriado)
+     * ¿El momento cae en día hábil (laborable configurado)
      * y entre la hora de inicio y el fin (ambos inclusive, minuto completo)? Compara instantes, no strings
      * H:i: con strings, un valor sin cero inicial en Configuraciones
      * ("8:00") rompía la comparación silenciosamente.

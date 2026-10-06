@@ -1,6 +1,6 @@
 {{--
     Mensajes flash del catálogo de administración. Los 8 módulos (Sedes,
-    Motivos, Turnos, Feriados, Unidades orgánicas, Configuraciones,
+    Motivos, Turnos, Unidades orgánicas, Configuraciones,
     Usuarios) siempre flashean con las mismas dos claves: session('mensaje')
     para éxito y session('error') para el aviso de "no se puede" (ver
     UsuarioAdminIndex::desactivar). Antes cada vista copiaba su propio

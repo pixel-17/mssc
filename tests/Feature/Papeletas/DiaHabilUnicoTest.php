@@ -6,7 +6,6 @@ use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Actions\Papeleta\DecisorDisponibleService;
 use App\Exceptions\PapeletaException;
 use App\Models\Configuracion;
-use App\Models\Feriado;
 use App\Services\CalculadorDiasHabiles;
 use App\Services\HorarioOrdinarioService;
 use Database\Seeders\ConfiguracionSeeder;
@@ -17,7 +16,7 @@ use Tests\TestCase;
 
 /**
  * "Día hábil" tiene UNA sola definición (CalculadorDiasHabiles): día
- * laborable configurado + no feriado. La ventana de 276, la disponibilidad
+ * laborable configurado. La ventana de 276, la disponibilidad
  * de decisores 276 y los plazos en horas hábiles deben coincidir siempre.
  * Fechas de referencia: lunes 2026-09-21, sábado 2026-09-26.
  */
@@ -49,43 +48,6 @@ class DiaHabilUnicoTest extends TestCase
     private function cargarDiasLaborables(string $dias): void
     {
         Configuracion::where('clave', 'HORARIO_ORDINARIO_DIAS_LABORABLES')->firstOrFail()->update(['valor' => $dias]);
-    }
-
-    public function test_la_ventana_276_excluye_feriados(): void
-    {
-        Feriado::create(['fecha' => '2026-09-21', 'descripcion' => 'Feriado de prueba']);
-
-        $this->assertFalse($this->dentroDeVentana('2026-09-21 10:00:00'));
-        $this->assertTrue($this->dentroDeVentana('2026-09-22 10:00:00'));
-    }
-
-    public function test_un_276_no_puede_crear_papeleta_en_feriado(): void
-    {
-        Feriado::create(['fecha' => '2026-09-21', 'descripcion' => 'Feriado de prueba']);
-        $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
-        $this->conJefeDePrueba($trabajador);
-        $this->travelTo(Carbon::parse('2026-09-21 10:00:00'));
-
-        $this->expectException(PapeletaException::class);
-        app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
-    }
-
-    public function test_un_decisor_276_no_esta_disponible_en_feriado(): void
-    {
-        Feriado::create(['fecha' => '2026-09-21', 'descripcion' => 'Feriado de prueba']);
-        $jefe = $this->usuarioDePrueba(['regimen' => '276']);
-        $decisor = app(DecisorDisponibleService::class);
-
-        $this->assertFalse($decisor->estaDisponible($jefe, Carbon::parse('2026-09-21 10:00:00')));
-        $this->assertTrue($decisor->estaDisponible($jefe, Carbon::parse('2026-09-22 10:00:00')));
-    }
-
-    public function test_un_decisor_728_sigue_disponible_en_feriado(): void
-    {
-        Feriado::create(['fecha' => '2026-09-21', 'descripcion' => 'Feriado de prueba']);
-        $jefe = $this->usuarioDePrueba(['regimen' => '728']);
-
-        $this->assertTrue(app(DecisorDisponibleService::class)->estaDisponible($jefe, Carbon::parse('2026-09-21 03:00:00')));
     }
 
     public function test_cambiar_los_dias_laborables_mueve_ventana_y_plazos_juntos(): void
