@@ -234,7 +234,7 @@ class MarcarRetornoAction
      * (BLOQUE_ALMUERZO_INICIO / BLOQUE_ALMUERZO_FIN, HH:MM). Si el
      * bloque no cae dentro de la ausencia, el descuento es 0.
      */
-    private function calcularDescuentoRefrigerio(Papeleta $papeleta, Carbon $horaRetorno): int
+    public function calcularDescuentoRefrigerio(Papeleta $papeleta, Carbon $horaRetorno): int
     {
         if ($papeleta->regimen !== '276' || ! $papeleta->hora_salida_real) {
             return 0;

@@ -196,6 +196,16 @@ Route::middleware([
     Route::get('/reportes/sustentos', \App\Livewire\Reportes\SustentosIndex::class)
         ->name('reportes.sustentos');
 
+    // Reportes y listas solo para RR. HH. (y admin): lo que RR. HH. decidió,
+    // el resumen mensual y los abandonos. A diferencia de los reportes de
+    // arriba, un jefe NO entra aquí.
+    Route::middleware('role:rrhh|admin')->group(function () {
+        Route::get('/reportes/decisiones-rrhh', \App\Livewire\Reportes\DecisionesRrhhIndex::class)
+            ->name('reportes.decisiones-rrhh');
+        Route::get('/reportes/resumen-papeletas', \App\Livewire\Reportes\ResumenPapeletasIndex::class)
+            ->name('reportes.resumen-papeletas');
+    });
+
     /*
      * Pantalla opcional de "actualiza tu contraseña" para quien entra
      * por primera vez con la contraseña = DNI que le asignó
@@ -300,6 +310,7 @@ Route::middleware([
     // --- RRHH (Paso 3 y Paso 4) ---
     Route::prefix('rrhh')->name('rrhh.')->middleware('role:rrhh')->group(function () {
         Route::get('/papeletas', \App\Livewire\Papeletas\RrhhIndex::class)->name('papeletas.index');
+        Route::get('/abandonos', \App\Livewire\Papeletas\RrhhAbandonos::class)->name('abandonos.index');
         Route::get('/papeletas/{papeleta}', [RrhhPapeletaController::class, 'show'])->name('papeletas.show');
 
         Route::post('/papeletas/{papeleta}/aprobar', [RrhhDecisionController::class, 'aprobar'])->name('papeletas.aprobar');
@@ -308,6 +319,7 @@ Route::middleware([
         Route::post('/papeletas/{papeleta}/posthoc-aprobar', [RrhhDecisionController::class, 'posthocAprobar'])->name('papeletas.posthoc-aprobar');
         Route::post('/papeletas/{papeleta}/posthoc-observar', [RrhhDecisionController::class, 'posthocObservar'])->name('papeletas.posthoc-observar');
         Route::post('/papeletas/{papeleta}/marcar-abandono', [RrhhDecisionController::class, 'marcarAbandono'])->name('papeletas.marcar-abandono');
+        Route::post('/papeletas/{papeleta}/corregir', [RrhhDecisionController::class, 'corregir'])->name('papeletas.corregir');
 
         Route::post('/sustentos/{sustento}/revisar', [RrhhSustentoController::class, 'revisar'])->name('sustentos.revisar');
     });

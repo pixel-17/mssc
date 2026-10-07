@@ -15,6 +15,8 @@
     'opcion' => null,
     'opcionLabel' => null,
     'opcionMarcada' => true,
+    // Textos de un clic que rellenan el comentario (se pueden editar después).
+    'sugerencias' => [],
 ])
 
 @php
@@ -82,6 +84,17 @@
                     <p class="rounded-md border border-amber-300 dark:border-amber-400/30 bg-amber-50 dark:bg-amber-500/10 px-3 py-2 text-xs text-amber-800 dark:text-amber-200">
                         {{ $aviso }}
                     </p>
+                @endif
+
+                @if (! empty($sugerencias))
+                    <div class="flex flex-wrap gap-1.5" aria-label="Respuestas rápidas">
+                        @foreach ($sugerencias as $sugerencia)
+                            <button type="button" @click="texto = @js($sugerencia)"
+                                    class="rounded-full border border-gray-300 dark:border-white/15 px-2.5 py-1 text-xs text-gray-600 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5 text-left">
+                                {{ \Illuminate\Support\Str::limit($sugerencia, 45) }}
+                            </button>
+                        @endforeach
+                    </div>
                 @endif
 
                 <div>

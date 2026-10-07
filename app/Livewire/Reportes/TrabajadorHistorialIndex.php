@@ -3,6 +3,7 @@
 namespace App\Livewire\Reportes;
 
 use App\Livewire\Concerns\RestringeAReportes;
+use App\Exports\HistorialTrabajadorExport;
 use App\Models\User;
 use App\Services\HistorialTrabajadorService;
 use Illuminate\Contracts\View\View;
@@ -11,6 +12,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Buscador + ficha de un trabajador: todo su historial de papeletas
@@ -45,6 +47,22 @@ class TrabajadorHistorialIndex extends Component
     public function quitar(): void
     {
         $this->trabajadorId = null;
+    }
+
+    /** Descarga en Excel el historial completo del trabajador elegido (mismo alcance que la pantalla). */
+    public function exportar(HistorialTrabajadorService $service)
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        $trabajador = $this->trabajadorId ? User::find($this->trabajadorId) : null;
+
+        abort_unless($trabajador && $service->puedeVer($user, $trabajador), 403);
+
+        return Excel::download(
+            new HistorialTrabajadorExport($service->historial($trabajador)),
+            'historial-papeletas-'.\Illuminate\Support\Str::slug($trabajador->nombre_completo).'.xlsx',
+        );
     }
 
     public function render(HistorialTrabajadorService $service): View

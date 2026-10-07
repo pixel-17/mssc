@@ -189,4 +189,16 @@ class PapeletaPolicy
         return $sustento->papeleta->trabajador_id === $user->id
             || $this->revisarSustento($user, $sustento);
     }
+
+    /**
+     * Corrección de datos (hora de retorno, motivo) de una papeleta ya
+     * cerrada: solo RRHH y nunca sobre la propia.
+     */
+    public function corregirComoRrhh(User $user, Papeleta $papeleta): bool
+    {
+        return $user->hasRole('rrhh')
+            && ! $this->esPropia($user, $papeleta)
+            && ($papeleta->estado->equals(\App\States\Papeleta\Cerrada::class)
+                || $papeleta->estado->equals(\App\States\Papeleta\ReclasificadoAParticular::class));
+    }
 }

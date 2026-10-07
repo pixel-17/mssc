@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Rrhh;
 
 use App\Actions\Papeleta\AprobarRrhhAction;
+use App\Actions\Papeleta\CorregirPapeletaRrhhAction;
 use App\Actions\Papeleta\MarcarAbandonoSobreRetornoPendienteAction;
 use App\Actions\Papeleta\ObservarRrhhAction;
 use App\Actions\Papeleta\RechazarRrhhAction;
@@ -10,7 +11,9 @@ use App\Actions\Papeleta\RevisionPosthocAction;
 use App\Exceptions\PapeletaException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\ComentarioRequest;
+use App\Http\Requests\Papeleta\CorregirPapeletaRequest;
 use App\Models\Papeleta;
+use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -97,5 +100,24 @@ class DecisionController extends Controller
         }
 
         return back()->with('success', 'Papeleta marcada como abandono no marcado.');
+    }
+
+    public function corregir(CorregirPapeletaRequest $request, Papeleta $papeleta, CorregirPapeletaRrhhAction $action): RedirectResponse
+    {
+        $this->authorize('corregirComoRrhh', $papeleta);
+
+        try {
+            $action->ejecutar(
+                $papeleta,
+                Auth::user(),
+                $request->filled('hora_retorno') ? Carbon::parse($request->input('hora_retorno')) : null,
+                $request->filled('motivo_id') ? (int) $request->input('motivo_id') : null,
+                $request->input('comentario'),
+            );
+        } catch (PapeletaException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Papeleta corregida. La corrección quedó en el historial.');
     }
 }

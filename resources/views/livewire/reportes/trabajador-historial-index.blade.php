@@ -55,6 +55,7 @@
                 <div class="flex gap-2">
                     <button type="button" onclick="window.print()" class="btn-secondary text-xs">Imprimir</button>
                     <button type="button" wire:click="quitar" class="btn-secondary text-xs">← Buscar a otro</button>
+                    <button type="button" wire:click="exportar" class="btn-secondary text-xs">Exportar a Excel</button>
                 </div>
             </div>
 

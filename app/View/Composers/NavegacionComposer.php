@@ -83,7 +83,8 @@ class NavegacionComposer
         }
 
         if ($esRrhh) {
-            $bandejas[] = ['label' => 'Papeletas de RR. HH.', 'route' => route('rrhh.papeletas.index'), 'active' => request()->routeIs('rrhh.*'), 'icon' => 'clipboard', 'bandeja' => 'rrhh'];
+            $bandejas[] = ['label' => 'Papeletas de RR. HH.', 'route' => route('rrhh.papeletas.index'), 'active' => request()->routeIs('rrhh.papeletas.*'), 'icon' => 'clipboard', 'bandeja' => 'rrhh'];
+            $bandejas[] = ['label' => 'Abandonos', 'route' => route('rrhh.abandonos.index'), 'active' => request()->routeIs('rrhh.abandonos.*'), 'icon' => 'inbox'];
         }
 
         if ($usuario->hasRole('trabajador')) {
@@ -116,11 +117,18 @@ class NavegacionComposer
 
         // Reportes: mismo criterio de acceso que las rutas (admin, RR. HH. o
         // jefe). Cada componente ya recorta los datos al alcance del usuario.
-        $secciones[] = ['label' => 'Reportes', 'items' => [
+        $reportes = [
             ['label' => 'Horas acumuladas', 'route' => route('reportes.horas-acumuladas'), 'active' => request()->routeIs('reportes.horas-acumuladas'), 'icon' => 'chart'],
             ['label' => 'Ficha de trabajador', 'route' => route('reportes.trabajador-historial'), 'active' => request()->routeIs('reportes.trabajador-historial'), 'icon' => 'user-circle'],
             ['label' => 'Sustentos', 'route' => route('reportes.sustentos'), 'active' => request()->routeIs('reportes.sustentos'), 'icon' => 'clipboard'],
-        ]];
+        ];
+
+        if ($esRrhh || $esAdmin) {
+            $reportes[] = ['label' => 'Resumen de papeletas', 'route' => route('reportes.resumen-papeletas'), 'active' => request()->routeIs('reportes.resumen-papeletas'), 'icon' => 'chart'];
+            $reportes[] = ['label' => 'Decisiones de RR. HH.', 'route' => route('reportes.decisiones-rrhh'), 'active' => request()->routeIs('reportes.decisiones-rrhh'), 'icon' => 'clipboard'];
+        }
+
+        $secciones[] = ['label' => 'Reportes', 'items' => $reportes];
 
         $personas = [];
 

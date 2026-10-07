@@ -34,6 +34,17 @@
                 @if ($evento->justificacion)
                     <p class="text-gray-500 dark:text-tinta-100/60 italic">"{{ $evento->justificacion }}"</p>
                 @endif
+                @if (! empty($evento->metadata['correccion_rrhh']))
+                    @php $corr = $evento->metadata['correccion_rrhh']; @endphp
+                    <ul class="text-xs text-gray-500 dark:text-tinta-100/60 list-disc pl-4">
+                        @isset($corr['hora_retorno'])
+                            <li>Hora de retorno: {{ \Carbon\Carbon::parse($corr['hora_retorno']['antes'])->format('d/m/Y H:i') }} → {{ \Carbon\Carbon::parse($corr['hora_retorno']['despues'])->format('d/m/Y H:i') }}</li>
+                        @endisset
+                        @isset($corr['motivo_id'])
+                            <li>Motivo: {{ $evento->motivoAnterior?->nombre ?? '—' }} → {{ $evento->motivoNuevo?->nombre ?? '—' }}</li>
+                        @endisset
+                    </ul>
+                @endif
                 <p class="text-xs text-gray-500 dark:text-tinta-100/60">{{ $evento->created_at->format('d/m/Y H:i') }}</p>
             </li>
         @empty
