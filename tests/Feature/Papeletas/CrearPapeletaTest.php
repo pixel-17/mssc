@@ -145,6 +145,63 @@ class CrearPapeletaTest extends TestCase
         $this->assertStringContainsString('Jefe inmediato fuera de su horario', $historial->justificacion);
     }
 
+    public function test_la_papeleta_del_jefe_de_area_va_directo_a_rrhh(): void
+    {
+        [$jefeArea] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
+        $rrhh = $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
+        $this->turnoDePrueba($jefeArea);
+
+        $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeArea, $this->motivoDe('PARTICULAR'), [])->fresh();
+
+        $this->assertTrue($papeleta->estado->equals(PendienteRrhh::class));
+        $this->assertNull($papeleta->jefe_inmediato_id);
+        $this->assertNull($papeleta->jefe_area_id);
+
+        $historial = HistorialPapeleta::where('papeleta_id', $papeleta->id)->latest('id')->first();
+        $this->assertSame('sistema', $historial->actor_tipo);
+        $this->assertStringContainsString('directo a RRHH', $historial->justificacion);
+
+        // RRHH la puede aprobar, pero no observar (no hay jefe que responda).
+        $this->expectException(\App\Exceptions\PapeletaException::class);
+        app(\App\Actions\Papeleta\ObservarRrhhAction::class)->ejecutar($papeleta, $rrhh, 'falta detalle');
+    }
+
+    public function test_rrhh_aprueba_la_papeleta_del_jefe_de_area(): void
+    {
+        [$jefeArea] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
+        $rrhh = $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
+        $this->turnoDePrueba($jefeArea);
+
+        $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeArea, $this->motivoDe('PARTICULAR'), []);
+        app(\App\Actions\Papeleta\AprobarRrhhAction::class)->ejecutar($papeleta, $rrhh);
+
+        $this->assertTrue($papeleta->fresh()->estado->equals(AutorizadaYCorriendo::class));
+    }
+
+    public function test_el_jefe_de_area_no_puede_crear_papeleta_si_no_hay_rrhh_activo(): void
+    {
+        [$jefeArea] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
+        $this->turnoDePrueba($jefeArea);
+
+        $this->expectException(\App\Exceptions\PapeletaException::class);
+        $this->expectExceptionMessage('RR. HH. activo');
+
+        app(CrearPapeletaAction::class)->ejecutar($jefeArea, $this->motivoDe('PARTICULAR'), []);
+    }
+
+    public function test_el_jefe_inmediato_sigue_pasando_por_su_jefe_de_area(): void
+    {
+        [$jefeArea, $jefeInmediato] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
+        $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
+        $this->turnoDePrueba($jefeInmediato);
+        $this->turnoDePrueba($jefeArea);
+
+        $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeInmediato, $this->motivoDe('PARTICULAR'), [])->fresh();
+
+        $this->assertTrue($papeleta->estado->equals(PendienteJefe::class));
+        $this->assertSame($jefeArea->id, $papeleta->jefe_inmediato_id);
+    }
+
     public function test_rrhh_no_puede_aprobar_la_papeleta_propia_del_jefe_tope(): void
     {
         $tope = $this->usuarioDePrueba([], ['trabajador', 'rrhh']);

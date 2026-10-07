@@ -101,6 +101,7 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('email', 'rosa@example.com')
             ->set('regimen', '276')
             ->set('sedeId', $this->sedeDePrueba()->id)
+            ->set('rolesSeleccionados', [(int) \Spatie\Permission\Models\Role::where('name', 'trabajador')->value('id')])
             ->call('guardar')
             ->assertHasNoErrors();
 

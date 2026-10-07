@@ -37,6 +37,11 @@ use Illuminate\Support\Facades\DB;
  *   asignado, jefe dado de baja, o tope del organigrama sin nadie
  *   arriba), no una indisponibilidad temporal. La papeleta nunca se
  *   crea esperando a alguien que no existe.
+ * - Jefe de ÁREA (encabeza una unidad con sub-unidades, ver
+ *   User::esJefeDeArea): su papeleta NO sube a nadie; va SIEMPRE directo a
+ *   PENDIENTE_RRHH, haya o no alguien arriba en el organigrama. RRHH solo
+ *   puede aprobarla o rechazarla (sin jefatura no hay quien responda una
+ *   observación). Exige al menos un usuario RRHH activo.
  * - Trabajador raso (no es jefe de nadie): SIEMPRE PENDIENTE_JEFE, sin
  *   importar si su jefe inmediato está "disponible ahora" (fuera de
  *   horario ordinario, etc. — ver DecisorDisponibleService).
@@ -97,7 +102,18 @@ class CrearPapeletaAction
         // jefes_turno — ver UnidadOrganica::resolverJefesInmediatos().
         // Para 276 (turno null) esto sigue siendo, como mucho, un único
         // candidato: jefe_id de la unidad.
-        [$jefesInmediatosIds, $jefeAreaId] = $unidad ? $unidad->jefaturasMultiplesDe($trabajador, $turno?->codigo()) : [[], null];
+        // Jefe de área: no sube a nadie, su papeleta va directo a RRHH.
+        $directoARrhh = $trabajador->esJefeDeArea();
+
+        if ($directoARrhh && ! User::role('rrhh')->where('activo', true)->exists()) {
+            throw new PapeletaException(
+                'No hay personal de RR. HH. activo para recibir tu papeleta. Comunícate con Administración antes de crearla.'
+            );
+        }
+
+        [$jefesInmediatosIds, $jefeAreaId] = (! $directoARrhh && $unidad)
+            ? $unidad->jefaturasMultiplesDe($trabajador, $turno?->codigo())
+            : [[], null];
 
         // resolverJefesInmediatos() ya filtra a jefes activos, así que
         // estos son directamente los candidatos válidos (0 o más).
@@ -117,7 +133,7 @@ class CrearPapeletaAction
         // posición en el organigrama. Sin él, no se puede crear la
         // papeleta: bloqueo total, nunca se queda esperando a alguien
         // que no existe ni escala a RRHH por defecto.
-        if ($jefesInmediatos->isEmpty()) {
+        if (! $directoARrhh && $jefesInmediatos->isEmpty()) {
             throw new PapeletaException(
                 $esJefeInmediatoDeLaUnidad
                     ? 'Tu unidad no tiene un Jefe de Área activo asignado. Comunícate con Administración para regularizar la jefatura antes de crear una papeleta.'
@@ -156,6 +172,7 @@ class CrearPapeletaAction
         // autoriza con revisión post-hoc — es el ÚNICO caso en que el
         // sistema autoriza.
         $estadoInicial = match (true) {
+            $directoARrhh => PendienteRrhh::class,
             ! $esJefeInmediatoDeLaUnidad => PendienteJefe::class,
             $jefeDisponible => PendienteJefe::class,
             $rrhhEnHorario => PendienteRrhh::class,
@@ -164,7 +181,7 @@ class CrearPapeletaAction
 
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $estadoInicial, $autorizaSistema) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $directoARrhh, $estadoInicial, $autorizaSistema) {
             $campos = [
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
@@ -212,7 +229,15 @@ class CrearPapeletaAction
                 'justificacion' => $datos['justificacion'] ?? null,
             ]);
 
-            if ($esJefeInmediatoDeLaUnidad && ! $jefeDisponible) {
+            if ($directoARrhh) {
+                HistorialPapeleta::create([
+                    'papeleta_id' => $papeleta->id,
+                    'actor_id' => null,
+                    'actor_tipo' => 'sistema',
+                    'estado_nuevo' => class_basename($papeleta->estado),
+                    'justificacion' => 'Jefe de área: la papeleta se envía directo a RRHH.',
+                ]);
+            } elseif ($esJefeInmediatoDeLaUnidad && ! $jefeDisponible) {
                 // Este historial explicativo solo aplica al caso que sí
                 // puede escalar (jefe inmediato enviando su propia
                 // papeleta). Un trabajador raso siempre queda en
