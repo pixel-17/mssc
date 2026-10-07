@@ -31,8 +31,6 @@ class ConfiguracionSeeder extends Seeder
             ['clave' => 'TURNO_TARDE_HORA_FIN', 'valor' => '22:00', 'descripcion' => 'Hora de fin del turno Tarde (régimen 728, ciclo 6x1).'],
             ['clave' => 'TURNO_NOCHE_HORA_INICIO', 'valor' => '22:00', 'descripcion' => 'Hora de inicio del turno Noche (régimen 728, ciclo 6x1; cruza medianoche).'],
             ['clave' => 'TURNO_NOCHE_HORA_FIN', 'valor' => '06:00', 'descripcion' => 'Hora de fin del turno Noche (régimen 728, ciclo 6x1; cruza medianoche).'],
-            ['clave' => 'TURNO_DIA_HORA_INICIO', 'valor' => '07:45', 'descripcion' => 'Hora de inicio del turno Día (único turno válido para régimen 276, ciclo 6x1).'],
-            ['clave' => 'TURNO_DIA_HORA_FIN', 'valor' => '16:15', 'descripcion' => 'Hora de fin del turno Día (único turno válido para régimen 276, ciclo 6x1).'],
         ];
 
         foreach ($configuraciones as $configuracion) {

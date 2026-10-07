@@ -13,7 +13,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use App\Support\ReglasDatosUsuario;
 use Livewire\Attributes\Layout;
 use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
@@ -158,14 +158,8 @@ class UsuarioAdminForm extends Component
         $reglas = [
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
-            'dni' => [
-                'required', 'digits:8',
-                Rule::unique('users', 'dni')->ignore($this->usuario?->id),
-            ],
-            'email' => [
-                'required', 'email', 'max:255',
-                Rule::unique('users', 'email')->ignore($this->usuario?->id),
-            ],
+            'dni' => ReglasDatosUsuario::dni($this->usuario?->id, soloActivos: false),
+            'email' => ReglasDatosUsuario::email($this->usuario?->id),
             'password' => ['nullable', 'string', 'min:8'],
             'regimen' => [$this->esSoloAdmin() ? 'nullable' : 'required', 'in:276,728'],
             'sedeId' => ['nullable', 'exists:sedes,id'],
@@ -189,6 +183,7 @@ class UsuarioAdminForm extends Component
         'rolesSeleccionados.required' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',
         'rolesSeleccionados.min' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',
         'dni.digits' => 'El DNI debe tener 8 dígitos.',
+        'dni.unique' => 'Ese DNI ya tiene una cuenta. Si está desactivada, reactívala desde Usuarios.',
     ];
 
     public function guardar(GeneradorTurnoMensualService $generador): void
@@ -198,6 +193,16 @@ class UsuarioAdminForm extends Component
         $requiereTurno = $this->requiereConfiguracionTurno();
 
         $datos = $this->validate();
+
+        $adminId = (int) Role::where('name', 'admin')->value('id');
+        $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
+        $roles = array_map('intval', $datos['rolesSeleccionados']);
+
+        if (in_array($adminId, $roles, true) && in_array($trabajadorId, $roles, true)) {
+            $this->addError('rolesSeleccionados', 'Un administrador no puede tener también el rol de trabajador: no tiene papeletas, equipo ni jefe.');
+
+            return;
+        }
 
         if ($this->usuario?->esUnicoRrhhActivo()) {
             $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');

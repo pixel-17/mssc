@@ -19,9 +19,10 @@ use Livewire\Component;
  * equipo, eligiendo entre estos turnos.
  *
  * Las horas viven donde ya las lee todo el sistema: las claves
- * TURNO_<CODIGO>_HORA_INICIO / _FIN de `configuraciones` (ver
- * GeneradorTurnoMensualService::horasDe). Esta pantalla es una vista
- * ordenada de esas ocho claves; Configuraciones sigue mostrándolas.
+ * TURNO_<CODIGO>_HORA_INICIO / _FIN de `configuraciones` (Mañana, Tarde,
+ * Noche) y HORARIO_ORDINARIO_HORA_INICIO / _FIN (Día, régimen 276), ver
+ * GeneradorTurnoMensualService::claveDeHora/horasDe. Esta pantalla es el ÚNICO lugar
+ * donde se editan esas ocho claves; Configuraciones las oculta.
  */
 #[Layout('layouts.app')]
 #[Title('Turnos')]
@@ -61,9 +62,9 @@ class DefinicionTurnos extends Component
 
         foreach (array_keys(self::TURNOS) as $codigo) {
             // Mismo formato H:i que exige Configuraciones para estas claves.
-            $reglas["horas.{$codigo}.inicio"] = ConfiguracionForm::reglasParaClave("TURNO_{$codigo}_HORA_INICIO");
+            $reglas["horas.{$codigo}.inicio"] = ConfiguracionForm::reglasParaClave(GeneradorTurnoMensualService::claveDeHora($codigo, 'INICIO'));
             $reglas["horas.{$codigo}.fin"] = [
-                ...ConfiguracionForm::reglasParaClave("TURNO_{$codigo}_HORA_FIN"),
+                ...ConfiguracionForm::reglasParaClave(GeneradorTurnoMensualService::claveDeHora($codigo, 'FIN')),
                 "different:horas.{$codigo}.inicio",
             ];
         }
@@ -94,7 +95,7 @@ class DefinicionTurnos extends Component
                 foreach (['inicio' => 'INICIO', 'fin' => 'FIN'] as $campo => $sufijo) {
                     // saved() en Configuracion invalida la caché de valorDe().
                     Configuracion::updateOrCreate(
-                        ['clave' => "TURNO_{$codigo}_HORA_{$sufijo}"],
+                        ['clave' => GeneradorTurnoMensualService::claveDeHora($codigo, $sufijo)],
                         ['valor' => $datos['horas'][$codigo][$campo]],
                     );
                 }

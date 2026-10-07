@@ -38,16 +38,9 @@ class UserPolicy
      */
     public function crearTrabajadorPropio(User $creator): bool
     {
-        if ($creator->hasRole('admin')) {
-            return true;
-        }
-
-        return $creator->unidadesQueEncabeza()->exists()
-            || \App\Models\User::where('jefe_inmediato_id', $creator->id)->exists()
-            || $creator->trabajadoresAdicionales()->exists()
-            // Jefe inmediato de turno (728): registrado en jefes_turno sin
-            // trabajadores propios asignados a mano; también es jefe.
-            || $creator->turnosQueEncabeza()->exists();
+        // Sin bypass de admin: el admin no tiene trabajadores ni jefes
+        // inmediatos. Su alta de cuentas va por usuarios-admin.
+        return $creator->esJefeDeEquipo();
     }
 
     /**

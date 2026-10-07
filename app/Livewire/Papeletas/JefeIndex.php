@@ -56,6 +56,9 @@ class JefeIndex extends Component
     {
         $user = Auth::user();
 
+        // Solo jefes de equipo: el admin no tiene bandeja de jefe ni por URL.
+        abort_unless($user->esJefeDeEquipo(), 403);
+
         // Buscador por trabajador (nombre, apellido o DNI): filtra todas las listas.
         $termino = trim($this->buscar);
         $filtroBuscar = fn ($query) => $query->whereHas('trabajador', fn ($q) => $q

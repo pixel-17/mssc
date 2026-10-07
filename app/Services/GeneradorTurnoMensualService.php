@@ -224,12 +224,26 @@ class GeneradorTurnoMensualService
     }
 
     /**
-     * Horas de cada turno del catálogo, parametrizadas en
-     * `configuraciones` (nunca hardcodeadas, misma convención que
-     * HorarioOrdinarioService). DIA reutiliza por defecto las mismas
-     * horas del horario ordinario global de 276, pero es una clave
-     * independiente porque esta tabla (`turnos`) es solo informativa
-     * y no reemplaza la ventana que sí bloquea en HorarioOrdinarioService.
+     * Clave de `configuraciones` donde se EDITA la hora de un turno (la usa
+     * DefinicionTurnos). Mañana/Tarde/Noche: TURNO_<CODIGO>_HORA_*. Día (276)
+     * usa el horario ordinario global, la misma ventana que bloquea
+     * HorarioOrdinarioService, así que no puede divergir.
+     *
+     * @param  'INICIO'|'FIN'  $extremo
+     */
+    public static function claveDeHora(string $turno, string $extremo): string
+    {
+        return in_array($turno, ['MANANA', 'TARDE', 'NOCHE'], true)
+            ? "TURNO_{$turno}_HORA_{$extremo}"
+            : "HORARIO_ORDINARIO_HORA_{$extremo}";
+    }
+
+    /**
+     * Horas de cada turno del catálogo, en `configuraciones`.
+     *
+     * Las claves van LITERALES a propósito: ConfiguracionSinDesajusteTest
+     * busca las llamadas a valorDe con texto literal para comprobar que
+     * toda clave sembrada se lea. No construirlas dinámicamente.
      *
      * @return array{0: string, 1: string} [hora_inicio, hora_fin] en H:i
      */
@@ -249,8 +263,8 @@ class GeneradorTurnoMensualService
                 (string) Configuracion::valorDe('TURNO_NOCHE_HORA_FIN', '06:00'),
             ],
             default => [
-                (string) Configuracion::valorDe('TURNO_DIA_HORA_INICIO', '07:45'),
-                (string) Configuracion::valorDe('TURNO_DIA_HORA_FIN', '16:15'),
+                (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_INICIO', HorarioOrdinarioService::HORA_INICIO_DEFECTO),
+                (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_FIN', HorarioOrdinarioService::HORA_FIN_DEFECTO),
             ],
         };
     }

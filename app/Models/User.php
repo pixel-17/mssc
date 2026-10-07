@@ -219,6 +219,23 @@ class User extends Authenticatable
      * ADICIONAL (asignado a mano), aparte de los que le llegan por
      * ser jefe automático de una unidad orgánica.
      */
+    /**
+     * ¿Es jefe de equipo (inmediato, de área o de turno)? NO incluye al admin:
+     * el admin administra cuentas, no gestiona trabajadores ni papeletas.
+     * Es la única fuente para menú, dashboard, reportes y bandeja de jefe.
+     */
+    public function esJefeDeEquipo(): bool
+    {
+        if ($this->hasRole('admin')) {
+            return false;
+        }
+
+        return $this->unidadesQueEncabeza()->exists()
+            || static::where('jefe_inmediato_id', $this->id)->exists()
+            || $this->trabajadoresAdicionales()->exists()
+            || $this->turnosQueEncabeza()->exists();
+    }
+
     public function trabajadoresAdicionales(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(

@@ -2,19 +2,23 @@
     use App\States\Papeleta\PendienteRrhh;
     use App\States\Papeleta\RetornoPendienteSustento;
 
-    $puedeDecidir = $papeleta->estado->equals(PendienteRrhh::class);
+    // Solo lectura cuando la ve el admin (ver Admin\PapeletaController):
+    // ninguna acción de RRHH aparece para él.
+    $soloLectura = $soloLectura ?? false;
 
-    $puedePosthoc = $papeleta->autorizado_con_rrhh_fuera_horario
+    $puedeDecidir = ! $soloLectura && $papeleta->estado->equals(PendienteRrhh::class);
+
+    $puedePosthoc = ! $soloLectura && $papeleta->autorizado_con_rrhh_fuera_horario
         && in_array($papeleta->revision_posthoc_estado, ['pendiente', 'respondida'], true);
 
     $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
     $posthocRespondida = $papeleta->revision_posthoc_estado === 'respondida';
 
-    $sustentoPresentado = $papeleta->estado->equals(RetornoPendienteSustento::class)
+    $sustentoPresentado = ! $soloLectura && $papeleta->estado->equals(RetornoPendienteSustento::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
 
-    $puedeMarcarAbandono = $papeleta->estado->equals(RetornoPendienteSustento::class);
+    $puedeMarcarAbandono = ! $soloLectura && $papeleta->estado->equals(RetornoPendienteSustento::class);
 @endphp
 
 <x-app-layout>

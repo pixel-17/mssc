@@ -4,6 +4,7 @@ namespace App\Http\Requests\Usuario;
 
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Support\ReglasDatosUsuario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
@@ -41,10 +42,7 @@ class EditarUsuarioRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required', 'string', 'email', 'max:255',
-                Rule::unique('users', 'email')->ignore($trabajador->id),
-            ],
+            'email' => ReglasDatosUsuario::email($trabajador->id),
             // Nadie queda sin sede: el cierre depende de ella.
             'sede_id' => $esJefeDeArea ? ['required', 'exists:sedes,id'] : ['nullable'],
             'unidad_organica_id' => $esJefeDeArea

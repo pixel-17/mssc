@@ -28,8 +28,21 @@ class ConfiguracionForm extends Component
 
     public string $valor = '';
 
+    /**
+     * Las horas de inicio/fin de cada turno (TURNO_<CODIGO>_HORA_INICIO/FIN y,
+     * para el turno Día, HORARIO_ORDINARIO_HORA_INICIO/FIN) se editan SOLO
+     * desde Turnos (DefinicionTurnos): ahí se validan todas
+     * juntas. Configuraciones ni las lista ni deja abrirlas por URL.
+     */
+    public static function esClaveDeTurno(string $clave): bool
+    {
+        return (bool) preg_match('/^(TURNO_[A-Z]+_HORA|HORARIO_ORDINARIO_HORA)_(INICIO|FIN)$/', $clave);
+    }
+
     public function mount(Configuracion $configuracion): void
     {
+        abort_if(self::esClaveDeTurno($configuracion->clave), 404);
+
         $this->configuracion = $configuracion;
         $this->valor = $configuracion->valor;
     }

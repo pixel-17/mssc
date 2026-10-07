@@ -86,6 +86,10 @@ class NavegacionComposer
             $bandejas[] = ['label' => 'Papeletas de RR. HH.', 'route' => route('rrhh.papeletas.index'), 'active' => request()->routeIs('rrhh.papeletas.*'), 'icon' => 'clipboard', 'bandeja' => 'rrhh'];
         }
 
+        if ($esAdmin) {
+            $bandejas[] = ['label' => 'Todas las papeletas', 'route' => route('admin.papeletas.index'), 'active' => request()->routeIs('admin.papeletas.*'), 'icon' => 'document'];
+        }
+
         if ($esRrhh || $esAdmin) {
             $bandejas[] = ['label' => 'Abandonos', 'route' => route('rrhh.abandonos.index'), 'active' => request()->routeIs('rrhh.abandonos.*'), 'icon' => 'inbox'];
         }

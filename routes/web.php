@@ -165,6 +165,20 @@ Route::middleware([
     Route::get('/{usuario}/editar', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('editar');
 });
 
+/*
+ * Papeletas para el admin: TODAS, de cualquier estado, SOLO LECTURA.
+ * El admin no decide ni aprueba (eso es de jefe y RRHH).
+ */
+Route::middleware([
+    'auth:sanctum',
+    config('jetstream.auth_session'),
+    'verified',
+    'role:admin',
+])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/papeletas', \App\Livewire\Papeletas\AdminPapeletasIndex::class)->name('papeletas.index');
+    Route::get('/papeletas/{papeleta}', [\App\Http\Controllers\Admin\PapeletaController::class, 'show'])->name('papeletas.show');
+});
+
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),

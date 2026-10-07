@@ -33,25 +33,25 @@ class ConfiguracionFormTest extends TestCase
 
     public function test_una_hora_valida_se_guarda(): void
     {
-        $this->editar('HORARIO_ORDINARIO_HORA_INICIO', '07:45', '08:30')->assertHasNoErrors();
+        $this->editar('BLOQUE_ALMUERZO_INICIO', '13:00', '13:30')->assertHasNoErrors();
 
-        $this->assertSame('08:30', Configuracion::where('clave', 'HORARIO_ORDINARIO_HORA_INICIO')->value('valor'));
+        $this->assertSame('13:30', Configuracion::where('clave', 'BLOQUE_ALMUERZO_INICIO')->value('valor'));
     }
 
     public function test_una_hora_mal_escrita_se_rechaza_y_no_se_guarda(): void
     {
         foreach (['8:00', '25:99', '8am', '0800', ''] as $malo) {
-            Configuracion::where('clave', 'HORARIO_ORDINARIO_HORA_FIN')->delete();
+            Configuracion::where('clave', 'BLOQUE_ALMUERZO_FIN')->delete();
 
-            $this->editar('HORARIO_ORDINARIO_HORA_FIN', '16:15', $malo)->assertHasErrors('valor');
+            $this->editar('BLOQUE_ALMUERZO_FIN', '14:00', $malo)->assertHasErrors('valor');
 
-            $this->assertSame('16:15', Configuracion::where('clave', 'HORARIO_ORDINARIO_HORA_FIN')->value('valor'), "no debe guardar '{$malo}'");
+            $this->assertSame('14:00', Configuracion::where('clave', 'BLOQUE_ALMUERZO_FIN')->value('valor'), "no debe guardar '{$malo}'");
         }
     }
 
-    public function test_el_bloque_de_almuerzo_y_los_turnos_tambien_exigen_hora(): void
+    public function test_el_bloque_de_almuerzo_tambien_exige_hora(): void
     {
-        foreach (['BLOQUE_ALMUERZO_INICIO', 'TURNO_NOCHE_HORA_FIN'] as $clave) {
+        foreach (['BLOQUE_ALMUERZO_INICIO'] as $clave) {
             Configuracion::where('clave', $clave)->delete();
 
             $this->editar($clave, '13:00', '1pm')->assertHasErrors('valor');
@@ -79,6 +79,19 @@ class ConfiguracionFormTest extends TestCase
             Configuracion::where('clave', 'TOPE_OBSERVACIONES')->delete();
 
             $this->editar('TOPE_OBSERVACIONES', '3', $malo)->assertHasErrors('valor');
+        }
+    }
+    public function test_las_horas_de_turno_no_se_editan_desde_configuraciones(): void
+    {
+        // Incluye el horario ordinario: es la hora del turno Día (276).
+        foreach (['TURNO_NOCHE_HORA_FIN' => '06:00', 'HORARIO_ORDINARIO_HORA_INICIO' => '07:45'] as $clave => $valor) {
+            $configuracion = Configuracion::create(['clave' => $clave, 'valor' => $valor, 'descripcion' => 'x']);
+
+            Livewire::actingAs($this->usuarioDePrueba([], ['admin']))
+                ->test(ConfiguracionForm::class, ['configuracion' => $configuracion])
+                ->assertStatus(404);
+
+            $this->assertSame($valor, $configuracion->fresh()->valor);
         }
     }
 

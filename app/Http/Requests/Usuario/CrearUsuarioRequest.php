@@ -6,6 +6,7 @@ use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
+use App\Support\ReglasDatosUsuario;
 use Illuminate\Validation\Rule;
 
 /**
@@ -42,14 +43,8 @@ class CrearUsuarioRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
-            'dni' => [
-                'required', 'string', 'size:8',
-                Rule::unique('users', 'dni')->where(fn ($q) => $q->where('activo', true)),
-            ],
-            'email' => [
-                'required', 'string', 'email', 'max:255',
-                Rule::unique('users', 'email')->ignore($existenteInactivo?->id),
-            ],
+            'dni' => ReglasDatosUsuario::dni(soloActivos: true),
+            'email' => ReglasDatosUsuario::email($existenteInactivo?->id),
             'regimen' => ['required', Rule::in(['276', '728'])],
             // 728 SIEMPRE necesita su turno vigente para crear una
             // papeleta (ver CrearPapeletaAction): se exige en el mismo

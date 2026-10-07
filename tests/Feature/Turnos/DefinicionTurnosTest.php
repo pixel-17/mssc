@@ -4,6 +4,7 @@ namespace Tests\Feature\Turnos;
 
 use App\Livewire\Turnos\DefinicionTurnos;
 use App\Models\Configuracion;
+use App\Services\GeneradorTurnoMensualService;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -57,6 +58,24 @@ class DefinicionTurnosTest extends TestCase
         $this->assertDatabaseHas('configuraciones', ['clave' => 'TURNO_MANANA_HORA_INICIO', 'valor' => '07:00']);
         $this->assertDatabaseHas('configuraciones', ['clave' => 'TURNO_MANANA_HORA_FIN', 'valor' => '15:00']);
         $this->assertSame('07:00', Configuracion::valorDe('TURNO_MANANA_HORA_INICIO'));
+    }
+
+    public function test_el_turno_dia_usa_y_guarda_el_horario_ordinario_sin_clave_propia(): void
+    {
+        $admin = $this->usuarioDePrueba([], ['admin']);
+
+        Livewire::actingAs($admin)
+            ->test(DefinicionTurnos::class)
+            ->set('horas.DIA.inicio', '08:00')
+            ->set('horas.DIA.fin', '17:00')
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertSame('08:00', Configuracion::valorDe('HORARIO_ORDINARIO_HORA_INICIO'));
+        $this->assertSame('17:00', Configuracion::valorDe('HORARIO_ORDINARIO_HORA_FIN'));
+        $this->assertDatabaseMissing('configuraciones', ['clave' => 'TURNO_DIA_HORA_INICIO']);
+        $this->assertDatabaseMissing('configuraciones', ['clave' => 'TURNO_DIA_HORA_FIN']);
+        $this->assertSame(['08:00', '17:00'], app(GeneradorTurnoMensualService::class)->horasDe('DIA'));
     }
 
     public function test_rechaza_horas_mal_escritas_o_con_inicio_igual_al_fin(): void

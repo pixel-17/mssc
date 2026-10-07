@@ -45,7 +45,10 @@ class PapeletaPolicy
 
     public function view(User $user, Papeleta $papeleta): bool
     {
-        return $user->hasRole('rrhh')
+        // El admin ve todas, en cualquier estado. Solo lectura: las acciones
+        // siguen siendo de jefe y RRHH (cada una tiene su propio método).
+        return $user->hasRole('admin')
+            || $user->hasRole('rrhh')
             || $papeleta->trabajador_id === $user->id
             || $papeleta->tieneComoJefeInmediatoA($user)
             || $papeleta->resuelto_por_jefe_id === $user->id
@@ -54,7 +57,8 @@ class PapeletaPolicy
 
     public function crear(User $user): bool
     {
-        return $user->hasRole('trabajador');
+        // El admin no marca papeletas, aunque se le haya asignado también el rol trabajador.
+        return $user->hasRole('trabajador') && ! $user->hasRole('admin');
     }
 
     public function cancelar(User $user, Papeleta $papeleta): bool
