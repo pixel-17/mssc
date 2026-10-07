@@ -7,6 +7,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Livewire\WithPagination;
 
@@ -29,7 +30,19 @@ class TrabajadorIndex extends Component
 
     public string $buscar = '';
 
+    /**
+     * false (por defecto): solo las papeletas del turno en curso; salen de
+     * esta vista cuando el turno termina. true: todas las papeletas del usuario.
+     */
+    #[Url(as: 'todas')]
+    public bool $verTodas = false;
+
     public function updatedBuscar(): void
+    {
+        $this->resetPage();
+    }
+
+    public function updatedVerTodas(): void
     {
         $this->resetPage();
     }
@@ -37,15 +50,25 @@ class TrabajadorIndex extends Component
     public function render(): View
     {
         $termino = trim($this->buscar);
+        $usuario = Auth::user();
+
+        $papeletas = $usuario->papeletas()
+            ->with(['motivo', 'sede', 'retorno'])
+            ->when(! $this->verTodas, fn ($q) => $q->delTurnoVigente())
+            ->when($termino !== '', fn ($q) => $q->where(fn ($w) => $w
+                ->whereHas('motivo', fn ($m) => $m->where('nombre', 'like', "%{$termino}%"))
+                ->orWhere('justificacion', 'like', "%{$termino}%")))
+            ->latest()
+            ->orderByDesc('papeletas.id')
+            ->paginate(15);
+
+        // Distingue "no hay nada en mi turno" de "nunca he creado una papeleta".
+        $tieneAlguna = ! $papeletas->isEmpty() || $this->verTodas || $termino !== ''
+            || $usuario->papeletas()->exists();
 
         return view('livewire.papeletas.trabajador-index', [
-            'papeletas' => Auth::user()->papeletas()
-                ->with(['motivo', 'sede', 'retorno'])
-                ->when($termino !== '', fn ($q) => $q->where(fn ($w) => $w
-                    ->whereHas('motivo', fn ($m) => $m->where('nombre', 'like', "%{$termino}%"))
-                    ->orWhere('justificacion', 'like', "%{$termino}%")))
-                ->latest()
-                ->paginate(15),
+            'papeletas' => $papeletas,
+            'tieneAlguna' => $tieneAlguna,
         ]);
     }
 }

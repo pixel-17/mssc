@@ -23,7 +23,7 @@
             <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10 flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                     Por decidir
-                    <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300">{{ $porDecidir->count() }}</span>
+                    <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-700 dark:text-amber-300">{{ $porDecidir->total() }}</span>
                 </h3>
             </div>
             @if ($porDecidir->isEmpty())
@@ -63,6 +63,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($porDecidir->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $porDecidir->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             @endif
         </div>
 
@@ -72,7 +77,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                         Observadas por ti — esperan respuesta del trabajador
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-500/15 text-gray-600 dark:text-tinta-100/70">{{ $observadasPorMi->count() }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-gray-500/15 text-gray-600 dark:text-tinta-100/70">{{ $observadasPorMi->total() }}</span>
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -104,6 +109,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($observadasPorMi->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $observadasPorMi->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -113,7 +123,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                         Observadas por RRHH — requieren tu reconocimiento
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/15 text-red-700 dark:text-red-300">{{ $observacionesRrhh->count() }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/15 text-red-700 dark:text-red-300">{{ $observacionesRrhh->total() }}</span>
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -141,6 +151,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($observacionesRrhh->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $observacionesRrhh->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -150,7 +165,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                         RRHH observó tu autorización fuera de horario — requieren tu respuesta
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-700 dark:text-orange-300">{{ $posthocPorResponder->count() }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-orange-500/15 text-orange-700 dark:text-orange-300">{{ $posthocPorResponder->total() }}</span>
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -175,6 +190,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($posthocPorResponder->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $posthocPorResponder->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -184,7 +204,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                         En curso
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-tinta-500/15 text-tinta-700 dark:text-tinta-300">{{ $enCurso->count() }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-tinta-500/15 text-tinta-700 dark:text-tinta-300">{{ $enCurso->total() }}</span>
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -211,6 +231,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($enCurso->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $enCurso->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -220,7 +245,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                         Papeletas del turno
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">{{ $delTurno->count() }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">{{ $delTurno->total() }}</span>
                     </h3>
                     <p class="text-xs text-gray-500 dark:text-tinta-100/50 mt-0.5">Se muestran hasta que finalice el turno.</p>
                 </div>
@@ -250,6 +275,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($delTurno->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $delTurno->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -259,7 +289,7 @@
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
                         Sustentos por revisar
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-700 dark:text-purple-300">{{ $sustentosPorRevisar->count() }}</span>
+                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-700 dark:text-purple-300">{{ $sustentosPorRevisar->total() }}</span>
                     </h3>
                 </div>
                 <div class="overflow-x-auto">
@@ -284,6 +314,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($sustentosPorRevisar->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $sustentosPorRevisar->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
     </div>

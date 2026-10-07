@@ -16,7 +16,7 @@
         {{-- Por decidir --}}
         <div class="glass-card overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Por decidir ({{ $porDecidir->count() }})</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Por decidir ({{ $porDecidir->total() }})</h3>
             </div>
             @if ($porDecidir->isEmpty())
                 <p class="p-4 text-sm text-gray-500 dark:text-tinta-100/50">
@@ -59,6 +59,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($porDecidir->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $porDecidir->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             @endif
         </div>
 
@@ -66,7 +71,7 @@
         @if ($posthocPendientes->isNotEmpty())
             <div class="glass-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Revisión post-hoc — jefe autorizó fuera de horario RRHH ({{ $posthocPendientes->count() }})</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Revisión post-hoc — jefe autorizó fuera de horario RRHH ({{ $posthocPendientes->total() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-separate border-spacing-y-2">
@@ -100,6 +105,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($posthocPendientes->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $posthocPendientes->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
 
@@ -107,7 +117,7 @@
         @if ($sustentosPorRevisar->isNotEmpty())
             <div class="glass-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Sustentos por revisar ({{ $sustentosPorRevisar->count() }})</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Sustentos por revisar ({{ $sustentosPorRevisar->total() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-separate border-spacing-y-2">
@@ -131,6 +141,11 @@
                         </tbody>
                     </table>
                 </div>
+                @if ($sustentosPorRevisar->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $sustentosPorRevisar->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
             </div>
         @endif
     </div>

@@ -3,6 +3,7 @@
 namespace App\Livewire\Papeletas;
 
 use App\Livewire\Concerns\EscuchaNotificacionesEnVivo;
+use App\Livewire\Concerns\PaginaListasDeBandeja;
 use App\Models\Papeleta;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\ObservadaPorJefe;
@@ -14,6 +15,7 @@ use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 /**
  * Bandeja del Jefe Inmediato, migrada de
@@ -32,9 +34,23 @@ use Livewire\Component;
 #[Title('Bandeja de Jefe')]
 class JefeIndex extends Component
 {
-    use EscuchaNotificacionesEnVivo;
+    use EscuchaNotificacionesEnVivo, PaginaListasDeBandeja, WithPagination;
 
     public string $buscar = '';
+
+    /** @return array<int, string> */
+    protected function nombresDePaginadores(): array
+    {
+        return [
+            'porDecidirPage',
+            'observadasPorMiPage',
+            'observacionesRrhhPage',
+            'posthocPorResponderPage',
+            'enCursoPage',
+            'sustentosPorRevisarPage',
+            'delTurnoPage',
+        ];
+    }
 
     public function render(): View
     {
@@ -48,72 +64,56 @@ class JefeIndex extends Component
                 ->orWhere('apellido', 'like', "%{$termino}%")
                 ->orWhere('dni', 'like', "%{$termino}%")));
 
-        $porDecidir = Papeleta::whereState('estado', PendienteJefe::class)
-            ->deJefeInmediato($user)
-            ->when($termino !== '', $filtroBuscar)
-            ->with(['trabajador', 'motivo'])
-            ->latest()
-            ->get();
+        // Consultas base de cada lista (sin búsqueda, relaciones ni orden).
+        // Sirven para paginar y también para que "Papeletas del turno"
+        // excluya TODO lo que ya sale en otra lista, no solo lo de la
+        // página que se está viendo.
+        $bases = [
+            'porDecidir' => fn () => Papeleta::whereState('estado', PendienteJefe::class)
+                ->deJefeInmediato($user),
+            // Las que yo observé: esperan la respuesta del trabajador.
+            'observadasPorMi' => fn () => Papeleta::whereState('estado', ObservadaPorJefe::class)
+                ->deJefeInmediato($user),
+            'observacionesRrhh' => fn () => Papeleta::whereState('estado', ObservadaPorRrhh::class)
+                ->deJefeInmediato($user),
+            // Observaciones post-hoc de RRHH que solo yo (el que autorizó) puedo responder.
+            'posthocPorResponder' => fn () => Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
+                ->where('revision_posthoc_estado', 'observada')
+                ->where('resuelto_por_jefe_id', $user->id),
+            'enCurso' => fn () => Papeleta::whereState('estado', AutorizadaYCorriendo::class)
+                ->deJefeInmediato($user),
+            'sustentosPorRevisar' => fn () => Papeleta::whereState('estado', RetornoPendienteSustento::class)
+                ->deJefeInmediato($user)
+                ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado')),
+        ];
 
-        // Las que yo observé: esperan la respuesta del trabajador.
-        $observadasPorMi = Papeleta::whereState('estado', ObservadaPorJefe::class)
-            ->deJefeInmediato($user)
-            ->when($termino !== '', $filtroBuscar)
-            ->with(['trabajador', 'motivo'])
-            ->latest()
-            ->get();
+        $listar = fn ($consulta, string $nombre, array $relaciones = ['trabajador', 'motivo']) => $this->paginarLista(
+            $consulta
+                ->when($termino !== '', $filtroBuscar)
+                ->with($relaciones)
+                ->latest()
+                ->orderByDesc('papeletas.id'),
+            $nombre.'Page',
+        );
 
-        $observacionesRrhh = Papeleta::whereState('estado', ObservadaPorRrhh::class)
-            ->deJefeInmediato($user)
-            ->when($termino !== '', $filtroBuscar)
-            ->with(['trabajador', 'motivo'])
-            ->latest()
-            ->get();
-
-        // Observaciones post-hoc de RRHH que solo yo (el que autorizó) puedo responder.
-        $posthocPorResponder = Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
-            ->where('revision_posthoc_estado', 'observada')
-            ->where('resuelto_por_jefe_id', $user->id)
-            ->when($termino !== '', $filtroBuscar)
-            ->with(['trabajador', 'motivo'])
-            ->latest()
-            ->get();
-
-        $enCurso = Papeleta::whereState('estado', AutorizadaYCorriendo::class)
-            ->deJefeInmediato($user)
-            ->when($termino !== '', $filtroBuscar)
-            ->with(['trabajador', 'motivo'])
-            ->latest()
-            ->get();
-
-        $sustentosPorRevisar = Papeleta::whereState('estado', RetornoPendienteSustento::class)
-            ->deJefeInmediato($user)
-            ->when($termino !== '', $filtroBuscar)
-            ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
-            ->with(['trabajador', 'motivo', 'sustentos'])
-            ->latest()
-            ->get();
+        $porDecidir = $listar($bases['porDecidir'](), 'porDecidir');
+        $observadasPorMi = $listar($bases['observadasPorMi'](), 'observadasPorMi');
+        $observacionesRrhh = $listar($bases['observacionesRrhh'](), 'observacionesRrhh');
+        $posthocPorResponder = $listar($bases['posthocPorResponder'](), 'posthocPorResponder');
+        $enCurso = $listar($bases['enCurso'](), 'enCurso');
+        $sustentosPorRevisar = $listar($bases['sustentosPorRevisar'](), 'sustentosPorRevisar', ['trabajador', 'motivo', 'sustentos']);
 
         // Papeletas del turno vigente: tras aprobar, la papeleta sale de "Por decidir"
         // (pasa a RRHH, sigue en curso, se cierra...) pero el jefe debe seguir viéndola
         // hasta que termine el turno (fin_turno_at). Sin fin_turno_at (papeletas viejas)
         // se usa el día operativo de hoy. Se excluyen las que ya salen en otra lista.
-        $yaMostradas = collect()
-            ->merge($porDecidir)->merge($observadasPorMi)->merge($observacionesRrhh)->merge($posthocPorResponder)
-            ->merge($enCurso)->merge($sustentosPorRevisar)
-            ->pluck('id');
+        $delTurnoConsulta = Papeleta::deJefeInmediato($user)->delTurnoVigente();
 
-        $delTurno = Papeleta::deJefeInmediato($user)
-            ->when($termino !== '', $filtroBuscar)
-            ->whereNotIn('papeletas.id', $yaMostradas)
-            ->where(fn ($q) => $q
-                ->where('papeletas.fin_turno_at', '>', now())
-                ->orWhere(fn ($q2) => $q2
-                    ->whereNull('papeletas.fin_turno_at')
-                    ->whereDate('papeletas.dia_operativo', today())))
-            ->with(['trabajador', 'motivo'])
-            ->latest()
-            ->get();
+        foreach ($bases as $base) {
+            $delTurnoConsulta->whereNotIn('papeletas.id', $base()->select('papeletas.id'));
+        }
+
+        $delTurno = $listar($delTurnoConsulta, 'delTurno');
 
         return view('livewire.papeletas.jefe-index', compact(
             'porDecidir',

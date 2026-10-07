@@ -1,6 +1,23 @@
 <div class="space-y-5">
     <x-flash-messages />
 
+    {{-- Mi turno / Todas: por defecto solo se ven las papeletas del turno en curso. --}}
+    <div class="space-y-1">
+        <div class="inline-flex rounded-lg overflow-hidden border border-gray-300 dark:border-white/15" role="group" aria-label="Qué papeletas ver">
+            <button type="button" wire:click="$set('verTodas', false)" aria-pressed="{{ $verTodas ? 'false' : 'true' }}"
+                    class="px-4 py-2 text-sm font-medium transition {{ $verTodas ? 'bg-white dark:bg-white/5 text-gray-700 dark:text-tinta-50/80 hover:bg-gray-50 dark:hover:bg-white/10' : 'bg-tinta-600 text-white' }}">
+                Mi turno
+            </button>
+            <button type="button" wire:click="$set('verTodas', true)" aria-pressed="{{ $verTodas ? 'true' : 'false' }}"
+                    class="px-4 py-2 text-sm font-medium transition border-l border-gray-300 dark:border-white/15 {{ $verTodas ? 'bg-tinta-600 text-white' : 'bg-white dark:bg-white/5 text-gray-700 dark:text-tinta-50/80 hover:bg-gray-50 dark:hover:bg-white/10' }}">
+                Todas mis papeletas
+            </button>
+        </div>
+        @unless ($verTodas)
+            <p class="text-xs text-gray-500 dark:text-tinta-100/60">Se muestran las papeletas de tu turno actual; salen de aquí cuando el turno termina.</p>
+        @endunless
+    </div>
+
     <div>
         <label for="trabajador-index-buscar" class="block text-sm font-medium mb-1 text-gray-700 dark:text-tinta-50/80">Buscar papeleta</label>
         <input id="trabajador-index-buscar" type="text" wire:model.live.debounce.300ms="buscar" placeholder="Motivo o justificación..."
@@ -9,6 +26,15 @@
 
     @if ($papeletas->isEmpty() && $buscar !== '')
         <div class="glass-card p-6 text-center text-sm text-gray-500 dark:text-tinta-100/60">Ninguna papeleta coincide con la búsqueda.</div>
+    @elseif ($papeletas->isEmpty() && ! $verTodas && $tieneAlguna)
+        <div class="glass-card p-8 text-center space-y-3">
+            <p class="font-semibold text-tinta-950 dark:text-white">No tienes papeletas en tu turno actual</p>
+            <p class="text-sm text-gray-500 dark:text-tinta-100/60">Las papeletas de turnos anteriores siguen disponibles en tu historial.</p>
+            <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+                <button type="button" wire:click="$set('verTodas', true)" class="btn-primary inline-flex">Ver todas mis papeletas</button>
+                <a href="{{ route('trabajador.papeletas.create') }}" class="inline-flex text-sm font-medium text-tinta-600 dark:text-tinta-300 hover:underline px-3 py-2">Crear papeleta</a>
+            </div>
+        </div>
     @elseif ($papeletas->isEmpty())
         <div class="glass-card p-8 text-center space-y-3">
             <div class="mx-auto icon-chip !size-14 !bg-tinta-500/15 !text-tinta-600 dark:!text-tinta-300">

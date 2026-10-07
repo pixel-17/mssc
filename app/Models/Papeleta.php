@@ -147,6 +147,20 @@ class Papeleta extends Model
     }
 
     /**
+     * Papeletas del turno vigente: las que aún no terminan según
+     * fin_turno_at. Sin fin_turno_at (papeletas viejas) se usa el día
+     * operativo de hoy. Lo usan "Mis papeletas" y la bandeja del Jefe.
+     */
+    public function scopeDelTurnoVigente(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->where('papeletas.fin_turno_at', '>', now())
+            ->orWhere(fn (Builder $q2) => $q2
+                ->whereNull('papeletas.fin_turno_at')
+                ->whereDate('papeletas.dia_operativo', today())));
+    }
+
+    /**
      * Fuente única de "papeletas de mi equipo" para reportes y dashboards.
      * Une las columnas fotografiadas (historial estable si cambia el
      * organigrama) con el equipo vivo, que sí incluye a los trabajadores
