@@ -8,7 +8,7 @@ use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
-use App\States\Papeleta\FinalizadoSinRetorno;
+use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Support\Facades\DB;
 
@@ -50,9 +50,10 @@ class MarcarAbandonoSobreRetornoPendienteAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            $actual->transicionarA(FinalizadoSinRetorno::class);
+            $actual->transicionarA(Cerrada::class);
             $actual->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
             $actual->requiere_visto_bueno = false; // la decisión humana ya se tomó acá
+            $actual->regularizacion_fecha_limite = null;
             $actual->save();
 
             HistorialPapeleta::create([

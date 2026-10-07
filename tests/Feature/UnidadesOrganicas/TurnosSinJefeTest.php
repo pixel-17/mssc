@@ -136,7 +136,8 @@ class TurnosSinJefeTest extends TestCase
     public function test_el_jefe_de_area_ve_el_aviso_en_su_listado_de_usuarios(): void
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']);
-        UnidadOrganica::create(['nombre' => 'Oficina Incompleta', 'jefe_id' => $jefeDeArea->id]);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina Incompleta', 'jefe_id' => $jefeDeArea->id]);
+        $this->conUnidadHija($unidad);
 
         $this->actingAs($jefeDeArea)
             ->get(route('usuarios.index'))
@@ -148,6 +149,7 @@ class TurnosSinJefeTest extends TestCase
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
+        $this->conUnidadHija($unidad);
         $this->asignarJefeConTurno($unidad, $jefeDeArea, 'MANANA');
 
         $this->actingAs($jefeDeArea)
@@ -171,6 +173,7 @@ class TurnosSinJefeTest extends TestCase
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
+        $this->conUnidadHija($unidad);
         $this->asignarJefeConTurno($unidad, $jefeDeArea, 'MANANA');
 
         $this->actingAs($jefeDeArea)

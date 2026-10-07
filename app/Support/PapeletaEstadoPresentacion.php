@@ -41,6 +41,22 @@ class PapeletaEstadoPresentacion
         ];
     }
 
+    /**
+     * Presentación de una papeleta Cerrada por abandono: mismo estado que
+     * una cerrada normal, pero con etiqueta y color propios para que jefes
+     * y RRHH la distingan de un vistazo.
+     *
+     * @return array{0: string, 1: string, 2: string}
+     */
+    public static function cerradaPorAbandono(): array
+    {
+        return [
+            'Cerrada · Abandono',
+            'bg-fuchsia-100 text-fuchsia-800 ring-fuchsia-400 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 dark:ring-fuchsia-400/40',
+            'bg-fuchsia-500',
+        ];
+    }
+
     /** @return array<class-string, array{0:string,1:string,2:string}> */
     protected static function mapa(): array
     {

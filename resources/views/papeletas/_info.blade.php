@@ -70,7 +70,7 @@
             @if ($papeleta->causa_finalizacion_sin_retorno)
                 <div class="sm:col-span-2">
                     <dt class="text-gray-500 dark:text-tinta-100/50">Causa de finalización sin retorno</dt>
-                    <dd class="text-red-700 dark:text-red-400">{{ $papeleta->causa_finalizacion_sin_retorno }}</dd>
+                    <dd class="text-red-700 dark:text-red-400">{{ $papeleta->esAbandono() ? 'Abandono: el trabajador no marcó su retorno antes de que terminara su turno/día' : $papeleta->causa_finalizacion_sin_retorno }}</dd>
                 </div>
             @endif
         </div>

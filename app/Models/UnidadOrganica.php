@@ -19,6 +19,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class UnidadOrganica extends Model
 {
+    /** Espeja el default de la BD para que un modelo recién creado ya tenga activo = true. */
+    protected $attributes = [
+        'activo' => true,
+    ];
+
     protected $fillable = [
         'nombre',
         'tipo',

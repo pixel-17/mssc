@@ -7,6 +7,7 @@ use App\Livewire\Concerns\PaginaListasDeBandeja;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Sede;
+use App\States\Papeleta\FinalizadoSinRetorno;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\RetornoPendienteSustento;
 use Illuminate\Contracts\View\View;
@@ -62,7 +63,7 @@ class RrhhIndex extends Component
     /** @return array<int, string> */
     protected function nombresDePaginadores(): array
     {
-        return ['porDecidirPage', 'posthocPage', 'sustentosPage'];
+        return ['porDecidirPage', 'posthocPage', 'sustentosPage', 'abandonosPage'];
     }
 
     public function render(): View
@@ -120,6 +121,19 @@ class RrhhIndex extends Component
             'sustentosPage',
         );
 
+        // Abandonos que el job marcó solos y esperan regularización: los de
+        // plazo más cercano primero (los vencidos quedan arriba).
+        $abandonosEnRegularizacion = $this->paginarLista(
+            Papeleta::whereState('estado', FinalizadoSinRetorno::class)
+                ->where('causa_finalizacion_sin_retorno', 'abandono_no_marcado')
+                ->where('requiere_visto_bueno', true)
+                ->when(true, $filtroBuscar)
+                ->with(['trabajador', 'motivo'])
+                ->orderBy('regularizacion_fecha_limite')
+                ->orderBy('papeletas.id'),
+            'abandonosPage',
+        );
+
         $masAntigua = Papeleta::whereState('estado', PendienteRrhh::class)
             ->when(true, $filtroBuscar)
             ->min('papeletas.created_at');
@@ -128,6 +142,7 @@ class RrhhIndex extends Component
             'porDecidir' => $porDecidir,
             'posthocPendientes' => $posthocPendientes,
             'sustentosPorRevisar' => $sustentosPorRevisar,
+            'abandonosEnRegularizacion' => $abandonosEnRegularizacion,
             'masAntigua' => $masAntigua ? \Illuminate\Support\Carbon::parse($masAntigua) : null,
             'motivos' => Motivo::orderBy('nombre')->get(['id', 'nombre']),
             'sedes' => Sede::orderBy('nombre')->get(['id', 'nombre']),

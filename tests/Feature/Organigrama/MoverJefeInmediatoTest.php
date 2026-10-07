@@ -196,14 +196,24 @@ class MoverJefeInmediatoTest extends TestCase
             ->assertSet('propuestaJefe.jefe', $this->omar->id)
             ->assertSet('propuestaJefe.origen', $this->gerencia->id)
             ->assertSet('propuestaJefe.destino', $this->otraGerencia->id)
-            ->assertSee('Mover jefe inmediato');
+            ->assertSee('Mover a '.$this->omar->nombre_completo);
 
         $this->assertSame($this->gerencia->id, $this->oficinaA->fresh()->parent_id);
 
+        // Mover a un jefe ofrece varios modos y nunca se elige por él: sin
+        // modo, la propuesta sigue abierta y pide que lo elija.
         $componente
             ->call('confirmarMovimientoJefe')
+            ->assertSet('mensajeError', 'Elige cómo quieres mover a la persona.');
+
+        $this->assertSame($this->gerencia->id, $this->oficinaA->fresh()->parent_id);
+
+        // El aviso de éxito es un toast de Alpine (cliente): se comprueba el estado.
+        $componente
+            ->set('modoJefe', 'unidad')
+            ->call('confirmarMovimientoJefe')
             ->assertSet('propuestaJefe', null)
-            ->assertSee('ahora depende de Otra gerencia');
+            ->assertSet('mensajeOk', fn (?string $m) => str_contains((string) $m, 'ahora depende de Otra gerencia'));
 
         $this->assertSame($this->otraGerencia->id, $this->oficinaA->fresh()->parent_id);
     }
@@ -214,7 +224,11 @@ class MoverJefeInmediatoTest extends TestCase
             ->test(OrganigramaArbol::class)
             ->call('alternarEdicion')
             ->call('proponerMovimiento', $this->omar->id, $this->areaSinJefe->id)
-            ->assertSet('propuestaJefe', null)
+            // Mover como trabajador/jefe sigue siendo posible, así que la
+            // propuesta se abre; lo rechazado es mover la unidad entera.
+            ->assertSet('propuestaJefe.destino', $this->areaSinJefe->id)
+            // Con una única forma posible queda marcada sola; nunca la de mover la unidad.
+            ->assertSet('modoJefe', fn (string $modo) => $modo !== 'unidad')
             ->assertSee('no tiene jefe de área activo');
 
         $this->assertSame($this->gerencia->id, $this->oficinaA->fresh()->parent_id);

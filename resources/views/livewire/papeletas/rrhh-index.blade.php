@@ -7,7 +7,7 @@
         <x-flash-messages />
 
         {{-- Resumen: cuánto hay en cada bandeja y desde cuándo espera la más antigua. --}}
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div class="glass-card p-4">
                 <p class="text-xs text-gray-500 dark:text-tinta-100/50">Por decidir</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $porDecidir->total() }}</p>
@@ -22,6 +22,10 @@
             <div class="glass-card p-4">
                 <p class="text-xs text-gray-500 dark:text-tinta-100/50">Sustentos por revisar</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $sustentosPorRevisar->total() }}</p>
+            </div>
+            <div class="glass-card p-4">
+                <p class="text-xs text-gray-500 dark:text-tinta-100/50">Abandonos en regularización</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $abandonosEnRegularizacion->total() }}</p>
             </div>
         </div>
 
@@ -131,6 +135,52 @@
                 @endif
             @endif
         </div>
+
+        {{-- Abandonos en regularización (ventana de 48 h hábiles) --}}
+        @if ($abandonosEnRegularizacion->isNotEmpty())
+            <div class="glass-card overflow-hidden">
+                <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Abandonos en regularización ({{ $abandonosEnRegularizacion->total() }})</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-tinta-50/70 dark:bg-white/5">
+                            <tr>
+                                @foreach (['Trabajador', 'Motivo', 'Día', 'Plazo', ''] as $columna)
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">{{ $columna }}</th>
+                                @endforeach
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($abandonosEnRegularizacion as $papeleta)
+                                @php $vencido = $papeleta->regularizacion_fecha_limite?->isPast(); @endphp
+                                <tr wire:key="abandono-regularizacion-{{ $papeleta->id }}" class="border-t border-gray-100 dark:border-white/10">
+                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
+                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->dia_operativo->format('d/m/Y') }}</td>
+                                    <td class="px-4 py-3 text-sm {{ $vencido ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-tinta-100/60' }}">
+                                        @if ($papeleta->regularizacion_fecha_limite)
+                                            {{ $papeleta->regularizacion_fecha_limite->format('d/m/Y H:i') }}
+                                            <span class="block text-xs">{{ $vencido ? 'Vencido ' : 'Vence ' }}{{ $papeleta->regularizacion_fecha_limite->diffForHumans() }}</span>
+                                        @else
+                                            —
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-right">
+                                        <a href="{{ route('rrhh.papeletas.show', $papeleta) }}" class="text-xs text-tinta-600 dark:text-tinta-300 font-medium">Ver</a>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @if ($abandonosEnRegularizacion->hasPages())
+                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
+                        {{ $abandonosEnRegularizacion->links(data: ['scrollTo' => false]) }}
+                    </div>
+                @endif
+            </div>
+        @endif
 
         {{-- Revisión post-hoc --}}
         @if ($posthocPendientes->isNotEmpty())

@@ -218,8 +218,10 @@ class UnidadOrganicaCrudTest extends TestCase
             ->assertViewHas('padresDisponibles', fn ($padres) => $padres->keys()->all() === [$ajena->id]);
     }
 
-    public function test_eliminar_una_unidad_conserva_a_sus_hijas_sin_padre(): void
+    public function test_una_unidad_con_sub_unidades_no_se_borra_se_desactiva(): void
     {
+        // El borrado está restringido (migración restringir_borrado_de_unidades_organicas):
+        // las hijas NO quedan huérfanas, la unidad se desactiva y conserva su lugar.
         $raiz = $this->unidad('Gerencia');
         $hija = $this->unidad('Subgerencia', ['parent_id' => $raiz->id]);
 
@@ -227,9 +229,10 @@ class UnidadOrganicaCrudTest extends TestCase
             ->test(UnidadOrganicaIndex::class)
             ->call('eliminar', $raiz->id);
 
-        $this->assertModelMissing($raiz);
-        $this->assertModelExists($hija);
-        $this->assertNull($hija->fresh()->parent_id);
+        $this->assertModelExists($raiz);
+        $this->assertFalse($raiz->fresh()->activo);
+        $this->assertSame($raiz->id, $hija->fresh()->parent_id);
+        $this->assertTrue($hija->fresh()->activo);
     }
 
     public function test_el_listado_muestra_las_unidades(): void

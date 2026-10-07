@@ -204,6 +204,9 @@ Route::middleware([
             ->name('reportes.decisiones-rrhh');
         Route::get('/reportes/resumen-papeletas', \App\Livewire\Reportes\ResumenPapeletasIndex::class)
             ->name('reportes.resumen-papeletas');
+
+        // Lista de abandonos y comisiones cerradas sin retorno (solo lectura).
+        Route::get('/rrhh/abandonos', \App\Livewire\Papeletas\RrhhAbandonos::class)->name('rrhh.abandonos.index');
     });
 
     /*
@@ -310,7 +313,6 @@ Route::middleware([
     // --- RRHH (Paso 3 y Paso 4) ---
     Route::prefix('rrhh')->name('rrhh.')->middleware('role:rrhh')->group(function () {
         Route::get('/papeletas', \App\Livewire\Papeletas\RrhhIndex::class)->name('papeletas.index');
-        Route::get('/abandonos', \App\Livewire\Papeletas\RrhhAbandonos::class)->name('abandonos.index');
         Route::get('/papeletas/{papeleta}', [RrhhPapeletaController::class, 'show'])->name('papeletas.show');
 
         Route::post('/papeletas/{papeleta}/aprobar', [RrhhDecisionController::class, 'aprobar'])->name('papeletas.aprobar');

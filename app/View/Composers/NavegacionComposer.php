@@ -84,6 +84,9 @@ class NavegacionComposer
 
         if ($esRrhh) {
             $bandejas[] = ['label' => 'Papeletas de RR. HH.', 'route' => route('rrhh.papeletas.index'), 'active' => request()->routeIs('rrhh.papeletas.*'), 'icon' => 'clipboard', 'bandeja' => 'rrhh'];
+        }
+
+        if ($esRrhh || $esAdmin) {
             $bandejas[] = ['label' => 'Abandonos', 'route' => route('rrhh.abandonos.index'), 'active' => request()->routeIs('rrhh.abandonos.*'), 'icon' => 'inbox'];
         }
 

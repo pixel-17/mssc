@@ -85,6 +85,7 @@ class HistorialTrabajadorService
                 // tenga que rearmar 'App\States\Papeleta\'.$fila['estado'],
                 // que se rompe en silencio si cambia el formato de arriba.
                 'estado_fqcn' => get_class($p->estado),
+                'abandono' => $p->esAbandono(),
                 'salida' => $p->hora_salida_real,
                 'retorno' => $p->retorno?->hora_servidor,
                 'minutos' => ($p->hora_salida_real && $p->retorno)

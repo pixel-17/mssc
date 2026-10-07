@@ -298,7 +298,9 @@ class MoverTrabajadorTest extends TestCase
         $componente
             ->call('confirmarMovimiento')
             ->assertSet('propuesta', null)
-            ->assertSee('pasó de Oficina A a Oficina B')
+            // El aviso de éxito es un toast de Alpine que se pinta en el cliente:
+            // en el HTML del servidor no está, se comprueba el estado del componente.
+            ->assertSet('mensajeOk', fn (?string $m) => str_contains((string) $m, 'pasó de Oficina A a Oficina B'))
             ->assertSee('Movimientos recientes');
 
         $this->assertSame($this->oficinaB->id, $this->carla->fresh()->unidad_organica_id);
@@ -368,7 +370,7 @@ class MoverTrabajadorTest extends TestCase
             ->test(OrganigramaArbol::class)
             ->call('alternarEdicion')
             ->call('deshacerMovimiento', $original->id)
-            ->assertSee('Se deshizo el movimiento');
+            ->assertSet('mensajeOk', fn (?string $m) => str_contains((string) $m, 'Se deshizo el movimiento'));
 
         $this->assertSame($this->oficinaA->id, $this->carla->fresh()->unidad_organica_id);
         $this->assertNotNull($original->fresh()->deshecho_at);
@@ -402,7 +404,9 @@ class MoverTrabajadorTest extends TestCase
 
         $norte = $this->ponerBetoEnOtraSede();
 
-        $vista = $this->mover()->previsualizar($this->admin, $this->carla, $this->oficinaB);
+        // fresh(): la relación ->jefe de la primera llamada quedó cacheada en
+        // esta instancia y mostraría la sede anterior de Beto.
+        $vista = $this->mover()->previsualizar($this->admin, $this->carla, $this->oficinaB->fresh());
         $this->assertTrue($vista['sede']['propone_cambio']);
         $this->assertSame($norte->id, $vista['sede']['propuesta']->id);
     }

@@ -5,12 +5,14 @@ namespace Tests\Feature\Usuarios;
 use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Livewire\Usuarios\UsuarioAdminForm;
 use App\Models\ConfiguracionTurno;
+use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
@@ -39,6 +41,12 @@ class TurnoInicialAlCrearTest extends TestCase
         $this->admin = $this->usuarioDePrueba([], ['admin']);
     }
 
+    /** El formulario de admin exige al menos un rol: sin él el usuario no podría usar el sistema. */
+    private function rolId(string $nombre): int
+    {
+        return (int) Role::where('name', $nombre)->value('id');
+    }
+
     protected function tearDown(): void
     {
         $this->travelBack();
@@ -56,6 +64,7 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('email', 'rosa@example.com')
             ->set('regimen', '728')
             ->set('sedeId', $this->sedeDePrueba()->id)
+            ->set('rolesSeleccionados', [$this->rolId('trabajador')])
             ->call('guardar')
             ->assertHasErrors(['turno', 'fechaAncla']);
 
@@ -68,6 +77,21 @@ class TurnoInicialAlCrearTest extends TestCase
         // turno recién creado esté vigente al llamar a CrearPapeletaAction.
         $this->travelTo(Carbon::parse(now()->toDateString().' 10:00:00'));
 
+        // Crear una papeleta exige un jefe inmediato activo que cubra el
+        // mismo turno: la unidad tiene uno 728 ya programado en MANANA.
+        $jefe = $this->usuarioDePrueba(['regimen' => '728']);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
+        $jefe->update(['unidad_organica_id' => $unidad->id]);
+        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
+        ConfiguracionTurno::create([
+            'user_id' => $jefe->id,
+            'turno' => 'MANANA',
+            'fecha_ancla' => now()->toDateString(),
+            'dias_trabajo' => 6,
+            'dias_descanso' => 1,
+        ]);
+        $this->turnoDePrueba($jefe, ['turno' => 'MANANA']);
+
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class)
             ->set('name', 'Rosa')
@@ -76,8 +100,10 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('email', 'rosa@example.com')
             ->set('regimen', '728')
             ->set('sedeId', $this->sedeDePrueba()->id)
+            ->set('unidadOrganicaId', $unidad->id)
             ->set('turno', 'MANANA')
             ->set('fechaAncla', now()->toDateString())
+            ->set('rolesSeleccionados', [$this->rolId('trabajador')])
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -101,7 +127,7 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('email', 'rosa@example.com')
             ->set('regimen', '276')
             ->set('sedeId', $this->sedeDePrueba()->id)
-            ->set('rolesSeleccionados', [(int) \Spatie\Permission\Models\Role::where('name', 'trabajador')->value('id')])
+            ->set('rolesSeleccionados', [$this->rolId('trabajador')])
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -134,6 +160,7 @@ class TurnoInicialAlCrearTest extends TestCase
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']); // dueño de la unidad para simplificar autorización
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
+        $this->conUnidadHija($unidad);
 
         $this->actingAs($jefeDeArea)
             ->post(route('usuarios.store'), [

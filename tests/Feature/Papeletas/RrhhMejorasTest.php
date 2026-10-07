@@ -9,7 +9,6 @@ use App\Livewire\Papeletas\RrhhIndex;
 use App\Models\HistorialPapeleta;
 use App\Models\Retorno;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\FinalizadoSinRetorno;
 use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -185,7 +184,7 @@ class RrhhMejorasTest extends TestCase
         $rrhh = $this->usuarioDePrueba(['name' => 'Rosa', 'apellido' => 'Decisora'], ['rrhh']);
         $trabajador = $this->usuarioDePrueba(['name' => 'Pedro', 'apellido' => 'Ausente']);
 
-        $papeleta = $this->papeletaDePrueba($trabajador, FinalizadoSinRetorno::class, [
+        $papeleta = $this->papeletaDePrueba($trabajador, Cerrada::class, [
             'causa_finalizacion_sin_retorno' => 'abandono_no_marcado',
         ]);
 
@@ -194,7 +193,7 @@ class RrhhMejorasTest extends TestCase
             'actor_id' => $rrhh->id,
             'actor_tipo' => 'rrhh',
             'estado_anterior' => 'RetornoPendienteSustento',
-            'estado_nuevo' => 'FinalizadoSinRetorno',
+            'estado_nuevo' => 'Cerrada',
             'justificacion' => 'No volvió y no hubo sustento.',
         ]);
 
@@ -203,6 +202,30 @@ class RrhhMejorasTest extends TestCase
             ->assertSee('Pedro')
             ->assertSee('Rosa')
             ->assertSee('No volvió y no hubo sustento.');
+    }
+
+    public function test_una_cerrada_normal_no_es_abandono_ni_aparece_en_la_lista(): void
+    {
+        $rrhh = $this->usuarioDePrueba([], ['rrhh']);
+        $normal = $this->usuarioDePrueba(['name' => 'Lucia', 'apellido' => 'Cumplida']);
+        $ausente = $this->usuarioDePrueba(['name' => 'Pedro', 'apellido' => 'Ausente']);
+
+        $cerradaNormal = $this->papeletaDePrueba($normal, Cerrada::class);
+        $cerradaAbandono = $this->papeletaDePrueba($ausente, Cerrada::class, [
+            'causa_finalizacion_sin_retorno' => 'abandono_no_marcado',
+        ]);
+
+        $this->assertFalse($cerradaNormal->esAbandono());
+        $this->assertTrue($cerradaAbandono->esAbandono());
+
+        Livewire::actingAs($rrhh)
+            ->test(RrhhAbandonos::class)
+            ->assertSee('Ausente')
+            ->assertDontSee('Cumplida');
+
+        // La etiqueta del estado las distingue a simple vista.
+        $this->assertStringContainsString('Cerrada · Abandono', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
+        $this->assertStringNotContainsString('Abandono', view('components.estado-papeleta', ['estado' => $cerradaNormal->estado, 'abandono' => false])->render());
     }
 
     public function test_los_reportes_de_rrhh_no_los_ve_un_trabajador(): void

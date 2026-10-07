@@ -128,7 +128,9 @@ class PapeletaActualizada implements ShouldBroadcastNow
                     ->unique()
                     ->values();
 
-                [$etiqueta] = PapeletaEstadoPresentacion::para($papeleta->estado);
+                [$etiqueta] = ($papeleta->esAbandono() && $papeleta->estado instanceof \App\States\Papeleta\Cerrada)
+                    ? PapeletaEstadoPresentacion::cerradaPorAbandono()
+                    : PapeletaEstadoPresentacion::para($papeleta->estado);
 
                 foreach ($ids->chunk(self::CANALES_POR_ENVIO) as $grupo) {
                     event(new self($papeleta->id, class_basename($papeleta->estado), $etiqueta, $grupo->all()));

@@ -128,6 +128,16 @@ class Papeleta extends Model
     }
 
     /**
+     * Cerrada porque el trabajador salió y no regresó (abandono). El estado
+     * es el mismo `Cerrada` de una papeleta normal; lo que las distingue es
+     * la causa, y esta es la única pregunta que debe hacer cualquier vista.
+     */
+    public function esAbandono(): bool
+    {
+        return $this->causa_finalizacion_sin_retorno === 'abandono_no_marcado';
+    }
+
+    /**
      * Papeletas que el usuario decide como jefe inmediato: automático
      * (jefe_inmediato_id, columna fotografiada), adicional
      * (jefes_inmediatos_adicionales, asignación manual permanente) o

@@ -84,6 +84,19 @@ trait CreaEscenarioPapeletas
     }
 
     /**
+     * "Jefe de Área" es quien encabeza una unidad CON unidades hijas
+     * (User::unidadesDeArea()). Para armar ese escenario, la unidad recibe
+     * una sub-unidad vacía (sin jefe, así no genera avisos de turnos).
+     */
+    protected function conUnidadHija(\App\Models\UnidadOrganica $unidad): \App\Models\UnidadOrganica
+    {
+        return \App\Models\UnidadOrganica::create([
+            'nombre' => 'Sub-área de '.$unidad->nombre,
+            'parent_id' => $unidad->id,
+        ]);
+    }
+
+    /**
      * Crea un jefe y una UnidadOrganica mínima, y asigna al trabajador a
      * ella (jefe_id de la unidad = este jefe). Necesario desde que
      * jefaturasDe() dejó de tener un fallback: sin unidad_organica_id no

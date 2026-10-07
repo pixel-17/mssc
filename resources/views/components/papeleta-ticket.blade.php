@@ -19,7 +19,7 @@
                 {{ $papeleta->motivo->nombre }}
             </p>
         </div>
-        <x-estado-papeleta :estado="$papeleta->estado" class="shrink-0 whitespace-nowrap" />
+        <x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="shrink-0 whitespace-nowrap" />
     </div>
 
     <div class="mt-1.5 flex items-center justify-between text-sm">

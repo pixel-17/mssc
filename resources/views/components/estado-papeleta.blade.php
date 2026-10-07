@@ -1,7 +1,11 @@
-@props(['estado'])
+@props(['estado', 'abandono' => false])
 
 @php
-    [$etiqueta, $colores, $punto] = \App\Support\PapeletaEstadoPresentacion::para($estado);
+    // Una papeleta Cerrada por abandono se muestra distinta de una cerrada normal.
+    $esCerrada = ($estado instanceof \App\States\Papeleta\Cerrada) || $estado === \App\States\Papeleta\Cerrada::class;
+    [$etiqueta, $colores, $punto] = ($abandono && $esCerrada)
+        ? \App\Support\PapeletaEstadoPresentacion::cerradaPorAbandono()
+        : \App\Support\PapeletaEstadoPresentacion::para($estado);
 @endphp
 
 <span {{ $attributes->merge(['class' => "badge-tinta $colores"]) }}>

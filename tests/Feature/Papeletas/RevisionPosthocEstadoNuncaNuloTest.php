@@ -41,10 +41,26 @@ class RevisionPosthocEstadoNuncaNuloTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * Un jefe de unidad que envía SU PROPIA papeleta. Desde que la jefatura
+     * superior es obligatoria (sin ella la papeleta ni se crea), el jefe
+     * necesita una unidad padre cuyo jefe exista pero NO pueda decidir hoy
+     * (día de descanso 728): así la papeleta escala a RRHH o, fuera de su
+     * horario, el sistema la autoriza con revisión post-hoc.
+     */
     private function topeDePrueba(): \App\Models\User
     {
+        $superior = $this->usuarioDePrueba();
+        $unidadSuperior = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $superior->id]);
+        $superior->update(['unidad_organica_id' => $unidadSuperior->id]);
+        $this->turnoDePrueba($superior, ['es_descanso' => true]);
+
         $tope = $this->usuarioDePrueba();
-        $unidad = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $tope->id]);
+        $unidad = UnidadOrganica::create([
+            'nombre' => 'Gerencia',
+            'parent_id' => $unidadSuperior->id,
+            'jefe_id' => $tope->id,
+        ]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
         $this->turnoDePrueba($tope);
 

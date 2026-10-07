@@ -91,17 +91,21 @@ class TurnoVigenteRequeridoTest extends TestCase
     public function test_turno_noche_de_ayer_todavia_vigente_de_madrugada_si_permite_crear(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador);
 
-        Turno::create([
-            'user_id' => $trabajador->id,
-            'sede_id' => $this->sedeDePrueba()->id,
-            'fecha' => '2026-09-20',
-            'hora_inicio' => '22:00',
-            'hora_fin' => '06:00',
-            'es_descanso' => false,
-            'turno' => 'NOCHE',
-        ]);
+        // En 728 el jefe solo resuelve si hoy tiene un turno vigente con el
+        // mismo código que el del trabajador.
+        foreach ([$trabajador, $jefe] as $quien) {
+            Turno::create([
+                'user_id' => $quien->id,
+                'sede_id' => $this->sedeDePrueba()->id,
+                'fecha' => '2026-09-20',
+                'hora_inicio' => '22:00',
+                'hora_fin' => '06:00',
+                'es_descanso' => false,
+                'turno' => 'NOCHE',
+            ]);
+        }
 
         $this->ir('2026-09-21 02:00:00'); // madrugada: la noche empezó el 20
 

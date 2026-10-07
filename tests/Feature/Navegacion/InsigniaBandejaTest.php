@@ -43,7 +43,7 @@ class InsigniaBandejaTest extends TestCase
 
         Livewire::actingAs($jefe)
             ->test(InsigniaBandeja::class, ['bandeja' => 'jefe'])
-            ->assertSee('2 papeletas por decidir');
+            ->assertSee('2 papeletas pendientes en tu bandeja');
     }
 
     public function test_no_cuenta_las_papeletas_que_ya_no_estan_pendientes_de_jefe(): void
@@ -55,7 +55,7 @@ class InsigniaBandejaTest extends TestCase
 
         Livewire::actingAs($jefe)
             ->test(InsigniaBandeja::class, ['bandeja' => 'jefe'])
-            ->assertDontSee('por decidir');
+            ->assertDontSee('en tu bandeja');
     }
 
     public function test_singular_cuando_hay_una(): void
@@ -65,7 +65,7 @@ class InsigniaBandejaTest extends TestCase
 
         Livewire::actingAs($jefe)
             ->test(InsigniaBandeja::class, ['bandeja' => 'jefe'])
-            ->assertSee('1 papeleta por decidir');
+            ->assertSee('1 papeleta pendiente en tu bandeja');
     }
 
     public function test_rrhh_cuenta_todas_las_pendientes_de_rrhh_y_los_demas_no_ven_nada(): void
@@ -79,11 +79,11 @@ class InsigniaBandejaTest extends TestCase
 
         Livewire::actingAs($rrhh)
             ->test(InsigniaBandeja::class, ['bandeja' => 'rrhh'])
-            ->assertSee('2 papeletas por decidir');
+            ->assertSee('2 papeletas pendientes en tu bandeja');
 
         Livewire::actingAs($trabajador)
             ->test(InsigniaBandeja::class, ['bandeja' => 'rrhh'])
-            ->assertDontSee('por decidir');
+            ->assertDontSee('en tu bandeja');
     }
 
     public function test_el_cliente_no_puede_cambiar_de_bandeja(): void

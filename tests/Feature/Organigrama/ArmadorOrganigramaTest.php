@@ -42,6 +42,11 @@ class ArmadorOrganigramaTest extends TestCase
 
     private function consultasAlArmar(User $admin): int
     {
+        // Spatie carga los roles del usuario una sola vez y los deja en el
+        // modelo: sin precargarlos, la PRIMERA medición cuenta una consulta
+        // que la segunda ya no hace y parece un N+1 que no es.
+        $admin->loadMissing('roles');
+
         DB::flushQueryLog();
         DB::enableQueryLog();
 

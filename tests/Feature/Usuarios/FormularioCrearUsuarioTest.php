@@ -28,7 +28,8 @@ class FormularioCrearUsuarioTest extends TestCase
 
         // Mismo atajo que TurnoInicialAlCrearTest: un admin dueño de la unidad hace de jefe de área.
         $this->jefeDeArea = $this->usuarioDePrueba([], ['admin']);
-        UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $this->jefeDeArea->id]);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $this->jefeDeArea->id]);
+        $this->conUnidadHija($unidad);
     }
 
     public function test_el_formulario_muestra_la_sede_que_heredara_el_trabajador(): void

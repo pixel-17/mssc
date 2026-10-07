@@ -5,7 +5,7 @@ namespace Tests\Feature\Papeletas;
 use App\Models\Papeleta;
 use App\Models\Retorno;
 use App\States\Papeleta\AutorizadaYCorriendo;
-use App\States\Papeleta\FinalizadoSinRetorno;
+use App\States\Papeleta\Cerrada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\Concerns\CreaEscenarioPapeletas;
@@ -72,9 +72,12 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->abandonos();
 
         $papeleta = $papeleta->fresh();
-        $this->assertTrue($papeleta->estado->equals(FinalizadoSinRetorno::class));
+        // Se cierra de una vez: sin plazo ni visto bueno, pero queda marcada como abandono.
+        $this->assertTrue($papeleta->estado->equals(Cerrada::class));
         $this->assertSame('abandono_no_marcado', $papeleta->causa_finalizacion_sin_retorno);
-        $this->assertTrue((bool) $papeleta->requiere_visto_bueno);
+        $this->assertTrue($papeleta->esAbandono());
+        $this->assertFalse((bool) $papeleta->requiere_visto_bueno);
+        $this->assertNull($papeleta->regularizacion_fecha_limite);
     }
 
     public function test_noche_con_retorno_registrado_no_es_abandono_al_terminar_el_turno(): void

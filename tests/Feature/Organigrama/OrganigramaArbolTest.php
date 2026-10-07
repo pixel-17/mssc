@@ -141,9 +141,10 @@ class OrganigramaArbolTest extends TestCase
             ->assertSet('modoEdicion', false)
             ->call('alternarEdicion')
             ->assertSet('modoEdicion', true)
-            ->assertSee('Modo edición activo')
+            ->assertSee('Salir del modo edición')
             ->call('alternarEdicion')
-            ->assertSet('modoEdicion', false);
+            ->assertSet('modoEdicion', false)
+            ->assertDontSee('Salir del modo edición');
     }
 
     // ---- «Mover a otra unidad» desde la ficha (alternativa al arrastre) ----

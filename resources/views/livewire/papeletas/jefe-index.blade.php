@@ -265,7 +265,7 @@
                                 <tr wire:key="del-turno-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
-                                    <td class="px-4 py-3 text-sm"><x-estado-papeleta :estado="$papeleta->estado" /></td>
+                                    <td class="px-4 py-3 text-sm"><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" /></td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->fin_turno_at?->format('d/m H:i') ?? '—' }}</td>
                                     <td class="px-4 py-3 text-right">
                                         <a href="{{ route('jefe.papeletas.show', $papeleta) }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Ver</a>

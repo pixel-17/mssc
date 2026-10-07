@@ -4,6 +4,7 @@ namespace Tests\Feature\Papeletas;
 
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
+use App\Models\UnidadOrganica;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Vencida;
@@ -53,9 +54,21 @@ class CierreDeRrhhTest extends TestCase
         $this->artisan('papeletas:procesar-vencimientos')->assertSuccessful();
     }
 
-    private function pendienteDeRrhh(string $finTurno): Papeleta
+    /**
+     * Por defecto quien envía la papeleta es jefe de una unidad: es el único
+     * caso en que el sistema autoriza al cerrar RRHH. Con $esJefe = false es
+     * un trabajador raso, que nunca se autoriza por sistema.
+     */
+    private function pendienteDeRrhh(string $finTurno, bool $esJefe = true): Papeleta
     {
-        return $this->papeletaDePrueba($this->usuarioDePrueba(), PendienteRrhh::class, [
+        $trabajador = $this->usuarioDePrueba();
+
+        if ($esJefe) {
+            $unidad = UnidadOrganica::create(['nombre' => 'Unidad de '.$trabajador->id, 'jefe_id' => $trabajador->id]);
+            $trabajador->update(['unidad_organica_id' => $unidad->id]);
+        }
+
+        return $this->papeletaDePrueba($trabajador, PendienteRrhh::class, [
             'fin_turno_at' => $finTurno,
             'jefe_resuelto_at' => now(),
         ]);
@@ -99,6 +112,17 @@ class CierreDeRrhhTest extends TestCase
         $this->vencimientos();
 
         $this->assertTrue($papeleta->fresh()->estado->equals(AutorizadaYCorriendo::class));
+    }
+
+    public function test_un_trabajador_raso_nunca_se_autoriza_por_cierre_de_rrhh(): void
+    {
+        $this->ir('2026-09-21 16:10:00');
+        $papeleta = $this->pendienteDeRrhh('2026-09-21 22:00:00', esJefe: false);
+
+        $this->ir('2026-09-21 16:16:00');
+        $this->vencimientos();
+
+        $this->assertTrue($papeleta->fresh()->estado->equals(PendienteRrhh::class));
     }
 
     public function test_si_el_turno_ya_termino_queda_vencida_y_no_autorizada(): void

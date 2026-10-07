@@ -47,7 +47,7 @@
             <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
-            <span data-en-vivo-estado><x-estado-papeleta :estado="$papeleta->estado" class="text-sm" /></span>
+            <span data-en-vivo-estado><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="text-sm" /></span>
         </div>
     </x-slot>
 

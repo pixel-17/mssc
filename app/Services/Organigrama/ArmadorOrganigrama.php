@@ -66,7 +66,13 @@ class ArmadorOrganigrama
         $configurados = $this->turnosConfiguradosDeJefes($unidades, $enAlcance);
 
         $raices = $raicesDeAlcance
-            ->map(fn (UnidadOrganica $u) => $this->construirNodo($u, $porPadre, $stats, $conteoSedes, $configurados))
+            // Closure con `use (&...)` y NO `fn`: las arrow functions capturan por
+            // valor, así que $stats y $conteoSedes (acumuladores por referencia de
+            // construirNodo) se quedaban en 0 y las tarjetas y el selector de sedes
+            // del organigrama mostraban siempre cero.
+            ->map(function (UnidadOrganica $u) use ($porPadre, &$stats, &$conteoSedes, $configurados) {
+                return $this->construirNodo($u, $porPadre, $stats, $conteoSedes, $configurados);
+            })
             ->filter()
             ->values();
 
@@ -319,8 +325,12 @@ class ArmadorOrganigrama
         $miembros = $miembrosBase->filter($enSede)->values();
         $jefesEnFiltro = $jefes->filter($enSede)->values();
 
+        // Por referencia a propósito (ver armar()): con `fn` se perderían los
+        // conteos de toda la rama hija.
         $hijos = $porPadre->get($unidad->id, collect())
-            ->map(fn (UnidadOrganica $h) => $this->construirNodo($h, $porPadre, $stats, $conteoSedes, $configurados))
+            ->map(function (UnidadOrganica $h) use ($porPadre, &$stats, &$conteoSedes, $configurados) {
+                return $this->construirNodo($h, $porPadre, $stats, $conteoSedes, $configurados);
+            })
             ->filter()
             ->values();
 

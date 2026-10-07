@@ -38,7 +38,7 @@
                     <p class="font-mono text-xs text-tinta-400 dark:text-tinta-300/60">N.° {{ str_pad($papeleta->id, 4, '0', STR_PAD_LEFT) }}</p>
                     <p class="font-display font-semibold text-lg text-tinta-950 dark:text-white leading-snug mt-0.5">{{ $papeleta->motivo->nombre }}</p>
                 </div>
-                <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" class="whitespace-nowrap" /></span>
+                <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="whitespace-nowrap" /></span>
             </div>
 
             <div class="mx-5 border-t border-dashed border-tinta-200/70 dark:border-white/15"></div>
@@ -60,7 +60,7 @@
             @if ($papeleta->causa_finalizacion_sin_retorno)
                 <div class="mx-5 mb-4 p-3 rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-400/20">
                     <p class="text-xs font-semibold text-red-700 dark:text-red-300 mb-1">Causa de finalización sin retorno</p>
-                    <p class="text-sm text-red-700 dark:text-red-200">{{ $papeleta->causa_finalizacion_sin_retorno }}</p>
+                    <p class="text-sm text-red-700 dark:text-red-200">{{ $papeleta->esAbandono() ? 'Abandono: no marcaste tu retorno antes de que terminara tu turno/día' : $papeleta->causa_finalizacion_sin_retorno }}</p>
                 </div>
             @endif
         </div>
