@@ -103,6 +103,10 @@ class UsuarioAdminForm extends Component
                 $this->diasTrabajo = $config->dias_trabajo;
                 $this->diasDescanso = $config->dias_descanso;
             }
+        } elseif (request()->query('tipo') === 'admin') {
+            // «Nuevo administrador»: rol admin ya marcado y sin unidad (el admin no pertenece al organigrama).
+            $adminId = (int) Role::where('name', 'admin')->value('id');
+            $this->rolesSeleccionados = $adminId > 0 ? [(string) $adminId] : [];
         } else {
             // Alta desde el organigrama: ?unidad=ID preselecciona la unidad
             // y, si su jefe tiene sede, la propone como sede.
@@ -126,6 +130,14 @@ class UsuarioAdminForm extends Component
         $roles = array_map('intval', $this->rolesSeleccionados);
 
         return $adminId > 0 && $roles !== [] && array_diff($roles, [$adminId]) === [];
+    }
+
+    /** ¿Entre los roles elegidos está el de administrador? Un admin no tiene unidad ni jefes. */
+    protected function incluyeAdmin(): bool
+    {
+        $adminId = (int) Role::where('name', 'admin')->value('id');
+
+        return $adminId > 0 && in_array($adminId, array_map('intval', $this->rolesSeleccionados), true);
     }
 
     /**
@@ -197,6 +209,12 @@ class UsuarioAdminForm extends Component
             return;
         }
 
+        if (in_array($adminId, $roles, true) && $this->usuario?->unidadesQueEncabeza()->exists()) {
+            $this->addError('rolesSeleccionados', 'Encabeza una unidad: reasigna primero esa jefatura antes de darle el rol de administrador.');
+
+            return;
+        }
+
         if ($this->usuario?->esUnicoRrhhActivo()) {
             $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');
             $conservaRol = in_array($rolRrhhId, array_map('intval', $datos['rolesSeleccionados']), true);
@@ -238,7 +256,8 @@ class UsuarioAdminForm extends Component
             'email' => $datos['email'],
             'regimen' => $datos['regimen'] ?: null,
             'sede_id' => $datos['sedeId'],
-            'unidad_organica_id' => $datos['unidadOrganicaId'],
+            // Un administrador no pertenece a ninguna unidad del organigrama.
+            'unidad_organica_id' => in_array($adminId, $roles, true) ? null : $datos['unidadOrganicaId'],
             'activo' => $datos['activo'],
         ];
 
@@ -292,7 +311,12 @@ class UsuarioAdminForm extends Component
         return view('livewire.usuarios.usuario-admin-form', [
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
-            'roles' => Role::orderBy('name')->get(),
+            // En «Nuevo usuario» no se ofrece admin: los administradores se crean desde «Nuevo administrador».
+            'roles' => Role::orderBy('name')
+                ->when($this->usuario === null && ! $this->soloAdmin, fn ($q) => $q->where('name', '!=', 'admin'))
+                ->get(),
+            'esAdminRol' => $this->incluyeAdmin(),
+            'nuevoAdmin' => $this->usuario === null && request()->query('tipo') === 'admin',
             'requiereTurno' => $this->usuario !== null && $this->admiteConfiguracionTurno(),
             'opcionesTurno' => $this->regimen
                 ? ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen]))

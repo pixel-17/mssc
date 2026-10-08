@@ -44,14 +44,18 @@ class UserPolicy
     }
 
     /**
-     * ¿Puede $creator crear ALGÚN usuario, sin importar en qué unidad?
-     * Sirve para mostrar/ocultar el enlace "Crear usuario" en el menú,
+     * ¿Puede $creator crear ALGÚN usuario desde la vía de jefes, sin importar en
+     * qué unidad? Sirve para mostrar/ocultar el enlace "Trabajadores" en el menú,
      * sin repetir la lógica de crearEnUnidad()/crearTrabajadorPropio().
      */
     public function puedeCrearAlgo(User $creator): bool
     {
+        // Sin bypass de admin: esta es la vía de alta de los jefes (Trabajadores /
+        // usuarios.create). La admin no tiene trabajadores propios; sus altas
+        // (incluido otro admin) van por Cuentas de usuario (usuarios-admin.crear)
+        // o por el organigrama.
         if ($creator->hasRole('admin')) {
-            return true;
+            return false;
         }
 
         return $creator->unidadesQueEncabeza()->exists()

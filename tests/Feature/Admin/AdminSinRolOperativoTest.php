@@ -68,4 +68,37 @@ class AdminSinRolOperativoTest extends TestCase
 
         $this->assertDatabaseMissing('users', ['dni' => '40555666']);
     }
+
+    public function test_nuevo_usuario_no_ofrece_ni_acepta_el_rol_admin(): void
+    {
+        $admin = $this->usuarioDePrueba([], ['admin']);
+        $adminId = (int) Role::where('name', 'admin')->value('id');
+
+        $componente = Livewire::actingAs($admin)->test(UsuarioAdminForm::class);
+
+        $this->assertFalse($componente->viewData('roles')->contains('name', 'admin'));
+
+        $componente
+            ->set('name', 'Colado')
+            ->set('apellido', 'Admin')
+            ->set('dni', '40777888')
+            ->set('email', 'colado.admin@example.com')
+            ->set('regimen', '276')
+            ->set('rolesSeleccionados', [$adminId])
+            ->call('guardar')
+            ->assertHasErrors(['rolesSeleccionados']);
+
+        $this->assertDatabaseMissing('users', ['dni' => '40777888']);
+    }
+
+    public function test_el_admin_no_tiene_la_via_de_alta_de_jefes_pero_si_la_de_cuentas(): void
+    {
+        $admin = $this->usuarioDePrueba([], ['admin']);
+
+        $this->assertFalse($admin->can('puedeCrearAlgo', \App\Models\User::class));
+
+        $this->actingAs($admin)->get(route('usuarios.create'))->assertForbidden();
+        $this->actingAs($admin)->get(route('usuarios.index'))->assertRedirect(route('usuarios-admin.index'));
+        $this->actingAs($admin)->get(route('usuarios-admin.crear'))->assertOk();
+    }
 }

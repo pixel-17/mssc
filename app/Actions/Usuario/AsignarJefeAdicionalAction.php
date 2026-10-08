@@ -34,6 +34,10 @@ class AsignarJefeAdicionalAction
             throw new PapeletaException('Un trabajador no puede ser su propio jefe inmediato.');
         }
 
+        if ($jefeNuevo->hasRole('admin')) {
+            throw new PapeletaException('Un administrador no puede ser jefe inmediato: no tiene bandeja de jefe.');
+        }
+
         if (! $confirmado) {
             throw new PapeletaException('Falta confirmar explícitamente la asignación de jefe inmediato.');
         }

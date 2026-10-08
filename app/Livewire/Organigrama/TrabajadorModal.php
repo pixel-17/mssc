@@ -221,6 +221,7 @@ class TrabajadorModal extends Component
                 ->map(fn ($s) => ['id' => $s->id, 'label' => $s->nombre, 'hint' => null])->all(),
             'jefes' => User::with('unidadOrganica:id,nombre')
                 ->where('activo', true)->whereKeyNot($this->trabajadorId)
+                ->whereDoesntHave('roles', fn ($r) => $r->where('name', 'admin'))
                 ->orderBy('name')->orderBy('apellido')->get()
                 ->map(fn (User $j) => ['id' => $j->id, 'label' => $j->nombre_completo, 'hint' => $j->unidadOrganica?->nombre])->all(),
             'adicionales' => $t?->jefesInmediatosAdicionales ?? collect(),

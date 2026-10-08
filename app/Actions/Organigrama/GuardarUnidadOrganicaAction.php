@@ -36,6 +36,8 @@ class GuardarUnidadOrganicaAction
             $this->exigirAlcanceDeJefeDeArea($actor, $unidad, $datos, $jefesAdicionales);
         }
 
+        $this->exigirJefesDeTurnoNoAdmin($jefesAdicionales);
+
         $jefaturas = app(JefaturaUnidadService::class);
         $jefaturas->validar(
             $unidad,
@@ -132,6 +134,28 @@ class GuardarUnidadOrganicaAction
 
         if (in_array((int) $parentId, $prohibidos, true)) {
             throw new UsuarioException('Esa unidad no puede ser su propio padre ni el de un descendiente suyo.');
+        }
+    }
+
+    /**
+     * Un administrador tampoco puede ser jefe de turno: no tiene bandeja de jefe.
+     *
+     * @param  list<int|null>|null  $jefesAdicionales
+     *
+     * @throws UsuarioException
+     */
+    private function exigirJefesDeTurnoNoAdmin(?array $jefesAdicionales): void
+    {
+        $ids = collect($jefesAdicionales ?? [])->filter()->map(fn ($id) => (int) $id)->unique();
+
+        if ($ids->isEmpty()) {
+            return;
+        }
+
+        $admin = User::whereIn('id', $ids)->role('admin')->first();
+
+        if ($admin) {
+            throw new UsuarioException($admin->nombre_completo.' es administrador: no puede ser jefe de turno de una unidad.');
         }
     }
 

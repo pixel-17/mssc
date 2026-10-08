@@ -167,7 +167,8 @@ class UnidadOrganicaForm extends Component
 
         return view('livewire.unidades-organicas.unidad-organica-form', [
             'padresDisponibles' => $padresDisponibles,
-            'jefesDisponibles' => User::orderBy('name')->pluck('name', 'id'),
+            'jefesDisponibles' => User::whereDoesntHave('roles', fn ($r) => $r->where('name', 'admin'))
+                ->orderBy('name')->pluck('name', 'id'),
         ]);
     }
 }

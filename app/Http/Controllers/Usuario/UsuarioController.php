@@ -28,9 +28,14 @@ use Illuminate\View\View;
  */
 class UsuarioController extends Controller
 {
-    public function index(): View
+    public function index(): View|RedirectResponse
     {
         $user = Auth::user();
+
+        // La admin no tiene trabajadores propios: gestiona cuentas desde su panel.
+        if ($user->hasRole('admin')) {
+            return redirect()->route('usuarios-admin.index');
+        }
         $unidadIds = $this->subtreeIdsDeAreasQueEncabeza($user);
 
         $usuarios = $unidadIds->isNotEmpty()

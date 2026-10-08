@@ -1,6 +1,6 @@
 <div>
     <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : 'Nuevo usuario'" />
+        <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : ($nuevoAdmin ? 'Nuevo administrador' : 'Nuevo usuario')" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -54,6 +54,7 @@
                     </x-select>
                 </x-admin.campo>
 
+                @unless ($esAdminRol)
                 <x-admin.campo
                     label="Unidad orgánica"
                     for="usuario-admin-form-unidadOrganicaId"
@@ -66,7 +67,14 @@
                         @endforeach
                     </x-select>
                 </x-admin.campo>
+                @endunless
             </div>
+
+            @if ($esAdminRol)
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Un administrador gestiona cuentas y catálogos: no pertenece a ninguna unidad del organigrama ni tiene equipo.
+                </p>
+            @endif
 
             @if ($requiereTurno)
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -117,7 +125,7 @@
                 <div class="flex flex-wrap gap-4" role="group" aria-labelledby="usuario-admin-form-roles-titulo">
                     @foreach ($roles as $rol)
                         <label wire:key="usuario-admin-form-label-{{ $rol->id }}" class="flex items-center gap-2">
-                            <x-checkbox wire:model="rolesSeleccionados" value="{{ $rol->id }}" />
+                            <x-checkbox wire:model.live="rolesSeleccionados" value="{{ $rol->id }}" />
                             <span class="text-sm">{{ $rol->name }}</span>
                         </label>
                     @endforeach

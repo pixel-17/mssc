@@ -21,7 +21,8 @@ use App\States\Papeleta\PendienteJefe;
  * funciones de UnidadOrganica que usa UserObserver (no pueden divergir).
  *
  * Reglas:
- * - El jefe nuevo debe existir y estar activo.
+ * - El jefe nuevo debe existir, estar activo y no ser administrador (el admin
+ *   administra cuentas: no tiene unidad, equipo ni bandeja de jefe).
  * - Régimen: todos en una unidad comparten el de su jefe (ver
  *   UnidadOrganica::regimen()). Si cambia el jefe, el régimen del nuevo debe
  *   coincidir con el de las personas activas y los jefes de turno que ya
@@ -60,6 +61,10 @@ class JefaturaUnidadService
 
         if (! $jefe->activo) {
             throw new UsuarioException($jefe->nombre_completo.' está desactivado: no puede encabezar una unidad.');
+        }
+
+        if ($jefe->hasRole('admin')) {
+            throw new UsuarioException($jefe->nombre_completo.' es administrador: un administrador no pertenece al organigrama ni puede encabezar una unidad.');
         }
 
         if ($unidad !== null && $jefe->regimen !== null) {
