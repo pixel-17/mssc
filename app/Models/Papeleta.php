@@ -3,7 +3,12 @@
 namespace App\Models;
 
 use App\Exceptions\PapeletaException;
+use App\States\Papeleta\AutorizadaYCorriendo;
+use App\States\Papeleta\ObservadaPorJefe;
+use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PapeletaState;
+use App\States\Papeleta\PendienteJefe;
+use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -136,6 +141,45 @@ class Papeleta extends Model
     public function esAbandono(): bool
     {
         return $this->causa_finalizacion_sin_retorno === 'abandono_no_marcado';
+    }
+
+    /**
+     * Estados en los que la papeleta sigue "viva": todavía no se resolvió o
+     * el trabajador está fuera. Un trabajador solo puede tener UNA papeleta
+     * viva a la vez; para crear otra debe cancelar (solo mientras espera
+     * decisión) o finalizar la que tiene (marcando su retorno).
+     *
+     * EnJustificacion no cuenta: la salida ya terminó y solo falta presentar
+     * el sustento. Los terminales (Cerrada, Finalizada, Cancelada, Vencida,
+     * Rechazada) tampoco.
+     */
+    public const ESTADOS_VIVOS = [
+        PendienteJefe::class,
+        ObservadaPorJefe::class,
+        PendienteRrhh::class,
+        ObservadaPorRrhh::class,
+        AutorizadaYCorriendo::class,
+    ];
+
+    public function scopeVivas(Builder $query): Builder
+    {
+        return $query->whereState('estado', self::ESTADOS_VIVOS);
+    }
+
+    /** La papeleta viva del trabajador (la más reciente), o null si no tiene ninguna. */
+    public static function vivaDe(User $trabajador): ?self
+    {
+        return static::where('trabajador_id', $trabajador->id)->vivas()->latest('id')->first();
+    }
+
+    /** Texto para el trabajador cuando intenta crear otra papeleta teniendo esta viva. */
+    public function mensajeDeBloqueoParaNueva(): string
+    {
+        if ($this->estado->equals(AutorizadaYCorriendo::class)) {
+            return "Ya tienes la papeleta #{$this->id} autorizada y en curso. Finalízala (marca tu retorno) antes de crear otra.";
+        }
+
+        return "Ya tienes la papeleta #{$this->id} en trámite. Cancélala o espera su resolución antes de crear otra.";
     }
 
     /**

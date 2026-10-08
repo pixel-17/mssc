@@ -37,6 +37,7 @@
         </div>
 
         @include('layouts.partials.confirmar')
+        @include('layouts.partials.visor-archivo')
 
         @stack('modals')
 

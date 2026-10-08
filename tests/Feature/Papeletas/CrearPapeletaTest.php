@@ -2,15 +2,23 @@
 
 namespace Tests\Feature\Papeletas;
 
+use App\Actions\Papeleta\CancelarPapeletaAction;
 use App\Actions\Papeleta\CrearPapeletaAction;
+use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\States\Papeleta\AutorizadaYCorriendo;
+use App\States\Papeleta\Cancelada;
+use App\States\Papeleta\Cerrada;
+use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
+use App\States\Papeleta\Rechazada;
+use App\States\Papeleta\Vencida;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -21,8 +29,9 @@ use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
 /**
- * Regresión del error "Ya tienes una papeleta activa...": un trabajador
- * puede tener varias papeletas al mismo tiempo y Emergencia ya no existe.
+ * Un trabajador solo puede tener UNA papeleta viva a la vez (pendiente,
+ * observada o autorizada y en curso): para crear otra debe cancelar o
+ * finalizar la anterior. Emergencia ya no existe.
  *
  * Horario ordinario sembrado por ConfiguracionSeeder: 07:45-16:15,
  * lunes a viernes. Lunes de referencia: 2026-09-21.
@@ -72,18 +81,104 @@ class CrearPapeletaTest extends TestCase
         return [$jefeArea->fresh(), $jefeInmediato->fresh(), $trabajador->fresh()];
     }
 
-    public function test_un_trabajador_puede_tener_varias_papeletas_a_la_vez(): void
+    public function test_no_puede_crear_otra_papeleta_mientras_tiene_una_en_tramite(): void
     {
         [, , $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
         $crear = app(CrearPapeletaAction::class);
 
         $primera = $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
-        $crear->ejecutar($trabajador, $this->motivoDe('SALUD'), []);
-        $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
 
-        $this->assertSame(3, Papeleta::where('trabajador_id', $trabajador->id)->count());
+        try {
+            $crear->ejecutar($trabajador, $this->motivoDe('SALUD'), []);
+            $this->fail('Debió bloquear la segunda papeleta.');
+        } catch (PapeletaException $e) {
+            $this->assertStringContainsString("#{$primera->id}", $e->getMessage());
+            $this->assertStringContainsString('Cancélala', $e->getMessage());
+        }
+
+        $this->assertSame(1, Papeleta::where('trabajador_id', $trabajador->id)->count());
         $this->assertTrue($primera->fresh()->estado->equals(PendienteJefe::class));
+    }
+
+    public function test_no_puede_crear_otra_papeleta_con_una_autorizada_y_en_curso(): void
+    {
+        [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+        $enCurso = $this->papeletaDePrueba($trabajador, AutorizadaYCorriendo::class);
+
+        try {
+            app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
+            $this->fail('Debió bloquear la nueva papeleta.');
+        } catch (PapeletaException $e) {
+            $this->assertStringContainsString("#{$enCurso->id}", $e->getMessage());
+            $this->assertStringContainsString('autorizada y en curso', $e->getMessage());
+        }
+
+        $this->assertSame(1, Papeleta::where('trabajador_id', $trabajador->id)->count());
+    }
+
+    public function test_puede_crear_otra_papeleta_despues_de_cancelar_la_anterior(): void
+    {
+        [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+        $crear = app(CrearPapeletaAction::class);
+
+        $primera = $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
+        app(CancelarPapeletaAction::class)->ejecutar($primera, $trabajador);
+
+        $segunda = $crear->ejecutar($trabajador, $this->motivoDe('SALUD'), []);
+
+        $this->assertSame(2, Papeleta::where('trabajador_id', $trabajador->id)->count());
+        $this->assertTrue($primera->fresh()->estado->equals(Cancelada::class));
+        $this->assertTrue($segunda->estado->equals(PendienteJefe::class));
+    }
+
+    public function test_puede_crear_otra_papeleta_cuando_la_anterior_ya_termino(): void
+    {
+        [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+        $crear = app(CrearPapeletaAction::class);
+
+        foreach ([Cerrada::class, Finalizada::class, Cancelada::class, Vencida::class, Rechazada::class, EnJustificacion::class] as $estado) {
+            $anterior = $this->papeletaDePrueba($trabajador, $estado);
+
+            $nueva = $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
+            $this->assertTrue($nueva->estado->equals(PendienteJefe::class), "No dejó crear tras {$estado}.");
+
+            // Se resuelve la nueva para que no bloquee la siguiente vuelta.
+            $nueva->update(['estado' => Cancelada::class]);
+            $anterior->delete();
+        }
+    }
+
+    public function test_la_papeleta_viva_de_otro_usuario_no_bloquea(): void
+    {
+        [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+        $this->papeletaDePrueba($jefeInmediato, AutorizadaYCorriendo::class);
+
+        $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
+
+        $this->assertTrue($papeleta->estado->equals(PendienteJefe::class));
+    }
+
+    public function test_con_una_papeleta_viva_la_pantalla_de_crear_lleva_a_esa_papeleta(): void
+    {
+        $this->ir('2026-09-21 10:00:00');
+        [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+        $viva = $this->papeletaDePrueba($trabajador, PendienteJefe::class);
+
+        $this->actingAs($trabajador)->get(route('trabajador.papeletas.create'))
+            ->assertRedirect(route('trabajador.papeletas.show', $viva))
+            ->assertSessionHas('error');
+
+        $this->actingAs($trabajador)->post(route('trabajador.papeletas.store'), [
+            'motivo_id' => $this->motivoDe('PARTICULAR')->id,
+        ])->assertSessionHas('error');
+
+        $this->assertSame(1, Papeleta::where('trabajador_id', $trabajador->id)->count());
     }
 
     public function test_se_puede_crear_la_papeleta_de_salud_con_adjunto_por_http(): void

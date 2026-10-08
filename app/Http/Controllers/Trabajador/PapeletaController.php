@@ -35,9 +35,17 @@ class PapeletaController extends Controller
         return view('trabajador.papeletas.index', compact('papeletas'));
     }
 
-    public function create(): View
+    public function create(): View|RedirectResponse
     {
         $this->authorize('crear', Papeleta::class);
+
+        // Con una papeleta viva no se puede crear otra: se lleva al trabajador a esa
+        // papeleta, donde puede cancelarla o finalizarla, en vez de dejarlo llenar el formulario.
+        if ($viva = Papeleta::vivaDe(Auth::user())) {
+            return redirect()
+                ->route('trabajador.papeletas.show', $viva)
+                ->with('error', $viva->mensajeDeBloqueoParaNueva());
+        }
 
         $motivos = Motivo::where('activo', true)->orderBy('nombre')->get();
 

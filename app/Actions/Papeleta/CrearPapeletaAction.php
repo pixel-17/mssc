@@ -28,8 +28,12 @@ use Illuminate\Support\Facades\DB;
  *   poder crear la papeleta: fuera de eso, bloqueo total. Ya no es un
  *   interruptor que el admin pueda activar/desactivar (antes
  *   MODO_ESTRICTO_728): es la regla fija, siempre activa.
- * - Un trabajador puede tener varias papeletas al mismo tiempo: no hay
- *   regla de exclusividad ni columnas "slot" a nivel de BD.
+ * - Un trabajador solo puede tener UNA papeleta viva a la vez (pendiente,
+ *   observada, o autorizada y en curso; ver Papeleta::ESTADOS_VIVOS). Para crear
+ *   otra primero debe cancelar la anterior (mientras espera decisión) o
+ *   finalizarla (marcando su retorno). Se valida al inicio y se revalida
+ *   dentro de la transacción, bajo lock de la fila del trabajador, para que dos
+ *   envíos simultáneos no creen dos. No hay columnas "slot" a nivel de BD.
  * - Jefe inmediato (o, si quien crea la papeleta es él mismo jefe
  *   inmediato, su Jefe de Área) sin resolver o inactivo: bloqueo total
  *   SIEMPRE, sin excepción por régimen ni por posición en el
@@ -89,6 +93,8 @@ class CrearPapeletaAction
         if ($motivo->adjunto === 'obligatorio' && empty($datos['justificacion'] ?? null)) {
             throw new PapeletaException("La justificación es obligatoria para el motivo {$motivo->nombre}.");
         }
+
+        $this->exigirSinPapeletaViva($trabajador);
 
         $turno = $this->resolverTurnoActivo($trabajador);
 
@@ -202,6 +208,11 @@ class CrearPapeletaAction
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
         $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $directoARrhh, $estadoInicial, $autorizaSistema) {
+            // Revalidación bajo lock: la fila del trabajador sirve de candado, así dos
+            // envíos casi simultáneos se atienden uno tras otro y el segundo ve al primero.
+            User::whereKey($trabajador->id)->lockForUpdate()->first();
+            $this->exigirSinPapeletaViva($trabajador);
+
             $campos = [
                 'trabajador_id' => $trabajador->id,
                 'motivo_id' => $motivo->id,
@@ -301,6 +312,15 @@ class CrearPapeletaAction
         };
 
         return $papeleta;
+    }
+
+    private function exigirSinPapeletaViva(User $trabajador): void
+    {
+        $viva = Papeleta::vivaDe($trabajador);
+
+        if ($viva) {
+            throw new PapeletaException($viva->mensajeDeBloqueoParaNueva());
+        }
     }
 
     /**
