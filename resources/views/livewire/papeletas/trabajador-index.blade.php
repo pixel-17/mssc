@@ -1,6 +1,4 @@
 <div class="space-y-5">
-    <x-flash-messages />
-
     {{-- Mi turno / Todas: por defecto solo se ven las papeletas del turno en curso. --}}
     <div class="space-y-1">
         <div class="inline-flex rounded-lg overflow-hidden border border-gray-300 dark:border-white/15" role="group" aria-label="Qué papeletas ver">

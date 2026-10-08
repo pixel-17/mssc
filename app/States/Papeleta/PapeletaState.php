@@ -39,13 +39,19 @@ abstract class PapeletaState extends State
             ->allowTransition(PendienteRrhh::class, Rechazada::class)
             ->allowTransition(PendienteRrhh::class, AutorizadaYCorriendo::class)
             ->allowTransition(PendienteRrhh::class, Vencida::class)
+            ->allowTransition(PendienteRrhh::class, Cancelada::class) // solo con RRHH en horario (ver CancelarPapeletaAction)
 
             ->allowTransition(ObservadaPorRrhh::class, PendienteJefe::class) // SIEMPRE vuelve al jefe, nunca al trabajador
             ->allowTransition(ObservadaPorRrhh::class, Vencida::class)
+            ->allowTransition(ObservadaPorRrhh::class, Cancelada::class) // solo con RRHH en horario (ver CancelarPapeletaAction)
 
             ->allowTransition(AutorizadaYCorriendo::class, Cerrada::class)
             ->allowTransition(AutorizadaYCorriendo::class, Finalizada::class)
             ->allowTransition(AutorizadaYCorriendo::class, EnJustificacion::class)
+
+            // Post-hoc no aprobado por RRHH: una papeleta ya Cerrada (sin descuento)
+            // pasa a Particular -> Finalizada (con descuento).
+            ->allowTransition(Cerrada::class, Finalizada::class)
 
             // Aprobada -> Cerrada (sin descuento). Rechazada, vencida o
             // abandono marcado por una persona -> Finalizada (con descuento).

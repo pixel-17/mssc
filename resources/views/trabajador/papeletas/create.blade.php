@@ -12,8 +12,6 @@
             this.archivo = f ? f.name : null;
         },
         get pideAdjunto() { const m = this.motivos.find(m => m.id == this.motivoId); return !!m && !!m.requiere_sustento_en_retorno; } }">
-        <x-flash-messages />
-
         {{--
             Una sola hoja, no cuatro tarjetas apiladas: como llenar un
             formulario de papel, campo tras campo, separados por una

@@ -29,7 +29,7 @@
     method="POST"
     action="{{ $action }}"
     x-data="{ enviando: false }"
-    x-on:submit="if ({{ $confirmText ? 'true' : 'false' }} && !confirm(@js($confirmText))) { $event.preventDefault(); return; } enviando = true"
+    x-on:submit="if ({{ $confirmText ? 'true' : 'false' }}) { $event.preventDefault(); if (enviando) return; mssConfirmar(@js($confirmText), { aceptar: @js($label) }).then(ok => { if (ok) { enviando = true; $el.submit(); } }); return; } enviando = true"
 >
     @csrf
 

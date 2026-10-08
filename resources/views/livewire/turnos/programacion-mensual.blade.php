@@ -83,11 +83,12 @@
                 generarMeses() {
                     if (!this.pasosPatron()) return;
                     const n = Math.max(1, Math.min(@js($maxMeses), parseInt(this.meses) || 1));
-                    if (!confirm('Se guardarán ' + n + ' meses de golpe, a partir del ' + this.desde + '. Lo que ya exista en los meses siguientes se reemplaza. ¿Continuar?')) return;
-                    this.$wire.generarMeses(this.patron, this.desde, n, this.continuar, this.dias);
+                    mssConfirmar('Se guardarán ' + n + ' meses de golpe, a partir del ' + this.desde + '. Lo que ya exista en los meses siguientes se reemplaza. ¿Continuar?', { aceptar: 'Continuar' }).then(ok => {
+                        if (ok) { this.$wire.generarMeses(this.patron, this.desde, n, this.continuar, this.dias); }
+                    });
                 },
                 navegar(accion) {
-                    if (!this.sucio || confirm('Tienes cambios sin guardar. ¿Descartarlos?')) { this.$wire[accion](); }
+                    if (!this.sucio) { this.$wire[accion](); return; } mssConfirmar('Tienes cambios sin guardar. ¿Descartarlos?', { aceptar: 'Descartar', peligro: true }).then(ok => { if (ok) { this.$wire[accion](); } });
                 }
             }"
             class="space-y-6"

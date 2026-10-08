@@ -50,7 +50,6 @@
                                                 :action="route('jefe.papeletas.aprobar', $papeleta)"
                                                 label="Aprobar"
                                                 color="green"
-                                                confirmText="¿Aprobar la papeleta de {{ $papeleta->trabajador->nombre_completo }}?"
                                             />
                                             <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" :aviso="$papeleta->contador_observaciones_jefe >= $topeObservaciones - 1 ? \"Esta papeleta ya tiene {$papeleta->contador_observaciones_jefe}/{$topeObservaciones} observaciones. Si la observas, alcanzará el tope y el sistema la rechazará automáticamente en vez de esperar respuesta del trabajador.\" : null" />
                                             <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />

@@ -6,8 +6,9 @@
         ? $papeleta->historial->where('estado_nuevo', 'ObservadaPorJefe')->sortByDesc('id')->first()
         : null;
 
-    $puedeCancelar = $papeleta->trabajador_id === auth()->id()
-        && $papeleta->estado->equals(\App\States\Papeleta\PendienteJefe::class, \App\States\Papeleta\ObservadaPorJefe::class);
+    // Misma regla que PapeletaPolicy::cancelar (antes de Autorizada y corriendo;
+    // en fase RRHH solo con RRHH en horario).
+    $puedeCancelar = auth()->user()->can('cancelar', $papeleta);
     $puedeMarcarRetorno = $papeleta->trabajador_id === auth()->id() && $papeleta->estado->equals(\App\States\Papeleta\AutorizadaYCorriendo::class) && ! $papeleta->retorno;
     $sustentoPendiente = $papeleta->estado->equals(\App\States\Papeleta\EnJustificacion::class)
         ? $papeleta->sustentos->firstWhere('estado', 'pendiente')
@@ -31,8 +32,6 @@
     <x-papeleta-en-vivo :papeleta="$papeleta" />
 
     <div class="space-y-5" data-en-vivo-contenido>
-        <x-flash-messages />
-
         {{-- Ticket grande --}}
         <div class="glass-card">
             <div class="p-5 flex items-start justify-between gap-3">
@@ -158,7 +157,8 @@
         {{-- Acciones contextuales --}}
         @if ($puedeCancelar)
             <form method="POST" action="{{ route('trabajador.papeletas.cancelar', $papeleta) }}"
-                  onsubmit="return confirm('¿Cancelar esta papeleta?')">
+                  x-data
+                  x-on:submit.prevent="mssConfirmar('¿Cancelar esta papeleta?', { aceptar: 'Sí, cancelar', cancelar: 'No', peligro: true }).then(ok => { if (ok) $el.submit(); })">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="btn-danger-glass w-full text-sm py-3">

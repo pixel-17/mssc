@@ -113,7 +113,6 @@
                                                 :action="route('rrhh.papeletas.aprobar', $papeleta)"
                                                 label="Aprobar"
                                                 color="green"
-                                                confirmText="¿Aprobar la papeleta de {{ $papeleta->trabajador->nombre_completo }}?"
                                             />
                                             @unless ($papeleta->sinJefatura())
                                                 <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar" color="orange" :sugerencias="config('respuestas_rapidas.rrhh_observar')" />

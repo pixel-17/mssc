@@ -14,3 +14,4 @@ import './sede-mapa';
 import './theme';
 import './sidebar';
 import './livewire-progreso';
+import './confirmar';

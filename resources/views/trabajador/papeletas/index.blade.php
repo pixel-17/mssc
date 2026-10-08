@@ -1,7 +1,5 @@
 <x-trabajador-layout>
     <div class="space-y-5">
-        <x-flash-messages />
-
         @if ($papeletas->isEmpty())
             <div class="glass-card p-8 text-center space-y-3">
                 <div class="mx-auto icon-chip !size-14 !bg-tinta-500/15 !text-tinta-600 dark:!text-tinta-300">

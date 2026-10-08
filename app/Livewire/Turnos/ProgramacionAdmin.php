@@ -53,7 +53,7 @@ class ProgramacionAdmin extends Component
         $jefe = User::findOrFail($id);
 
         if (! $equipos->idsDeJefes()->contains($jefe->id)) {
-            session()->flash('error', $jefe->nombre_completo.' no es jefe de nadie: búscalo como trabajador.');
+            session()->now('error', $jefe->nombre_completo.' no es jefe de nadie: búscalo como trabajador.');
 
             return;
         }

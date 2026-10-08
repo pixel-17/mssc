@@ -28,7 +28,7 @@ class MotivoIndex extends Component
 
         try {
             $motivo->delete();
-            session()->flash('mensaje', 'Motivo eliminado.');
+            session()->now('mensaje', 'Motivo eliminado.');
         } catch (QueryException $e) {
             // FK (papeletas, usuarios, hijos...): no se pierde historial, se desactiva.
             if (! str_starts_with((string) $e->getCode(), '23')) {
@@ -36,7 +36,7 @@ class MotivoIndex extends Component
             }
 
             $motivo->forceFill(['activo' => false])->save();
-            session()->flash('mensaje', 'Motivo desactivado: tiene papeletas asociadas y no puede borrarse.');
+            session()->now('mensaje', 'Motivo desactivado: tiene papeletas asociadas y no puede borrarse.');
         }
     }
 

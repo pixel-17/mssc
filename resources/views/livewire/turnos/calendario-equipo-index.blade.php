@@ -93,7 +93,7 @@
                 },
                 limpiar() { for (const u of this.objetivo) { this.dias[u] = {}; } },
                 navegar(accion) {
-                    if (!this.hayCambios || confirm('Tienes cambios sin guardar. ¿Descartarlos?')) { this.$wire[accion](); }
+                    if (!this.hayCambios) { this.$wire[accion](); return; } mssConfirmar('Tienes cambios sin guardar. ¿Descartarlos?', { aceptar: 'Descartar', peligro: true }).then(ok => { if (ok) { this.$wire[accion](); } });
                 }
             }"
             class="space-y-6"
@@ -163,14 +163,8 @@
                 </div>
             @endif
 
-            @if (session('mensaje'))
-                <div class="glass-card p-4 text-sm text-green-700 dark:text-green-400">
-                    {{ session('mensaje') }}
-                </div>
-            @endif
-
             @if ($mensaje)
-                <p class="text-sm text-green-700 dark:text-green-400">{{ $mensaje }}</p>
+                <x-aviso-toast tipo="success">{{ $mensaje }}</x-aviso-toast>
             @endif
 
             <div class="glass-card overflow-x-auto">

@@ -28,7 +28,7 @@ class UnidadOrganicaIndex extends Component
 
         try {
             $unidad->delete();
-            session()->flash('mensaje', 'Unidad orgánica eliminada.');
+            session()->now('mensaje', 'Unidad orgánica eliminada.');
         } catch (QueryException $e) {
             // FK (papeletas, usuarios, hijos...): no se pierde historial, se desactiva.
             if (! str_starts_with((string) $e->getCode(), '23')) {
@@ -36,7 +36,7 @@ class UnidadOrganicaIndex extends Component
             }
 
             $unidad->forceFill(['activo' => false])->save();
-            session()->flash('mensaje', 'Unidad desactivada: tiene usuarios o sub-unidades asociados y no puede borrarse.');
+            session()->now('mensaje', 'Unidad desactivada: tiene usuarios o sub-unidades asociados y no puede borrarse.');
         }
     }
 

@@ -46,7 +46,7 @@
             @if ($papeleta->autorizado_con_rrhh_fuera_horario)
                 <div>
                     <dt class="text-gray-500 dark:text-tinta-100/50">Revisión post-hoc RRHH</dt>
-                    <dd class="text-gray-900 dark:text-white">{{ ucfirst($papeleta->revision_posthoc_estado ?? 'pendiente') }}</dd>
+                    <dd class="text-gray-900 dark:text-white">{{ $papeleta->etiquetaPosthoc() }}</dd>
                 </div>
             @endif
             @if ($papeleta->justificacion)

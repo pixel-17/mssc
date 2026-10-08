@@ -36,6 +36,7 @@
         open: false,
         texto: '',
         enviando: false,
+        confirmado: false,
         minlength: {{ (int) $minlength }},
         confirmText: @js($confirmText),
         enviar(event) {
@@ -43,8 +44,13 @@
                 event.preventDefault();
                 return;
             }
-            if (this.confirmText && !confirm(this.confirmText)) {
+            if (this.confirmText && !this.confirmado) {
                 event.preventDefault();
+                if (this.enviando) return;
+                const form = event.target;
+                mssConfirmar(this.confirmText, { aceptar: @js($label) }).then((ok) => {
+                    if (ok) { this.confirmado = true; this.enviando = true; form.submit(); }
+                });
                 return;
             }
             this.enviando = true;

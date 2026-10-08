@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Actions\Papeleta\RrhhHorarioService;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\States\Papeleta\ObservadaPorJefe;
@@ -76,10 +77,23 @@ class PapeletaPolicy
         return $user->hasRole('trabajador') && ! $user->hasRole('admin');
     }
 
+    /**
+     * El trabajador cancela hasta antes de AUTORIZADA_Y_CORRIENDO. Mientras
+     * la papeleta espera a RRHH solo se puede si RRHH está en horario (ver
+     * CancelarPapeletaAction).
+     */
     public function cancelar(User $user, Papeleta $papeleta): bool
     {
-        return $papeleta->trabajador_id === $user->id
-            && $papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class);
+        if ($papeleta->trabajador_id !== $user->id) {
+            return false;
+        }
+
+        if ($papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class)) {
+            return true;
+        }
+
+        return $papeleta->estado->equals(PendienteRrhh::class, ObservadaPorRrhh::class)
+            && app(RrhhHorarioService::class)->estaEnHorarioAhora();
     }
 
     /** El trabajador responde por escrito (y con adjunto si se lo exigieron) a la observación del jefe. */

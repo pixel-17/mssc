@@ -4,12 +4,6 @@
             Horario de RRHH
         </h2>
 
-        @if (session('mensaje'))
-            <div class="glass-card p-4 text-sm text-green-700 dark:text-green-400">
-                {{ session('mensaje') }}
-            </div>
-        @endif
-
         <div class="glass-card overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>

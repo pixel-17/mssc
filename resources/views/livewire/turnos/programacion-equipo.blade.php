@@ -80,7 +80,7 @@
                 },
                 limpiar() { for (const u of this.objetivo) { this.dias[u] = {}; } },
                 navegar(accion) {
-                    if (!this.hayCambios || confirm('Tienes cambios sin guardar. ¿Descartarlos?')) { this.$wire[accion](); }
+                    if (!this.hayCambios) { this.$wire[accion](); return; } mssConfirmar('Tienes cambios sin guardar. ¿Descartarlos?', { aceptar: 'Descartar', peligro: true }).then(ok => { if (ok) { this.$wire[accion](); } });
                 }
             }"
             class="space-y-6"
@@ -224,7 +224,7 @@
                 @error('dias') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
                 @if ($mensaje)
-                    <p class="text-sm text-green-700 dark:text-green-400">{{ $mensaje }}</p>
+                    <x-aviso-toast tipo="success">{{ $mensaje }}</x-aviso-toast>
                 @endif
 
                 {{-- Advertencias no bloqueantes: hay que confirmar para guardar --}}

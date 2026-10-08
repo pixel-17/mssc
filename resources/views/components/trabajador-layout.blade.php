@@ -28,11 +28,15 @@
             @include('layouts.partials.mobile-topbar', ['usuario' => auth()->user()])
 
             <main id="contenido" tabindex="-1" class="mobile-content focus:outline-none">
+                @include('layouts.partials.flash')
+
                 {{ $slot }}
             </main>
 
             @include('layouts.partials.bottom-nav', ['items' => $navItems])
         </div>
+
+        @include('layouts.partials.confirmar')
 
         @stack('modals')
 

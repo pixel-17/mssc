@@ -19,8 +19,8 @@ use Illuminate\View\View;
 
 /**
  * Bandeja del Trabajador (Paso 1 del flujo): crear, ver el estado de
- * sus propias papeletas, cancelar mientras siga en PENDIENTE_JEFE u
- * OBSERVADA_POR_JEFE y responder por escrito (con adjunto si el jefe lo
+ * sus propias papeletas, cancelar antes de AUTORIZADA_Y_CORRIENDO (en fase
+ * RRHH solo si RRHH está en horario) y responder por escrito (con adjunto si el jefe lo
  * exige) a las observaciones del jefe.
  */
 class PapeletaController extends Controller

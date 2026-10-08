@@ -87,6 +87,19 @@ class DecisionController extends Controller
         return back()->with('success', 'Revisión post-hoc observada.');
     }
 
+    public function posthocNoAprobar(ComentarioRequest $request, Papeleta $papeleta, RevisionPosthocAction $action): RedirectResponse
+    {
+        $this->authorize('revisarPosthoc', $papeleta);
+
+        try {
+            $action->noAprobar($papeleta, Auth::user(), $request->input('comentario'));
+        } catch (PapeletaException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Revisión post-hoc no aprobada: la papeleta pasó a Particular (con descuento).');
+    }
+
     public function corregir(CorregirPapeletaRequest $request, Papeleta $papeleta, CorregirPapeletaRrhhAction $action): RedirectResponse
     {
         $this->authorize('corregirComoRrhh', $papeleta);

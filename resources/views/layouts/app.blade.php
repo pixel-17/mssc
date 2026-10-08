@@ -83,6 +83,8 @@
         @include('layouts.partials.bottom-nav', ['items' => $navItems])
     @endif
 
+    @include('layouts.partials.confirmar')
+
     @stack('modals')
     <script src="{{ asset('js/push.js') }}"></script>
     @stack('scripts')

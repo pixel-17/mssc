@@ -233,7 +233,8 @@ class Papeleta extends Model
         return match ($this->revision_posthoc_estado) {
             'observada' => 'Observada — espera respuesta del jefe',
             'respondida' => 'Respondida por el jefe — pendiente de RRHH',
-            'observada_firme' => 'Observada (reparo definitivo)',
+            'observada_firme' => 'Observada (reparo definitivo) — pasó a Particular',
+            'no_aprobada' => 'No aprobada — pasó a Particular',
             'aprobada' => 'Aprobada',
             'no_aplica' => 'No aplica',
             default => 'Pendiente',

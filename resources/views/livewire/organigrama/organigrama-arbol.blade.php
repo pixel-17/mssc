@@ -90,25 +90,22 @@
                        this.$wire.$watch('mensajeOk', v => {
                            if (! v) return;
                            this.texto = v; this.show = true; clearTimeout(this.t);
-                           this.t = setTimeout(() => { this.show = false; this.$wire.set('mensajeOk', null, false) }, 4500);
+                           this.t = setTimeout(() => { this.show = false; this.$wire.set('mensajeOk', null, false) }, 3000);
                        });
                    } }"
-         class="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4">
+         class="pointer-events-none fixed inset-x-0 top-6 z-[60] flex justify-center px-4">
         <div x-show="show" x-cloak
-             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="translate-y-2 opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
+             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="-translate-y-2 opacity-0" x-transition:enter-end="translate-y-0 opacity-100"
              x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-             class="pointer-events-auto flex max-w-md items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-sm text-white shadow-xl dark:bg-white dark:text-gray-900" role="status">
-            <svg class="size-5 shrink-0 text-emerald-400 dark:text-emerald-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
-            <span x-text="texto"></span>
+             class="pointer-events-auto flex w-full max-w-md items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-800 shadow-lg dark:border-green-500/30 dark:bg-green-950 dark:text-green-200" role="status">
+            <svg class="size-5 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            <span class="flex-1" x-text="texto"></span>
             <button type="button" @click="show = false" class="ms-1 opacity-60 hover:opacity-100" aria-label="Cerrar aviso">✕</button>
         </div>
     </div>
 
     @if ($mensajeError)
-        <div class="flex items-start gap-2 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-500/40 dark:bg-red-500/10 dark:text-red-200" role="alert" x-data="{ v: true }" x-show="v">
-            <span class="flex-1">{{ $mensajeError }}</span>
-            <button type="button" @click="v = false" class="opacity-60 hover:opacity-100" aria-label="Cerrar aviso">✕</button>
-        </div>
+        <x-aviso-toast tipo="error">{{ $mensajeError }}</x-aviso-toast>
     @endif
 
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">

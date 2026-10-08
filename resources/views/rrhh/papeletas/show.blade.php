@@ -75,7 +75,6 @@
                             :action="route('rrhh.papeletas.aprobar', $papeleta)"
                             label="Aprobar"
                             color="green"
-                            confirmText="¿Aprobar la papeleta de {{ $papeleta->trabajador->nombre_completo }}?"
                         />
                         @unless ($papeleta->sinJefatura())
                             <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar (vuelve al jefe)" color="orange" :sugerencias="config('respuestas_rapidas.rrhh_observar')" />
@@ -116,9 +115,14 @@
                             :action="route('rrhh.papeletas.posthoc-aprobar', $papeleta)"
                             label="Aprobar revisión"
                             color="green"
-                            confirmText="¿Aprobar la revisión post-hoc de la papeleta de {{ $papeleta->trabajador->nombre_completo }}?"
                         />
                         <x-accion-comentario :action="route('rrhh.papeletas.posthoc-observar', $papeleta)" label="Observar revisión" color="orange" :sugerencias="config('respuestas_rapidas.rrhh_posthoc_observar')" />
+                        <x-accion-comentario
+                            :action="route('rrhh.papeletas.posthoc-no-aprobar', $papeleta)"
+                            label="No aprobar"
+                            color="red"
+                            aviso="La papeleta pasará a Particular: se descontarán las horas que el trabajador estuvo fuera. Esta decisión no se puede deshacer desde aquí."
+                        />
                     </div>
                 </div>
             @endif

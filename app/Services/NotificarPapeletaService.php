@@ -112,7 +112,7 @@ class NotificarPapeletaService
             $firme ? 'posthoc_observada_firme' : 'posthoc_observada',
             $firme ? 'Revisión post-hoc observada (definitiva)' : 'RRHH observó tu autorización',
             $firme
-                ? "RRHH dejó un reparo definitivo sobre la papeleta de {$nombre} que autorizaste fuera de horario. Ya no admite respuesta."
+                ? "RRHH dejó un reparo definitivo sobre la papeleta de {$nombre} que autorizaste fuera de horario. Ya no admite respuesta y la papeleta pasó a Particular (con descuento)."
                 : "RRHH observó la papeleta de {$nombre} que autorizaste fuera de su horario. Responde por escrito (y con un adjunto si quieres) para que vuelva a RRHH.",
             $this->urlJefe($papeleta),
         );
@@ -221,6 +221,19 @@ class NotificarPapeletaService
             'reclasificada_particular',
             'Papeleta reclasificada a Particular',
             'El plazo para presentar sustento de Salud venció sin nada presentado. Tu papeleta se reclasificó a Particular.',
+            $this->urlTrabajador($papeleta),
+        );
+    }
+
+    /** RRHH no aprobó la revisión post-hoc: la papeleta pasó a Particular (con descuento). */
+    public function posthocAParticular(Papeleta $papeleta): void
+    {
+        $this->enviarUno(
+            $papeleta->trabajador,
+            $papeleta,
+            'posthoc_a_particular',
+            'Papeleta reclasificada a Particular',
+            'RRHH no aprobó la revisión de tu papeleta autorizada fuera de horario. Pasó a Particular: se descuentan las horas que estuviste fuera.',
             $this->urlTrabajador($papeleta),
         );
     }

@@ -330,6 +330,7 @@ Route::middleware([
         Route::post('/papeletas/{papeleta}/observar', [RrhhDecisionController::class, 'observar'])->name('papeletas.observar');
         Route::post('/papeletas/{papeleta}/posthoc-aprobar', [RrhhDecisionController::class, 'posthocAprobar'])->name('papeletas.posthoc-aprobar');
         Route::post('/papeletas/{papeleta}/posthoc-observar', [RrhhDecisionController::class, 'posthocObservar'])->name('papeletas.posthoc-observar');
+        Route::post('/papeletas/{papeleta}/posthoc-no-aprobar', [RrhhDecisionController::class, 'posthocNoAprobar'])->name('papeletas.posthoc-no-aprobar');
         Route::post('/papeletas/{papeleta}/corregir', [RrhhDecisionController::class, 'corregir'])->name('papeletas.corregir');
 
         Route::post('/sustentos/{sustento}/revisar', [RrhhSustentoController::class, 'revisar'])->name('sustentos.revisar');

@@ -64,12 +64,12 @@ class UsuarioAdminIndex extends Component
         try {
             $estado->desactivar(auth()->user(), $usuario);
         } catch (UsuarioException $e) {
-            session()->flash('error', $e->getMessage());
+            session()->now('error', $e->getMessage());
 
             return;
         }
 
-        session()->flash('mensaje', 'Usuario desactivado: ya no podrá iniciar sesión.');
+        session()->now('mensaje', 'Usuario desactivado: ya no podrá iniciar sesión.');
     }
 
     public function reactivar(User $usuario, CambiarEstadoUsuarioAction $estado): void
@@ -79,12 +79,12 @@ class UsuarioAdminIndex extends Component
         try {
             $estado->reactivar(auth()->user(), $usuario);
         } catch (UsuarioException $e) {
-            session()->flash('error', $e->getMessage());
+            session()->now('error', $e->getMessage());
 
             return;
         }
 
-        session()->flash('mensaje', 'Usuario reactivado.');
+        session()->now('mensaje', 'Usuario reactivado.');
     }
 
     public function render(): View
