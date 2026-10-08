@@ -37,11 +37,6 @@ class Motivo extends Model
     }
 
     /**
-     * Horas hábiles que tiene el trabajador para presentar la justificación
-     * una vez terminada la salida. Plazo propio del motivo; si el admin no
-     * lo definió, el global SUSTENTO_HORAS_HABILES (48 por defecto).
-     */
-    /**
      * Qué pasa cuando termina la salida (con retorno o por abandono), en el
      * mismo orden de prioridad que aplican MarcarRetornoAction y
      * ProcesarAbandonoNoMarcado: justificar > descuenta > libre.
@@ -57,6 +52,11 @@ class Motivo extends Model
         };
     }
 
+    /**
+     * Horas hábiles que tiene el trabajador para presentar la justificación
+     * una vez terminada la salida. Plazo propio del motivo; si el admin no
+     * lo definió, el global SUSTENTO_HORAS_HABILES (48 por defecto).
+     */
     public function plazoJustificacionHorasHabiles(): int
     {
         return $this->plazo_justificacion_horas_habiles

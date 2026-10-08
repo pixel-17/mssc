@@ -120,15 +120,19 @@ class MarcarRetornoAction
 
             $actual->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($actual, $retorno->hora_servidor);
 
-            if ($actual->motivo->requiere_sustento_en_retorno) {
-                // La justificación queda abierta con el plazo del motivo; el
-                // descuento se define cuando se revise o venza.
-                $actual->transicionarA(EnJustificacion::class);
+            // justificar -> la justificación queda abierta con el plazo del
+            // motivo y el descuento se define al revisarla o vencer;
+            // descuenta (Particular) -> Finalizada; libre -> Cerrada.
+            $consecuencia = $actual->motivo->consecuenciaAlTerminar();
+
+            $actual->transicionarA(match ($consecuencia) {
+                'justificar' => EnJustificacion::class,
+                'descuenta' => Finalizada::class,
+                default => Cerrada::class,
+            });
+
+            if ($consecuencia === 'justificar') {
                 app(AbrirJustificacion::class)->para($actual, $retorno->hora_servidor);
-            } elseif ($actual->motivo->suma_descuento) {
-                $actual->transicionarA(Finalizada::class); // Particular: termina con descuento
-            } else {
-                $actual->transicionarA(Cerrada::class);
             }
 
             $actual->save();

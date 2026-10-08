@@ -62,11 +62,11 @@ class ProcesarAbandonoNoMarcado extends Command
 
                             $estadoAnterior = class_basename($actual->estado);
 
-                            $motivo = $actual->motivo;
+                            $consecuencia = $actual->motivo->consecuenciaAlTerminar();
 
-                            $actual->transicionarA(match (true) {
-                                (bool) $motivo->requiere_sustento_en_retorno => EnJustificacion::class,
-                                (bool) $motivo->suma_descuento => Finalizada::class,
+                            $actual->transicionarA(match ($consecuencia) {
+                                'justificar' => EnJustificacion::class,
+                                'descuenta' => Finalizada::class,
                                 default => Cerrada::class,
                             });
                             $actual->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
@@ -74,7 +74,7 @@ class ProcesarAbandonoNoMarcado extends Command
                             $actual->regularizacion_fecha_limite = null;
                             $actual->save();
 
-                            if ($actual->estado->equals(EnJustificacion::class)) {
+                            if ($consecuencia === 'justificar') {
                                 app(AbrirJustificacion::class)->para($actual, now());
                             }
 
@@ -84,7 +84,7 @@ class ProcesarAbandonoNoMarcado extends Command
                                 'actor_tipo' => 'sistema',
                                 'estado_anterior' => $estadoAnterior,
                                 'estado_nuevo' => class_basename($actual->estado),
-                                'justificacion' => $actual->estado->equals(EnJustificacion::class)
+                                'justificacion' => $consecuencia === 'justificar'
                                     ? 'Abandono no marcado: turno/día terminó sin registro de retorno. Queda en justificación dentro del plazo del motivo. Notificado a jefe y RRHH.'
                                     : 'Abandono no marcado: turno/día terminó sin registro de retorno. Papeleta cerrada. Notificado a jefe y RRHH.',
                             ]);
