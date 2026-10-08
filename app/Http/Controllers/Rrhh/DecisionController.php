@@ -45,7 +45,7 @@ class DecisionController extends Controller
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Papeleta rechazada.');
+        return back()->with('warning', 'Papeleta rechazada.');
     }
 
     public function observar(ComentarioRequest $request, Papeleta $papeleta, ObservarRrhhAction $action): RedirectResponse

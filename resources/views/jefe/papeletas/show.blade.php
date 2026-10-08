@@ -14,9 +14,10 @@
 
     // Tras observar, mientras el trabajador no responda el jefe solo puede rechazar
     // (al responder, la papeleta vuelve a PENDIENTE_JEFE y decide como siempre).
-    $puedeDecidir = ($estaPendiente || $estaObservada) && $esJefeInmediato;
+    $estaObservadaPorRrhh = $papeleta->estado->equals(ObservadaPorRrhh::class);
 
-    $puedeReconocer = $papeleta->estado->equals(ObservadaPorRrhh::class) && $esJefeInmediato;
+    // Pendiente, observada por el jefe, o observada por RRHH: en los tres casos el jefe decide.
+    $puedeDecidir = ($estaPendiente || $estaObservada || $estaObservadaPorRrhh) && $esJefeInmediato;
 
     $enCurso = $papeleta->estado->equals(AutorizadaYCorriendo::class) && $esJefeInmediato;
 
@@ -58,6 +59,12 @@
                 <div class="glass-card p-6">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Decisión</h3>
 
+                    @if ($estaObservadaPorRrhh)
+                        <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">
+                            RRHH observó esta papeleta. Decide directamente: aprobar, observar o rechazar.
+                        </p>
+                    @endif
+
                     @if ($estaObservada)
                         <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">
                             Observaste esta papeleta. Espera la respuesta escrita del trabajador{{ $papeleta->observacion_requiere_adjunto ? ' (con archivo adjunto)' : '' }}:
@@ -66,7 +73,7 @@
                     @endif
 
                     <div class="flex items-center gap-3 flex-wrap">
-                        @if ($estaPendiente)
+                        @if ($estaPendiente || $estaObservadaPorRrhh)
                             <form method="POST" action="{{ route('jefe.papeletas.aprobar', $papeleta) }}" x-data="{ enviando: false }" @submit="enviando = true">
                                 @csrf
                                 <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-green-600 hover:bg-green-700">
@@ -75,22 +82,14 @@
                                 </button>
                             </form>
                         @endif
-                        @if ($estaPendiente)
-                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" :aviso="$avisoObservar" />
+                        @if ($estaPendiente || $estaObservadaPorRrhh)
+                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Solicitar justificación (el trabajador debe adjuntar un documento)" :opcionMarcada="false" :aviso="$avisoObservar" />
                         @endif
                         <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                     </div>
                     @if ($papeleta->contador_observaciones_jefe > 0)
                         <p class="text-xs text-gray-500 dark:text-tinta-100/60 mt-2">Observaciones previas del jefe: {{ $papeleta->contador_observaciones_jefe }}/{{ $topeObservaciones }}</p>
                     @endif
-                </div>
-            @endif
-
-            @if ($puedeReconocer)
-                <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Observación de RRHH</h3>
-                    <p class="text-sm text-gray-600 dark:text-tinta-100/60 mb-3">RRHH observó esta papeleta. Revisa el historial y reconoce para reabrirla en tu bandeja.</p>
-                    <x-accion-comentario :action="route('jefe.papeletas.reconocer-observacion-rrhh', $papeleta)" label="Reconocer" color="orange" />
                 </div>
             @endif
 

@@ -18,8 +18,8 @@
             @else
                 Solo los trabajadores de los que eres jefe inmediato.
             @endif
-            Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) se cargan en
-            "Crear/editar horario".
+            Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) se configuran con
+            el botón "Configurar ciclo" de su fila.
         </p>
 
         {{-- Leyenda: mismo color que las celdas, coherente con "Mi calendario" del Trabajador (Turno::claseColor()). --}}
@@ -202,6 +202,19 @@
                                         </a>
                                     @endif
                                     <span class="text-xs text-gray-500">({{ $trabajador->regimen }})</span>
+                                    @if ($trabajador->regimen === '276' && ! in_array($trabajador->id, $soloLectura, true))
+                                        @php($cfg276 = $configs276->get($trabajador->id))
+                                        <div class="mt-0.5 flex items-center gap-1.5 text-[11px] {{ $cfg276 ? 'text-gray-600 dark:text-gray-300' : 'text-amber-700 dark:text-amber-300' }}">
+                                            @if ($cfg276)
+                                                <span>{{ $cfg276->dias_trabajo }}×{{ $cfg276->dias_descanso }} · desde {{ $cfg276->fecha_ancla->format('d/m') }}</span>
+                                            @else
+                                                <span>Sin ciclo</span>
+                                            @endif
+                                            <button type="button" wire:click="abrirCiclo({{ $trabajador->id }})" title="{{ $cfg276 ? 'Editar ciclo' : 'Configurar ciclo' }}" aria-label="{{ $cfg276 ? 'Editar ciclo' : 'Configurar ciclo' }} de {{ $trabajador->nombre_completo }}" class="inline-flex items-center justify-center w-6 h-6 rounded-md border border-tinta-600/40 text-tinta-700 dark:text-tinta-300 hover:bg-tinta-50 dark:hover:bg-tinta-500/10 transition-colors">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5" aria-hidden="true"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
+                                            </button>
+                                        </div>
+                                    @endif
                                     @if (in_array($trabajador->id, $idsJefes, true))
                                         <span class="ml-1 inline-flex items-center rounded bg-tinta-100 dark:bg-tinta-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-tinta-800 dark:text-tinta-200">Jefe</span>
                                     @endif
@@ -264,10 +277,6 @@
                                             <input type="checkbox" class="rounded border-gray-300" value="{{ $trabajador->id }}" x-model="seleccion">
                                             marcar
                                         </label>
-                                    @else
-                                        <a href="{{ route('turnos.configuracion', $trabajador) }}" class="text-sm text-tinta-700 dark:text-tinta-300 underline hover:no-underline">
-                                            Crear/editar horario
-                                        </a>
                                     @endif
                                 </td>
                             </tr>
@@ -281,6 +290,43 @@
                     </tbody>
                 </table>
             </div>
+
+            {{-- Modal: ciclo de trabajo para trabajadores 276 --}}
+            @if ($cicloUserId !== null)
+                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:key="ciclo-modal-{{ $cicloUserId }}">
+                    <div class="glass-card w-full max-w-md p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="ciclo-modal-titulo">
+                        <h3 id="ciclo-modal-titulo" class="font-semibold text-lg text-tinta-950 dark:text-tinta-100">Ciclo de trabajo — {{ $cicloNombre }}</h3>
+                        <p class="text-xs text-gray-500">
+                            Régimen 276: horario ordinario Día. Aquí defines el ciclo de trabajo y descanso. Al guardar se regenera el mes de la fecha de inicio.
+                        </p>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="sm:col-span-3">
+                                <label for="ciclo-fecha" class="block text-xs font-medium mb-1">Fecha de inicio del próximo bloque</label>
+                                <input id="ciclo-fecha" type="date" wire:model="cicloFechaAncla" class="w-full rounded-md border-gray-300 dark:bg-gray-800 text-sm">
+                                @error('cicloFechaAncla') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label for="ciclo-trabajo" class="block text-xs font-medium mb-1">Días de trabajo</label>
+                                <input id="ciclo-trabajo" type="number" min="1" max="30" wire:model="cicloDiasTrabajo" class="w-full rounded-md border-gray-300 dark:bg-gray-800 text-sm">
+                                @error('cicloDiasTrabajo') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                            <div>
+                                <label for="ciclo-descanso" class="block text-xs font-medium mb-1">Días de descanso</label>
+                                <input id="ciclo-descanso" type="number" min="1" max="30" wire:model="cicloDiasDescanso" class="w-full rounded-md border-gray-300 dark:bg-gray-800 text-sm">
+                                @error('cicloDiasDescanso') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-3 pt-2">
+                            <button type="button" wire:click="cerrarCiclo" class="text-sm text-gray-600 dark:text-gray-300">Cancelar</button>
+                            <button type="button" wire:click="guardarCiclo" wire:loading.attr="disabled" class="inline-flex items-center px-4 py-2 bg-tinta-700 text-white rounded-md text-sm font-semibold hover:bg-tinta-800">
+                                Guardar ciclo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             @error('dias') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 

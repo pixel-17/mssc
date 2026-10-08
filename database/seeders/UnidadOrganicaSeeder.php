@@ -7,60 +7,46 @@ use Illuminate\Database\Seeder;
 
 /**
  * Carga el organigrama oficial de la Municipalidad Distrital de Santiago
- * (documento ORGANIGRAMA, gestión 2023-2026) dentro del árbol
+ * (ESTRUCTURA ORGÁNICA, gestión 2023-2026, abril 2023) dentro del árbol
  * `unidades_organicas`.
  *
- * No asigna `jefe_id` a ninguna unidad: eso se hace después, desde
- * /admin/unidades-organicas, cuando cada puesto tenga un usuario real
- * creado. Sin jefe_id, jefeInmediato()/jefeArea() simplemente devuelven
- * null y el flujo de la papeleta trata eso igual que "jefe fuera de
- * horario" (no se autoriza por inacción, la papeleta espera o vence).
+ * La raíz es la propia Municipalidad Distrital de Santiago (MDS). Concejo
+ * Municipal, Alcaldía y Gerencia Municipal NO se cargan como unidades.
+ * Los Órganos Consultivos (Consejo de Coordinación Local Distrital y Junta
+ * de Delegados Vecinales y Comunales) tampoco se cargan.
+ *
+ * Jefaturas: no se asigna `jefe_id` aquí. Se hace después, desde
+ * /unidades-organicas, cuando cada puesto tenga un usuario real. Cada
+ * unidad hija de otra recibe su jefe inmediato a partir del `jefe_id` de su
+ * unidad; la unidad que tiene hijos recibe el jefe de área.
  */
 class UnidadOrganicaSeeder extends Seeder
 {
     public function run(): void
     {
-        $concejo = UnidadOrganica::create(['nombre' => 'Concejo Municipal', 'tipo' => 'alta_direccion']);
+        $mds = UnidadOrganica::create([
+            'nombre' => 'Municipalidad Distrital de Santiago',
+            'tipo' => 'alta_direccion',
+        ]);
 
-        UnidadOrganica::create(['nombre' => 'Oficina de Control Institucional', 'tipo' => 'control', 'parent_id' => $concejo->id]);
-        UnidadOrganica::create(['nombre' => 'Procuraduría Pública Municipal', 'tipo' => 'control', 'parent_id' => $concejo->id]);
-        UnidadOrganica::create(['nombre' => 'Consejo de Coordinación Local Distrital', 'tipo' => 'consultivo', 'parent_id' => $concejo->id]);
-        UnidadOrganica::create(['nombre' => 'Junta de Delegados Vecinales y Comunales', 'tipo' => 'consultivo', 'parent_id' => $concejo->id]);
+        // --- Órganos de control y defensa ---
+        UnidadOrganica::create(['nombre' => 'Oficina de Control Institucional', 'tipo' => 'control', 'parent_id' => $mds->id]);
+        UnidadOrganica::create(['nombre' => 'Procuraduría Pública Municipal', 'tipo' => 'control', 'parent_id' => $mds->id]);
 
-        $alcaldia = UnidadOrganica::create(['nombre' => 'Alcaldía', 'tipo' => 'alta_direccion', 'parent_id' => $concejo->id]);
+        // --- Órganos de apoyo a Alcaldía ---
+        UnidadOrganica::create(['nombre' => 'Oficina de Secretaría Municipal y Gestión Documentaria', 'tipo' => 'apoyo_alcaldia', 'parent_id' => $mds->id]);
 
-        UnidadOrganica::create(['nombre' => 'Oficina de Secretaría Municipal y Gestión Documentaria', 'tipo' => 'apoyo_alcaldia', 'parent_id' => $alcaldia->id]);
-
-        $gerenciaMunicipal = UnidadOrganica::create(['nombre' => 'Gerencia Municipal', 'tipo' => 'alta_direccion', 'parent_id' => $alcaldia->id]);
-
-        // --- Órganos de apoyo directos de Gerencia Municipal ---
+        // --- Órganos de apoyo (solitas, con jefe de área) ---
         foreach ([
             'Oficina de Tecnologías e Informática',
             'Oficina de Imagen Institucional y Comunicaciones',
             'Oficina de Ejecución Coactiva',
         ] as $nombre) {
-            UnidadOrganica::create(['nombre' => $nombre, 'tipo' => 'apoyo', 'parent_id' => $gerenciaMunicipal->id]);
+            UnidadOrganica::create(['nombre' => $nombre, 'tipo' => 'apoyo', 'parent_id' => $mds->id]);
         }
 
-        // --- Órganos de asesoramiento ---
-        UnidadOrganica::create(['nombre' => 'Oficina de Gestión de Riesgos de Desastres', 'tipo' => 'asesoramiento', 'parent_id' => $gerenciaMunicipal->id]);
-
-        $supervisionInversiones = UnidadOrganica::create(['nombre' => 'Oficina General de Supervisión y Liquidación de Inversiones', 'tipo' => 'asesoramiento', 'parent_id' => $gerenciaMunicipal->id]);
-        UnidadOrganica::create(['nombre' => 'Oficina de Supervisión', 'tipo' => 'asesoramiento', 'parent_id' => $supervisionInversiones->id]);
-        UnidadOrganica::create(['nombre' => 'Oficina de Liquidación', 'tipo' => 'asesoramiento', 'parent_id' => $supervisionInversiones->id]);
-
-        UnidadOrganica::create(['nombre' => 'Oficina General de Asesoría Jurídica', 'tipo' => 'asesoramiento', 'parent_id' => $gerenciaMunicipal->id]);
-
-        $planeamiento = UnidadOrganica::create(['nombre' => 'Oficina General de Planeamiento, Presupuesto e Inversión', 'tipo' => 'asesoramiento', 'parent_id' => $gerenciaMunicipal->id]);
-        UnidadOrganica::create(['nombre' => 'Oficina de Planeamiento, Modernización y Cooperación Técnica', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
-        UnidadOrganica::create(['nombre' => 'Oficina de Programación Multianual de Inversiones', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
-        UnidadOrganica::create(['nombre' => 'Oficina de Formulación de Proyectos de Pre Inversión', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
-        UnidadOrganica::create(['nombre' => 'Oficina de Presupuesto', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
-
-        UnidadOrganica::create(['nombre' => 'Oficina de Estudios y Proyectos Definitivos', 'tipo' => 'asesoramiento', 'parent_id' => $gerenciaMunicipal->id]);
-
-        // --- Oficinas Generales de apoyo (2do nivel, jefe de área) ---
-        $adminFinanzas = UnidadOrganica::create(['nombre' => 'Oficina General de Administración y Finanzas', 'tipo' => 'apoyo', 'parent_id' => $gerenciaMunicipal->id]);
+        // --- Oficina General de Administración y Finanzas (apoyo, con oficinas hijas) ---
+        $adminFinanzas = UnidadOrganica::create(['nombre' => 'Oficina General de Administración y Finanzas', 'tipo' => 'apoyo', 'parent_id' => $mds->id]);
         foreach ([
             'Oficina de Recursos Humanos',
             'Oficina de Logística, Almacén y Patrimonio',
@@ -70,11 +56,28 @@ class UnidadOrganicaSeeder extends Seeder
             UnidadOrganica::create(['nombre' => $nombre, 'tipo' => 'apoyo', 'parent_id' => $adminFinanzas->id]);
         }
 
-        $adminTributaria = UnidadOrganica::create(['nombre' => 'Oficina General de Administración Tributaria', 'tipo' => 'apoyo', 'parent_id' => $gerenciaMunicipal->id]);
+        // --- Oficina General de Administración Tributaria (apoyo, con oficinas hijas) ---
+        $adminTributaria = UnidadOrganica::create(['nombre' => 'Oficina General de Administración Tributaria', 'tipo' => 'apoyo', 'parent_id' => $mds->id]);
         UnidadOrganica::create(['nombre' => 'Oficina de Recaudación Tributaria', 'tipo' => 'apoyo', 'parent_id' => $adminTributaria->id]);
         UnidadOrganica::create(['nombre' => 'Oficina de Fiscalización Tributaria', 'tipo' => 'apoyo', 'parent_id' => $adminTributaria->id]);
 
-        // --- Gerencias de línea (2do nivel, jefe de área) con sus Sub Gerencias ---
+        // --- Órganos de asesoramiento ---
+        UnidadOrganica::create(['nombre' => 'Oficina de Gestión de Riesgos de Desastres', 'tipo' => 'asesoramiento', 'parent_id' => $mds->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Estudios y Proyectos Definitivos', 'tipo' => 'asesoramiento', 'parent_id' => $mds->id]);
+
+        $supervisionInversiones = UnidadOrganica::create(['nombre' => 'Oficina General de Supervisión y Liquidación de Inversiones', 'tipo' => 'asesoramiento', 'parent_id' => $mds->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Supervisión', 'tipo' => 'asesoramiento', 'parent_id' => $supervisionInversiones->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Liquidación', 'tipo' => 'asesoramiento', 'parent_id' => $supervisionInversiones->id]);
+
+        UnidadOrganica::create(['nombre' => 'Oficina General de Asesoría Jurídica', 'tipo' => 'asesoramiento', 'parent_id' => $mds->id]);
+
+        $planeamiento = UnidadOrganica::create(['nombre' => 'Oficina General de Planeamiento, Presupuesto e Inversión', 'tipo' => 'asesoramiento', 'parent_id' => $mds->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Planeamiento, Modernización y Cooperación Técnica', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Programación Multianual de Inversiones', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Formulación de Proyectos de Pre Inversión', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
+        UnidadOrganica::create(['nombre' => 'Oficina de Presupuesto', 'tipo' => 'asesoramiento', 'parent_id' => $planeamiento->id]);
+
+        // --- Gerencias de línea (2do nivel) con sus Sub Gerencias (3er nivel) ---
         $gerenciasDeLinea = [
             'Gerencia de Infraestructura' => [
                 'Sub Gerencia de Obras',
@@ -113,7 +116,7 @@ class UnidadOrganicaSeeder extends Seeder
             $gerencia = UnidadOrganica::create([
                 'nombre' => $nombreGerencia,
                 'tipo' => 'linea_2do_nivel',
-                'parent_id' => $gerenciaMunicipal->id,
+                'parent_id' => $mds->id,
             ]);
 
             foreach ($subGerencias as $nombreSub) {

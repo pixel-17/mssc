@@ -15,6 +15,7 @@ use App\Http\Requests\Papeleta\ObservarJefeRequest;
 use App\Http\Requests\Papeleta\ResponderPosthocRequest;
 use App\Http\Requests\Papeleta\RetornoManualRequest;
 use App\Models\Papeleta;
+use App\States\Papeleta\ObservadaPorRrhh;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -33,6 +34,7 @@ class DecisionController extends Controller
         $this->authorize('decidirComoJefe', $papeleta);
 
         try {
+            $this->reabrirSiObservadaPorRrhh($papeleta, 'Aprobada directamente tras observación de RRHH.');
             $action->ejecutar($papeleta, Auth::user());
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
@@ -46,12 +48,13 @@ class DecisionController extends Controller
         $this->authorize('decidirComoJefe', $papeleta);
 
         try {
+            $this->reabrirSiObservadaPorRrhh($papeleta, 'Rechazada directamente tras observación de RRHH.');
             $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        return back()->with('success', 'Papeleta rechazada.');
+        return back()->with('warning', 'Papeleta rechazada.');
     }
 
     public function observar(ObservarJefeRequest $request, Papeleta $papeleta, ObservarJefeAction $action): RedirectResponse
@@ -59,6 +62,7 @@ class DecisionController extends Controller
         $this->authorize('decidirComoJefe', $papeleta);
 
         try {
+            $this->reabrirSiObservadaPorRrhh($papeleta, 'Observada directamente tras observación de RRHH.');
             $action->ejecutar(
                 $papeleta,
                 Auth::user(),
@@ -133,5 +137,19 @@ class DecisionController extends Controller
         }
 
         return back()->with('success', 'Retorno manual registrado por falla de conectividad.');
+    }
+
+    /**
+     * Si RRHH observó la papeleta, el jefe decide directamente: antes de la decisión
+     * se reabre en PENDIENTE_JEFE (mismo efecto que el antiguo «Reconocer»), con el
+     * motivo de la decisión dejado en el historial.
+     */
+    private function reabrirSiObservadaPorRrhh(Papeleta $papeleta, string $motivo): void
+    {
+        $papeleta->refresh();
+
+        if ($papeleta->estado->equals(ObservadaPorRrhh::class)) {
+            app(ReconocerObservacionRrhhAction::class)->ejecutar($papeleta, Auth::user(), $motivo);
+        }
     }
 }

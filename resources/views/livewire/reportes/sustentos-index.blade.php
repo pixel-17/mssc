@@ -101,7 +101,7 @@
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->revisadoPor?->nombre_completo ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm print:hidden">
                                     @if ($sustento->archivo_path)
-                                        <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="text-tinta-600 hover:text-tinta-900 underline">Ver</a>
+                                        <a href="{{ route('sustentos.archivo', $sustento) }}" class="text-tinta-600 hover:text-tinta-900 underline">Ver</a>
                                     @else
                                         —
                                     @endif

@@ -107,7 +107,8 @@ class PapeletaPolicy
             return false;
         }
 
-        if (! $papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class)) {
+        // Tras una observación de RRHH el jefe decide directamente (aprobar, observar o rechazar).
+        if (! $papeleta->estado->equals(PendienteJefe::class, ObservadaPorJefe::class, ObservadaPorRrhh::class)) {
             return false;
         }
 

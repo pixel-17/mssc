@@ -99,7 +99,7 @@
                             <p class="font-medium">El jefe respondió tu observación:</p>
                             <p class="mt-1">{{ $papeleta->posthoc_respuesta }}</p>
                             @if ($papeleta->posthoc_adjunto_path)
-                                <a href="{{ route('papeletas.archivo', [$papeleta, 'respuesta-posthoc']) }}" target="_blank" rel="noopener" class="mt-1 inline-block text-xs underline">Ver adjunto</a>
+                                <a href="{{ route('papeletas.archivo', [$papeleta, 'respuesta-posthoc']) }}" class="mt-1 inline-block text-xs underline">Ver adjunto</a>
                             @endif
                         </div>
                     @endif

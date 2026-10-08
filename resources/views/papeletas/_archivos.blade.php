@@ -20,8 +20,6 @@
             @foreach ($archivosPapeleta as $tipoArchivo => $etiquetaArchivo)
                 <li>
                     <a href="{{ route('papeletas.archivo', ['papeleta' => $papeleta, 'tipo' => $tipoArchivo]) }}"
-                       target="_blank"
-                       rel="noopener"
                        class="text-tinta-600 dark:text-tinta-300 hover:text-tinta-700 dark:hover:text-tinta-100 underline">
                         {{ $etiquetaArchivo }}
                     </a>

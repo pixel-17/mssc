@@ -289,7 +289,7 @@
                                 {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
                                 · límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
                                 @if ($sustento->archivo_path)
-                                    · <a href="{{ route('sustentos.archivo', $sustento) }}" target="_blank" rel="noopener" class="underline hover:text-tinta-600 dark:hover:text-tinta-300">ver archivo</a>
+                                    · <a href="{{ route('sustentos.archivo', $sustento) }}" class="underline hover:text-tinta-600 dark:hover:text-tinta-300">ver archivo</a>
                                 @endif
                             </span>
                             <span class="badge-tinta shrink-0 {{ match($sustento->estado) {

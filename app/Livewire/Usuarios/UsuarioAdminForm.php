@@ -70,6 +70,10 @@ class UsuarioAdminForm extends Component
 
     public bool $activo = true;
 
+    /** Modo «Nuevo administrador» (?tipo=admin). Se fija en mount(): en las peticiones de Livewire ya no existe el query string. */
+    #[Locked]
+    public bool $nuevoAdmin = false;
+
     public string $turno = '';
 
     public string $fechaAncla = '';
@@ -104,6 +108,7 @@ class UsuarioAdminForm extends Component
                 $this->diasDescanso = $config->dias_descanso;
             }
         } elseif (request()->query('tipo') === 'admin') {
+            $this->nuevoAdmin = true;
             // «Nuevo administrador»: rol admin ya marcado y sin unidad (el admin no pertenece al organigrama).
             $adminId = (int) Role::where('name', 'admin')->value('id');
             $this->rolesSeleccionados = $adminId > 0 ? [(string) $adminId] : [];
@@ -313,10 +318,9 @@ class UsuarioAdminForm extends Component
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
             // En «Nuevo usuario» no se ofrece admin: los administradores se crean desde «Nuevo administrador».
             'roles' => Role::orderBy('name')
-                ->when($this->usuario === null && ! $this->soloAdmin, fn ($q) => $q->where('name', '!=', 'admin'))
+                ->when($this->usuario === null && ! $this->nuevoAdmin, fn ($q) => $q->where('name', '!=', 'admin'))
                 ->get(),
             'esAdminRol' => $this->incluyeAdmin(),
-            'nuevoAdmin' => $this->usuario === null && request()->query('tipo') === 'admin',
             'requiereTurno' => $this->usuario !== null && $this->admiteConfiguracionTurno(),
             'opcionesTurno' => $this->regimen
                 ? ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen]))

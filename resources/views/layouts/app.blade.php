@@ -86,5 +86,6 @@
     @stack('modals')
     <script src="{{ asset('js/push.js') }}"></script>
     @stack('scripts')
+    @include('layouts.partials.visor-archivo')
 </body>
 </html>

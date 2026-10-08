@@ -15,6 +15,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Vista de equipo (grilla): filas = trabajadores que este Jefe
@@ -63,6 +64,20 @@ class CalendarioEquipoIndex extends Component
 
     #[Locked]
     public ?string $mensaje = null;
+
+    /*
+     * Modal «Ciclo» para trabajadores de 276 (ver abrirCiclo / guardarCiclo).
+     * cicloUserId null = modal cerrado.
+     */
+    public ?int $cicloUserId = null;
+
+    public string $cicloNombre = '';
+
+    public string $cicloFechaAncla = '';
+
+    public int $cicloDiasTrabajo = 6;
+
+    public int $cicloDiasDescanso = 1;
 
     public function mount(?int $jefeId = null): void
     {
@@ -186,6 +201,80 @@ class CalendarioEquipoIndex extends Component
             ->keyBy('id');
     }
 
+    /**
+     * Trabajadores 276 del equipo que este usuario puede tocar (los de solo lectura
+     * no entran). Se resuelve en cada acción: nunca se confía en lo que vio el navegador.
+     */
+    private function equipo276(): Collection
+    {
+        [$trabajadores, , $soloLectura] = app(EquipoDelJefeService::class)->para($this->jefeVista());
+
+        return $trabajadores
+            ->filter(fn (User $t) => $t->regimen === '276' && $t->activo && ! in_array($t->id, $soloLectura, true))
+            ->keyBy('id');
+    }
+
+    /** Abre el modal de ciclo de un trabajador 276 del equipo. */
+    public function abrirCiclo(int $userId): void
+    {
+        $trabajador = $this->equipo276()->get($userId);
+        abort_unless($trabajador !== null, 403);
+        abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
+
+        $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
+
+        $this->cicloUserId = $trabajador->id;
+        $this->cicloNombre = $trabajador->nombre_completo;
+        $this->cicloFechaAncla = $config?->fecha_ancla->toDateString() ?? now()->toDateString();
+        $this->cicloDiasTrabajo = $config?->dias_trabajo ?? 6;
+        $this->cicloDiasDescanso = $config?->dias_descanso ?? 1;
+        $this->resetErrorBag();
+    }
+
+    public function cerrarCiclo(): void
+    {
+        $this->cicloUserId = null;
+        $this->resetErrorBag();
+    }
+
+    /**
+     * Guarda el ciclo del 276. Usa el mismo servicio que la pantalla
+     * «Crear/editar horario», así que la regla y el mes generado son los mismos.
+     */
+    public function guardarCiclo(GeneradorTurnoMensualService $generador): void
+    {
+        abort_unless($this->cicloUserId !== null, 422);
+
+        $trabajador = $this->equipo276()->get($this->cicloUserId);
+        abort_unless($trabajador !== null, 403);
+        abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
+
+        $datos = $this->validate([
+            'cicloFechaAncla' => ['required', 'date'],
+            'cicloDiasTrabajo' => ['required', 'integer', 'min:1', 'max:30'],
+            'cicloDiasDescanso' => ['required', 'integer', 'min:1', 'max:30'],
+        ]);
+
+        try {
+            $generador->cargarConfiguracion(
+                trabajador: $trabajador,
+                turno: ConfiguracionTurno::TURNO_276,
+                fechaAncla: Carbon::parse($datos['cicloFechaAncla']),
+                actor: auth()->user(),
+                diasTrabajo: $datos['cicloDiasTrabajo'],
+                diasDescanso: $datos['cicloDiasDescanso'],
+            );
+        } catch (ValidationException $e) {
+            $this->addError('cicloFechaAncla', $e->validator->errors()->first());
+
+            return;
+        }
+
+        $this->mensaje = 'Ciclo guardado para '.$trabajador->nombre_completo.'.';
+        $this->cicloUserId = null;
+        $this->version++;
+    }
+
     public function render(): View
     {
         $jefe = $this->jefeVista();
@@ -227,6 +316,9 @@ class CalendarioEquipoIndex extends Component
             $horas[$codigo] = substr($inicio, 0, 5).' – '.substr($fin, 0, 5);
         }
 
+        $equipo276 = $this->equipo276();
+        $configs276 = ConfiguracionTurno::whereIn('user_id', $equipo276->keys())->get()->keyBy('user_id');
+
         return view('livewire.turnos.calendario-equipo-index', [
             'jefe' => $jefe,
             'vistaAdmin' => $this->jefeId !== null,
@@ -243,6 +335,8 @@ class CalendarioEquipoIndex extends Component
             'fechasIso' => $fechas->map(fn (Carbon $f) => $f->toDateString())->values()->all(),
             'diasIniciales' => (object) $diasIniciales,
             'horas' => $horas,
+            'equipo276' => $equipo276,
+            'configs276' => $configs276,
         ]);
     }
 }

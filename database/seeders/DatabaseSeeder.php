@@ -29,6 +29,11 @@ class DatabaseSeeder extends Seeder
             JefeAreaUserSeeder::class,
             JefeInmediatoUserSeeder::class,
             TrabajadorUserSeeder::class,
+
+            // Datos de prueba completos: sedes y un jefe (de área o inmediato) por cada
+            // unidad que aún no lo tenga. Va al final para no pisar a los jefes de arriba.
+            SedeSeeder::class,
+            OrganigramaPruebaSeeder::class,
         ]);
 
         // User::factory(10)->create();
