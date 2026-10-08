@@ -13,7 +13,9 @@ use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
@@ -82,6 +84,24 @@ class CrearPapeletaTest extends TestCase
 
         $this->assertSame(3, Papeleta::where('trabajador_id', $trabajador->id)->count());
         $this->assertTrue($primera->fresh()->estado->equals(PendienteJefe::class));
+    }
+
+    public function test_se_puede_crear_la_papeleta_de_salud_con_adjunto_por_http(): void
+    {
+        Storage::fake('local');
+        $this->ir('2026-09-21 10:00:00');
+
+        [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+
+        $this->actingAs($trabajador)->post(route('trabajador.papeletas.store'), [
+            'motivo_id' => $this->motivoDe('SALUD')->id,
+            'adjunto_inicial_path' => UploadedFile::fake()->create('certificado.pdf', 100, 'application/pdf'),
+        ])->assertSessionDoesntHaveErrors();
+
+        $papeleta = Papeleta::where('trabajador_id', $trabajador->id)->latest('id')->first();
+        $this->assertNotNull($papeleta?->adjunto_inicial_path);
+        Storage::disk('local')->assertExists($papeleta->adjunto_inicial_path);
     }
 
     /**

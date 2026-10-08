@@ -282,44 +282,5 @@
                 @endif
             </div>
         @endif
-
-        {{-- Sustentos por revisar --}}
-        @if ($sustentosPorRevisar->isNotEmpty())
-            <div class="glass-card overflow-hidden border-l-4 border-purple-500 dark:border-purple-400">
-                <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 flex items-center gap-2">
-                        Sustentos por revisar
-                        <span class="inline-flex items-center justify-center min-w-[1.5rem] px-1.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-700 dark:text-purple-300">{{ $sustentosPorRevisar->total() }}</span>
-                    </h3>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="min-w-full border-separate border-spacing-y-2">
-                        <thead class="bg-tinta-50/70 dark:bg-white/5">
-                            <tr>
-                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Trabajador</th>
-                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Motivo</th>
-                                <th scope="col" class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white dark:bg-transparent">
-                            @foreach ($sustentosPorRevisar as $papeleta)
-                                <tr wire:key="sustento-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
-                                    <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
-                                    <td class="px-4 py-3 text-right">
-                                        <a href="{{ route('jefe.papeletas.show', $papeleta) }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Revisar sustento →</a>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-                @if ($sustentosPorRevisar->hasPages())
-                    <div class="px-4 py-3 border-t border-gray-100 dark:border-white/10">
-                        {{ $sustentosPorRevisar->links(data: ['scrollTo' => false]) }}
-                    </div>
-                @endif
-            </div>
-        @endif
     </div>
 </div>

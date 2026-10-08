@@ -48,13 +48,24 @@ class PapeletaController extends Controller
     {
         $motivo = Motivo::findOrFail($request->integer('motivo_id'));
 
+        $adjuntoPath = $request->hasFile('adjunto_inicial_path')
+            ? $request->file('adjunto_inicial_path')->store('papeletas/adjuntos-iniciales', 'local')
+            : null;
+
         try {
             $papeleta = $action->ejecutar(Auth::user(), $motivo, [
                 'justificacion' => $request->input('justificacion'),
+                'adjunto_inicial_path' => $adjuntoPath,
                 'hora_retorno_estimado' => $request->input('hora_retorno_estimado'),
             ]);
         } catch (PapeletaException $e) {
+            $this->descartarAdjunto($adjuntoPath);
+
             return back()->withInput()->with('error', $e->getMessage());
+        } catch (Throwable $e) {
+            $this->descartarAdjunto($adjuntoPath);
+
+            throw $e;
         }
 
         return redirect()

@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Jefe\DecisionController as JefeDecisionController;
 use App\Http\Controllers\Jefe\PapeletaController as JefePapeletaController;
-use App\Http\Controllers\Jefe\SustentoController as JefeSustentoController;
 use App\Http\Controllers\Papeleta\PapeletaArchivoController;
 use App\Http\Controllers\Papeleta\SustentoArchivoController;
 use App\Http\Controllers\PushSubscriptionController;
@@ -321,7 +320,6 @@ Route::middleware([
         Route::post('/papeletas/{papeleta}/cerrar-sin-retorno', [JefeDecisionController::class, 'cerrarSinRetorno'])->name('papeletas.cerrar-sin-retorno');
         Route::post('/papeletas/{papeleta}/marcar-abandono', [JefeDecisionController::class, 'marcarAbandono'])->name('papeletas.marcar-abandono');
 
-        Route::post('/sustentos/{sustento}/revisar', [JefeSustentoController::class, 'revisar'])->name('sustentos.revisar');
     });
 
     // --- RRHH (Paso 3 y Paso 4) ---

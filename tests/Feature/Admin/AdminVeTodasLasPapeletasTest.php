@@ -56,7 +56,7 @@ class AdminVeTodasLasPapeletasTest extends TestCase
         Livewire::actingAs($admin)
             ->test(AdminPapeletasIndex::class)
             ->call('verHistorial', $trabajador->id)
-            ->assertSee('Historial completo de')
+            ->assertSee('Historial de Pedro Historial')
             ->assertViewHas('papeletas', fn ($papeletas) => $papeletas->total() === 2);
     }
 

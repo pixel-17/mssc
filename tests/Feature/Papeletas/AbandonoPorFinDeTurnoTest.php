@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Papeletas;
 
+use App\Livewire\Papeletas\RrhhIndex;
 use App\Models\Papeleta;
 use App\Models\Retorno;
 use App\States\Papeleta\AutorizadaYCorriendo;
@@ -10,6 +11,7 @@ use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\Finalizada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Livewire\Livewire;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
@@ -143,5 +145,40 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->assertTrue($papeleta->estado->equals(Finalizada::class));
         $this->assertTrue($papeleta->esAbandono(), 'la causa de abandono se conserva');
         $this->assertSame($this->motivoDe('PARTICULAR')->id, $papeleta->motivo_id, 'pasa a Particular para el descuento');
+    }
+
+    public function test_salud_con_adjunto_al_crear_nace_presentada_y_va_a_revision_de_rrhh(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('SALUD');
+        $papeleta->update(['adjunto_inicial_path' => 'papeletas/adjuntos-iniciales/certificado.pdf']);
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(EnJustificacion::class));
+
+        $sustento = $papeleta->sustentos()->first();
+        $this->assertSame('presentado', $sustento->estado, 'el adjunto de la creación cuenta como justificación');
+        $this->assertSame('papeletas/adjuntos-iniciales/certificado.pdf', $sustento->archivo_path);
+        $this->assertNotNull($sustento->presentado_at);
+
+        $rrhh = $this->usuarioDePrueba([], ['rrhh']);
+
+        Livewire::actingAs($rrhh)
+            ->test(RrhhIndex::class)
+            ->assertViewHas('sustentosPorRevisar', fn ($lista) => $lista->total() === 1);
+    }
+
+    public function test_salud_sin_adjunto_al_crear_queda_pendiente_para_presentarla_despues(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('SALUD');
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $sustento = $papeleta->fresh()->sustentos()->first();
+        $this->assertSame('pendiente', $sustento->estado);
+        $this->assertNull($sustento->archivo_path);
     }
 }

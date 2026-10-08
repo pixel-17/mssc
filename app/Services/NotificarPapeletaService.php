@@ -227,7 +227,7 @@ class NotificarPapeletaService
 
     public function sustentoSinRevisar(Papeleta $papeleta): void
     {
-        $destinatarios = $this->usuariosRrhh()->concat($this->destinatariosJefe($papeleta));
+        $destinatarios = $this->usuariosRrhh();
 
         $this->enviar(
             $destinatarios,

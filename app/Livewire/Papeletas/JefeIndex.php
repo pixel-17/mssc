@@ -9,7 +9,6 @@ use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
-use App\States\Papeleta\EnJustificacion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -47,7 +46,6 @@ class JefeIndex extends Component
             'observacionesRrhhPage',
             'posthocPorResponderPage',
             'enCursoPage',
-            'sustentosPorRevisarPage',
             'delTurnoPage',
         ];
     }
@@ -85,9 +83,6 @@ class JefeIndex extends Component
                 ->where('resuelto_por_jefe_id', $user->id),
             'enCurso' => fn () => Papeleta::whereState('estado', AutorizadaYCorriendo::class)
                 ->deJefeInmediato($user),
-            'sustentosPorRevisar' => fn () => Papeleta::whereState('estado', EnJustificacion::class)
-                ->deJefeInmediato($user)
-                ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado')),
         ];
 
         $listar = fn ($consulta, string $nombre, array $relaciones = ['trabajador', 'motivo']) => $this->paginarLista(
@@ -104,7 +99,6 @@ class JefeIndex extends Component
         $observacionesRrhh = $listar($bases['observacionesRrhh'](), 'observacionesRrhh');
         $posthocPorResponder = $listar($bases['posthocPorResponder'](), 'posthocPorResponder');
         $enCurso = $listar($bases['enCurso'](), 'enCurso');
-        $sustentosPorRevisar = $listar($bases['sustentosPorRevisar'](), 'sustentosPorRevisar', ['trabajador', 'motivo', 'sustentos']);
 
         // Papeletas del turno vigente: tras aprobar, la papeleta sale de "Por decidir"
         // (pasa a RRHH, sigue en curso, se cierra...) pero el jefe debe seguir viéndola
@@ -124,7 +118,6 @@ class JefeIndex extends Component
             'observacionesRrhh',
             'posthocPorResponder',
             'enCurso',
-            'sustentosPorRevisar',
             'delTurno',
         ));
     }

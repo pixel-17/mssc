@@ -13,15 +13,15 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * (el de sustentos ya lo sirve
  * SustentoArchivoController).
  *
- * Autorización: la misma PapeletaPolicy::view que el detalle (dueño,
- * jefe inmediato/adicional, jefe de área o RRHH). Disco 'local' privado,
- * nunca URL directa.
+ * Autorización: PapeletaPolicy::verArchivos (dueño, jefe inmediato/adicional,
+ * jefe de área o RRHH; el admin NO, aunque vea el detalle). Disco 'local'
+ * privado, nunca URL directa.
  */
 class PapeletaArchivoController extends Controller
 {
     public function show(Papeleta $papeleta, string $tipo): StreamedResponse
     {
-        $this->authorize('view', $papeleta);
+        $this->authorize('verArchivos', $papeleta);
 
         $path = match ($tipo) {
             'adjunto-inicial' => $papeleta->adjunto_inicial_path,

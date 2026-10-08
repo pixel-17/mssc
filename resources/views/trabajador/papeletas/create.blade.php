@@ -118,6 +118,40 @@
                     </div>
                 </div>
 
+                <div class="py-4" x-show="pideAdjunto">
+                    <div class="flex items-baseline gap-2.5">
+                        <span class="font-display text-sello-500 dark:text-sello-300 font-semibold shrink-0">4</span>
+                        <div class="w-full space-y-2">
+                            <x-label for="adjunto_inicial_path" value="Adjunto" />
+                            <p x-show="motivos.find(m => m.id == motivoId)?.requiere_sustento_en_retorno" x-cloak class="text-xs text-gray-500 dark:text-tinta-100/60">
+                                Si lo adjuntas ahora, cuenta como tu justificación y RR. HH. la revisa cuando termine tu salida. Si no puedes, podrás presentarla después, dentro del plazo.
+                            </p>
+
+                            <label
+                                for="adjunto_inicial_path"
+                                class="flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed @error('adjunto_inicial_path') border-alarma-400 @else border-tinta-200 @enderror dark:border-white/15 bg-tinta-50/40 dark:bg-white/5 py-6 text-center cursor-pointer hover:border-sello-400 dark:hover:border-sello-400/60 focus-within:border-sello-500 focus-within:ring-2 focus-within:ring-sello-300 transition"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-7 text-tinta-500">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
+                                </svg>
+                                <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Toca para adjuntar un archivo'"></span>
+                                <span class="text-xs text-gray-500 dark:text-tinta-100/60">PDF, JPG o PNG · máximo 10 MB</span>
+                                <input
+                                    type="file"
+                                    id="adjunto_inicial_path"
+                                    name="adjunto_inicial_path"
+                                    :disabled="!pideAdjunto"
+                                    accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                                    class="sr-only"
+                                    @change="elegirArchivo($event)"
+                                >
+                            </label>
+                            <p x-show="errorArchivo" x-cloak x-text="errorArchivo" role="alert" class="mt-1 text-sm text-red-600"></p>
+                            <x-input-error for="adjunto_inicial_path" class="mt-1" />
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <div class="pt-4">

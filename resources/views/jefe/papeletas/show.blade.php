@@ -3,7 +3,6 @@
     use App\States\Papeleta\PendienteJefe;
     use App\States\Papeleta\ObservadaPorRrhh;
     use App\States\Papeleta\AutorizadaYCorriendo;
-    use App\States\Papeleta\EnJustificacion;
 
     $estaPendiente = $papeleta->estado->equals(PendienteJefe::class);
     $estaObservada = $papeleta->estado->equals(ObservadaPorJefe::class);
@@ -24,10 +23,6 @@
     // Observación post-hoc de RRHH: solo responde el MISMO jefe que autorizó.
     $puedeResponderPosthoc = $papeleta->puedeResponderPosthoc(auth()->user());
     $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
-
-    $sustentoPresentado = $papeleta->estado->equals(EnJustificacion::class)
-        ? $papeleta->sustentos->firstWhere('estado', 'presentado')
-        : null;
 
     // El tope de observaciones es configurable (Configuraciones > TOPE_OBSERVACIONES,
     // por defecto 3) y ObservarJefeAction rechaza automáticamente la papeleta en
@@ -157,30 +152,6 @@
                         <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Marcar abandono (no retornó y no hay justificación válida):</p>
                         <x-accion-comentario :action="route('jefe.papeletas.marcar-abandono', $papeleta)" label="Marcar abandono" color="red" confirmText="¿Confirmas marcar esta papeleta como abandono?" />
                     </div>
-                </div>
-            @endif
-
-            @if ($sustentoPresentado)
-                <div class="glass-card p-6" x-data="{ resultado: 'aprobado', enviando: false }">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Revisar sustento presentado</h3>
-                    <form method="POST" action="{{ route('jefe.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3" @submit="enviando = true">
-                        @csrf
-                        <div class="flex items-center gap-4 text-sm text-gray-700 dark:text-tinta-100/80">
-                            <label class="inline-flex items-center gap-1">
-                                <input type="radio" name="resultado" value="aprobado" x-model="resultado"> Aprobar
-                            </label>
-                            <label class="inline-flex items-center gap-1">
-                                <input type="radio" name="resultado" value="observado" x-model="resultado"> Observar
-                            </label>
-                        </div>
-                        <textarea name="comentario" aria-label="Motivo de la observación" rows="2" maxlength="2000" x-show="resultado === 'observado'"
-                                  placeholder="Motivo de la observación (mínimo 5 caracteres)..."
-                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
-                        <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-tinta-600 hover:bg-tinta-700">
-                            <span x-show="! enviando">Confirmar revisión</span>
-                            <span x-show="enviando" x-cloak>Enviando…</span>
-                        </button>
-                    </form>
                 </div>
             @endif
 

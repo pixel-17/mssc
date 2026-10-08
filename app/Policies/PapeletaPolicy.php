@@ -55,6 +55,21 @@ class PapeletaPolicy
             || $papeleta->jefe_area_id === $user->id;
     }
 
+    /**
+     * Archivos de la papeleta (adjunto inicial, foto del retorno, adjuntos de
+     * observación y post-hoc). Mismos actores que `view` salvo el admin: él ve
+     * la papeleta en solo lectura, pero sus archivos pueden ser documentos
+     * médicos y no le corresponden.
+     */
+    public function verArchivos(User $user, Papeleta $papeleta): bool
+    {
+        return $user->hasRole('rrhh')
+            || $papeleta->trabajador_id === $user->id
+            || $papeleta->tieneComoJefeInmediatoA($user)
+            || $papeleta->resuelto_por_jefe_id === $user->id
+            || $papeleta->jefe_area_id === $user->id;
+    }
+
     public function crear(User $user): bool
     {
         // El admin no marca papeletas, aunque se le haya asignado también el rol trabajador.
@@ -173,19 +188,18 @@ class PapeletaPolicy
     }
 
     /**
-     * Visto bueno humano sobre un sustento ya presentado (Paso 8):
-     * jefe inmediato o RRHH de la papeleta dueña del sustento.
+     * Visto bueno humano sobre la justificación presentada (Paso 8): solo
+     * RRHH, y nunca sobre su propia papeleta. El jefe inmediato no la revisa.
      */
     public function revisarSustento(User $user, \App\Models\Sustento $sustento): bool
     {
         return ! $this->esPropia($user, $sustento->papeleta)
-            && ($sustento->papeleta->tieneComoJefeInmediatoA($user) || $user->hasRole('rrhh'));
+            && $user->hasRole('rrhh');
     }
 
     /**
      * Ver/descargar el archivo adjunto de un sustento: el propio
-     * trabajador dueño, o cualquiera que pueda darle visto bueno
-     * (jefe inmediato o RRHH) — mismo criterio que revisarSustento,
+     * trabajador dueño o RRHH — mismo criterio que revisarSustento,
      * más el dueño.
      */
     public function verSustento(User $user, \App\Models\Sustento $sustento): bool
