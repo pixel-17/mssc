@@ -48,7 +48,9 @@ class PapeletaController extends Controller
     {
         $motivo = Motivo::findOrFail($request->integer('motivo_id'));
 
-        $adjuntoPath = $request->hasFile('adjunto_inicial_path')
+        // El adjunto al crear es solo para los motivos que exigen justificación
+        // (Salud): en los demás (p. ej. Comisión de Servicio) se ignora.
+        $adjuntoPath = $motivo->requiere_sustento_en_retorno && $request->hasFile('adjunto_inicial_path')
             ? $request->file('adjunto_inicial_path')->store('papeletas/adjuntos-iniciales', 'local')
             : null;
 

@@ -146,50 +146,6 @@ class MarcarRetornoAction
         });
     }
 
-    /**
-     * Comisión de Servicio sin retorno físico: no pasa por acá (nunca
-     * hay evidencia de retorno), se cierra directo con visto bueno
-     * humano. FINALIZADO_SIN_RETORNO con causa distinta al abandono
-     * del job de vencimiento — motivo por el que vive en su propio
-     * método y no en ejecutar().
-     *
-     * Misma relectura con lockForUpdate() que ejecutar().
-     */
-    public function cerrarSinRetornoFisico(Papeleta $papeleta, User $quienConfirma): Papeleta
-    {
-        return DB::transaction(function () use ($papeleta, $quienConfirma) {
-            /** @var Papeleta $actual */
-            $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
-
-            $this->exigirDecisorAjeno($actual, $quienConfirma);
-
-            if (! $actual->estado->equals(AutorizadaYCorriendo::class)) {
-                throw new PapeletaException('Esta papeleta no está en curso.');
-            }
-
-            if (! $actual->motivo->permite_cierre_sin_retorno) {
-                throw new PapeletaException('El motivo de esta papeleta no permite cierre sin retorno físico.');
-            }
-
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(Cerrada::class); // comisión: sin descuento
-            $actual->causa_finalizacion_sin_retorno = 'comision_servicio_campo';
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $quienConfirma->id,
-                'actor_tipo' => $actual->tieneComoJefeInmediatoA($quienConfirma) ? 'jefe_inmediato' : 'rrhh',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => 'Visto bueno humano: comisión de servicio cerrada sin retorno físico.',
-            ]);
-
-            return $actual;
-        });
-    }
-
     private function calcularDentroDeRadio(Papeleta $papeleta, array $datos): ?bool
     {
         if (empty($datos['latitud']) || empty($datos['longitud'])) {

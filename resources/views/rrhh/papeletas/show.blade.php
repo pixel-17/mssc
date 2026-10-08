@@ -17,8 +17,6 @@
     $sustentoPresentado = ! $soloLectura && $papeleta->estado->equals(EnJustificacion::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
-
-    $puedeMarcarAbandono = ! $soloLectura && $papeleta->estado->equals(EnJustificacion::class) && $papeleta->retorno !== null;
 @endphp
 
 <x-app-layout>
@@ -146,14 +144,6 @@
                             <span x-show="enviando" x-cloak>Enviando…</span>
                         </button>
                     </form>
-                </div>
-            @endif
-
-            @if ($puedeMarcarAbandono)
-                <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Abandono sobre retorno pendiente de sustento</h3>
-                    <p class="text-xs text-gray-500 mb-3">Usar solo si corresponde precedencia de abandono sobre el sustento vencido.</p>
-                    <x-accion-comentario :action="route('rrhh.papeletas.marcar-abandono', $papeleta)" label="Marcar abandono" color="red" confirmText="¿Confirmas marcar esta papeleta como abandono?" />
                 </div>
             @endif
 

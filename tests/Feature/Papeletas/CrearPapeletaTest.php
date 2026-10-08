@@ -104,6 +104,25 @@ class CrearPapeletaTest extends TestCase
         Storage::disk('local')->assertExists($papeleta->adjunto_inicial_path);
     }
 
+    public function test_el_adjunto_al_crear_solo_aplica_a_salud_y_se_ignora_en_comision(): void
+    {
+        Storage::fake('local');
+        $this->ir('2026-09-21 10:00:00');
+
+        [, , $trabajador] = $this->armarOrganigrama();
+        $this->turnoDePrueba($trabajador);
+
+        $this->actingAs($trabajador)->post(route('trabajador.papeletas.store'), [
+            'motivo_id' => $this->motivoDe('COMISION')->id,
+            'adjunto_inicial_path' => UploadedFile::fake()->create('oficio.pdf', 100, 'application/pdf'),
+        ])->assertSessionDoesntHaveErrors();
+
+        $papeleta = Papeleta::where('trabajador_id', $trabajador->id)->latest('id')->first();
+        $this->assertNotNull($papeleta);
+        $this->assertNull($papeleta->adjunto_inicial_path);
+        $this->assertSame([], Storage::disk('local')->allFiles('papeletas/adjuntos-iniciales'));
+    }
+
     /**
      * Regla de estructura (2026-09-24): el jefe inmediato (o, para quien
      * encabeza su propia unidad, su Jefe de Área) SIEMPRE debe existir y

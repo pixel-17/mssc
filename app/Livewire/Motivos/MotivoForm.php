@@ -14,9 +14,16 @@ use Livewire\Component;
  * Formulario del catálogo de Motivos, en Blade + Livewire puro (ver rutas
  * 'motivos.*' en routes/web.php, middleware role:admin).
  *
- * Las banderas de reglas de negocio (suma_descuento, cierre sin retorno, etc.)
- * son la única fuente de verdad que consultan las Actions del flujo
- * — nunca hardcodear por código en base al nombre/código del motivo.
+ * Un motivo se define con solo dos reglas, que son las únicas que consultan
+ * las Actions y los jobs del flujo (nunca se decide por el código/nombre):
+ *
+ *  - requiere justificación (requiere_sustento_en_retorno): al terminar la
+ *    salida pasa a justificación; si no se presenta a tiempo, pasa a
+ *    Particular y se descuenta.
+ *  - aplica descuento (suma_descuento): solo se pregunta si NO requiere
+ *    justificación; si la requiere, el descuento depende de si la presenta.
+ *
+ * El abandono lo marca solo el sistema, por lo que no hay regla de cierre manual.
  */
 #[Layout('layouts.app')]
 #[Title('Motivo')]
@@ -31,19 +38,13 @@ class MotivoForm extends Component
 
     public string $nombre = '';
 
-    public string $adjunto = 'no';
-
     public bool $activo = true;
 
-    public bool $sumaDescuento = false;
+    public bool $requiereJustificacion = false;
 
-    public bool $permiteCierreSinRetorno = false;
-
-    public bool $requiereSustentoEnRetorno = false;
+    public bool $aplicaDescuento = false;
 
     public ?int $plazoJustificacionHorasHabiles = null;
-
-    public bool $esDestinoReclasificacion = false;
 
     public function mount(?Motivo $motivo = null): void
     {
@@ -51,13 +52,10 @@ class MotivoForm extends Component
             $this->motivo = $motivo;
             $this->codigo = $motivo->codigo;
             $this->nombre = $motivo->nombre;
-            $this->adjunto = $motivo->adjunto;
             $this->activo = $motivo->activo;
-            $this->sumaDescuento = $motivo->suma_descuento;
-            $this->permiteCierreSinRetorno = $motivo->permite_cierre_sin_retorno;
-            $this->requiereSustentoEnRetorno = $motivo->requiere_sustento_en_retorno;
+            $this->requiereJustificacion = $motivo->consecuenciaAlTerminar() === 'justificar';
+            $this->aplicaDescuento = $motivo->consecuenciaAlTerminar() === 'descuenta';
             $this->plazoJustificacionHorasHabiles = $motivo->plazo_justificacion_horas_habiles;
-            $this->esDestinoReclasificacion = $motivo->es_destino_reclasificacion;
         }
     }
 
@@ -71,13 +69,10 @@ class MotivoForm extends Component
                     : 'unique:motivos,codigo',
             ],
             'nombre' => ['required', 'string', 'max:255'],
-            'adjunto' => ['required', 'in:no,opcional,flexible,obligatorio'],
             'activo' => ['boolean'],
-            'sumaDescuento' => ['boolean'],
-            'permiteCierreSinRetorno' => ['boolean'],
-            'requiereSustentoEnRetorno' => ['boolean'],
+            'requiereJustificacion' => ['boolean'],
+            'aplicaDescuento' => ['boolean'],
             'plazoJustificacionHorasHabiles' => ['nullable', 'integer', 'min:1', 'max:720'],
-            'esDestinoReclasificacion' => ['boolean'],
         ];
     }
 
@@ -87,16 +82,18 @@ class MotivoForm extends Component
 
         $datos = $this->validate();
 
+        $requiere = $datos['requiereJustificacion'];
+
+        // Solo se tocan las columnas de estas dos reglas: el resto (p. ej. cuál
+        // es el motivo Particular) se conserva tal como está.
         $atributos = [
             'codigo' => $datos['codigo'],
             'nombre' => $datos['nombre'],
-            'adjunto' => $datos['adjunto'],
             'activo' => $datos['activo'],
-            'suma_descuento' => $datos['sumaDescuento'],
-            'permite_cierre_sin_retorno' => $datos['permiteCierreSinRetorno'],
-            'requiere_sustento_en_retorno' => $datos['requiereSustentoEnRetorno'],
-            'plazo_justificacion_horas_habiles' => $datos['requiereSustentoEnRetorno'] ? ($datos['plazoJustificacionHorasHabiles'] ?? null) : null,
-            'es_destino_reclasificacion' => $datos['esDestinoReclasificacion'],
+            'requiere_sustento_en_retorno' => $requiere,
+            // Si requiere justificación, el descuento depende de si la presenta.
+            'suma_descuento' => ! $requiere && $datos['aplicaDescuento'],
+            'plazo_justificacion_horas_habiles' => $requiere ? ($datos['plazoJustificacionHorasHabiles'] ?? null) : null,
         ];
 
         $this->motivo

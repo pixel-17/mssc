@@ -43,48 +43,123 @@ class MotivoCrudTest extends TestCase
         ])->fresh();
     }
 
-    public function test_el_admin_crea_un_motivo_con_todas_sus_banderas(): void
-    {
-        Livewire::actingAs($this->admin)
-            ->test(MotivoForm::class)
-            ->set('codigo', 'CAPACITACION')
-            ->set('nombre', 'Capacitación')
-            ->set('adjunto', 'opcional')
-            ->set('sumaDescuento', true)
-            ->set('permiteCierreSinRetorno', true)
-            ->set('requiereSustentoEnRetorno', true)
-            ->set('esDestinoReclasificacion', true)
-            ->call('guardar')
-            ->assertHasNoErrors()
-            ->assertRedirect(route('motivos.index'));
-
-        $motivo = Motivo::where('codigo', 'CAPACITACION')->firstOrFail();
-
-        $this->assertSame('Capacitación', $motivo->nombre);
-        $this->assertSame('opcional', $motivo->adjunto);
-        $this->assertTrue($motivo->activo);
-        $this->assertTrue($motivo->suma_descuento);
-        $this->assertTrue($motivo->permite_cierre_sin_retorno);
-        $this->assertTrue($motivo->requiere_sustento_en_retorno);
-        $this->assertTrue($motivo->es_destino_reclasificacion);
-    }
-
-    public function test_un_motivo_nuevo_nace_con_las_banderas_apagadas(): void
+    public function test_un_motivo_nuevo_nace_sin_justificacion_ni_descuento(): void
     {
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class)
             ->set('codigo', 'SIMPLE')
             ->set('nombre', 'Simple')
             ->call('guardar')
-            ->assertHasNoErrors();
+            ->assertHasNoErrors()
+            ->assertRedirect(route('motivos.index'));
 
         $motivo = Motivo::where('codigo', 'SIMPLE')->firstOrFail();
 
-        $this->assertSame('no', $motivo->adjunto);
+        $this->assertTrue($motivo->activo);
         $this->assertFalse($motivo->suma_descuento);
-        $this->assertFalse($motivo->permite_cierre_sin_retorno);
         $this->assertFalse($motivo->requiere_sustento_en_retorno);
         $this->assertFalse($motivo->es_destino_reclasificacion);
+        $this->assertSame('libre', $motivo->consecuenciaAlTerminar());
+    }
+
+    public function test_las_dos_reglas_producen_una_sola_consecuencia(): void
+    {
+        $casos = [
+            // [requiereJustificacion, aplicaDescuento, suma_descuento, requiere_sustento, consecuencia]
+            'particular' => [false, true, true, false, 'descuenta'],
+            'salud' => [true, false, false, true, 'justificar'],
+            'comision' => [false, false, false, false, 'libre'],
+            // Si requiere justificación, el descuento no se guarda: depende de si la presenta.
+            'ambas' => [true, true, false, true, 'justificar'],
+        ];
+
+        foreach ($casos as $codigo => [$requiere, $descuento, $suma, $sustento, $consecuencia]) {
+            Livewire::actingAs($this->admin)
+                ->test(MotivoForm::class)
+                ->set('codigo', 'REGLA_'.strtoupper($codigo))
+                ->set('nombre', 'Regla '.$codigo)
+                ->set('requiereJustificacion', $requiere)
+                ->set('aplicaDescuento', $descuento)
+                ->call('guardar')
+                ->assertHasNoErrors();
+
+            $motivo = Motivo::where('codigo', 'REGLA_'.strtoupper($codigo))->firstOrFail();
+            $this->assertSame($suma, $motivo->suma_descuento, $codigo);
+            $this->assertSame($sustento, $motivo->requiere_sustento_en_retorno, $codigo);
+            $this->assertSame($consecuencia, $motivo->consecuenciaAlTerminar(), $codigo);
+        }
+    }
+
+    public function test_el_plazo_solo_se_guarda_si_requiere_justificacion(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class)
+            ->set('codigo', 'CON_PLAZO')
+            ->set('nombre', 'Con plazo')
+            ->set('requiereJustificacion', true)
+            ->set('plazoJustificacionHorasHabiles', 24)
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class)
+            ->set('codigo', 'SIN_PLAZO')
+            ->set('nombre', 'Sin plazo')
+            ->set('aplicaDescuento', true)
+            ->set('plazoJustificacionHorasHabiles', 24)
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertSame(24, Motivo::where('codigo', 'CON_PLAZO')->firstOrFail()->plazo_justificacion_horas_habiles);
+        $this->assertNull(Motivo::where('codigo', 'SIN_PLAZO')->firstOrFail()->plazo_justificacion_horas_habiles);
+    }
+
+    public function test_editar_precarga_las_reglas_y_permite_conservar_el_propio_codigo(): void
+    {
+        $motivo = $this->motivoNuevo(['suma_descuento' => true]);
+
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class, ['motivo' => $motivo])
+            ->assertSet('codigo', 'MOTIVO_NUEVO')
+            ->assertSet('aplicaDescuento', true)
+            ->assertSet('requiereJustificacion', false)
+            ->set('nombre', 'Motivo renombrado')
+            ->set('aplicaDescuento', false)
+            ->call('guardar')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('motivos.index'));
+
+        $motivo = $motivo->fresh();
+
+        $this->assertSame('MOTIVO_NUEVO', $motivo->codigo);
+        $this->assertSame('Motivo renombrado', $motivo->nombre);
+        $this->assertFalse($motivo->suma_descuento);
+    }
+
+    public function test_un_motivo_con_ambas_banderas_se_muestra_como_requiere_justificacion(): void
+    {
+        // Misma prioridad que MarcarRetornoAction: si pide justificación, ese camino manda.
+        $motivo = $this->motivoNuevo(['suma_descuento' => true, 'requiere_sustento_en_retorno' => true]);
+
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class, ['motivo' => $motivo])
+            ->assertSet('requiereJustificacion', true)
+            ->assertSet('aplicaDescuento', false);
+    }
+
+    public function test_editar_el_motivo_particular_no_pierde_su_condicion_de_destino(): void
+    {
+        $particular = $this->motivoDe('PARTICULAR');
+        $this->assertTrue($particular->es_destino_reclasificacion);
+
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class, ['motivo' => $particular])
+            ->set('nombre', 'Particular (renombrado)')
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertTrue($particular->fresh()->es_destino_reclasificacion);
+        $this->assertTrue($particular->fresh()->suma_descuento);
     }
 
     public function test_codigo_y_nombre_son_obligatorios(): void
@@ -108,48 +183,6 @@ class MotivoCrudTest extends TestCase
             ->assertHasErrors(['codigo' => 'unique']);
 
         $this->assertSame($antes, Motivo::count());
-    }
-
-    public function test_el_tipo_de_adjunto_debe_ser_uno_de_los_permitidos(): void
-    {
-        Livewire::actingAs($this->admin)
-            ->test(MotivoForm::class)
-            ->set('codigo', 'ADJ_MALO')
-            ->set('nombre', 'Adjunto malo')
-            ->set('adjunto', 'siempre')
-            ->call('guardar')
-            ->assertHasErrors(['adjunto' => 'in']);
-
-        foreach (['no', 'opcional', 'flexible', 'obligatorio'] as $valido) {
-            Livewire::actingAs($this->admin)
-                ->test(MotivoForm::class)
-                ->set('codigo', 'ADJ_'.strtoupper($valido))
-                ->set('nombre', 'Adjunto '.$valido)
-                ->set('adjunto', $valido)
-                ->call('guardar')
-                ->assertHasNoErrors();
-        }
-    }
-
-    public function test_editar_precarga_y_permite_conservar_el_propio_codigo(): void
-    {
-        $motivo = $this->motivoNuevo(['suma_descuento' => true]);
-
-        Livewire::actingAs($this->admin)
-            ->test(MotivoForm::class, ['motivo' => $motivo])
-            ->assertSet('codigo', 'MOTIVO_NUEVO')
-            ->assertSet('sumaDescuento', true)
-            ->set('nombre', 'Motivo renombrado')
-            ->set('sumaDescuento', false)
-            ->call('guardar')
-            ->assertHasNoErrors()
-            ->assertRedirect(route('motivos.index'));
-
-        $motivo = $motivo->fresh();
-
-        $this->assertSame('MOTIVO_NUEVO', $motivo->codigo);
-        $this->assertSame('Motivo renombrado', $motivo->nombre);
-        $this->assertFalse($motivo->suma_descuento);
     }
 
     public function test_editar_no_puede_tomar_el_codigo_de_otro_motivo(): void

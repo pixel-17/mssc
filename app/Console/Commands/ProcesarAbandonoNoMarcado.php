@@ -27,10 +27,8 @@ use Throwable;
  * Jefe y RRHH reciben el aviso "Turno finalizado sin marcar retorno" y
  * /rrhh/abandonos queda como lista informativa.
  *
- * No decide sobre EnJustificacion con retorno ya registrado: marcar abandono sobre un
- * retorno ya registrado es un juicio humano (requiere que alguien
- * determine que el retorno no fue real) y vive en
- * MarcarAbandonoSobreRetornoPendienteAction, no en este job automático.
+ * Solo el sistema marca abandono: ni el jefe ni RRHH pueden hacerlo a mano.
+ * No toca papeletas con retorno ya registrado.
  */
 class ProcesarAbandonoNoMarcado extends Command
 {

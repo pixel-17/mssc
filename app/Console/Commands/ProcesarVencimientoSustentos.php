@@ -33,8 +33,8 @@ use Throwable;
  *
  * Defensivo: ambas queries exigen que la papeleta siga EnJustificacion
  * antes de actuar. Un Sustento puede quedar huérfano si la papeleta sale
- * de ese estado por otra vía que no cierre el Sustento asociado (por eso
- * MarcarAbandonoSobreRetornoPendienteAction lo vence al finalizar). Sin este
+ * de ese estado por otra vía que no cierre el Sustento asociado (un
+ * Sustento sin cerrar). Sin este
  * filtro, ReclasificarAParticularAction lanza PapeletaException sobre
  * ese registro y, al no estar capturada dentro del each(), tumba el
  * resto del job para ese ciclo.

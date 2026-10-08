@@ -19,7 +19,6 @@ class Motivo extends Model
         'nombre',
         'adjunto',
         'suma_descuento',
-        'permite_cierre_sin_retorno',
         'requiere_sustento_en_retorno',
         'plazo_justificacion_horas_habiles',
         'es_destino_reclasificacion',
@@ -30,7 +29,6 @@ class Motivo extends Model
     {
         return [
             'suma_descuento' => 'boolean',
-            'permite_cierre_sin_retorno' => 'boolean',
             'requiere_sustento_en_retorno' => 'boolean',
             'plazo_justificacion_horas_habiles' => 'integer',
             'es_destino_reclasificacion' => 'boolean',
@@ -43,6 +41,22 @@ class Motivo extends Model
      * una vez terminada la salida. Plazo propio del motivo; si el admin no
      * lo definió, el global SUSTENTO_HORAS_HABILES (48 por defecto).
      */
+    /**
+     * Qué pasa cuando termina la salida (con retorno o por abandono), en el
+     * mismo orden de prioridad que aplican MarcarRetornoAction y
+     * ProcesarAbandonoNoMarcado: justificar > descuenta > libre.
+     *
+     * @return 'justificar'|'descuenta'|'libre'
+     */
+    public function consecuenciaAlTerminar(): string
+    {
+        return match (true) {
+            (bool) $this->requiere_sustento_en_retorno => 'justificar',
+            (bool) $this->suma_descuento => 'descuenta',
+            default => 'libre',
+        };
+    }
+
     public function plazoJustificacionHorasHabiles(): int
     {
         return $this->plazo_justificacion_horas_habiles

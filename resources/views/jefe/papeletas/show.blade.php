@@ -127,30 +127,13 @@
                 </div>
             @endif
 
-            @if ($enCurso)
+            @if ($enCurso && ! $papeleta->retorno)
                 <div class="glass-card p-6 space-y-6">
                     <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Papeleta en curso</h3>
 
-                    @if (! $papeleta->retorno)
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Retorno manual (solo ante falla de conectividad del trabajador):</p>
-                            <x-accion-comentario :action="route('jefe.papeletas.retorno-manual', $papeleta)" label="Marcar retorno manual" color="gray" field="justificacion" :minlength="10" placeholder="Justifica la falla de conectividad (mínimo 10 caracteres)..." confirmText="¿Confirmas el retorno manual por falla de conectividad?" />
-                        </div>
-                    @endif
-
-                    @if ($papeleta->motivo->permite_cierre_sin_retorno)
-                        <div>
-                            <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Comisión de servicio sin retorno físico:</p>
-                            <form method="POST" action="{{ route('jefe.papeletas.cerrar-sin-retorno', $papeleta) }}" onsubmit="return confirm('¿Cerrar esta papeleta sin retorno físico?')">
-                                @csrf
-                                <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-semibold rounded-md text-white bg-gray-600 hover:bg-gray-700">Cerrar sin retorno físico</button>
-                            </form>
-                        </div>
-                    @endif
-
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Marcar abandono (no retornó y no hay justificación válida):</p>
-                        <x-accion-comentario :action="route('jefe.papeletas.marcar-abandono', $papeleta)" label="Marcar abandono" color="red" confirmText="¿Confirmas marcar esta papeleta como abandono?" />
+                        <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-2">Retorno manual (solo ante falla de conectividad del trabajador):</p>
+                        <x-accion-comentario :action="route('jefe.papeletas.retorno-manual', $papeleta)" label="Marcar retorno manual" color="gray" field="justificacion" :minlength="10" placeholder="Justifica la falla de conectividad (mínimo 10 caracteres)..." confirmText="¿Confirmas el retorno manual por falla de conectividad?" />
                     </div>
                 </div>
             @endif

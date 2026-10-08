@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Rrhh;
 
 use App\Actions\Papeleta\AprobarRrhhAction;
 use App\Actions\Papeleta\CorregirPapeletaRrhhAction;
-use App\Actions\Papeleta\MarcarAbandonoSobreRetornoPendienteAction;
 use App\Actions\Papeleta\ObservarRrhhAction;
 use App\Actions\Papeleta\RechazarRrhhAction;
 use App\Actions\Papeleta\RevisionPosthocAction;
@@ -19,8 +18,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Decisiones de RRHH (Paso 3: aprobar/rechazar/observar) + revisión
- * post-hoc (Paso 4) + abandono sobre retorno pendiente de sustento,
- * que RRHH también puede resolver (ver PapeletaPolicy::marcarAbandono).
+ * post-hoc (Paso 4). El abandono lo marca solo el sistema, nunca RRHH.
  */
 class DecisionController extends Controller
 {
@@ -87,19 +85,6 @@ class DecisionController extends Controller
         }
 
         return back()->with('success', 'Revisión post-hoc observada.');
-    }
-
-    public function marcarAbandono(ComentarioRequest $request, Papeleta $papeleta, MarcarAbandonoSobreRetornoPendienteAction $action): RedirectResponse
-    {
-        $this->authorize('marcarAbandono', $papeleta);
-
-        try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Papeleta marcada como abandono no marcado.');
     }
 
     public function corregir(CorregirPapeletaRequest $request, Papeleta $papeleta, CorregirPapeletaRrhhAction $action): RedirectResponse

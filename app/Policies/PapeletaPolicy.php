@@ -168,26 +168,6 @@ class PapeletaPolicy
     }
 
     /**
-     * Comisión de Servicio sin retorno físico (Paso 5): visto bueno
-     * humano del jefe inmediato o de RRHH.
-     */
-    public function cerrarSinRetorno(User $user, Papeleta $papeleta): bool
-    {
-        return ! $this->esPropia($user, $papeleta)
-            && ($papeleta->tieneComoJefeInmediatoA($user) || $user->hasRole('rrhh'));
-    }
-
-    /**
-     * "Abandono + sustento vencido simultáneos -> gana el abandono"
-     * (Paso 5): mismo criterio que cerrarSinRetorno, jefe o RRHH.
-     */
-    public function marcarAbandono(User $user, Papeleta $papeleta): bool
-    {
-        return ! $this->esPropia($user, $papeleta)
-            && ($papeleta->tieneComoJefeInmediatoA($user) || $user->hasRole('rrhh'));
-    }
-
-    /**
      * Visto bueno humano sobre la justificación presentada (Paso 8): solo
      * RRHH, y nunca sobre su propia papeleta. El jefe inmediato no la revisa.
      */

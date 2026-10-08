@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Papeletas;
 
-use App\Actions\Papeleta\MarcarAbandonoSobreRetornoPendienteAction;
 use App\Actions\Papeleta\ReconocerObservacionRrhhAction;
 use App\Actions\Papeleta\RevisarSustentoAction;
 use App\Actions\Papeleta\RevisionPosthocAction;
@@ -12,7 +11,6 @@ use App\Models\Sustento;
 use App\Models\User;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\EnJustificacion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,45 +52,6 @@ class LockRelecturaTest extends TestCase
     private function cambiarEnBd(Papeleta $papeleta, array $columnas): void
     {
         DB::table('papeletas')->where('id', $papeleta->id)->update($columnas);
-    }
-
-    public function test_marcar_abandono_no_pisa_una_papeleta_que_ya_se_cerro(): void
-    {
-        $obsoleta = $this->papeletaDePrueba($this->trabajador, EnJustificacion::class);
-        $this->cambiarEnBd($obsoleta, ['estado' => 'cerrada']);
-
-        $this->assertThrows(
-            fn () => app(MarcarAbandonoSobreRetornoPendienteAction::class)->ejecutar($obsoleta, $this->jefe, 'No volvió'),
-            PapeletaException::class,
-            'Esta acción solo aplica a papeletas en justificación.',
-        );
-
-        $this->assertTrue($obsoleta->fresh()->estado->equals(Cerrada::class));
-    }
-
-    public function test_marcar_abandono_sobre_retorno_finaliza_y_vence_la_justificacion(): void
-    {
-        $papeleta = $this->papeletaDePrueba($this->trabajador, EnJustificacion::class, [
-            'motivo_id' => $this->motivoDe('SALUD')->id,
-        ]);
-        \App\Models\Retorno::create([
-            'papeleta_id' => $papeleta->id,
-            'hora_servidor' => now(),
-            'marcado_manual' => false,
-        ]);
-        $sustento = Sustento::create([
-            'papeleta_id' => $papeleta->id,
-            'fecha_limite' => now()->addDay(),
-            'estado' => 'pendiente',
-        ]);
-
-        app(MarcarAbandonoSobreRetornoPendienteAction::class)->ejecutar($papeleta, $this->jefe, 'El retorno no fue real');
-
-        $papeleta->refresh();
-        $this->assertTrue($papeleta->estado->equals(Finalizada::class));
-        $this->assertTrue($papeleta->esAbandono());
-        $this->assertSame($this->motivoDe('PARTICULAR')->id, $papeleta->motivo_id, 'pasa a Particular para el descuento');
-        $this->assertSame('vencido', $sustento->fresh()->estado, 'la justificación abierta no queda huérfana');
     }
 
     public function test_reconocer_observacion_no_reabre_una_papeleta_que_ya_avanzo(): void

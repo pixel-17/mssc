@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Jefe;
 
 use App\Actions\Papeleta\AprobarJefeAction;
-use App\Actions\Papeleta\MarcarAbandonoSobreRetornoPendienteAction;
 use App\Actions\Papeleta\MarcarRetornoAction;
 use App\Actions\Papeleta\ObservarJefeAction;
 use App\Actions\Papeleta\RechazarJefeAction;
@@ -134,31 +133,5 @@ class DecisionController extends Controller
         }
 
         return back()->with('success', 'Retorno manual registrado por falla de conectividad.');
-    }
-
-    public function cerrarSinRetorno(Papeleta $papeleta, MarcarRetornoAction $action): RedirectResponse
-    {
-        $this->authorize('cerrarSinRetorno', $papeleta);
-
-        try {
-            $action->cerrarSinRetornoFisico($papeleta, Auth::user());
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Papeleta cerrada sin retorno físico.');
-    }
-
-    public function marcarAbandono(ComentarioRequest $request, Papeleta $papeleta, MarcarAbandonoSobreRetornoPendienteAction $action): RedirectResponse
-    {
-        $this->authorize('marcarAbandono', $papeleta);
-
-        try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Papeleta marcada como abandono no marcado.');
     }
 }
