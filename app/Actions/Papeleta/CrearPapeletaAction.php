@@ -136,10 +136,28 @@ class CrearPapeletaAction
         // papeleta: bloqueo total, nunca se queda esperando a alguien
         // que no existe ni escala a RRHH por defecto.
         if (! $directoARrhh && $jefesInmediatos->isEmpty()) {
+            if ($esJefeInmediatoDeLaUnidad) {
+                throw new PapeletaException(
+                    'Tu unidad no tiene un Jefe de Área activo asignado. Comunícate con Administración para regularizar la jefatura antes de crear una papeleta.'
+                );
+            }
+
+            // El jefe existe y está activo, pero ninguno tiene hoy un turno
+            // vigente: se dice eso (y no "no hay jefe"), porque lo que hay
+            // que regularizar es el turno del jefe, no su asignación.
+            $jefesSinTurno = $unidad?->jefesInmediatosSinTurnoVigente() ?? collect();
+
+            if ($jefesSinTurno->isNotEmpty()) {
+                throw new PapeletaException(
+                    ($jefesSinTurno->count() === 1
+                        ? 'Tu jefe inmediato no tiene un turno vigente asignado en este momento, por eso no puedes crear la papeleta. '
+                        : 'Tus jefes inmediatos no tienen un turno vigente asignado en este momento, por eso no puedes crear la papeleta. ').
+                    'Comunícate con tu Jefe de Área para que regularice su turno.'
+                );
+            }
+
             throw new PapeletaException(
-                $esJefeInmediatoDeLaUnidad
-                    ? 'Tu unidad no tiene un Jefe de Área activo asignado. Comunícate con Administración para regularizar la jefatura antes de crear una papeleta.'
-                    : 'Tu turno actual no tiene un jefe inmediato activo asignado. Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
+                'Tu turno actual no tiene un jefe inmediato activo asignado. Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
             );
         }
 

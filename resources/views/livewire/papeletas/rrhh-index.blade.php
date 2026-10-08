@@ -4,8 +4,6 @@
             Bandeja de RRHH
         </h2>
 
-        <x-flash-messages />
-
         {{-- Resumen: cuánto hay en cada bandeja y desde cuándo espera la más antigua. --}}
         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <div class="glass-card p-4">

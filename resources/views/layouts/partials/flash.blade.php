@@ -1,7 +1,7 @@
 {{--
     Mensajes de sesión de los controllers, como tarjeta flotante centrada arriba.
-    Se oculta sola a los 10 segundos (o al cerrarla). Solo muestra un mensaje a la vez,
-    priorizando error > éxito > aviso > info. Los avisos nacidos en Livewire siguen por <x-flash-messages />.
+    Se oculta sola a los 3 segundos (o al cerrarla). Solo muestra un mensaje a la vez,
+    priorizando error > éxito > aviso > info. Las pantallas que cargan dentro de layouts.app (bandejas de Jefe y RRHH) NO deben repetirlo con <x-flash-messages />: quedaría una tarjeta fija duplicada.
 --}}
 @php
     $flash = collect([
@@ -54,7 +54,7 @@
             if (!aviso) return;
             const quitar = () => aviso.remove();
             aviso.querySelector('[data-flash-cerrar]')?.addEventListener('click', quitar);
-            setTimeout(quitar, 10000);
+            setTimeout(quitar, 3000);
         })();
     </script>
 @endif

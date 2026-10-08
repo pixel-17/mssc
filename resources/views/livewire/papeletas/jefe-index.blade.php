@@ -9,8 +9,6 @@
             Bandeja de Jefe
         </h2>
 
-        <x-flash-messages />
-
         {{-- Buscar por trabajador: filtra todas las listas de abajo. --}}
         <div class="max-w-xs">
             <label for="jefe-index-buscar" class="block text-sm font-medium mb-1 text-gray-700 dark:text-tinta-50/80">Buscar trabajador</label>

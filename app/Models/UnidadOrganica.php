@@ -119,6 +119,29 @@ class UnidadOrganica extends Model
     }
 
     /**
+     * Jefes inmediatos activos (régimen 728) de esta unidad, SOLO si ninguno
+     * tiene hoy un turno vigente (sin programación para hoy, o en descanso).
+     * Colección vacía si no hay jefes activos o si al menos uno sí tiene turno.
+     *
+     * Permite avisar "tu jefe inmediato no tiene turno" en vez de un genérico
+     * "no hay jefe inmediato" cuando el jefe existe pero no está programado.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
+     */
+    public function jefesInmediatosSinTurnoVigente(): \Illuminate\Support\Collection
+    {
+        $jefes = $this->jefesInmediatos728();
+
+        $todosSinTurno = $jefes->isNotEmpty() && $jefes->every(function (User $jefe) {
+            $turno = Turno::vigenteParaUsuario($jefe->id);
+
+            return $turno === null || $turno->es_descanso;
+        });
+
+        return $todosSinTurno ? $jefes : collect();
+    }
+
+    /**
      * Jefes inmediatos de esta unidad cuyo turno CONFIGURADO
      * (`configuraciones_turno.turno`, no el de hoy) es el turno dado.
      * Versión "estructural" para avisos de "falta jefe" (ver

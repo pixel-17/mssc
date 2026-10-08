@@ -191,10 +191,36 @@ class JefeTurnoTest extends TestCase
 
         $this->turnoVigenteDePrueba($trabajador, 'NOCHE', '22:00:00', '06:00:00');
 
+        // El único jefe activo que queda (el titular) no tiene turno vigente:
+        // el aviso debe decir eso, no que "no hay jefe".
         $this->expectException(PapeletaException::class);
-        $this->expectExceptionMessage('Tu turno actual no tiene un jefe inmediato activo asignado');
+        $this->expectExceptionMessage('Tu jefe inmediato no tiene un turno vigente asignado');
 
         app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
+    }
+
+    public function test_si_el_jefe_inmediato_no_tiene_turno_el_aviso_lo_dice_y_no_se_crea_la_papeleta(): void
+    {
+        $jefe = $this->usuarioDePrueba([], ['trabajador']);
+        $trabajador = $this->usuarioDePrueba(['regimen' => '728'], ['trabajador']);
+
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
+        $jefe->update(['unidad_organica_id' => $unidad->id]);
+        $trabajador->update(['unidad_organica_id' => $unidad->id]);
+
+        // El trabajador sí tiene turno vigente; el jefe, ninguno.
+        $this->turnoVigenteDePrueba($trabajador, 'MANANA', '06:00:00', '14:00:00');
+
+        try {
+            app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
+
+            $this->fail('Debió lanzar PapeletaException: el jefe inmediato no tiene turno.');
+        } catch (PapeletaException $e) {
+            $this->assertStringContainsString('Tu jefe inmediato no tiene un turno vigente asignado', $e->getMessage());
+            $this->assertStringNotContainsString('no tienes un turno', $e->getMessage());
+        }
+
+        $this->assertDatabaseCount('papeletas', 0);
     }
 
     public function test_un_turno_que_no_es_rotativo_usa_el_jefe_titular(): void
