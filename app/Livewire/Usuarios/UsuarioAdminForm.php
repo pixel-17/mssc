@@ -80,9 +80,7 @@ class UsuarioAdminForm extends Component
 
     public function mount(?User $usuario = null): void
     {
-        // En un alta nueva fechaAncla queda vacía a propósito: el admin debe
-        // elegirla de forma consciente (la regla `required` del turno 728
-        // no puede cumplirse con un valor prellenado).
+        // En un alta nueva fechaAncla queda vacía: el turno es opcional al crear.
         if ($usuario?->exists) {
             // Usuario existente sin configuración de turno: sugerimos hoy.
             $this->fechaAncla = now()->toDateString();
@@ -119,16 +117,6 @@ class UsuarioAdminForm extends Component
     }
 
     /**
-     * Un 728 SIEMPRE necesita su turno vigente para crear una papeleta
-     * (ver CrearPapeletaAction): sin esto, un trabajador recién creado
-     * quedaría bloqueado desde el día uno sin que nadie se diera cuenta,
-     * porque el generador automático mensual (GenerarTurnosProximoMes)
-     * solo CONTINÚA una ConfiguracionTurno que ya existe, nunca crea la
-     * primera. Por eso este formulario la exige en el mismo paso: al
-     * crear siempre, y al editar solo si todavía no tiene ninguna
-     * (para no obligar a re-cargarla cada vez que se edita otra cosa).
-     */
-    /**
      * ¿Los roles elegidos son únicamente el de administrador? El admin no
      * marca papeletas ni tiene turno, así que el régimen es opcional para él.
      */
@@ -140,7 +128,12 @@ class UsuarioAdminForm extends Component
         return $adminId > 0 && $roles !== [] && array_diff($roles, [$adminId]) === [];
     }
 
-    protected function requiereConfiguracionTurno(): bool
+    /**
+     * ¿Se puede cargar el turno inicial desde este formulario? Es OPCIONAL: al crear no se
+     * pide (lo programan después); si llega, se valida y se carga. Un 728 sin turno no puede
+     * crear papeletas (ver CrearPapeletaAction) hasta que se lo carguen.
+     */
+    protected function admiteConfiguracionTurno(): bool
     {
         if ($this->regimen !== '728') {
             return false;
@@ -169,7 +162,7 @@ class UsuarioAdminForm extends Component
             'activo' => ['boolean'],
         ];
 
-        if ($this->requiereConfiguracionTurno()) {
+        if ($this->admiteConfiguracionTurno() && $this->turno !== '') {
             $reglas['turno'] = ['required', 'in:'.implode(',', ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen])))];
             $reglas['fechaAncla'] = ['required', 'date'];
             $reglas['diasTrabajo'] = ['required', 'integer', 'min:1', 'max:30'];
@@ -190,7 +183,7 @@ class UsuarioAdminForm extends Component
     {
         $this->autorizarAdmin();
 
-        $requiereTurno = $this->requiereConfiguracionTurno();
+        $requiereTurno = $this->admiteConfiguracionTurno() && $this->turno !== '';
 
         $datos = $this->validate();
 
@@ -300,7 +293,7 @@ class UsuarioAdminForm extends Component
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
             'roles' => Role::orderBy('name')->get(),
-            'requiereTurno' => $this->requiereConfiguracionTurno(),
+            'requiereTurno' => $this->usuario !== null && $this->admiteConfiguracionTurno(),
             'opcionesTurno' => $this->regimen
                 ? ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen]))
                 : [],

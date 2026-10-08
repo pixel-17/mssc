@@ -33,7 +33,7 @@ class GuardarUnidadOrganicaAction
     public function ejecutar(User $actor, ?UnidadOrganica $unidad, array $datos, ?array $jefesAdicionales = null, bool $ubicarJefe = false): UnidadOrganica
     {
         if (! $actor->hasRole('admin')) {
-            throw new UsuarioException('Solo un administrador puede editar unidades orgánicas.');
+            $this->exigirAlcanceDeJefeDeArea($actor, $unidad, $datos, $jefesAdicionales);
         }
 
         $jefaturas = app(JefaturaUnidadService::class);
@@ -69,6 +69,45 @@ class GuardarUnidadOrganicaAction
 
             return $unidad;
         });
+    }
+
+    /**
+     * Un jefe de área solo puede cambiar QUIÉN jefatura una unidad de su área (nunca la que él
+     * encabeza) y el jefe nuevo debe pertenecer a esa misma área. Nombre, tipo, padre, estado y
+     * jefes de turno quedan como están: eso sigue siendo del administrador.
+     *
+     * @param  array{nombre:string,tipo:?string,parent_id:?int,jefe_id:?int,activo:bool}  $datos
+     * @param  list<int|null>|null  $jefesAdicionales
+     *
+     * @throws UsuarioException
+     */
+    private function exigirAlcanceDeJefeDeArea(User $actor, ?UnidadOrganica $unidad, array $datos, ?array $jefesAdicionales): void
+    {
+        $reglas = app(ReglasOrganigrama::class);
+
+        if ($unidad === null || ! $actor->esJefeDeArea() || ! $reglas->puedeGestionarJefaturasEn($actor, $unidad)) {
+            throw new UsuarioException('Solo un administrador puede editar esta unidad orgánica.');
+        }
+
+        $soloJefatura = $jefesAdicionales === null
+            && $datos['nombre'] === $unidad->nombre
+            && ($datos['tipo'] ?? null) === $unidad->tipo
+            && (int) ($datos['parent_id'] ?? 0) === (int) $unidad->parent_id
+            && (bool) $datos['activo'] === (bool) $unidad->activo;
+
+        if (! $soloJefatura) {
+            throw new UsuarioException('Como jefe de área solo puedes cambiar quién jefatura la unidad.');
+        }
+
+        $jefeId = isset($datos['jefe_id']) ? (int) $datos['jefe_id'] : null;
+
+        if ($jefeId !== null && $jefeId !== (int) $unidad->jefe_id) {
+            $unidadNuevo = User::find($jefeId)?->unidadOrganica;
+
+            if ($unidadNuevo === null || $reglas->areaDe($actor, $unidadNuevo) !== $reglas->areaDe($actor, $unidad)) {
+                throw new UsuarioException('El nuevo jefe debe pertenecer a tu área.');
+            }
+        }
     }
 
     /**

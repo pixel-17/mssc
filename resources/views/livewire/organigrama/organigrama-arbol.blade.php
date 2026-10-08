@@ -61,6 +61,11 @@
                         </a>
                     </div>
                 </div>
+            @elseif ($modoEdicion)
+                {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
+                <a href="{{ route('usuarios.create') }}" class="btn-primary inline-flex items-center gap-1 text-xs">
+                    <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
+                </a>
             @endif
             <button type="button" class="btn-secondary text-xs" @click="todos = null; $dispatch('org-areas')">Solo áreas</button>
             <button type="button" class="btn-secondary text-xs" @click="todos = true; $dispatch('org-expandir')">Expandir todo</button>
@@ -73,7 +78,7 @@
             <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
             <strong>Modo edición</strong>
             <span class="text-amber-800/80 dark:text-amber-200/80">
-                Arrastra trabajadores a una unidad con jefe inmediato{{ $esAdmin ? '; arrastra un jefe inmediato sobre un área con jefe de área para mover su unidad con su gente' : '' }} (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
+                Arrastra trabajadores y jefes inmediatos a otra unidad{{ $esAdmin ? '; sobre un área con jefe de área puedes mover también su unidad con su gente' : '' }} (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
                 Sin arrastrar (táctil o teclado): abre a la persona con clic en su nombre y usa «Mover a otra unidad».
             </span>
         </div>
@@ -220,7 +225,7 @@
                     <strong>{{ $movimiento['destino']->nombre }}</strong>.
                 </p>
 
-                @if ($esAdmin)
+                @if ($modoEdicion)
                     <div class="mt-3 flex flex-wrap gap-2 text-xs" role="group" aria-label="Cómo moverlo">
                         <span class="rounded-full bg-tinta-600 px-3 py-1 font-medium text-white">Como trabajador</span>
                         <button type="button" wire:click="ascenderTrabajador" class="rounded-full border border-gray-300 px-3 py-1 font-medium text-tinta-950 hover:bg-gray-50 dark:border-white/20 dark:text-white dark:hover:bg-white/5">

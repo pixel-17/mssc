@@ -245,8 +245,21 @@ class MoverJefeComoTrabajadorAction
             throw new UsuarioException('Forma de mover no válida.');
         }
 
-        if (! $actor->hasRole('admin')) {
-            throw new UsuarioException('Solo un administrador puede mover jefes.');
+        $esAdmin = $actor->hasRole('admin');
+        $reglas = app(ReglasOrganigrama::class);
+
+        if (! $esAdmin && ! $actor->esJefeDeArea()) {
+            throw new UsuarioException('Solo un administrador o un jefe de área puede mover jefes.');
+        }
+
+        if (! $esAdmin) {
+            if ($jefe->hasRole('admin')) {
+                throw new UsuarioException('No puedes mover a un administrador.');
+            }
+
+            if ((int) $jefe->id === (int) $actor->id) {
+                throw new UsuarioException('No puedes moverte a ti mismo.');
+            }
         }
 
         $unidades = $jefe->unidadesQueEncabeza()->get();
@@ -282,7 +295,32 @@ class MoverJefeComoTrabajadorAction
             app(MoverTrabajadorAction::class)->exigirJefeInmediato($destino);
         }
 
-        app(ReglasOrganigrama::class)->exigirRegimenCompatible($jefe, $destino);
+        // Jefe de área: todo ocurre dentro de su propia área (origen, unidades que deja y destino).
+        if (! $esAdmin) {
+            $areaDestino = $reglas->areaDe($actor, $destino);
+
+            if ($areaDestino === null) {
+                throw new UsuarioException('La unidad de destino está fuera de tu área.');
+            }
+
+            $origen = $jefe->unidad_organica_id ? UnidadOrganica::find($jefe->unidad_organica_id) : null;
+
+            if ($origen === null || $reglas->areaDe($actor, $origen) !== $areaDestino) {
+                throw new UsuarioException($jefe->nombre_completo.' está fuera de tu área: solo un administrador puede moverlo.');
+            }
+
+            foreach ($unidades as $unidad) {
+                if (! $reglas->puedeGestionarJefaturasEn($actor, $unidad) || $reglas->areaDe($actor, $unidad) !== $areaDestino) {
+                    throw new UsuarioException('«'.$unidad->nombre.'» no depende de ti como jefe de área: solo un administrador puede relevar esa jefatura.');
+                }
+            }
+
+            if ($modo === self::COMO_JEFE && ! $reglas->puedeGestionarJefaturasEn($actor, $destino)) {
+                throw new UsuarioException('No puedes cambiar la jefatura de tu propia unidad: lo hace un administrador.');
+            }
+        }
+
+        $reglas->exigirRegimenCompatible($jefe, $destino);
 
         return $unidades;
     }

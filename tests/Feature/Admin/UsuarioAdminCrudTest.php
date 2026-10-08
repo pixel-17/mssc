@@ -217,13 +217,13 @@ class UsuarioAdminCrudTest extends TestCase
             ->assertHasErrors(['email' => 'email']);
     }
 
-    public function test_un_728_nuevo_exige_su_turno_en_el_mismo_formulario(): void
+    public function test_un_728_nuevo_no_exige_turno_en_el_alta(): void
     {
         $this->formularioDeAlta(['regimen' => '728'])
             ->call('guardar')
-            ->assertHasErrors(['turno' => 'required']);
+            ->assertHasNoErrors();
 
-        $this->assertFalse(User::where('dni', '12345678')->exists());
+        $this->assertTrue(User::where('dni', '12345678')->exists());
     }
 
     public function test_un_728_no_acepta_el_turno_de_un_276(): void
@@ -397,7 +397,7 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertSame($jefe->id, $usuario->fresh()->jefe_inmediato_id);
     }
 
-    public function test_editar_un_728_sin_configuracion_de_turno_la_exige(): void
+    public function test_editar_un_728_sin_configuracion_de_turno_no_la_exige(): void
     {
         $usuario = $this->usuarioDePrueba(['regimen' => '728']);
 
@@ -405,9 +405,9 @@ class UsuarioAdminCrudTest extends TestCase
             ->test(UsuarioAdminForm::class, ['usuario' => $usuario->fresh()])
             ->set('name', 'Sin turno')
             ->call('guardar')
-            ->assertHasErrors(['turno' => 'required']);
+            ->assertHasNoErrors();
 
-        $this->assertNotSame('Sin turno', $usuario->fresh()->name);
+        $this->assertSame('Sin turno', $usuario->fresh()->name);
     }
 
     public function test_no_se_puede_desactivar_desde_el_formulario_a_un_jefe_titular_de_turno(): void

@@ -70,10 +70,10 @@
 
             @if ($requiereTurno)
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <p class="text-sm font-medium mb-1">Turno inicial (régimen 728)</p>
+                    <p class="text-sm font-medium mb-1">Turno inicial (régimen 728, opcional)</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        Este trabajador todavía no tiene un horario cargado. Sin esto no podrá crear ninguna
-                        papeleta desde el primer día (ver régimen 728 en Turnos). Trabajará
+                        Este trabajador todavía no tiene un horario cargado. Puedes cargarlo ahora o después;
+                        hasta entonces no podrá crear papeletas (ver régimen 728 en Turnos). Trabajará
                         {{ $diasTrabajo }} días seguidos en el turno elegido y descansará {{ $diasDescanso }},
                         repitiendo el ciclo. Si no se vuelve a cargar una actualización, el mes siguiente se
                         genera solo con esta misma configuración.

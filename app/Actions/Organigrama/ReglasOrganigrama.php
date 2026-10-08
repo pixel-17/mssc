@@ -38,6 +38,22 @@ class ReglasOrganigrama
         return $area;
     }
 
+    /**
+     * ¿Puede $actor gestionar jefaturas (cambiar quién jefatura, mover jefes) en $unidad?
+     * Admin: siempre. Jefe de área: solo en unidades que cuelgan de su área, sin contar
+     * la unidad que él mismo encabeza como jefe de área.
+     */
+    public function puedeGestionarJefaturasEn(User $actor, UnidadOrganica $unidad): bool
+    {
+        if ($actor->hasRole('admin')) {
+            return true;
+        }
+
+        $area = $this->areaDe($actor, $unidad);
+
+        return $area !== null && (int) $area !== (int) $unidad->id;
+    }
+
     /** ¿$user es jefe de área de la unidad $unidadId (la encabeza o encabeza un ancestro con sub-unidades)? */
     public function esJefeDeAreaDe(User $user, int $unidadId): bool
     {

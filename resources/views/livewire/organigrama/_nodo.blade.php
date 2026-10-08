@@ -68,6 +68,12 @@
                                 <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador</span>
                             </a>
                         </div>
+                    @elseif ($modoEdicion)
+                        <div class="flex items-center gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                            <a href="{{ route('usuarios.create', ['unidad' => $unidad->id]) }}" title="Agregar trabajador o jefe inmediato a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10">
+                                <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador o jefe inmediato</span>
+                            </a>
+                        </div>
                     @endif
                 </div>
 
@@ -80,8 +86,8 @@
                 {{-- Jefes de la unidad --}}
                 <div class="mt-3 space-y-1.5">
                     @forelse ($nodo['jefes'] as $jefe)
-                        {{-- Se arrastra el jefe titular de la unidad, inmediato o de área (solo el admin, en modo edición). --}}
-                        @php($puedeArrastrarJefe = $modoEdicion && $esAdmin && $jefe->id === $jefePrincipal?->id)
+                        {{-- Se arrastra cualquier jefe de la unidad en modo edición (admin o jefe de área; el servidor valida el alcance). --}}
+                        @php($puedeArrastrarJefe = $modoEdicion && ($esAdmin || (int) $jefe->id !== (int) auth()->id()))
                         <div @class([
                             'org-persona flex flex-wrap items-center gap-2 text-sm',
                             'opacity-50' => ! $jefe->activo,
@@ -90,14 +96,14 @@
                         ])
                              @if ($puedeArrastrarJefe)
                                  draggable="true"
-                                 title="Arrástralo sobre otra unidad: puedes mover solo a la persona (pasa a trabajador) o su unidad entera"
+                                 title="Arrástralo sobre otra unidad para moverlo (se pide confirmación)"
                                  @dragstart="arrastrando = {{ $jefe->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $jefe->id }}')"
                                  @dragend="arrastrando = null; sobre = null"
                              @endif
                         >
                             <x-avatar :user="$jefe" />
                             <button type="button" wire:click="verPersona({{ $jefe->id }})" class="font-medium text-tinta-950 hover:underline dark:text-white">{{ $jefe->nombre_completo }}</button>
-                            <span class="text-xs text-gray-500 dark:text-tinta-50/60">{{ $jefe->id === $jefePrincipal?->id ? 'Jefe' : 'Jefe de turno' }}</span>
+                            <span class="text-xs text-gray-500 dark:text-tinta-50/60">{{ $tieneHijos && $jefe->id === $jefePrincipal?->id ? 'Jefe de área' : 'Jefe inmediato' }}</span>
                             @include('livewire.organigrama._chips', ['persona' => $jefe, 'sedeReferencia' => null])
                             @unless ($jefe->activo)<span class="text-[11px] text-red-600">desactivado</span>@endunless
                         </div>

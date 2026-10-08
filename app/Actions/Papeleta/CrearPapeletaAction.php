@@ -115,9 +115,11 @@ class CrearPapeletaAction
             ? $unidad->jefaturasMultiplesDe($trabajador, $turno?->codigo())
             : [[], null];
 
-        // resolverJefesInmediatos() ya filtra a jefes activos, así que
-        // estos son directamente los candidatos válidos (0 o más).
-        $jefesInmediatos = $jefesInmediatosIds !== [] ? User::whereKey($jefesInmediatosIds)->get() : collect();
+        // resolverJefesInmediatos() solo filtra por activo en 728; en 276 devuelve jefe_id tal
+        // cual. Se filtra aquí para todos: un jefe dado de baja no cuenta como candidato (0 o más).
+        $jefesInmediatos = $jefesInmediatosIds !== []
+            ? User::whereKey($jefesInmediatosIds)->where('activo', true)->get()
+            : collect();
 
         // ¿Quien crea la papeleta es, él mismo, jefe inmediato de su
         // unidad? Si lo es, jefaturasMultiplesDe() ya resolvió más

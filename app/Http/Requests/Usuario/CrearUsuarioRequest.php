@@ -46,24 +46,12 @@ class CrearUsuarioRequest extends FormRequest
             'dni' => ReglasDatosUsuario::dni(soloActivos: true),
             'email' => ReglasDatosUsuario::email($existenteInactivo?->id),
             'regimen' => ['required', Rule::in(['276', '728'])],
-            // 728 SIEMPRE necesita su turno vigente para crear una
-            // papeleta (ver CrearPapeletaAction): se exige en el mismo
-            // paso del alta para que no quede ningún 728 sin horario
-            // desde el día uno (el generador automático mensual solo
-            // continúa una configuración que ya existe, nunca crea la
-            // primera).
-            //
-            // Un Jefe Inmediato NUNCA se crea con turno: él mismo programa
-            // el suyo (ver ProgramacionMensual). Y en 276 tampoco hay
-            // turno que elegir: el campo llega vacío (null tras
-            // ConvertEmptyStringsToNull) y Rule::in(...) sobre un null
-            // presente fallaba con "valor no válido" — por eso 'nullable'.
-            'turno' => [
-                Rule::requiredIf($this->requiereTurnoInicial()),
-                'nullable',
-                Rule::in(['MANANA', 'TARDE', 'NOCHE']),
-            ],
-            'fecha_ancla' => [Rule::requiredIf($this->requiereTurnoInicial()), 'nullable', 'date'],
+            // El turno NO se pide al crear: lo carga después quien programa el
+            // horario (ver ProgramacionMensual). Hasta entonces un 728 no puede
+            // crear papeletas (ver CrearPapeletaAction) y el alta lo avisa. Si
+            // aun así llegan, se validan (turno y fecha van juntos).
+            'turno' => ['nullable', Rule::in(['MANANA', 'TARDE', 'NOCHE'])],
+            'fecha_ancla' => ['nullable', 'required_with:turno', 'date'],
             'dias_trabajo' => ['nullable', 'integer', 'min:1', 'max:30'],
             'dias_descanso' => ['nullable', 'integer', 'min:1', 'max:30'],
             // Sede: el Jefe Inmediato la elige (puede ser de otra sede) pero
@@ -89,8 +77,7 @@ class CrearUsuarioRequest extends FormRequest
             'email.unique' => 'Ese correo ya está en uso por otro usuario.',
             'unidad_organica_id.in' => 'Esa unidad no pertenece a tu área.',
             'sede_id.required' => 'Un jefe inmediato debe tener sede: es necesaria para los cierres.',
-            'turno.required' => 'Un trabajador 728 necesita su turno inicial: sin esto no podrá crear ninguna papeleta.',
-            'fecha_ancla.required' => 'Indica desde cuándo empieza su próximo bloque de trabajo.',
+            'fecha_ancla.required_with' => 'Indica desde cuándo empieza su próximo bloque de trabajo.',
         ];
     }
 
@@ -107,17 +94,6 @@ class CrearUsuarioRequest extends FormRequest
                 );
             }
         });
-    }
-
-    /**
-     * Solo un TRABAJADOR 728 necesita turno inicial. Un jefe inmediato
-     * (de cualquier régimen) queda sin turno y se programa solo; 276 no
-     * tiene turnos rotativos.
-     */
-    public function requiereTurnoInicial(): bool
-    {
-        return $this->input('regimen') === '728'
-            && $this->input('tipo', 'trabajador') !== 'jefe_inmediato';
     }
 
     /**

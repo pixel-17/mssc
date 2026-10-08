@@ -40,6 +40,9 @@ use Illuminate\Support\Facades\Hash;
  * como lo eligió el formulario, porque una misma área puede abarcar
  * más de una sede.
  *
+ * El turno NO se pide al crear: si llega (opcional) se carga; si no, el 728 queda sin
+ * horario hasta que se lo programen y mientras tanto no puede crear papeletas.
+ *
  * Contraseña inicial: siempre el DNI del propio usuario (nunca la
  * elige quien lo crea). debe_actualizar_password queda en true para
  * que RedirigirSiDebeActualizarPassword le pida cambiarla —de forma
@@ -131,7 +134,7 @@ class CrearUsuarioAction
             // solo se carga. Reingreso incluido: si vuelve como 728,
             // también necesita su ciclo desde el primer día.
             // Un jefe inmediato NO se crea con turno: se programa el suyo.
-            if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo) {
+            if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo && ! empty($datos['turno'])) {
                 $this->generadorTurno->cargarConfiguracion(
                     trabajador: $nuevo,
                     turno: $datos['turno'],
@@ -149,7 +152,7 @@ class CrearUsuarioAction
         // si el envío de la notificación falla, nunca debe revertir el
         // alta ya confirmada en BD. Solo aplica a 728 (jefes_turno no se
         // usa en 276, ver AlertaJefaturaService).
-        if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo && $nuevo->unidadOrganica) {
+        if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo && ! empty($datos['turno']) && $nuevo->unidadOrganica) {
             $this->alertaJefatura->avisarSiFaltaJefeDeTurno($nuevo->unidadOrganica, $datos['turno']);
         }
 

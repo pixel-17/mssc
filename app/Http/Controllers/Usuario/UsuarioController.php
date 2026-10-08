@@ -63,6 +63,8 @@ class UsuarioController extends Controller
             // mismo régimen que sus trabajadores, pero no es una regla
             // dura — por eso solo se pre-selecciona, nunca se fuerza.
             'regimenCreador' => $user->regimen,
+            // Viene de «Agregar» en una unidad del organigrama (?unidad=ID); solo si es de su área.
+            'unidadPreseleccionada' => $unidadIds->contains((int) request('unidad')) ? (int) request('unidad') : null,
         ]);
     }
 
@@ -135,8 +137,13 @@ class UsuarioController extends Controller
      */
     private function advertenciaTurnoSinJefe(User $nuevo, ?string $turno): ?string
     {
-        if ($nuevo->regimen !== '728' || $turno === null) {
+        if ($nuevo->regimen !== '728') {
             return null;
+        }
+
+        if ($turno === null) {
+            return $nuevo->nombre_completo.' es 728 y todavía no tiene turno: cárgalo en la programación de turnos; '
+                .'hasta entonces no podrá crear papeletas.';
         }
 
         $unidad = UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])->find($nuevo->unidad_organica_id);

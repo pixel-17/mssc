@@ -54,7 +54,7 @@ class TurnoInicialAlCrearTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_admin_no_puede_crear_un_728_sin_turno(): void
+    public function test_admin_puede_crear_un_728_sin_turno_y_se_le_carga_despues(): void
     {
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class)
@@ -66,9 +66,11 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('sedeId', $this->sedeDePrueba()->id)
             ->set('rolesSeleccionados', [$this->rolId('trabajador')])
             ->call('guardar')
-            ->assertHasErrors(['turno', 'fechaAncla']);
+            ->assertHasNoErrors();
 
-        $this->assertNull(User::where('dni', '70112233')->first(), 'no debe crear al usuario si falta el turno');
+        $nuevo = User::where('dni', '70112233')->firstOrFail();
+
+        $this->assertFalse(ConfiguracionTurno::where('user_id', $nuevo->id)->exists(), 'el turno no se pide al crear');
     }
 
     public function test_admin_crea_un_728_con_turno_y_puede_crear_papeleta_el_mismo_dia(): void
@@ -156,7 +158,7 @@ class TurnoInicialAlCrearTest extends TestCase
         $this->assertSame('Rosa Editada', $trabajador->fresh()->name);
     }
 
-    public function test_jefe_de_area_no_puede_crear_un_728_sin_turno_por_http(): void
+    public function test_jefe_de_area_puede_crear_un_728_sin_turno_por_http(): void
     {
         $jefeDeArea = $this->usuarioDePrueba([], ['admin']); // dueño de la unidad para simplificar autorización
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
@@ -172,8 +174,10 @@ class TurnoInicialAlCrearTest extends TestCase
                 'unidad_organica_id' => $unidad->id,
                 'tipo' => 'trabajador',
             ])
-            ->assertSessionHasErrors(['turno', 'fecha_ancla']);
+            ->assertSessionHasNoErrors();
 
-        $this->assertNull(User::where('dni', '70998877')->first());
+        $nuevo = User::where('dni', '70998877')->firstOrFail();
+
+        $this->assertFalse(ConfiguracionTurno::where('user_id', $nuevo->id)->exists(), 'el turno no se pide al crear');
     }
 }

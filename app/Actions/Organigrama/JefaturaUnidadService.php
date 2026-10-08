@@ -3,8 +3,10 @@
 namespace App\Actions\Organigrama;
 
 use App\Exceptions\UsuarioException;
+use App\Models\Papeleta;
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\States\Papeleta\PendienteJefe;
 
 /**
  * Reglas y vista previa de dos cambios sobre una unidad orgánica:
@@ -161,6 +163,17 @@ class JefaturaUnidadService
 
         if ($cambiaJefe && $jefeAntes) {
             $avisos[] = $jefeAntes->nombre_completo.' deja de encabezar la unidad y sigue en ella como trabajador; muévelo si hace falta.';
+        }
+
+        if ($cambiaJefe && $jefeAntes) {
+            $pendientes = Papeleta::whereState('estado', PendienteJefe::class)
+                ->where('jefe_inmediato_id', $jefeAntes->id)
+                ->count();
+
+            if ($pendientes > 0) {
+                $avisos[] = $pendientes.' '.($pendientes === 1 ? 'papeleta pendiente seguirá' : 'papeletas pendientes seguirán')
+                    .' con '.$jefeAntes->nombre_completo.' (cada papeleta guarda a su jefe al crearse; no pasan al jefe nuevo).';
+            }
         }
 
         if ($cambiaJefe && $jefeId === null && $personas > 0) {

@@ -179,12 +179,10 @@ class OrganigramaArbol extends Component
             return;
         }
 
-        // Soltarlo en su misma unidad no es un movimiento como trabajador; el admin sí puede
-        // ascenderlo a jefe inmediato de esa unidad.
+        // Soltarlo en su misma unidad no es un movimiento como trabajador: se puede
+        // ascenderlo a jefe inmediato de esa unidad (el servidor valida el alcance).
         if ((int) $trabajador->unidad_organica_id === (int) $destino->id) {
-            if ($usuario->hasRole('admin')) {
-                $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
-            }
+            $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
 
             return;
         }
@@ -192,15 +190,13 @@ class OrganigramaArbol extends Component
         try {
             $vista = app(MoverTrabajadorAction::class)->previsualizar($usuario, $trabajador, $destino);
         } catch (UsuarioException $e) {
-            // Como trabajador no entra (p. ej. la unidad no tiene jefe), pero el admin aún puede ponerlo de jefe.
-            if ($usuario->hasRole('admin')) {
-                $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
+            // Como trabajador no entra (p. ej. la unidad no tiene jefe), pero aún se puede ponerlo de jefe.
+            $this->proponerMovimientoJefe($usuario, $trabajador, $destino);
 
-                if ($this->propuestaJefe !== null) {
-                    $this->mensajeError = null;
+            if ($this->propuestaJefe !== null) {
+                $this->mensajeError = null;
 
-                    return;
-                }
+                return;
             }
 
             $this->mensajeError = $e->getMessage();

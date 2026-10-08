@@ -19,6 +19,7 @@ use App\Models\User;
  * - No a uno mismo.
  * - No al único RR. HH. activo (sin él toda papeleta se autorizaría sola).
  * - No a quien es jefe inmediato de un turno (jefes_turno): reasignar antes.
+ * - No a quien encabeza una unidad con sub-unidades activas (jefe de área).
  * - No a quien encabeza una unidad que todavía tiene personas activas:
  *   en 728 esas personas recibirían "no tiene un jefe inmediato activo" al
  *   crear papeletas, y en 276 las papeletas seguirían llegándole a alguien
@@ -42,8 +43,15 @@ class CambiarEstadoUsuarioAction
         }
 
         $unidad = $usuario->unidadesQueEncabeza()
-            ->whereHas('miembros', fn ($q) => $q->where('activo', true)->whereKeyNot($usuario->getKey()))
+            ->where(fn ($q) => $q
+                ->whereHas('miembros', fn ($m) => $m->where('activo', true)->whereKeyNot($usuario->getKey()))
+                ->orWhereHas('hijos', fn ($h) => $h->where('activo', true)))
             ->first();
+
+        if ($unidad && $unidad->hijos()->where('activo', true)->exists()) {
+            return 'No puedes desactivar a este usuario: es jefe de área de «'.$unidad->nombre
+                .'», que tiene sub-unidades a su cargo. Cambia primero la jefatura de esa unidad.';
+        }
 
         if ($unidad) {
             $personas = $unidad->miembros()->where('activo', true)->whereKeyNot($usuario->getKey())->count();
