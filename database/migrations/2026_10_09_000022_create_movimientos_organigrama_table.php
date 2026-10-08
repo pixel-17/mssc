@@ -40,6 +40,11 @@ return new class extends Migration
             $table->foreignId('jefe_area_anterior_id')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('jefe_area_nuevo_id')->nullable()->constrained('users')->nullOnDelete();
 
+            // Al mover a un trabajador se puede decidir quitarle sus jefes
+            // inmediatos adicionales: se guardan aquí ({jefe_id, asignado_por_id})
+            // para devolvérselos si se deshace. null = no se quitó ninguno.
+            $table->json('jefes_adicionales_quitados')->nullable();
+
             // Si esta fila es la reversión de otra, apunta a la original.
             $table->foreignId('revierte_id')->nullable()->constrained('movimientos_organigrama')->nullOnDelete();
 

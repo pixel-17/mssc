@@ -7,10 +7,8 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Si el proyecto P_Salida ya tiene una tabla `sedes`, esta migración es
-     * solo referencia — ajusta/omite y en su lugar crea una migración
-     * "add_gps_fields_to_sedes_table" con las columnas latitud/longitud/radio_metros,
-     * que son las que usa la validación de GPS del retorno (Paso 5 del flujo).
+     * Latitud/longitud/radio_metros alimentan la validación de GPS del
+     * retorno (la evidencia es foto + GPS + hora del servidor).
      */
     public function up(): void
     {

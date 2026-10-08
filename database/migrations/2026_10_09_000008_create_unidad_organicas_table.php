@@ -7,17 +7,16 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Representa todo el organigrama (Concejo, Gerencia Municipal, Gerencias
-     * de línea, Sub Gerencias, Oficinas Generales, Oficinas de apoyo/
-     * asesoramiento/control) como un único árbol auto-referenciado.
+     * Todo el organigrama (Concejo, Gerencias, Sub Gerencias, Oficinas) es un
+     * único árbol auto-referenciado, sin límite de niveles.
      *
-     * No hay límite de niveles ni de cantidad de nodos: cualquier unidad
-     * puede tener sub-oficinas creadas en cualquier momento sin tocar
-     * el motor de papeletas.
+     * Escalamiento derivado del árbol, NO de `tipo`:
+     *   Jefe Inmediato = jefe_id de la unidad del trabajador.
+     *   Jefe de Área   = jefe_id de la unidad padre.
      *
-     * Regla de escalamiento (Sección 1 del flujo), derivada del árbol y NO
-     * de `tipo`: Jefe Inmediato = jefe_id de la unidad del trabajador.
-     * Jefe de Área = jefe_id de la unidad padre de esa unidad.
+     * Borrar una unidad con sub-unidades o con personas está restringido a
+     * nivel de BD (restrictOnDelete); EliminarUnidadOrganicaAction valida lo mismo
+     * en la aplicación.
      */
     public function up(): void
     {
@@ -25,9 +24,7 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
 
-            // Solo para pintar el organigrama con los mismos colores de la
-            // leyenda del documento fuente. NO se usa para la lógica de
-            // escalamiento (esa es siempre relativa a la posición en el árbol).
+            // Solo para colorear el organigrama; no interviene en la lógica.
             $table->enum('tipo', [
                 'alta_direccion',
                 'consultivo',
@@ -40,10 +37,9 @@ return new class extends Migration
             ])->nullable();
 
             $table->foreignId('parent_id')->nullable()
-                ->constrained('unidad_organicas')->nullOnDelete();
+                ->constrained('unidad_organicas')->restrictOnDelete();
 
-            // Quien encabeza esta unidad. Nullable porque una unidad puede
-            // crearse antes de asignarle jefe.
+            // Nullable: una unidad puede crearse antes de asignarle jefe.
             $table->foreignId('jefe_id')->nullable()
                 ->constrained('users')->nullOnDelete();
 
@@ -53,7 +49,7 @@ return new class extends Migration
 
         Schema::table('users', function (Blueprint $table) {
             $table->foreignId('unidad_organica_id')->nullable()->after('jefe_area_id')
-                ->constrained('unidad_organicas')->nullOnDelete();
+                ->constrained('unidad_organicas')->restrictOnDelete();
         });
     }
 
