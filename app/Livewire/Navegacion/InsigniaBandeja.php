@@ -6,7 +6,7 @@ use App\Models\Papeleta;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Locked;
@@ -74,7 +74,7 @@ class InsigniaBandeja extends Component
                         $query->whereState('estado', PendienteJefe::class)
                             ->orWhereState('estado', ObservadaPorRrhh::class)
                             ->orWhere(function ($sub) {
-                                $sub->whereState('estado', RetornoPendienteSustento::class)
+                                $sub->whereState('estado', EnJustificacion::class)
                                     ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'));
                             });
                     }))

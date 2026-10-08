@@ -7,9 +7,9 @@ use App\Livewire\Concerns\PaginaListasDeBandeja;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Sede;
-use App\States\Papeleta\FinalizadoSinRetorno;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\PendienteRrhh;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -102,7 +102,7 @@ class RrhhIndex extends Component
         );
 
         $sustentosPorRevisar = $this->paginarLista(
-            Papeleta::whereState('estado', RetornoPendienteSustento::class)
+            Papeleta::whereState('estado', EnJustificacion::class)
                 ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
                 ->when(true, $filtroBuscar)
                 // Solo el sustento "presentado" es relevante en esta bandeja
@@ -124,7 +124,7 @@ class RrhhIndex extends Component
         // Abandonos que el job marcó solos y esperan regularización: los de
         // plazo más cercano primero (los vencidos quedan arriba).
         $abandonosEnRegularizacion = $this->paginarLista(
-            Papeleta::whereState('estado', FinalizadoSinRetorno::class)
+            Papeleta::whereState('estado', Finalizada::class)
                 ->where('causa_finalizacion_sin_retorno', 'abandono_no_marcado')
                 ->where('requiere_visto_bueno', true)
                 ->when(true, $filtroBuscar)

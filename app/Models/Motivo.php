@@ -21,6 +21,7 @@ class Motivo extends Model
         'suma_descuento',
         'permite_cierre_sin_retorno',
         'requiere_sustento_en_retorno',
+        'plazo_justificacion_horas_habiles',
         'es_destino_reclasificacion',
         'activo',
     ];
@@ -31,9 +32,21 @@ class Motivo extends Model
             'suma_descuento' => 'boolean',
             'permite_cierre_sin_retorno' => 'boolean',
             'requiere_sustento_en_retorno' => 'boolean',
+            'plazo_justificacion_horas_habiles' => 'integer',
             'es_destino_reclasificacion' => 'boolean',
             'activo' => 'boolean',
         ];
+    }
+
+    /**
+     * Horas hábiles que tiene el trabajador para presentar la justificación
+     * una vez terminada la salida. Plazo propio del motivo; si el admin no
+     * lo definió, el global SUSTENTO_HORAS_HABILES (48 por defecto).
+     */
+    public function plazoJustificacionHorasHabiles(): int
+    {
+        return $this->plazo_justificacion_horas_habiles
+            ?? (int) Configuracion::valorDe('SUSTENTO_HORAS_HABILES', 48);
     }
 
     public function papeletas(): HasMany

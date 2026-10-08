@@ -5,7 +5,7 @@ namespace Tests\Feature\Papeletas;
 use App\Models\Papeleta;
 use App\Models\Sustento;
 use App\Models\User;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +36,7 @@ class SustentoSubidaTest extends TestCase
         Storage::fake('local');
 
         $this->trabajador = $this->usuarioDePrueba();
-        $this->papeleta = $this->papeletaDePrueba($this->trabajador, RetornoPendienteSustento::class);
+        $this->papeleta = $this->papeletaDePrueba($this->trabajador, EnJustificacion::class);
         $this->sustento = Sustento::create([
             'papeleta_id' => $this->papeleta->id,
             'fecha_limite' => now()->addDays(3),

@@ -8,7 +8,7 @@ use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Sustento;
 use App\Services\NotificarPapeletaService;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Throwable;
@@ -27,11 +27,14 @@ use Throwable;
  *   papeleta.requiere_visto_bueno = true para que aparezca en la
  *   bandeja de jefe/RRHH, y deja que RevisarSustentoAction decida.
  *
- * Defensivo: ambas queries exigen que la papeleta siga en
- * RetornoPendienteSustento antes de actuar. Un Sustento puede quedar
- * huérfano si la papeleta sale de ese estado por otra vía que no
- * cierre el Sustento asociado (p. ej. MarcarAbandonoSobreRetornoPendienteAction
- * la mueve a FinalizadoSinRetorno sin tocar `sustentos`). Sin este
+ * Cubre por igual a quien marcó retorno y a quien abandonó: ambos están
+ * EnJustificacion. Al vencer sin archivo la papeleta termina en
+ * Finalizada (con descuento) y, si venía de un abandono, conserva esa causa.
+ *
+ * Defensivo: ambas queries exigen que la papeleta siga EnJustificacion
+ * antes de actuar. Un Sustento puede quedar huérfano si la papeleta sale
+ * de ese estado por otra vía que no cierre el Sustento asociado (por eso
+ * MarcarAbandonoSobreRetornoPendienteAction lo vence al finalizar). Sin este
  * filtro, ReclasificarAParticularAction lanza PapeletaException sobre
  * ese registro y, al no estar capturada dentro del each(), tumba el
  * resto del job para ese ciclo.
@@ -40,7 +43,7 @@ class ProcesarVencimientoSustentos extends Command
 {
     protected $signature = 'papeletas:procesar-vencimiento-sustentos';
 
-    protected $description = 'Reclasifica a Particular los sustentos de Salud vencidos sin presentar; marca visto bueno pendiente si hay archivo sin revisar.';
+    protected $description = 'Pasa a Finalizada (Particular) las justificaciones vencidas sin presentar; marca visto bueno pendiente si hay archivo sin revisar.';
 
     public function handle(ReclasificarAParticularAction $reclasificar, NotificarPapeletaService $notificar): int
     {
@@ -49,7 +52,7 @@ class ProcesarVencimientoSustentos extends Command
         // reclasificación), no hay que duplicar el envío aquí.
         Sustento::where('estado', 'pendiente')
             ->where('fecha_limite', '<=', now())
-            ->whereHas('papeleta', fn ($q) => $q->whereState('estado', RetornoPendienteSustento::class))
+            ->whereHas('papeleta', fn ($q) => $q->whereState('estado', EnJustificacion::class))
             ->with('papeleta')
             ->chunkById(100, function ($lote) use ($reclasificar) {
                 foreach ($lote as $sustento) {
@@ -69,7 +72,7 @@ class ProcesarVencimientoSustentos extends Command
                                 || ! $actual
                                 || $actual->estado !== 'pendiente'
                                 || $actual->fecha_limite->isFuture()
-                                || ! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
+                                || ! $papeleta->estado->equals(EnJustificacion::class)) {
                                 return;
                             }
 
@@ -82,7 +85,7 @@ class ProcesarVencimientoSustentos extends Command
                                 $papeleta,
                                 actorId: null,
                                 actorTipo: 'sistema',
-                                justificacion: 'Reclasificado automáticamente: sustento de Salud vencido sin presentar (48h hábiles).',
+                                justificacion: 'Reclasificado automáticamente: la justificación venció sin presentarse dentro del plazo del motivo.',
                             );
                         });
                     } catch (PapeletaException) {
@@ -96,7 +99,7 @@ class ProcesarVencimientoSustentos extends Command
         Sustento::where('estado', 'presentado')
             ->where('fecha_limite', '<=', now())
             ->whereHas('papeleta', fn ($q) => $q->where('requiere_visto_bueno', false)
-                ->whereState('estado', RetornoPendienteSustento::class))
+                ->whereState('estado', EnJustificacion::class))
             ->with('papeleta')
             ->chunkById(100, function ($lote) use ($notificar) {
                 foreach ($lote as $sustento) {
@@ -106,7 +109,7 @@ class ProcesarVencimientoSustentos extends Command
 
                             if (! $papeleta
                                 || $papeleta->requiere_visto_bueno
-                                || ! $papeleta->estado->equals(RetornoPendienteSustento::class)) {
+                                || ! $papeleta->estado->equals(EnJustificacion::class)) {
                                 return null;
                             }
 

@@ -5,14 +5,13 @@ namespace App\Support;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\FinalizadoSinRetorno;
+use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
-use App\States\Papeleta\ReclasificadoAParticular;
 use App\States\Papeleta\Rechazada;
-use App\States\Papeleta\RetornoPendienteSustento;
 use App\States\Papeleta\Vencida;
 use Spatie\ModelStates\State;
 
@@ -42,16 +41,28 @@ class PapeletaEstadoPresentacion
     }
 
     /**
-     * Presentación de una papeleta Cerrada por abandono: mismo estado que
-     * una cerrada normal, pero con etiqueta y color propios para que jefes
-     * y RRHH la distingan de un vistazo.
+     * Presentación de una papeleta con causa de abandono. El estado dice si
+     * hay descuento y cómo terminó la justificación:
+     *  - Cerrada       -> abandono justificado (sin descuento)
+     *  - Finalizada    -> abandono sin justificar (con descuento)
+     *  - EnJustificacion -> todavía puede presentar su justificación
+     * Para cualquier otro estado devuelve null (se usa la etiqueta normal).
      *
-     * @return array{0: string, 1: string, 2: string}
+     * @return array{0: string, 1: string, 2: string}|null
      */
-    public static function cerradaPorAbandono(): array
+    public static function porAbandono(State|string $estado): ?array
     {
-        return [
-            'Cerrada · Abandono',
+        $clave = $estado instanceof State ? get_class($estado) : (string) $estado;
+
+        $etiqueta = match ($clave) {
+            Cerrada::class => 'Cerrada · abandono justificado',
+            Finalizada::class => 'Finalizada · abandono sin justificar',
+            EnJustificacion::class => 'En justificación · abandono',
+            default => null,
+        };
+
+        return $etiqueta === null ? null : [
+            $etiqueta,
             'bg-fuchsia-100 text-fuchsia-800 ring-fuchsia-400 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 dark:ring-fuchsia-400/40',
             'bg-fuchsia-500',
         ];
@@ -94,15 +105,10 @@ class PapeletaEstadoPresentacion
                 'bg-lime-100 text-lime-800 ring-lime-400 dark:bg-lime-500/20 dark:text-lime-200 dark:ring-lime-400/40',
                 'bg-lime-500',
             ],
-            RetornoPendienteSustento::class => [
-                'Retorno: falta sustento',
+            EnJustificacion::class => [
+                'En justificación',
                 'bg-morado-100 text-morado-800 ring-morado-400 dark:bg-morado-500/20 dark:text-morado-200 dark:ring-morado-400/40',
                 'bg-morado-500',
-            ],
-            FinalizadoSinRetorno::class => [
-                'Sin retorno (abandono)',
-                'bg-fuchsia-100 text-fuchsia-800 ring-fuchsia-400 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 dark:ring-fuchsia-400/40',
-                'bg-fuchsia-500',
             ],
             Cerrada::class => [
                 'Cerrada',
@@ -119,8 +125,8 @@ class PapeletaEstadoPresentacion
                 'bg-gray-100 text-gray-800 ring-gray-400 dark:bg-gray-500/20 dark:text-gray-200 dark:ring-gray-400/40',
                 'bg-gray-500',
             ],
-            ReclasificadoAParticular::class => [
-                'Reclasificada a Particular',
+            Finalizada::class => [
+                'Finalizada (con descuento)',
                 'bg-indigo-100 text-indigo-800 ring-indigo-400 dark:bg-indigo-500/20 dark:text-indigo-200 dark:ring-indigo-400/40',
                 'bg-indigo-500',
             ],

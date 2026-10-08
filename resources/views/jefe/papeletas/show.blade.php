@@ -3,7 +3,7 @@
     use App\States\Papeleta\PendienteJefe;
     use App\States\Papeleta\ObservadaPorRrhh;
     use App\States\Papeleta\AutorizadaYCorriendo;
-    use App\States\Papeleta\RetornoPendienteSustento;
+    use App\States\Papeleta\EnJustificacion;
 
     $estaPendiente = $papeleta->estado->equals(PendienteJefe::class);
     $estaObservada = $papeleta->estado->equals(ObservadaPorJefe::class);
@@ -25,7 +25,7 @@
     $puedeResponderPosthoc = $papeleta->puedeResponderPosthoc(auth()->user());
     $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
 
-    $sustentoPresentado = $papeleta->estado->equals(RetornoPendienteSustento::class)
+    $sustentoPresentado = $papeleta->estado->equals(EnJustificacion::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
 

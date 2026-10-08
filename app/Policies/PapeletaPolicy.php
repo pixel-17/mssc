@@ -203,6 +203,6 @@ class PapeletaPolicy
         return $user->hasRole('rrhh')
             && ! $this->esPropia($user, $papeleta)
             && ($papeleta->estado->equals(\App\States\Papeleta\Cerrada::class)
-                || $papeleta->estado->equals(\App\States\Papeleta\ReclasificadoAParticular::class));
+                || $papeleta->estado->equals(\App\States\Papeleta\Finalizada::class));
     }
 }

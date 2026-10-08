@@ -7,14 +7,16 @@ use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Services\NotificarPapeletaService;
-use App\States\Papeleta\ReclasificadoAParticular;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use Illuminate\Support\Facades\DB;
 
 /**
  * "Solo cambia el motivo, horas intactas" — usada cuando el sustento de
- * Salud vence sin nada presentado (Paso 5, estado
- * RetornoPendienteSustento).
+ * Salud vence sin nada presentado o no se aprueba (estado
+ * EnJustificacion, con retorno o por abandono). Termina en Finalizada:
+ * con descuento. Si ya traía una causa (p. ej. abandono) se conserva;
+ * si no, queda `salud_no_justificada`.
  * Actor null = job automático (Console\Commands); si un humano la
  * dispara explícitamente, se pasa su id.
  */
@@ -41,7 +43,7 @@ class ReclasificarAParticularAction
             /** @var Papeleta $actual */
             $actual = Papeleta::whereKey($papeleta->id)->lockForUpdate()->firstOrFail();
 
-            if (! $actual->estado->equals(RetornoPendienteSustento::class)) {
+            if (! $actual->estado->equals(EnJustificacion::class)) {
                 throw new PapeletaException('Esta papeleta no está en un estado que se pueda reclasificar a Particular.');
             }
 
@@ -50,7 +52,8 @@ class ReclasificarAParticularAction
 
             $actual->motivo_original_id = $motivoAnteriorId;
             $actual->motivo_id = $motivoParticular->id;
-            $actual->transicionarA(ReclasificadoAParticular::class);
+            $actual->transicionarA(Finalizada::class);
+            $actual->causa_finalizacion_sin_retorno ??= 'salud_no_justificada';
             $actual->requiere_visto_bueno = false;
             $actual->save();
 

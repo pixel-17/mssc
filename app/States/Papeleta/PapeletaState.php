@@ -44,11 +44,12 @@ abstract class PapeletaState extends State
             ->allowTransition(ObservadaPorRrhh::class, Vencida::class)
 
             ->allowTransition(AutorizadaYCorriendo::class, Cerrada::class)
-            ->allowTransition(AutorizadaYCorriendo::class, RetornoPendienteSustento::class)
-            ->allowTransition(AutorizadaYCorriendo::class, FinalizadoSinRetorno::class)
+            ->allowTransition(AutorizadaYCorriendo::class, Finalizada::class)
+            ->allowTransition(AutorizadaYCorriendo::class, EnJustificacion::class)
 
-            ->allowTransition(RetornoPendienteSustento::class, Cerrada::class)
-            ->allowTransition(RetornoPendienteSustento::class, ReclasificadoAParticular::class)
-            ->allowTransition(RetornoPendienteSustento::class, FinalizadoSinRetorno::class); // abandono gana sobre sustento vencido
+            // Aprobada -> Cerrada (sin descuento). Rechazada, vencida o
+            // abandono marcado por una persona -> Finalizada (con descuento).
+            ->allowTransition(EnJustificacion::class, Cerrada::class)
+            ->allowTransition(EnJustificacion::class, Finalizada::class);
     }
 }

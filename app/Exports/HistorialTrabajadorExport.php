@@ -42,9 +42,9 @@ class HistorialTrabajadorExport implements FromCollection, WithHeadings, WithMap
             $fila['dia']?->format('d/m/Y'),
             $fila['motivo'],
             $fila['sede'],
-            ($fila['abandono'] ?? false) && $fila['estado_fqcn'] === \App\States\Papeleta\Cerrada::class
-                ? PapeletaEstadoPresentacion::cerradaPorAbandono()[0]
-                : PapeletaEstadoPresentacion::para($fila['estado_fqcn'])[0],
+            (($fila['abandono'] ?? false)
+                ? (PapeletaEstadoPresentacion::porAbandono($fila['estado_fqcn']) ?? PapeletaEstadoPresentacion::para($fila['estado_fqcn']))
+                : PapeletaEstadoPresentacion::para($fila['estado_fqcn']))[0],
             $fila['salida']?->format('d/m/Y H:i'),
             $fila['retorno']?->format('d/m/Y H:i'),
             $fila['minutos'],

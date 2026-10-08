@@ -6,6 +6,8 @@ use App\Models\Papeleta;
 use App\Models\Retorno;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
+use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\Concerns\CreaEscenarioPapeletas;
@@ -40,9 +42,10 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->travelTo(Carbon::parse($momento));
     }
 
-    private function papeletaNocheEnCurso(): Papeleta
+    private function papeletaNocheEnCurso(string $motivo = 'PARTICULAR'): Papeleta
     {
         return $this->papeletaDePrueba($this->usuarioDePrueba(), AutorizadaYCorriendo::class, [
+            'motivo_id' => $this->motivoDe($motivo)->id,
             'dia_operativo' => '2026-09-21',
             'fin_turno_at' => '2026-09-22 06:00:00',
             'hora_salida_real' => '2026-09-21 23:30:00',
@@ -72,8 +75,9 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->abandonos();
 
         $papeleta = $papeleta->fresh();
-        // Se cierra de una vez: sin plazo ni visto bueno, pero queda marcada como abandono.
-        $this->assertTrue($papeleta->estado->equals(Cerrada::class));
+        // Particular descuenta: termina de una vez en Finalizada, sin plazo ni
+        // visto bueno, y queda marcada como abandono.
+        $this->assertTrue($papeleta->estado->equals(Finalizada::class));
         $this->assertSame('abandono_no_marcado', $papeleta->causa_finalizacion_sin_retorno);
         $this->assertTrue($papeleta->esAbandono());
         $this->assertFalse((bool) $papeleta->requiere_visto_bueno);
@@ -94,5 +98,50 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->abandonos();
 
         $this->assertTrue($papeleta->fresh()->estado->equals(AutorizadaYCorriendo::class));
+    }
+
+    public function test_abandono_de_comision_cierra_sin_descuento(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('COMISION');
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(Cerrada::class));
+        $this->assertTrue($papeleta->esAbandono());
+    }
+
+    public function test_abandono_de_salud_queda_en_justificacion_con_plazo(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('SALUD');
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(EnJustificacion::class));
+        $this->assertTrue($papeleta->esAbandono());
+
+        $sustento = $papeleta->sustentos()->first();
+        $this->assertNotNull($sustento);
+        $this->assertSame('pendiente', $sustento->estado);
+        $this->assertTrue($sustento->fecha_limite->isFuture(), 'puede justificar al día siguiente');
+    }
+
+    public function test_abandono_de_salud_sin_justificar_termina_finalizada_con_descuento(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('SALUD');
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $this->ir('2026-09-30 12:00:00');
+        $this->artisan('papeletas:procesar-vencimiento-sustentos')->assertSuccessful();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(Finalizada::class));
+        $this->assertTrue($papeleta->esAbandono(), 'la causa de abandono se conserva');
+        $this->assertSame($this->motivoDe('PARTICULAR')->id, $papeleta->motivo_id, 'pasa a Particular para el descuento');
     }
 }

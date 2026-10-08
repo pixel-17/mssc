@@ -8,12 +8,12 @@ use App\Models\Configuracion;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Retorno;
-use App\Models\Sustento;
 use App\Models\User;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\FinalizadoSinRetorno;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
+use App\Services\AbrirJustificacion;
 use App\Support\Minutos;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -121,15 +121,12 @@ class MarcarRetornoAction
             $actual->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($actual, $retorno->hora_servidor);
 
             if ($actual->motivo->requiere_sustento_en_retorno) {
-                $actual->transicionarA(RetornoPendienteSustento::class);
-
-                $horasHabiles = (int) Configuracion::valorDe('SUSTENTO_HORAS_HABILES', 48);
-                Sustento::create([
-                    'papeleta_id' => $actual->id,
-                    'fecha_limite' => app(\App\Services\CalculadorDiasHabiles::class)
-                        ->agregarHorasHabiles($retorno->hora_servidor->copy(), $horasHabiles),
-                    'estado' => 'pendiente',
-                ]);
+                // La justificación queda abierta con el plazo del motivo; el
+                // descuento se define cuando se revise o venza.
+                $actual->transicionarA(EnJustificacion::class);
+                app(AbrirJustificacion::class)->para($actual, $retorno->hora_servidor);
+            } elseif ($actual->motivo->suma_descuento) {
+                $actual->transicionarA(Finalizada::class); // Particular: termina con descuento
             } else {
                 $actual->transicionarA(Cerrada::class);
             }
@@ -176,7 +173,7 @@ class MarcarRetornoAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            $actual->transicionarA(FinalizadoSinRetorno::class);
+            $actual->transicionarA(Cerrada::class); // comisión: sin descuento
             $actual->causa_finalizacion_sin_retorno = 'comision_servicio_campo';
             $actual->save();
 

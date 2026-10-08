@@ -12,12 +12,12 @@
                     <x-input id="motivo-form-nombre" type="text" wire:model="nombre" class="w-full" />
                 </x-admin.campo>
 
-                <x-admin.campo label="Adjunto" for="motivo-form-adjunto">
+                <x-admin.campo label="Justificación escrita al solicitar" for="motivo-form-adjunto">
                     <x-select id="motivo-form-adjunto" wire:model="adjunto">
-                        <option value="no">No lleva adjunto</option>
+                        <option value="no">No se pide</option>
                         <option value="opcional">Opcional</option>
                         <option value="flexible">Flexible (puede o no traerlo)</option>
-                        <option value="obligatorio">Obligatorio</option>
+                        <option value="obligatorio">Obligatoria</option>
                     </x-select>
                 </x-admin.campo>
 
@@ -33,7 +33,14 @@
 
                 <x-admin.campo-checkbox for="sumaDescuento" wire:model="sumaDescuento" label="Suma al contador mensual de descuento" />
                 <x-admin.campo-checkbox for="permiteCierreSinRetorno" wire:model="permiteCierreSinRetorno" label="Permite cerrar sin retorno físico" />
-                <x-admin.campo-checkbox for="requiereSustentoEnRetorno" wire:model="requiereSustentoEnRetorno" label="Requiere sustento al retorno (48h hábiles)" />
+                <x-admin.campo-checkbox for="requiereSustentoEnRetorno" wire:model.live="requiereSustentoEnRetorno" label="Requiere justificación (archivo) después de la salida, tanto si marca retorno como si abandona" />
+
+                @if ($requiereSustentoEnRetorno)
+                    <x-admin.campo label="Plazo para presentarla (horas hábiles; vacío = valor global)" for="motivo-form-plazo">
+                        <x-input id="motivo-form-plazo" type="number" min="1" max="720" wire:model="plazoJustificacionHorasHabiles" class="w-full sm:w-48" placeholder="48" />
+                    </x-admin.campo>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Si vence sin justificación, la papeleta pasa a Particular y se descuenta.</p>
+                @endif
                 <x-admin.campo-checkbox for="esDestinoReclasificacion" wire:model="esDestinoReclasificacion" label="Es el destino de reclasificación (Particular) — debe estar activo en exactamente un motivo" />
             </div>
 

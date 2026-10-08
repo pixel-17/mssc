@@ -1,6 +1,6 @@
 @php
     use App\States\Papeleta\PendienteRrhh;
-    use App\States\Papeleta\RetornoPendienteSustento;
+    use App\States\Papeleta\EnJustificacion;
 
     // Solo lectura cuando la ve el admin (ver Admin\PapeletaController):
     // ninguna acción de RRHH aparece para él.
@@ -14,11 +14,11 @@
     $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
     $posthocRespondida = $papeleta->revision_posthoc_estado === 'respondida';
 
-    $sustentoPresentado = ! $soloLectura && $papeleta->estado->equals(RetornoPendienteSustento::class)
+    $sustentoPresentado = ! $soloLectura && $papeleta->estado->equals(EnJustificacion::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
 
-    $puedeMarcarAbandono = ! $soloLectura && $papeleta->estado->equals(RetornoPendienteSustento::class);
+    $puedeMarcarAbandono = ! $soloLectura && $papeleta->estado->equals(EnJustificacion::class) && $papeleta->retorno !== null;
 @endphp
 
 <x-app-layout>

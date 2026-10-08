@@ -5,14 +5,17 @@ namespace App\Http\Controllers\Trabajador;
 use App\Exceptions\PapeletaException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\SubirSustentoRequest;
+use App\Models\Papeleta;
 use App\Models\Sustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
 /**
- * Paso 5, motivo Salud: el trabajador sube el archivo de sustento.
+ * Motivos que exigen justificación (Salud): el trabajador sube el archivo,
+ * tras el retorno o, si abandonó, dentro del plazo del motivo.
  * A propósito NO es un Action de app/Actions/Papeleta — subir el
  * archivo nunca cierra el caso por sí solo, solo dejar constancia de
  * que ya se presentó (ver RevisarSustentoAction, que sí vive en
@@ -26,6 +29,12 @@ class SustentoController extends Controller
             return back()->with('error', 'Este sustento ya fue presentado o revisado.');
         }
 
+        // La justificación solo se presenta mientras la papeleta siga en
+        // justificación (con retorno o tras un abandono, dentro del plazo).
+        if (! $sustento->papeleta->estado->equals(EnJustificacion::class)) {
+            return back()->with('error', 'Esta papeleta ya no admite justificación.');
+        }
+
         $archivoPath = $request->file('archivo')->store('papeletas/sustentos', 'local');
 
         try {
@@ -33,6 +42,13 @@ class SustentoController extends Controller
                 // Relectura bajo lock: dos envíos casi simultáneos (doble clic, dos
                 // pestañas) pasaban ambos el chequeo de arriba y el segundo pisaba
                 // la ruta del primero, dejando ese archivo suelto en el disco.
+                // Mismo orden de locks que jobs y revisión: papeleta y luego sustento.
+                $papeleta = Papeleta::whereKey($sustento->papeleta_id)->lockForUpdate()->firstOrFail();
+
+                if (! $papeleta->estado->equals(EnJustificacion::class)) {
+                    throw new PapeletaException('Esta papeleta ya no admite justificación.');
+                }
+
                 /** @var Sustento $actual */
                 $actual = Sustento::whereKey($sustento->id)->lockForUpdate()->firstOrFail();
 

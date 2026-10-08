@@ -7,20 +7,27 @@ use App\Models\Papeleta;
 use App\Services\DeterminadorFinDeTurno;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
+use App\Services\AbrirJustificacion;
 use App\States\Papeleta\Cerrada;
+use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
- * Turno vence sin marcación de retorno -> la papeleta se CIERRA de una vez
- * (Cerrada), sin plazo ni visto bueno. Lo que la distingue de una cerrada
- * normal es la causa `abandono_no_marcado`, que se conserva
- * (Papeleta::esAbandono()) y que las vistas muestran como "Cerrada ·
- * Abandono". Jefe y RRHH reciben el aviso "Turno finalizado sin marcar
- * retorno" y /rrhh/abandonos queda como lista informativa.
+ * Turno vence sin marcación de retorno. La causa `abandono_no_marcado` se
+ * conserva siempre (Papeleta::esAbandono()); el estado depende del motivo:
+ *  - exige justificación (Salud) -> EnJustificacion: el trabajador puede
+ *    presentarla, incluso al día siguiente, dentro del plazo del motivo.
+ *    Aprobada -> Cerrada (abandono justificado); rechazada o vencida ->
+ *    Finalizada (con descuento).
+ *  - descuenta (Particular)      -> Finalizada.
+ *  - el resto                    -> Cerrada.
+ * Jefe y RRHH reciben el aviso "Turno finalizado sin marcar retorno" y
+ * /rrhh/abandonos queda como lista informativa.
  *
- * No decide sobre RETORNO_PENDIENTE_SUSTENTO: marcar abandono sobre un
+ * No decide sobre EnJustificacion con retorno ya registrado: marcar abandono sobre un
  * retorno ya registrado es un juicio humano (requiere que alguien
  * determine que el retorno no fue real) y vive en
  * MarcarAbandonoSobreRetornoPendienteAction, no en este job automático.
@@ -57,11 +64,21 @@ class ProcesarAbandonoNoMarcado extends Command
 
                             $estadoAnterior = class_basename($actual->estado);
 
-                            $actual->transicionarA(Cerrada::class);
+                            $motivo = $actual->motivo;
+
+                            $actual->transicionarA(match (true) {
+                                (bool) $motivo->requiere_sustento_en_retorno => EnJustificacion::class,
+                                (bool) $motivo->suma_descuento => Finalizada::class,
+                                default => Cerrada::class,
+                            });
                             $actual->causa_finalizacion_sin_retorno = 'abandono_no_marcado';
                             $actual->requiere_visto_bueno = false;
                             $actual->regularizacion_fecha_limite = null;
                             $actual->save();
+
+                            if ($actual->estado->equals(EnJustificacion::class)) {
+                                app(AbrirJustificacion::class)->para($actual, now());
+                            }
 
                             HistorialPapeleta::create([
                                 'papeleta_id' => $actual->id,
@@ -69,7 +86,9 @@ class ProcesarAbandonoNoMarcado extends Command
                                 'actor_tipo' => 'sistema',
                                 'estado_anterior' => $estadoAnterior,
                                 'estado_nuevo' => class_basename($actual->estado),
-                                'justificacion' => 'Abandono no marcado: turno/día terminó sin registro de retorno. Papeleta cerrada. Notificado a jefe y RRHH.',
+                                'justificacion' => $actual->estado->equals(EnJustificacion::class)
+                                    ? 'Abandono no marcado: turno/día terminó sin registro de retorno. Queda en justificación dentro del plazo del motivo. Notificado a jefe y RRHH.'
+                                    : 'Abandono no marcado: turno/día terminó sin registro de retorno. Papeleta cerrada. Notificado a jefe y RRHH.',
                             ]);
 
                             return $actual;

@@ -9,7 +9,7 @@ use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\ReclasificadoAParticular;
+use App\States\Papeleta\Finalizada;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -49,7 +49,7 @@ class CorregirPapeletaRrhhAction
 
             $this->exigirDecisorAjeno($actual, $quienCorrige);
 
-            if (! $actual->estado->equals(Cerrada::class) && ! $actual->estado->equals(ReclasificadoAParticular::class)) {
+            if (! $actual->estado->equals(Cerrada::class) && ! $actual->estado->equals(Finalizada::class)) {
                 throw new PapeletaException('Solo se pueden corregir papeletas ya cerradas.');
             }
 

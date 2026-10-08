@@ -41,6 +41,8 @@ class MotivoForm extends Component
 
     public bool $requiereSustentoEnRetorno = false;
 
+    public ?int $plazoJustificacionHorasHabiles = null;
+
     public bool $esDestinoReclasificacion = false;
 
     public function mount(?Motivo $motivo = null): void
@@ -54,6 +56,7 @@ class MotivoForm extends Component
             $this->sumaDescuento = $motivo->suma_descuento;
             $this->permiteCierreSinRetorno = $motivo->permite_cierre_sin_retorno;
             $this->requiereSustentoEnRetorno = $motivo->requiere_sustento_en_retorno;
+            $this->plazoJustificacionHorasHabiles = $motivo->plazo_justificacion_horas_habiles;
             $this->esDestinoReclasificacion = $motivo->es_destino_reclasificacion;
         }
     }
@@ -73,6 +76,7 @@ class MotivoForm extends Component
             'sumaDescuento' => ['boolean'],
             'permiteCierreSinRetorno' => ['boolean'],
             'requiereSustentoEnRetorno' => ['boolean'],
+            'plazoJustificacionHorasHabiles' => ['nullable', 'integer', 'min:1', 'max:720'],
             'esDestinoReclasificacion' => ['boolean'],
         ];
     }
@@ -91,6 +95,7 @@ class MotivoForm extends Component
             'suma_descuento' => $datos['sumaDescuento'],
             'permite_cierre_sin_retorno' => $datos['permiteCierreSinRetorno'],
             'requiere_sustento_en_retorno' => $datos['requiereSustentoEnRetorno'],
+            'plazo_justificacion_horas_habiles' => $datos['requiereSustentoEnRetorno'] ? ($datos['plazoJustificacionHorasHabiles'] ?? null) : null,
             'es_destino_reclasificacion' => $datos['esDestinoReclasificacion'],
         ];
 

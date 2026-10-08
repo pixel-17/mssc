@@ -3,7 +3,7 @@
 namespace Tests\Feature\Papeletas;
 
 use App\Models\Sustento;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -62,7 +62,7 @@ class LimpiarArchivosHuerfanosTest extends TestCase
         ]);
 
         $conSustento = $this->archivo('papeletas/sustentos/con-sustento.pdf');
-        $tercera = $this->papeletaDePrueba($this->usuarioDePrueba(), RetornoPendienteSustento::class);
+        $tercera = $this->papeletaDePrueba($this->usuarioDePrueba(), EnJustificacion::class);
         Sustento::create(['papeleta_id' => $tercera->id, 'archivo_path' => $conSustento, 'fecha_limite' => now()->addDay(), 'estado' => 'presentado']);
 
         $huerfanoViejo = $this->archivo('papeletas/sustentos/huerfano-viejo.pdf', 40);

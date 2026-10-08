@@ -10,13 +10,13 @@ use App\Models\Sustento;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Paso 8 / regla de legitimidad de adjuntos: subir el archivo NO cierra
  * el caso. El jefe o RRHH deben dar visto bueno explícito sobre el
- * adjunto antes de que la papeleta transite de RETORNO_PENDIENTE_SUSTENTO.
+ * adjunto antes de que la papeleta transite de EN_JUSTIFICACION.
  *
  * El trabajador sube el archivo por separado (fuera de esta acción,
  * solo actualiza sustento.archivo_path/presentado_at/estado=presentado)
@@ -50,8 +50,8 @@ class RevisarSustentoAction
 
             $this->exigirDecisorAjeno($actual, $revisor);
 
-            if (! $actual->estado->equals(RetornoPendienteSustento::class)) {
-                throw new PapeletaException('Esta papeleta ya no está esperando sustento.');
+            if (! $actual->estado->equals(EnJustificacion::class)) {
+                throw new PapeletaException('Esta papeleta ya no está en justificación.');
             }
 
             if ($sustentoActual->estado !== 'presentado') {
@@ -65,7 +65,8 @@ class RevisarSustentoAction
 
             $estadoAnterior = class_basename($actual->estado);
 
-            // Aprobado -> cierra. Observado -> el sustento sigue pendiente
+            // Aprobado -> Cerrada (sin descuento; si venía de un abandono, la
+            // causa se conserva y queda como abandono justificado). Observado -> el sustento sigue pendiente
             // de un nuevo archivo, la papeleta se queda en el mismo estado
             // hasta que venza (job de vencimiento) o el trabajador vuelva
             // a presentar antes de la fecha_limite.

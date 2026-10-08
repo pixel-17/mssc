@@ -9,7 +9,7 @@ use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -85,7 +85,7 @@ class JefeIndex extends Component
                 ->where('resuelto_por_jefe_id', $user->id),
             'enCurso' => fn () => Papeleta::whereState('estado', AutorizadaYCorriendo::class)
                 ->deJefeInmediato($user),
-            'sustentosPorRevisar' => fn () => Papeleta::whereState('estado', RetornoPendienteSustento::class)
+            'sustentosPorRevisar' => fn () => Papeleta::whereState('estado', EnJustificacion::class)
                 ->deJefeInmediato($user)
                 ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado')),
         ];

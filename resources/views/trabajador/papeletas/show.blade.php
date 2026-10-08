@@ -9,7 +9,9 @@
     $puedeCancelar = $papeleta->trabajador_id === auth()->id()
         && $papeleta->estado->equals(\App\States\Papeleta\PendienteJefe::class, \App\States\Papeleta\ObservadaPorJefe::class);
     $puedeMarcarRetorno = $papeleta->trabajador_id === auth()->id() && $papeleta->estado->equals(\App\States\Papeleta\AutorizadaYCorriendo::class) && ! $papeleta->retorno;
-    $sustentoPendiente = $papeleta->sustentos->firstWhere('estado', 'pendiente');
+    $sustentoPendiente = $papeleta->estado->equals(\App\States\Papeleta\EnJustificacion::class)
+        ? $papeleta->sustentos->firstWhere('estado', 'pendiente')
+        : null;
 
     $filas = collect([
         ['Sede', $papeleta->sede->nombre ?? '—'],
@@ -208,9 +210,12 @@
 
         @if ($sustentoPendiente)
             <div class="glass-card p-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-1">Sustento pendiente</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-1">Justificación pendiente</h3>
                 <p class="text-xs text-gray-500 dark:text-tinta-100/50 mb-3">
                     Fecha límite: {{ $sustentoPendiente->fecha_limite?->format('d/m/Y H:i') }}
+                    @if ($papeleta->esAbandono())
+                        · No marcaste tu retorno: si presentas tu justificación a tiempo, RRHH o tu jefe decidirán si se justifica.
+                    @endif
                 </p>
                 <form method="POST" action="{{ route('trabajador.papeletas.sustento.store', $sustentoPendiente) }}" enctype="multipart/form-data" class="space-y-3"
                       x-data="{ archivo: null }">
@@ -220,13 +225,13 @@
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-tinta-500">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0 3 3m-3-3-3 3M6.75 19.5a4.5 4.5 0 0 1-1.41-8.775 5.25 5.25 0 0 1 10.233-2.33 3 3 0 0 1 3.758 3.848A3.752 3.752 0 0 1 18 19.5H6.75Z" />
                         </svg>
-                        <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Adjuntar sustento'"></span>
+                        <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivo ?? 'Adjuntar justificación'"></span>
                     </label>
                     <input type="file" id="archivo-sustento" name="archivo" required class="sr-only"
                            @change="archivo = $event.target.files[0]?.name ?? null">
 
                     <button type="submit" class="btn-primary w-full text-sm py-3">
-                        Presentar sustento
+                        Presentar justificación
                     </button>
                 </form>
             </div>

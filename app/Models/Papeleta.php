@@ -128,9 +128,10 @@ class Papeleta extends Model
     }
 
     /**
-     * Cerrada porque el trabajador salió y no regresó (abandono). El estado
-     * es el mismo `Cerrada` de una papeleta normal; lo que las distingue es
-     * la causa, y esta es la única pregunta que debe hacer cualquier vista.
+     * El trabajador salió y no regresó (abandono). El estado dice cómo
+     * terminó: EnJustificacion (aún puede justificar), Cerrada (abandono
+     * justificado, sin descuento) o Finalizada (sin justificar, con
+     * descuento). La causa es la única pregunta que debe hacer cualquier vista.
      */
     public function esAbandono(): bool
     {

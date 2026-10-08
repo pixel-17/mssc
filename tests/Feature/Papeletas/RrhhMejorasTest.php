@@ -192,7 +192,7 @@ class RrhhMejorasTest extends TestCase
             'papeleta_id' => $papeleta->id,
             'actor_id' => $rrhh->id,
             'actor_tipo' => 'rrhh',
-            'estado_anterior' => 'RetornoPendienteSustento',
+            'estado_anterior' => 'EnJustificacion',
             'estado_nuevo' => 'Cerrada',
             'justificacion' => 'No volvió y no hubo sustento.',
         ]);
@@ -224,7 +224,7 @@ class RrhhMejorasTest extends TestCase
             ->assertDontSee('Cumplida');
 
         // La etiqueta del estado las distingue a simple vista.
-        $this->assertStringContainsString('Cerrada · Abandono', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
+        $this->assertStringContainsString('Cerrada · abandono justificado', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
         $this->assertStringNotContainsString('Abandono', view('components.estado-papeleta', ['estado' => $cerradaNormal->estado, 'abandono' => false])->render());
     }
 

@@ -3,7 +3,6 @@
 namespace App\Livewire\Papeletas;
 
 use App\Models\Papeleta;
-use App\States\Papeleta\Cerrada;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
@@ -44,8 +43,9 @@ class RrhhAbandonos extends Component
 
     public function render(): View
     {
-        $abandonos = Papeleta::whereState('estado', Cerrada::class)
-            ->where('causa_finalizacion_sin_retorno', 'abandono_no_marcado')
+        // Cualquier estado: Cerrada (justificado), Finalizada (sin justificar)
+        // o EnJustificacion (esperando que el trabajador presente la suya).
+        $abandonos = Papeleta::where('causa_finalizacion_sin_retorno', 'abandono_no_marcado')
             ->when(array_key_exists($this->causa, self::CAUSAS), fn ($q) => $q->where('causa_finalizacion_sin_retorno', $this->causa))
             ->when($this->buscar, fn ($q) => $q->whereHas('trabajador', fn ($t) => $t
                 ->where('name', 'like', "%{$this->buscar}%")
@@ -53,7 +53,7 @@ class RrhhAbandonos extends Component
             ->with([
                 'trabajador',
                 'motivo',
-                'historial' => fn ($q) => $q->whereIn('estado_nuevo', ['Cerrada', 'FinalizadoSinRetorno'])->with('actor'),
+                'historial' => fn ($q) => $q->whereIn('estado_nuevo', ['Cerrada', 'Finalizada', 'EnJustificacion'])->with('actor'),
             ])
             ->latest('dia_operativo')
             ->orderByDesc('papeletas.id')

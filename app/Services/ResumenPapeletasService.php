@@ -7,14 +7,13 @@ use App\Support\Minutos;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\FinalizadoSinRetorno;
+use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Rechazada;
-use App\States\Papeleta\ReclasificadoAParticular;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\Vencida;
 use Illuminate\Support\Collection;
 
@@ -28,8 +27,7 @@ class ResumenPapeletasService
     /** Agrupación de estados en las cuatro columnas del reporte. */
     private const GRUPOS = [
         'autorizadas' => [
-            AutorizadaYCorriendo::class, Cerrada::class, RetornoPendienteSustento::class,
-            FinalizadoSinRetorno::class, ReclasificadoAParticular::class,
+            AutorizadaYCorriendo::class, Cerrada::class, EnJustificacion::class, Finalizada::class,
         ],
         'rechazadas' => [Rechazada::class],
         'no_prosperaron' => [Vencida::class, Cancelada::class],

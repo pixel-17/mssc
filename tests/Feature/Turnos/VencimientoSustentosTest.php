@@ -4,8 +4,8 @@ namespace Tests\Feature\Turnos;
 
 use App\Models\Papeleta;
 use App\Models\Sustento;
-use App\States\Papeleta\ReclasificadoAParticular;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\Finalizada;
+use App\States\Papeleta\EnJustificacion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
@@ -24,7 +24,7 @@ class VencimientoSustentosTest extends TestCase
 
     private function sustentoConPlazo(string $estado, string $plazo): Sustento
     {
-        $papeleta = $this->papeletaDePrueba($this->usuarioDePrueba(), RetornoPendienteSustento::class);
+        $papeleta = $this->papeletaDePrueba($this->usuarioDePrueba(), EnJustificacion::class);
 
         return Sustento::create([
             'papeleta_id' => $papeleta->id,
@@ -41,7 +41,7 @@ class VencimientoSustentosTest extends TestCase
         $this->artisan('papeletas:procesar-vencimiento-sustentos')->assertSuccessful();
 
         $this->assertSame('vencido', $sustento->fresh()->estado);
-        $this->assertTrue(Papeleta::find($sustento->papeleta_id)->estado->equals(ReclasificadoAParticular::class));
+        $this->assertTrue(Papeleta::find($sustento->papeleta_id)->estado->equals(Finalizada::class));
     }
 
     public function test_un_sustento_dentro_de_plazo_no_se_toca(): void
@@ -51,7 +51,7 @@ class VencimientoSustentosTest extends TestCase
         $this->artisan('papeletas:procesar-vencimiento-sustentos')->assertSuccessful();
 
         $this->assertSame('pendiente', $sustento->fresh()->estado);
-        $this->assertTrue(Papeleta::find($sustento->papeleta_id)->estado->equals(RetornoPendienteSustento::class));
+        $this->assertTrue(Papeleta::find($sustento->papeleta_id)->estado->equals(EnJustificacion::class));
     }
 
     public function test_un_sustento_ya_presentado_no_se_marca_como_vencido(): void
@@ -61,7 +61,7 @@ class VencimientoSustentosTest extends TestCase
         $this->artisan('papeletas:procesar-vencimiento-sustentos')->assertSuccessful();
 
         $this->assertSame('presentado', $sustento->fresh()->estado, 'el archivo presentado a tiempo no se pisa');
-        $this->assertTrue(Papeleta::find($sustento->papeleta_id)->estado->equals(RetornoPendienteSustento::class));
+        $this->assertTrue(Papeleta::find($sustento->papeleta_id)->estado->equals(EnJustificacion::class));
         $this->assertTrue((bool) Papeleta::find($sustento->papeleta_id)->requiere_visto_bueno, 'queda para revisión humana');
     }
 }

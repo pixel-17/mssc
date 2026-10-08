@@ -11,13 +11,12 @@ use Illuminate\Support\Facades\Cache;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
-use App\States\Papeleta\FinalizadoSinRetorno;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
-use App\States\Papeleta\ReclasificadoAParticular;
 use App\States\Papeleta\Rechazada;
-use App\States\Papeleta\RetornoPendienteSustento;
+use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\Vencida;
 
 /**
@@ -148,7 +147,7 @@ class DashboardMetricsService
             'posthoc_pendientes' => Papeleta::where('autorizado_con_rrhh_fuera_horario', true)
                 ->whereIn('revision_posthoc_estado', ['pendiente', 'respondida'])
                 ->count(),
-            'sustentos_por_revisar' => Papeleta::whereState('estado', RetornoPendienteSustento::class)
+            'sustentos_por_revisar' => Papeleta::whereState('estado', EnJustificacion::class)
                 ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
                 ->count(),
             'promedio_resolucion_minutos' => $promedioMinutos,
@@ -197,7 +196,7 @@ class DashboardMetricsService
 
         $decididasPeriodo = $baseEquipo()
             ->where('created_at', '>=', $desde)
-            ->whereState('estado', [Cerrada::class, Rechazada::class, AutorizadaYCorriendo::class, Vencida::class])
+            ->whereState('estado', [Cerrada::class, Finalizada::class, EnJustificacion::class, Rechazada::class, AutorizadaYCorriendo::class, Vencida::class])
             ->get(['estado']);
 
         $tasaAprobacion = $decididasPeriodo->isEmpty()
@@ -216,7 +215,7 @@ class DashboardMetricsService
             'en_curso' => Papeleta::whereState('estado', AutorizadaYCorriendo::class)
                 ->deJefeInmediato($jefe)
                 ->count(),
-            'sustentos_por_revisar' => Papeleta::whereState('estado', RetornoPendienteSustento::class)
+            'sustentos_por_revisar' => Papeleta::whereState('estado', EnJustificacion::class)
                 ->deJefeInmediato($jefe)
                 ->whereHas('sustentos', fn ($q) => $q->where('estado', 'presentado'))
                 ->count(),
@@ -239,8 +238,7 @@ class DashboardMetricsService
             Rechazada::class,
             Vencida::class,
             Cancelada::class,
-            FinalizadoSinRetorno::class,
-            ReclasificadoAParticular::class,
+            Finalizada::class,
         ];
     }
 }
