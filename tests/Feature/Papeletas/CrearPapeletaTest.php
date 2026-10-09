@@ -83,8 +83,9 @@ class CrearPapeletaTest extends TestCase
 
     public function test_no_puede_crear_otra_papeleta_mientras_tiene_una_en_tramite(): void
     {
-        [, , $trabajador] = $this->armarOrganigrama();
+        [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
         $crear = app(CrearPapeletaAction::class);
 
         $primera = $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
@@ -120,8 +121,9 @@ class CrearPapeletaTest extends TestCase
 
     public function test_puede_crear_otra_papeleta_despues_de_cancelar_la_anterior(): void
     {
-        [, , $trabajador] = $this->armarOrganigrama();
+        [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
         $crear = app(CrearPapeletaAction::class);
 
         $primera = $crear->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
@@ -136,8 +138,9 @@ class CrearPapeletaTest extends TestCase
 
     public function test_puede_crear_otra_papeleta_cuando_la_anterior_ya_termino(): void
     {
-        [, , $trabajador] = $this->armarOrganigrama();
+        [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
         $crear = app(CrearPapeletaAction::class);
 
         foreach ([Cerrada::class, Finalizada::class, Cancelada::class, Vencida::class, Rechazada::class, EnJustificacion::class] as $estado) {
@@ -156,6 +159,7 @@ class CrearPapeletaTest extends TestCase
     {
         [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
         $this->papeletaDePrueba($jefeInmediato, AutorizadaYCorriendo::class);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
@@ -186,8 +190,9 @@ class CrearPapeletaTest extends TestCase
         Storage::fake('local');
         $this->ir('2026-09-21 10:00:00');
 
-        [, , $trabajador] = $this->armarOrganigrama();
+        [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
 
         $this->actingAs($trabajador)->post(route('trabajador.papeletas.store'), [
             'motivo_id' => $this->motivoDe('SALUD')->id,
@@ -204,8 +209,9 @@ class CrearPapeletaTest extends TestCase
         Storage::fake('local');
         $this->ir('2026-09-21 10:00:00');
 
-        [, , $trabajador] = $this->armarOrganigrama();
+        [, $jefeInmediato, $trabajador] = $this->armarOrganigrama();
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
 
         $this->actingAs($trabajador)->post(route('trabajador.papeletas.store'), [
             'motivo_id' => $this->motivoDe('COMISION')->id,
@@ -245,6 +251,7 @@ class CrearPapeletaTest extends TestCase
         [, $jefeInmediato, $trabajador] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '276');
         $this->ir('2026-09-21 22:00:00'); // jefe de área (276) fuera de horario, pero no importa: decide el jefe inmediato
         $this->turnoDePrueba($trabajador);
+        $this->turnoDePrueba($jefeInmediato); // el jefe 728 también debe tener turno vigente
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
 

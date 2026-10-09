@@ -164,9 +164,10 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_276_vence_al_terminar_el_horario_ordinario(): void
     {
         $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador); // jefe 728
 
         $this->ir('2026-09-21 15:00:00');
+        $this->turnoDePrueba($jefe); // el jefe 728 debe tener turno vigente para recibir la papeleta
         $papeleta = $this->crear($trabajador);
 
         $this->assertSame('2026-09-21 16:15:59', $papeleta->fresh()->fin_turno_at->format('Y-m-d H:i:s'));

@@ -70,8 +70,9 @@ class RevisionPosthocEstadoNuncaNuloTest extends TestCase
     public function test_pendiente_jefe_nunca_guarda_null(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador);
         $this->turnoDePrueba($trabajador); // vigente todo el día, jefe 728 siempre disponible
+        $this->turnoDePrueba($jefe);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
 

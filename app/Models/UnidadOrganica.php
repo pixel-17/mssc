@@ -211,10 +211,34 @@ class UnidadOrganica extends Model
      *
      * @return list<int>
      */
-    public function resolverJefesInmediatos(?string $turno): array
+    public function resolverJefesInmediatos(?string $turno, bool $exigirTurnoVigenteDelJefe = false): array
     {
         if (! in_array($turno, ConfiguracionTurno::TURNOS_728, true)) {
-            return $this->jefe_id !== null ? [(int) $this->jefe_id] : [];
+            if ($this->jefe_id === null) {
+                return [];
+            }
+
+            // Trabajador sin turno rotativo (276) con jefe inmediato 728: el
+            // jefe solo cuenta si hoy tiene un turno vigente (no descanso).
+            // Sin turno asignado a él, la papeleta no le llega a nadie y
+            // CrearPapeletaAction bloquea la creación. Un jefe 276 no se
+            // programa por turnos, así que no se le exige.
+            //
+            // Solo se exige cuando quien crea es un trabajador común
+            // ($exigirTurnoVigenteDelJefe). Si quien crea es un jefe y sube a
+            // su superior, no se filtra aquí: la disponibilidad del superior
+            // la resuelve DecisorDisponibleService (escala a RRHH si no está).
+            $jefe = $this->jefe;
+
+            if ($exigirTurnoVigenteDelJefe && $jefe?->regimen === '728') {
+                $vigente = Turno::vigenteParaUsuario($jefe->id);
+
+                if ($vigente === null || $vigente->es_descanso) {
+                    return [];
+                }
+            }
+
+            return [(int) $this->jefe_id];
         }
 
         return $this->jefesInmediatos728()
@@ -246,7 +270,7 @@ class UnidadOrganica extends Model
         }
 
         return [
-            $this->resolverJefesInmediatos($turno),
+            $this->resolverJefesInmediatos($turno, exigirTurnoVigenteDelJefe: true),
             $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
         ];
     }
