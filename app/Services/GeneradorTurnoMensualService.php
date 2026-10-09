@@ -8,6 +8,7 @@ use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -174,6 +175,41 @@ class GeneradorTurnoMensualService
                 'generado_por_id' => $actor?->id,
             ]
         );
+
+        \App\Events\HorarioActualizado::notificar($trabajador->id);
+    }
+
+    /**
+     * Quita el turno de un trabajador: borra su ConfiguracionTurno, sus
+     * `turnos` de $desde en adelante (por defecto hoy) y las cargas
+     * mensuales del mes de $desde en adelante.
+     *
+     * Se usa cuando el turno que tenía ya no le corresponde:
+     * - al desactivarlo (cese, retiro, licencia): no debe quedar con un
+     *   turno vigente ni con el ciclo "listo" para generarse;
+     * - al cambiar de régimen (276 <-> 728): el turno del régimen anterior
+     *   (p. ej. DIA) no es válido en el nuevo y, mientras exista, el
+     *   formulario cree que ya tiene turno y no deja programar otro.
+     *
+     * Los días anteriores a $desde NO se tocan: son historial.
+     * Si después lo reactivan o lo programan de nuevo, cargarConfiguracion()
+     * crea todo desde cero.
+     */
+    public function retirarTurno(User $trabajador, ?Carbon $desde = null): void
+    {
+        $desde = ($desde ?? now())->copy()->startOfDay();
+
+        DB::transaction(function () use ($trabajador, $desde) {
+            Turno::where('user_id', $trabajador->id)
+                ->where('fecha', '>=', $desde->toDateString())
+                ->delete();
+
+            CargaTurnoMensual::where('user_id', $trabajador->id)
+                ->whereRaw('(anio * 12 + mes) >= ?', [$desde->year * 12 + $desde->month])
+                ->delete();
+
+            ConfiguracionTurno::where('user_id', $trabajador->id)->delete();
+        });
 
         \App\Events\HorarioActualizado::notificar($trabajador->id);
     }

@@ -160,7 +160,33 @@ class UsuarioAdminForm extends Component
             return true;
         }
 
+        // Cambió de régimen (p. ej. 276 -> 728): el turno que tenía era del régimen
+        // anterior y se retira al guardar, así que aquí se programa el nuevo.
+        if ($this->cambioDeRegimen()) {
+            return true;
+        }
+
         return ! ConfiguracionTurno::where('user_id', $this->usuario->id)->exists();
+    }
+
+    /** ¿Se está cambiando el régimen de un usuario ya existente? */
+    protected function cambioDeRegimen(): bool
+    {
+        return $this->usuario !== null
+            && ($this->usuario->regimen ?? '') !== ''
+            && $this->regimen !== (string) $this->usuario->regimen;
+    }
+
+    /**
+     * Al elegir otro régimen, el turno cargado en el formulario (el del
+     * régimen anterior, p. ej. DIA) deja de ser válido: se limpia para
+     * que se elija uno del régimen nuevo.
+     */
+    public function updatedRegimen(): void
+    {
+        if ($this->cambioDeRegimen()) {
+            $this->turno = '';
+        }
     }
 
     protected function rules(): array
@@ -243,6 +269,12 @@ class UsuarioAdminForm extends Component
             return;
         }
 
+        if ($this->cambioDeRegimen() && $this->regimen !== '728' && $this->usuario->esJefeInmediatoDeAlgunTurno()) {
+            $this->addError('regimen', 'Es jefe inmediato de un turno (MAÑANA/TARDE/NOCHE) en su unidad: reasigna primero ese turno a otro jefe antes de cambiarlo de régimen.');
+
+            return;
+        }
+
         // Mismas reglas que desactivar desde la lista o el organigrama (jefe con personas a cargo, etc.).
         if ($this->usuario?->activo && ! $datos['activo']) {
             $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
@@ -266,7 +298,11 @@ class UsuarioAdminForm extends Component
             'activo' => $datos['activo'],
         ];
 
-        DB::transaction(function () use ($atributos, $datos, $requiereTurno, $generador) {
+        // Se calcula ANTES de guardar: después $this->usuario ya trae los valores nuevos.
+        $debeRetirarTurno = $this->usuario !== null
+            && ($this->cambioDeRegimen() || ($this->usuario->activo && ! $datos['activo']));
+
+        DB::transaction(function () use ($atributos, $datos, $requiereTurno, $generador, $debeRetirarTurno) {
             if ($this->usuario) {
                 // Reseteo manual opcional: si el admin llenó el campo, se
                 // le pedirá actualizarla de nuevo en su próximo ingreso.
@@ -279,6 +315,11 @@ class UsuarioAdminForm extends Component
 
                 if (! $datos['activo']) {
                     $this->usuario->tokens()->delete();
+                }
+
+                // Desactivado o con otro régimen: el turno anterior ya no le corresponde.
+                if ($debeRetirarTurno) {
+                    $generador->retirarTurno($this->usuario);
                 }
             } else {
                 // Alta nueva: la contraseña inicial siempre es el DNI,
@@ -294,7 +335,7 @@ class UsuarioAdminForm extends Component
             // NOMBRE de rol (RoleDoesNotExist). Con enteros los busca por id.
             $this->usuario->syncRoles(array_map('intval', $datos['rolesSeleccionados']));
 
-            if ($requiereTurno) {
+            if ($requiereTurno && $datos['activo']) {
                 $generador->cargarConfiguracion(
                     trabajador: $this->usuario,
                     turno: $datos['turno'],

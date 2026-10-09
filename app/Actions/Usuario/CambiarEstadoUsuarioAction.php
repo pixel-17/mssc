@@ -4,12 +4,18 @@ namespace App\Actions\Usuario;
 
 use App\Exceptions\UsuarioException;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Activar / desactivar a un usuario. Única puerta: la usan la lista de
  * Usuarios, el formulario de edición y el panel de trabajador del
  * organigrama, para que las tres apliquen exactamente las mismas reglas
  * (antes el organigrama escribía `activo` directo y se saltaba todas).
+ *
+ * Al desactivar también se retira su turno (configuración y días de hoy en
+ * adelante, ver GeneradorTurnoMensualService::retirarTurno): un usuario
+ * inactivo no debe conservar turno vigente. El historial pasado se mantiene.
  *
  * NUNCA se borra un usuario: papeletas.trabajador_id tiene cascadeOnDelete
  * y borrarlo se llevaría su historial. Se desactiva; EnsureUsuarioActivo y
@@ -79,8 +85,12 @@ class CambiarEstadoUsuarioAction
             throw new UsuarioException($motivo);
         }
 
-        $usuario->forceFill(['activo' => false])->save();
-        $usuario->tokens()->delete();
+        DB::transaction(function () use ($usuario) {
+            $usuario->forceFill(['activo' => false])->save();
+            $usuario->tokens()->delete();
+
+            app(GeneradorTurnoMensualService::class)->retirarTurno($usuario);
+        });
 
         return $usuario;
     }

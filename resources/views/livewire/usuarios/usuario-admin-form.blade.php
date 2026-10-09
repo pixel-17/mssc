@@ -70,6 +70,23 @@
                 @endunless
             </div>
 
+            @if ($cuentaExistente)
+                <div class="rounded-md border border-yellow-300 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/30 px-4 py-3" role="alert">
+                    <p class="text-sm text-yellow-800 dark:text-yellow-200">
+                        Ya existe una cuenta con el DNI {{ $cuentaExistente->dni }}:
+                        {{ $cuentaExistente->name }} {{ $cuentaExistente->apellido }}
+                        ({{ $cuentaExistente->activo ? 'activo' : 'desactivado' }}).
+                        @unless ($cuentaExistente->activo)
+                            Para volver a darle acceso, ábrelo y marca «Activo».
+                        @endunless
+                    </p>
+                    <a href="{{ route('usuarios-admin.editar', $cuentaExistente) }}"
+                       class="mt-1 inline-block text-sm font-medium text-yellow-900 dark:text-yellow-100 underline">
+                        Ver usuario
+                    </a>
+                </div>
+            @endif
+
             @if ($esAdminRol)
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                     Un administrador gestiona cuentas y catálogos: no pertenece a ninguna unidad del organigrama ni tiene equipo.
