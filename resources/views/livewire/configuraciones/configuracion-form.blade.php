@@ -8,7 +8,7 @@
                 <x-input id="configuracion-form-clave" type="text" :value="$configuracion->clave" disabled class="w-full opacity-60" />
             </div>
 
-            <x-admin.campo label="Valor" for="configuracion-form-valor">
+            <x-admin.campo label="Valor" for="configuracion-form-valor" campo="valor">
                 <x-input id="configuracion-form-valor" type="text" wire:model="valor" class="w-full" />
             </x-admin.campo>
 

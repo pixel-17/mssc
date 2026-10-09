@@ -1,4 +1,4 @@
-@props(['label', 'for', 'ayuda' => null])
+@props(['label', 'for', 'ayuda' => null, 'campo' => null])
 
 {{--
     Envoltorio label + control + error para los formularios del catálogo
@@ -22,5 +22,6 @@
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ $ayuda }}</p>
     @endif
 
-    <x-input-error :for="$for" class="mt-2" />
+    {{-- El error se busca por la propiedad Livewire (campo); si no se indica, por for. --}}
+    <x-input-error :for="$campo ?? $for" class="mt-2" />
 </div>

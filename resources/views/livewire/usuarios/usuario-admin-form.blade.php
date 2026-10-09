@@ -4,26 +4,26 @@
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <x-admin.campo label="Nombres" for="usuario-admin-form-name">
+                <x-admin.campo label="Nombres" for="usuario-admin-form-name" campo="name">
                     <x-input id="usuario-admin-form-name" type="text" wire:model="name" class="w-full" />
                 </x-admin.campo>
 
-                <x-admin.campo label="Apellidos" for="usuario-admin-form-apellido">
+                <x-admin.campo label="Apellidos" for="usuario-admin-form-apellido" campo="apellido">
                     <x-input id="usuario-admin-form-apellido" type="text" wire:model="apellido" class="w-full" />
                 </x-admin.campo>
 
-                <x-admin.campo label="DNI" for="usuario-admin-form-dni">
+                <x-admin.campo label="DNI" for="usuario-admin-form-dni" campo="dni">
                     <x-input id="usuario-admin-form-dni" type="text" wire:model="dni" maxlength="8" class="w-full" />
                 </x-admin.campo>
 
-                <x-admin.campo label="Correo" for="usuario-admin-form-email">
+                <x-admin.campo label="Correo" for="usuario-admin-form-email" campo="email">
                     <x-input id="usuario-admin-form-email" type="email" wire:model="email" class="w-full" />
                 </x-admin.campo>
 
                 @if ($usuario)
                     <x-admin.campo
                         label="Contraseña (opcional)"
-                        for="usuario-admin-form-password"
+                        for="usuario-admin-form-password" campo="password"
                         ayuda="Déjala en blanco para no cambiarla. Si la llenas, se le pedirá actualizarla en su próximo ingreso."
                     >
                         <x-input id="usuario-admin-form-password" type="password" wire:model="password" class="w-full" />
@@ -37,7 +37,7 @@
                     </div>
                 @endif
 
-                <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" ayuda="Opcional solo si el usuario es únicamente administrador.">
+                <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" campo="regimen" ayuda="Opcional solo si el usuario es únicamente administrador.">
                     <x-select id="usuario-admin-form-regimen" wire:model.live="regimen">
                         <option value="">— Selecciona —</option>
                         <option value="276">276 (día)</option>
@@ -45,7 +45,7 @@
                     </x-select>
                 </x-admin.campo>
 
-                <x-admin.campo label="Sede" for="usuario-admin-form-sedeId">
+                <x-admin.campo label="Sede" for="usuario-admin-form-sedeId" campo="sedeId">
                     <x-select id="usuario-admin-form-sedeId" wire:model="sedeId">
                         <option value="">— (ninguna) —</option>
                         @foreach ($sedes as $id => $nombre)
@@ -57,7 +57,7 @@
                 @unless ($esAdminRol)
                 <x-admin.campo
                     label="Unidad orgánica"
-                    for="usuario-admin-form-unidadOrganicaId"
+                    for="usuario-admin-form-unidadOrganicaId" campo="unidadOrganicaId"
                     ayuda="Determina automáticamente su jefe inmediato y jefe de área."
                 >
                     <x-select id="usuario-admin-form-unidadOrganicaId" wire:model="unidadOrganicaId">
@@ -87,7 +87,7 @@
                         genera solo con esta misma configuración.
                     </p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <x-admin.campo label="Turno" for="usuario-admin-form-turno">
+                        <x-admin.campo label="Turno" for="usuario-admin-form-turno" campo="turno">
                             <x-select id="usuario-admin-form-turno" wire:model="turno">
                                 <option value="">— Selecciona —</option>
                                 @foreach ($opcionesTurno as $opcion)
@@ -96,15 +96,15 @@
                             </x-select>
                         </x-admin.campo>
 
-                        <x-admin.campo label="Fecha en que empieza su próximo bloque de trabajo" for="usuario-admin-form-fechaAncla">
+                        <x-admin.campo label="Fecha en que empieza su próximo bloque de trabajo" for="usuario-admin-form-fechaAncla" campo="fechaAncla">
                             <x-input id="usuario-admin-form-fechaAncla" type="date" wire:model="fechaAncla" class="w-full" />
                         </x-admin.campo>
 
-                        <x-admin.campo label="Días de trabajo seguidos" for="usuario-admin-form-diasTrabajo">
+                        <x-admin.campo label="Días de trabajo seguidos" for="usuario-admin-form-diasTrabajo" campo="diasTrabajo">
                             <x-input id="usuario-admin-form-diasTrabajo" type="number" min="1" max="30" wire:model="diasTrabajo" class="w-full" />
                         </x-admin.campo>
 
-                        <x-admin.campo label="Días de descanso" for="usuario-admin-form-diasDescanso">
+                        <x-admin.campo label="Días de descanso" for="usuario-admin-form-diasDescanso" campo="diasDescanso">
                             <x-input id="usuario-admin-form-diasDescanso" type="number" min="1" max="30" wire:model="diasDescanso" class="w-full" />
                         </x-admin.campo>
                     </div>

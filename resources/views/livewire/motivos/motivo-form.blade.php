@@ -4,16 +4,16 @@
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-8">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <x-admin.campo label="Nombre del motivo" for="motivo-form-nombre">
+                <x-admin.campo label="Nombre del motivo" for="motivo-form-nombre" campo="nombre">
                     <x-input id="motivo-form-nombre" type="text" wire:model="nombre" class="w-full" placeholder="ej. Cita médica" />
                 </x-admin.campo>
 
-                <x-admin.campo label="Código (una palabra, sin espacios)" for="motivo-form-codigo">
+                <x-admin.campo label="Código (una palabra, sin espacios)" for="motivo-form-codigo" campo="codigo">
                     <x-input id="motivo-form-codigo" type="text" wire:model="codigo" class="w-full" placeholder="ej. SALUD" />
                 </x-admin.campo>
 
                 <div class="sm:col-span-2">
-                    <x-admin.campo-checkbox for="activo" wire:model="activo" label="Los trabajadores pueden elegir este motivo" />
+                    <x-admin.campo-checkbox for="activo" campo="requiereJustificacion" wire:model="activo" label="Los trabajadores pueden elegir este motivo" />
                 </div>
             </div>
 

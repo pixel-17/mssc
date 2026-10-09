@@ -3,11 +3,11 @@
         <x-admin.encabezado :titulo="$unidad ? 'Editar unidad orgánica' : 'Nueva unidad orgánica'" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
-            <x-admin.campo label="Nombre" for="unidad-organica-form-nombre">
+            <x-admin.campo label="Nombre" for="unidad-organica-form-nombre" campo="nombre">
                 <x-input id="unidad-organica-form-nombre" type="text" wire:model="nombre" class="w-full" />
             </x-admin.campo>
 
-            <x-admin.campo label="Tipo" for="unidad-organica-form-tipo" ayuda="Solo pinta el organigrama, no afecta el escalamiento de papeletas.">
+            <x-admin.campo label="Tipo" for="unidad-organica-form-tipo" campo="tipo" ayuda="Solo pinta el organigrama, no afecta el escalamiento de papeletas.">
                 <x-select id="unidad-organica-form-tipo" wire:model="tipo">
                     <option value="">— (sin tipo) —</option>
                     @foreach (\App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TIPOS as $valor => $etiqueta)
@@ -16,7 +16,7 @@
                 </x-select>
             </x-admin.campo>
 
-            <x-admin.campo label="Unidad padre" for="unidad-organica-form-parentId">
+            <x-admin.campo label="Unidad padre" for="unidad-organica-form-parentId" campo="parentId">
                 <x-select id="unidad-organica-form-parentId" wire:model="parentId">
                     <option value="">— (raíz) —</option>
                     @foreach ($padresDisponibles as $id => $nombrePadre)
@@ -25,7 +25,7 @@
                 </x-select>
             </x-admin.campo>
 
-            <x-admin.campo label="Jefe de la unidad" for="unidad-organica-form-jefeId">
+            <x-admin.campo label="Jefe de la unidad" for="unidad-organica-form-jefeId" campo="jefeId">
                 <x-select id="unidad-organica-form-jefeId" wire:model="jefeId">
                     <option value="">— (ninguno) —</option>
                     @foreach ($jefesDisponibles as $id => $nombreJefe)

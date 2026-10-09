@@ -25,7 +25,7 @@ Route::get('/', function () {
 
 /*
  * Todo el catálogo de administración (Sedes, Motivos, Turnos,
- * Unidades orgánicas, Configuraciones, Horario de RRHH,
+ * Unidades orgánicas, Configuraciones,
  * Usuarios) ya vive en Blade + Livewire puro, uno por uno, en los
  * bloques de abajo.
  */
