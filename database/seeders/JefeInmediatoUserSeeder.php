@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Database\Seeder;
 
 /**
@@ -40,5 +41,37 @@ class JefeInmediatoUserSeeder extends Seeder
         }
 
         $unidad->update(['jefe_id' => $jefeInmediato->id]);
+
+        $this->cargarTurno($jefeInmediato);
+    }
+
+    /**
+     * El jefe inmediato es 728: sin turno cargado, CrearPapeletaAction rechaza
+     * las papeletas de su equipo ("Tu jefe inmediato no tiene un turno vigente").
+     * Se le asigna el turno que corresponde a la hora en que corre el seed
+     * (MANANA 06-14, TARDE 14-22, NOCHE el resto), con fecha ancla de hoy
+     * (o ayer de 00:00 a 06:00, para que hoy caiga en día de trabajo).
+     */
+    private function cargarTurno(User $jefeInmediato): void
+    {
+        $ahora = now();
+        $hora = (int) $ahora->format('G');
+
+        $turno = match (true) {
+            $hora >= 6 && $hora < 14 => 'MANANA',
+            $hora >= 14 && $hora < 22 => 'TARDE',
+            default => 'NOCHE',
+        };
+
+        $fechaAncla = $hora < 6 ? $ahora->copy()->subDay() : $ahora->copy();
+
+        $actor = User::where('email', 'admin@mssc.test')->firstOrFail();
+
+        app(GeneradorTurnoMensualService::class)->cargarConfiguracion(
+            trabajador: $jefeInmediato,
+            turno: $turno,
+            fechaAncla: $fechaAncla,
+            actor: $actor,
+        );
     }
 }

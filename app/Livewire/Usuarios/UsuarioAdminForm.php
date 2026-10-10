@@ -352,9 +352,23 @@ class UsuarioAdminForm extends Component
         $this->redirectRoute('usuarios-admin.index', navigate: false);
     }
 
+    /**
+     * Cuenta ya registrada con el DNI escrito (activa o desactivada). Solo se
+     * busca al crear y con el DNI completo; al editar no aplica y devuelve null.
+     */
+    protected function buscarCuentaExistente(): ?User
+    {
+        if ($this->usuario !== null || strlen($this->dni) !== 8) {
+            return null;
+        }
+
+        return User::where('dni', $this->dni)->first();
+    }
+
     public function render(): View
     {
         return view('livewire.usuarios.usuario-admin-form', [
+            'cuentaExistente' => $this->buscarCuentaExistente(),
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
             // En «Nuevo usuario» no se ofrece admin: los administradores se crean desde «Nuevo administrador».
