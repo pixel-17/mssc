@@ -33,6 +33,10 @@ class JefeInmediatoUserSeeder extends Seeder
                 'email_verified_at' => now(),
                 'regimen' => '728',
                 'unidad_organica_id' => $unidad->id,
+                // Si el seed corre sobre una base donde este usuario quedó
+                // inactivo (p. ej. dado de baja en pruebas), hay que reactivarlo:
+                // cargarConfiguracion() rechaza trabajadores inactivos.
+                'activo' => true,
             ]
         );
 
