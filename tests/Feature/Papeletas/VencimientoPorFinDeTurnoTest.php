@@ -64,17 +64,6 @@ class VencimientoPorFinDeTurnoTest extends TestCase
         ]);
     }
 
-    /**
-     * En 728 el jefe inmediato solo resuelve para un turno si HOY tiene un
-     * Turno vigente con el mismo código (jefes_turno ya no fija el turno):
-     * se le asigna el mismo turno que al trabajador.
-     */
-    private function turnoConJefe(User $trabajador, User $jefe, string $fecha, string $codigo, string $inicio, string $fin): void
-    {
-        $this->turno($trabajador, $fecha, $codigo, $inicio, $fin);
-        $this->turno($jefe, $fecha, $codigo, $inicio, $fin);
-    }
-
     private function crear(User $trabajador): Papeleta
     {
         return app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
@@ -88,8 +77,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_noche_no_vence_a_medianoche_y_el_jefe_aun_puede_decidir_a_la_1_02(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $jefe = $this->conJefeDePrueba($trabajador);
-        $this->turnoConJefe($trabajador, $jefe, '2026-09-21', 'NOCHE', '22:00', '06:00');
+        $this->conJefeDePrueba($trabajador);
+        $this->turno($trabajador,'2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-21 23:58:00');
         $papeleta = $this->crear($trabajador);
@@ -105,8 +94,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_noche_vence_recien_cuando_termina_el_turno_a_las_6(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $jefe = $this->conJefeDePrueba($trabajador);
-        $this->turnoConJefe($trabajador, $jefe, '2026-09-21', 'NOCHE', '22:00', '06:00');
+        $this->conJefeDePrueba($trabajador);
+        $this->turno($trabajador,'2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-21 23:58:00');
         $papeleta = $this->crear($trabajador);
@@ -123,8 +112,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_noche_puede_crear_despues_de_medianoche_con_el_turno_del_dia_anterior(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $jefe = $this->conJefeDePrueba($trabajador);
-        $this->turnoConJefe($trabajador, $jefe, '2026-09-21', 'NOCHE', '22:00', '06:00');
+        $this->conJefeDePrueba($trabajador);
+        $this->turno($trabajador,'2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-22 01:00:00');
         $papeleta = $this->crear($trabajador);
@@ -136,8 +125,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_manana_vence_a_las_14_y_no_a_medianoche(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $jefe = $this->conJefeDePrueba($trabajador);
-        $this->turnoConJefe($trabajador, $jefe, '2026-09-21', 'MANANA', '06:00', '14:00');
+        $this->conJefeDePrueba($trabajador);
+        $this->turno($trabajador,'2026-09-21', 'MANANA', '06:00', '14:00');
 
         $this->ir('2026-09-21 13:00:00');
         $papeleta = $this->crear($trabajador);
@@ -164,10 +153,9 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_276_vence_al_terminar_el_horario_ordinario(): void
     {
         $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
-        $jefe = $this->conJefeDePrueba($trabajador); // jefe 728
+        $this->conJefeDePrueba($trabajador); // jefe 728
 
         $this->ir('2026-09-21 15:00:00');
-        $this->turnoDePrueba($jefe); // el jefe 728 debe tener turno vigente para recibir la papeleta
         $papeleta = $this->crear($trabajador);
 
         $this->assertSame('2026-09-21 16:15:59', $papeleta->fresh()->fin_turno_at->format('Y-m-d H:i:s'));

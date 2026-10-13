@@ -3,7 +3,6 @@
 namespace Tests\Feature\Organigrama;
 
 use App\Actions\Organigrama\ReglasOrganigrama;
-use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Services\Organigrama\ArmadorOrganigrama;
@@ -75,20 +74,6 @@ class ArmadorOrganigramaTest extends TestCase
         $conNueve = $this->consultasAlArmar($admin);
 
         $this->assertSame($conTres, $conNueve, 'armar() hace consultas por unidad (N+1).');
-    }
-
-    public function test_el_regimen_incompatible_con_la_unidad_destino_se_rechaza(): void
-    {
-        $raiz = UnidadOrganica::create(['nombre' => 'Gerencia', 'jefe_id' => $this->usuarioDePrueba()->id]);
-        $destino = $this->crearRama($raiz, 'Oficina A');
-        $regimenDestino = $destino->regimen();
-
-        $ajeno = $this->usuarioDePrueba(['regimen' => $regimenDestino === '728' ? '276' : '728']);
-
-        $this->expectException(UsuarioException::class);
-        $this->expectExceptionMessage('no coincide con el de la unidad de destino');
-
-        app(ReglasOrganigrama::class)->exigirRegimenCompatible($ajeno, $destino);
     }
 
     public function test_el_area_de_un_jefe_es_la_unidad_mas_alta_que_encabeza_con_subunidades(): void

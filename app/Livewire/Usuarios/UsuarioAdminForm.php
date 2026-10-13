@@ -272,6 +272,16 @@ class UsuarioAdminForm extends Component
 
                 return;
             }
+
+            // Un jefe con personas a cargo no se desactiva desde el formulario:
+            // hay que elegir su reemplazo (baja con reemplazo, en Usuarios).
+            $cargo = app(CambiarEstadoUsuarioAction::class)->jefaturasPorResolver($this->usuario);
+
+            if ($cargo->isNotEmpty()) {
+                $this->addError('activo', 'Tiene personas a cargo: desactívalo desde Usuarios para elegir a quién reemplaza.');
+
+                return;
+            }
         }
 
         $atributos = [

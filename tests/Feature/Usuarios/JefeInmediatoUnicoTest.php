@@ -2,30 +2,24 @@
 
 namespace Tests\Feature\Usuarios;
 
-use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
 /**
- * "Jefe inmediato" es un solo tipo: quien lo sea de un trabajador —por
- * su unidad (titular), por jefes_turno (728) o por asignación manual—
- * tiene exactamente las mismas capacidades y privilegios sobre él.
+ * Hay UN solo jefe inmediato por trabajador: el jefe de su unidad
+ * (users.jefe_inmediato_id, derivado de unidades_organicas.jefe_id). Ese
+ * jefe tiene las mismas capacidades sobre él sin importar su régimen.
  */
 class JefeInmediatoUnicoTest extends TestCase
 {
     use CreaEscenarioPapeletas;
     use RefreshDatabase;
 
-    private User $titular;
-
-    private User $deUnidad;
-
-    private User $manual;
+    private User $jefe;
 
     private User $ajeno;
 
@@ -37,70 +31,58 @@ class JefeInmediatoUnicoTest extends TestCase
 
         $this->prepararBase();
 
-        $this->titular = $this->usuarioDePrueba();
-        $this->deUnidad = $this->usuarioDePrueba();
-        $this->manual = $this->usuarioDePrueba();
+        $this->jefe = $this->usuarioDePrueba();
         $this->ajeno = $this->usuarioDePrueba();
 
-        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $this->titular->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $this->deUnidad->id]);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $this->jefe->id]);
 
         $this->trabajador = $this->usuarioDePrueba(['regimen' => '728']);
-        $this->trabajador->forceFill([
-            'unidad_organica_id' => $unidad->id,
-            'jefe_inmediato_id' => $this->titular->id,
-        ])->saveQuietly();
-
-        $this->trabajador->jefesInmediatosAdicionales()->attach($this->manual->id, [
-            'asignado_por_id' => $this->titular->id,
-        ]);
-
+        $this->trabajador->update(['unidad_organica_id' => $unidad->id]);
         $this->trabajador = $this->trabajador->fresh();
     }
 
-    /** @return array<string, array{0: string}> */
-    public static function origenes(): array
+    public function test_el_jefe_de_la_unidad_es_el_jefe_inmediato_del_trabajador(): void
     {
-        return [
-            'por la unidad (titular)' => ['titular'],
-            'por jefes_turno (728)' => ['deUnidad'],
-            'asignado a mano' => ['manual'],
-        ];
-    }
-
-    #[DataProvider('origenes')]
-    public function test_los_tres_origenes_son_jefe_inmediato(string $propiedad): void
-    {
-        $this->assertTrue($this->{$propiedad}->esJefeInmediatoDe($this->trabajador));
+        $this->assertSame($this->jefe->id, $this->trabajador->jefe_inmediato_id);
+        $this->assertTrue($this->jefe->esJefeInmediatoDe($this->trabajador));
         $this->assertFalse($this->ajeno->esJefeInmediatoDe($this->trabajador));
     }
 
-    #[DataProvider('origenes')]
-    public function test_los_tres_origenes_ven_y_editan_al_trabajador(string $propiedad): void
+    public function test_el_jefe_inmediato_ve_y_edita_al_trabajador(): void
     {
         $policy = new UserPolicy;
 
-        $this->assertTrue($policy->view($this->{$propiedad}, $this->trabajador));
-        $this->assertTrue($policy->editar($this->{$propiedad}, $this->trabajador));
+        $this->assertTrue($policy->view($this->jefe, $this->trabajador));
+        $this->assertTrue($policy->editar($this->jefe, $this->trabajador));
 
         $this->assertFalse($policy->view($this->ajeno, $this->trabajador));
         $this->assertFalse($policy->editar($this->ajeno, $this->trabajador));
     }
 
-    #[DataProvider('origenes')]
-    public function test_los_tres_origenes_pueden_gestionar_su_turno(string $propiedad): void
+    public function test_el_jefe_inmediato_puede_gestionar_el_turno_del_trabajador(): void
     {
-        $this->assertTrue($this->{$propiedad}->puedeGestionarTurnoDe($this->trabajador));
+        $this->assertTrue($this->jefe->puedeGestionarTurnoDe($this->trabajador));
         $this->assertFalse($this->ajeno->puedeGestionarTurnoDe($this->trabajador));
     }
 
-    public function test_jefes_inmediatos_lista_a_todos_sin_distinguir_origen(): void
+    public function test_jefes_inmediatos_lista_solo_al_jefe_de_la_unidad(): void
     {
-        $ids = $this->trabajador->jefesInmediatos()->pluck('id')->sort()->values()->all();
-
         $this->assertSame(
-            collect([$this->titular->id, $this->deUnidad->id, $this->manual->id])->sort()->values()->all(),
-            $ids,
+            [$this->jefe->id],
+            $this->trabajador->jefesInmediatos()->pluck('id')->all(),
         );
+    }
+
+    public function test_quien_no_encabeza_unidad_no_es_jefe_de_nadie_por_tener_turno(): void
+    {
+        // Antes un "jefe de turno" podía ser jefe de un trabajador sin ser
+        // el jefe de la unidad. Ahora solo cuenta jefe_inmediato_id.
+        $otro = $this->usuarioDePrueba();
+        $unidad = UnidadOrganica::find($this->trabajador->unidad_organica_id);
+        $unidad->update(['jefe_id' => null]);
+
+        $this->assertNull($this->trabajador->fresh()->jefe_inmediato_id);
+        $this->assertFalse($otro->esJefeInmediatoDe($this->trabajador->fresh()));
+        $this->assertFalse($this->jefe->fresh()->esJefeInmediatoDe($this->trabajador->fresh()));
     }
 }

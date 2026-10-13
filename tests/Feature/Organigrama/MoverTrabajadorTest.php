@@ -184,12 +184,15 @@ class MoverTrabajadorTest extends TestCase
 
     // ---- Action: reglas de negocio ----------------------------------------
 
-    public function test_no_se_mueve_a_una_unidad_de_otro_regimen(): void
+    public function test_se_puede_mover_a_una_unidad_de_otro_regimen(): void
     {
-        $this->expectException(UsuarioException::class);
-        $this->expectExceptionMessage('régimen');
-
+        // El régimen de la persona y el de su jefe son independientes: un 728
+        // puede quedar bajo un jefe 276 sin bloqueo.
         $this->moverYa($this->admin, $this->carla, $this->oficina276);
+
+        $carla = $this->carla->fresh();
+        $this->assertSame($this->oficina276->id, $carla->unidad_organica_id);
+        $this->assertSame($this->oficina276->jefe_id, $carla->jefe_inmediato_id);
     }
 
     public function test_quien_encabeza_una_unidad_no_se_mueve_desde_el_organigrama(): void
@@ -288,7 +291,6 @@ class MoverTrabajadorTest extends TestCase
             ->assertSet('propuesta.origen', $this->oficinaA->id)
             ->assertSet('propuesta.destino', $this->oficinaB->id)
             ->assertSet('propuesta.cambiar_sede', false)
-            ->assertSet('propuesta.quitar_adicionales', false)
             ->assertSee('Confirmar movimiento');
 
         // Solo con la propuesta abierta, todavía no se movió nadie.
@@ -353,7 +355,6 @@ class MoverTrabajadorTest extends TestCase
                 'origen' => $this->oficinaA->id,
                 'destino' => $this->subOtra->id,
                 'cambiar_sede' => false,
-                'quitar_adicionales' => false,
             ])
             ->call('confirmarMovimiento')
             ->assertSee('fuera de tu área');
@@ -387,7 +388,7 @@ class MoverTrabajadorTest extends TestCase
                 && $historial->first()['movimiento']->trabajador_id === $this->sergio->id);
     }
 
-    // ---- Sede propuesta y jefes adicionales -------------------------------
+    // ---- Sede propuesta -------------------------------
 
     private function ponerBetoEnOtraSede(): Sede
     {
@@ -448,50 +449,18 @@ class MoverTrabajadorTest extends TestCase
         $this->assertSame($sedeOriginal, $this->carla->fresh()->sede_id);
     }
 
-    public function test_por_defecto_se_conservan_los_jefes_adicionales(): void
-    {
-        $this->carla->jefesInmediatosAdicionales()->attach($this->sergio->id, ['asignado_por_id' => $this->admin->id]);
-
-        $this->moverYa($this->admin, $this->carla, $this->oficinaB);
-
-        $this->assertSame([$this->sergio->id], $this->carla->jefesInmediatosAdicionales()->pluck('users.id')->all());
-    }
-
-    public function test_quitar_los_jefes_adicionales_los_anota_y_deshacer_los_devuelve(): void
-    {
-        $this->carla->jefesInmediatosAdicionales()->attach($this->sergio->id, ['asignado_por_id' => $this->admin->id]);
-
-        $movimiento = $this->mover()->ejecutar($this->admin, $this->carla->id, $this->oficinaB->id, $this->oficinaA->id, true, quitarAdicionales: true);
-
-        $this->assertSame(0, $this->carla->jefesInmediatosAdicionales()->count());
-        $this->assertSame(
-            [['jefe_id' => $this->sergio->id, 'asignado_por_id' => $this->admin->id]],
-            $movimiento->jefes_adicionales_quitados,
-        );
-
-        $this->mover()->deshacer($this->admin, $movimiento);
-
-        $this->assertSame([$this->sergio->id], $this->carla->jefesInmediatosAdicionales()->pluck('users.id')->all());
-    }
-
-    public function test_la_ventana_de_confirmacion_ofrece_sede_y_jefes_adicionales_y_los_aplica(): void
+    public function test_la_ventana_de_confirmacion_ofrece_la_sede_y_la_aplica(): void
     {
         $norte = $this->ponerBetoEnOtraSede();
-        $this->carla->jefesInmediatosAdicionales()->attach($this->sergio->id, ['asignado_por_id' => $this->admin->id]);
 
         Livewire::actingAs($this->admin)
             ->test(OrganigramaArbol::class)
             ->call('alternarEdicion')
             ->call('proponerMovimiento', $this->carla->id, $this->oficinaB->id)
             ->assertSet('propuesta.cambiar_sede', true)
-            ->assertSet('propuesta.quitar_adicionales', false)
             ->assertSee('Cambiar la sede de')
-            ->assertSee('Jefes inmediatos adicionales')
-            ->set('propuesta.quitar_adicionales', true)
             ->call('confirmarMovimiento');
 
-        $carla = $this->carla->fresh();
-        $this->assertSame($norte->id, $carla->sede_id);
-        $this->assertSame(0, $carla->jefesInmediatosAdicionales()->count());
+        $this->assertSame($norte->id, $this->carla->fresh()->sede_id);
     }
 }

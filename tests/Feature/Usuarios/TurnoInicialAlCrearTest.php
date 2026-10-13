@@ -5,7 +5,6 @@ namespace Tests\Feature\Usuarios;
 use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Livewire\Usuarios\UsuarioAdminForm;
 use App\Models\ConfiguracionTurno;
-use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
@@ -79,12 +78,10 @@ class TurnoInicialAlCrearTest extends TestCase
         // turno recién creado esté vigente al llamar a CrearPapeletaAction.
         $this->travelTo(Carbon::parse(now()->toDateString().' 10:00:00'));
 
-        // Crear una papeleta exige un jefe inmediato activo que cubra el
-        // mismo turno: la unidad tiene uno 728 ya programado en MANANA.
+        // Crear una papeleta exige un jefe inmediato activo en la unidad.
         $jefe = $this->usuarioDePrueba(['regimen' => '728']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
         $jefe->update(['unidad_organica_id' => $unidad->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
         ConfiguracionTurno::create([
             'user_id' => $jefe->id,
             'turno' => 'MANANA',

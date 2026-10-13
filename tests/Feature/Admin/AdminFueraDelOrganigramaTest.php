@@ -3,8 +3,6 @@
 namespace Tests\Feature\Admin;
 
 use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
-use App\Actions\Usuario\AsignarJefeAdicionalAction;
-use App\Exceptions\PapeletaException;
 use App\Exceptions\UsuarioException;
 use App\Livewire\Organigrama\UnidadModal;
 use App\Livewire\Usuarios\UsuarioAdminForm;
@@ -18,7 +16,7 @@ use Tests\TestCase;
 
 /**
  * El admin administra cuentas: no pertenece al organigrama, no encabeza
- * unidades, no es jefe de turno ni jefe inmediato adicional. Y puede crear
+ * unidades ni es jefe inmediato de nadie. Y puede crear
  * a otro admin desde «Nuevo administrador».
  */
 class AdminFueraDelOrganigramaTest extends TestCase
@@ -54,7 +52,7 @@ class AdminFueraDelOrganigramaTest extends TestCase
     }
 
     /** @param array<string, mixed> $cambios */
-    private function guardarUnidad(UnidadOrganica $unidad, array $cambios, ?array $jefesAdicionales = null): UnidadOrganica
+    private function guardarUnidad(UnidadOrganica $unidad, array $cambios): UnidadOrganica
     {
         return app(GuardarUnidadOrganicaAction::class)->ejecutar($this->admin, $unidad, [
             'nombre' => $unidad->nombre,
@@ -63,7 +61,7 @@ class AdminFueraDelOrganigramaTest extends TestCase
             'jefe_id' => $unidad->jefe_id,
             'activo' => $unidad->activo,
             ...$cambios,
-        ], $jefesAdicionales);
+        ]);
     }
 
     public function test_un_admin_no_puede_encabezar_una_unidad(): void
@@ -71,22 +69,6 @@ class AdminFueraDelOrganigramaTest extends TestCase
         $this->expectException(UsuarioException::class);
 
         $this->guardarUnidad($this->oficina, ['jefe_id' => $this->otroAdmin->id]);
-    }
-
-    public function test_un_admin_no_puede_ser_jefe_de_turno_de_una_unidad(): void
-    {
-        $this->expectException(UsuarioException::class);
-
-        $this->guardarUnidad($this->oficina, [], [$this->otroAdmin->id]);
-    }
-
-    public function test_un_admin_no_puede_ser_jefe_inmediato_adicional(): void
-    {
-        $trabajador = $this->usuarioDePrueba(['name' => 'Carla', 'unidad_organica_id' => $this->oficina->id]);
-
-        $this->expectException(PapeletaException::class);
-
-        app(AsignarJefeAdicionalAction::class)->ejecutar($trabajador, $this->otroAdmin, $this->admin, true);
     }
 
     public function test_los_admins_no_aparecen_como_candidatos_a_jefe_en_el_organigrama(): void

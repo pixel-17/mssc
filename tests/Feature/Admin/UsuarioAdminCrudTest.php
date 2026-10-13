@@ -5,7 +5,6 @@ namespace Tests\Feature\Admin;
 use App\Livewire\Usuarios\UsuarioAdminForm;
 use App\Livewire\Usuarios\UsuarioAdminIndex;
 use App\Models\ConfiguracionTurno;
-use App\Models\JefeTurno;
 use App\Models\Turno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -410,11 +409,11 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertSame('Sin turno', $usuario->fresh()->name);
     }
 
-    public function test_no_se_puede_desactivar_desde_el_formulario_a_un_jefe_titular_de_turno(): void
+    public function test_desactivar_desde_el_formulario_a_un_jefe_con_gente_sin_decidir_se_bloquea(): void
     {
         $jefe = $this->usuarioDePrueba(['regimen' => '276']);
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina de Guardia', 'jefe_id' => $jefe->id]);
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $jefe->id]);
+        $this->usuarioDePrueba(['regimen' => '276', 'unidad_organica_id' => $unidad->id]);
 
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class, ['usuario' => $jefe->fresh()])
