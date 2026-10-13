@@ -6,7 +6,6 @@ use App\Actions\Organigrama\MoverJefeComoTrabajadorAction;
 use App\Actions\Organigrama\MoverJefeInmediatoAction;
 use App\Actions\Organigrama\MoverTrabajadorAction;
 use App\Exceptions\UsuarioException;
-use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
 use App\Models\MovimientoOrganigrama;
 use App\Models\Papeleta;
 use App\Models\Sede;
@@ -75,12 +74,11 @@ class OrganigramaArbol extends Component
      * del navegador, así que MoverTrabajadorAction lo revalida entero al
      * confirmar y la vista previa se recalcula en cada render.
      *
-     * `cambiar_sede` (aceptar la sede del jefe del destino) y
-     * `quitar_adicionales` son las dos decisiones de la ventana de
-     * confirmación; son solo booleanos: la sede concreta la decide el
-     * servidor.
+     * `cambiar_sede` (aceptar la sede del jefe del destino) es la decisión
+     * de la ventana de confirmación; es solo un booleano: la sede concreta
+     * la decide el servidor.
      *
-     * @var array{trabajador: int, origen: int, destino: int, cambiar_sede: bool, quitar_adicionales: bool}|null
+     * @var array{trabajador: int, origen: int, destino: int, cambiar_sede: bool}|null
      */
     public ?array $propuesta = null;
 
@@ -208,9 +206,8 @@ class OrganigramaArbol extends Component
             'trabajador' => (int) $trabajador->id,
             'origen' => (int) $trabajador->unidad_organica_id,
             'destino' => (int) $destino->id,
-            // La sede del nuevo jefe se propone ya marcada; quitar jefes adicionales, no.
+            // La sede del nuevo jefe se propone ya marcada.
             'cambiar_sede' => $vista['sede']['propone_cambio'],
-            'quitar_adicionales' => false,
         ];
     }
 
@@ -308,7 +305,7 @@ class OrganigramaArbol extends Component
         }
 
         $persona = User::find((int) ($propuesta['jefe'] ?? 0));
-        $eraJefe = $persona && ($persona->unidadesQueEncabeza()->exists() || $persona->turnosQueEncabeza()->exists());
+        $eraJefe = $persona && ($persona->unidadesQueEncabeza()->exists());
 
         $this->mensajeOk = $this->mensajeError = null;
 
@@ -391,7 +388,6 @@ class OrganigramaArbol extends Component
                 (int) ($propuesta['origen'] ?? 0),
                 true,
                 (bool) ($propuesta['cambiar_sede'] ?? false),
-                (bool) ($propuesta['quitar_adicionales'] ?? false),
             );
         } catch (UsuarioException $e) {
             $this->mensajeError = $e->getMessage();
@@ -517,7 +513,6 @@ class OrganigramaArbol extends Component
             'raices' => $raices,
             'stats' => $stats,
             'esAdmin' => $usuario->hasRole('admin'),
-            'etiquetasTurno' => UnidadOrganicaForm::TURNOS,
             'sedes' => Sede::orderBy('nombre')->get(['id', 'nombre']),
             'conteoSedes' => $conteoSedes,
             'ficha' => $ficha,
@@ -583,7 +578,7 @@ class OrganigramaArbol extends Component
             return null;
         }
 
-        $vista = ['jefe' => $jefe, 'es_jefe' => $jefe->unidadesQueEncabeza()->exists() || $jefe->turnosQueEncabeza()->exists(), 'destino' => $destino, 'trabajador' => null, 'como_jefe' => null, 'unidad' => null, 'errores' => []];
+        $vista = ['jefe' => $jefe, 'es_jefe' => $jefe->unidadesQueEncabeza()->exists(), 'destino' => $destino, 'trabajador' => null, 'como_jefe' => null, 'unidad' => null, 'errores' => []];
 
         foreach (['trabajador' => MoverJefeComoTrabajadorAction::COMO_TRABAJADOR, 'como_jefe' => MoverJefeComoTrabajadorAction::COMO_JEFE] as $clave => $modo) {
             try {

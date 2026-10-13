@@ -61,6 +61,20 @@ class UsuarioAdminIndex extends Component
     {
         $this->autorizarAdmin();
 
+        // Jefe con gente a cargo: se decide el reemplazo en su propio panel.
+        if ($usuario->activo && $estado->motivoParaNoDesactivar(auth()->user(), $usuario) === null
+            && $estado->jefaturasPorResolver($usuario)->isNotEmpty()) {
+            $this->dispatch('usuario-baja-abrir', id: $usuario->id);
+
+            return;
+        }
+
+        if ($estado->jefaturasPorResolver($usuario)->isNotEmpty()) {
+            $this->dispatch('usuario-baja-abrir', id: $usuario->id);
+
+            return;
+        }
+
         try {
             $estado->desactivar(auth()->user(), $usuario);
         } catch (UsuarioException $e) {
@@ -70,6 +84,11 @@ class UsuarioAdminIndex extends Component
         }
 
         session()->now('mensaje', 'Usuario desactivado: ya no podrá iniciar sesión.');
+    }
+
+    #[\Livewire\Attributes\On('usuarios-actualizado')]
+    public function refrescar(): void
+    {
     }
 
     public function reactivar(User $usuario, CambiarEstadoUsuarioAction $estado): void

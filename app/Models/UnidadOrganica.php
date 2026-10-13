@@ -55,229 +55,8 @@ class UnidadOrganica extends Model
     }
 
     /**
-     * Régimen de la unidad = el de su jefe (`jefe_id`): todos sus jefes y
-     * trabajadores deben ser de ese mismo régimen. null mientras la
-     * unidad todavía no tiene jefe (el primero que se cree lo define).
-     */
-    public function regimen(): ?string
-    {
-        return $this->jefe?->regimen;
-    }
-
-    /**
-     * Turnos rotativos de una unidad 728 que hoy NO tienen jefe inmediato
-     * activo (sin fila en jefes_turno, o con el jefe desactivado). Vacío
-     * para unidades 276 o sin jefe: ahí la regla de turnos no aplica.
-     *
-     * Requiere `jefe` y `jefesTurno.jefe` cargados (si no, se leen perezosamente).
-     * Quien llama en bucle (organigrama, avisos del listado) debe pasar
-     * $configuradosPorTurno, calculado UNA vez con
-     * ConfiguracionTurno::idsPorTurno() para todos los jefes; sin él se
-     * hace una sola query por llamada (antes eran tres, una por turno).
-     *
-     * @param  array<string, array<int, true>>|null  $configuradosPorTurno
-     * @return list<string>
-     */
-    public function turnosSinJefe(?array $configuradosPorTurno = null): array
-    {
-        if ($this->regimen() !== '728') {
-            return [];
-        }
-
-        $jefes = $this->jefesInmediatos728();
-        $configurados = $configuradosPorTurno ?? ConfiguracionTurno::idsPorTurno($jefes->pluck('id'));
-
-        return array_values(array_filter(
-            ConfiguracionTurno::TURNOS_728,
-            fn (string $turno) => ! $jefes->contains(
-                fn (User $jefe) => isset($configurados[$turno][(int) $jefe->id])
-            ),
-        ));
-    }
-
-    /** Jefes inmediatos adicionales de esta unidad (régimen 728). Asignación manual de QUIÉN, sin turno fijo. */
-    public function jefesTurno(): HasMany
-    {
-        return $this->hasMany(JefeTurno::class, 'unidad_organica_id');
-    }
-
-    /**
-     * Jefes inmediatos de esta unidad para régimen 728, de UN solo tipo:
-     * el jefe de la unidad (`jefe_id`) y los adicionales (`jefes_turno`)
-     * cuentan igual, sin distinguir cómo se asignaron. Solo activos y
-     * sin repetir.
-     *
-     * @return \Illuminate\Support\Collection<int, User>
-     */
-    private function jefesInmediatos728(): \Illuminate\Support\Collection
-    {
-        return collect([$this->jefe])
-            ->merge($this->jefesTurno->map(fn (JefeTurno $jefeTurno) => $jefeTurno->jefe))
-            ->filter(fn (?User $jefe) => $jefe?->activo)
-            ->unique('id')
-            ->values();
-    }
-
-    /**
-     * Jefes inmediatos activos (régimen 728) de esta unidad, SOLO si ninguno
-     * tiene hoy un turno vigente (sin programación para hoy, o en descanso).
-     * Colección vacía si no hay jefes activos o si al menos uno sí tiene turno.
-     *
-     * Permite avisar "tu jefe inmediato no tiene turno" en vez de un genérico
-     * "no hay jefe inmediato" cuando el jefe existe pero no está programado.
-     *
-     * @return \Illuminate\Support\Collection<int, User>
-     */
-    public function jefesInmediatosSinTurnoVigente(): \Illuminate\Support\Collection
-    {
-        $jefes = $this->jefesInmediatos728();
-
-        $todosSinTurno = $jefes->isNotEmpty() && $jefes->every(function (User $jefe) {
-            $turno = Turno::vigenteParaUsuario($jefe->id);
-
-            return $turno === null || $turno->es_descanso;
-        });
-
-        return $todosSinTurno ? $jefes : collect();
-    }
-
-    /**
-     * Jefes inmediatos de esta unidad cuyo turno CONFIGURADO
-     * (`configuraciones_turno.turno`, no el de hoy) es el turno dado.
-     * Versión "estructural" para avisos de "falta jefe" (ver
-     * AlertaJefaturaService) y columnas fijas de `users`.
-     *
-     * @return \Illuminate\Support\Collection<int, User>
-     */
-    private function jefesConfiguradosPara(string $turno): \Illuminate\Support\Collection
-    {
-        $jefes = $this->jefesInmediatos728();
-
-        if ($jefes->isEmpty()) {
-            return $jefes;
-        }
-
-        $jefeIdsDelTurno = ConfiguracionTurno::where('turno', $turno)
-            ->whereIn('user_id', $jefes->pluck('id'))
-            ->pluck('user_id');
-
-        return $jefes->filter(fn (User $jefe) => $jefeIdsDelTurno->contains($jefe->id));
-    }
-
-    /**
-     * Jefe inmediato de esta unidad para el turno dado.
-     *
-     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): de los
-     *   jefes inmediatos de esta unidad (jefe_id y jefes_turno cuentan
-     *   igual, ver jefesInmediatos728()), cuenta al primero cuyo turno
-     *   CONFIGURADO coincide con el pedido y que sigue activo. Sin
-     *   ninguno devuelve null: ese turno no tiene jefe y quien pide
-     *   la papeleta debe enterarse (ver CrearPapeletaAction). Ya NO
-     *   cae a `jefe_id`.
-     * - Cualquier otro valor ($turno null, ej. régimen 276, o un código
-     *   que no es de turno rotativo): `jefe_id` de la unidad.
-     */
-    public function resolverJefeInmediato(?string $turno): ?int
-    {
-        if (! in_array($turno, ConfiguracionTurno::TURNOS_728, true)) {
-            return $this->jefe_id !== null ? (int) $this->jefe_id : null;
-        }
-
-        $jefe = $this->jefesConfiguradosPara($turno)->first();
-
-        return $jefe ? (int) $jefe->id : null;
-    }
-
-    /**
-     * Todos los candidatos a jefe inmediato de esta unidad para el
-     * turno dado — no uno solo (ver resolverJefeInmediato() para el
-     * caso de un solo jefe fotografiado, que se mantiene por
-     * compatibilidad).
-     *
-     * - Turno rotativo (MANANA/TARDE/NOCHE, régimen 728): de los
-     *   jefes inmediatos de esta unidad (jefe_id y jefes_turno cuentan
-     *   igual, ver jefesInmediatos728()), activos, SOLO
-     *   cuentan los que hoy están "de servicio" para ese turno (su
-     *   propio ciclo en configuraciones_turno, vía
-     *   Turno::vigenteParaUsuario, igual que un trabajador). El jefe
-     *   inmediato no tiene turno fijo asignado: aplica únicamente
-     *   cuando él mismo está de turno y coincide con el de sus
-     *   trabajadores — si ninguno está de servicio hoy, no hay
-     *   candidatos (cae al bloqueo de CrearPapeletaAction, no hay
-     *   caída a "todos los asignados" aunque no estén de servicio).
-     * - Cualquier otro valor ($turno null, régimen 276, o un código
-     *   que no es de turno rotativo): un único candidato, jefe_id de
-     *   la unidad (o vacío si no tiene).
-     *
-     * @return list<int>
-     */
-    public function resolverJefesInmediatos(?string $turno, bool $exigirTurnoVigenteDelJefe = false): array
-    {
-        if (! in_array($turno, ConfiguracionTurno::TURNOS_728, true)) {
-            if ($this->jefe_id === null) {
-                return [];
-            }
-
-            // Trabajador sin turno rotativo (276) con jefe inmediato 728: el
-            // jefe solo cuenta si hoy tiene un turno vigente (no descanso).
-            // Sin turno asignado a él, la papeleta no le llega a nadie y
-            // CrearPapeletaAction bloquea la creación. Un jefe 276 no se
-            // programa por turnos, así que no se le exige.
-            //
-            // Solo se exige cuando quien crea es un trabajador común
-            // ($exigirTurnoVigenteDelJefe). Si quien crea es un jefe y sube a
-            // su superior, no se filtra aquí: la disponibilidad del superior
-            // la resuelve DecisorDisponibleService (escala a RRHH si no está).
-            $jefe = $this->jefe;
-
-            if ($exigirTurnoVigenteDelJefe && $jefe?->regimen === '728') {
-                $vigente = Turno::vigenteParaUsuario($jefe->id);
-
-                if ($vigente === null || $vigente->es_descanso) {
-                    return [];
-                }
-            }
-
-            return [(int) $this->jefe_id];
-        }
-
-        return $this->jefesInmediatos728()
-            ->filter(fn (User $jefe) => Turno::vigenteParaUsuario($jefe->id)?->codigo() === $turno)
-            ->pluck('id')
-            ->map(fn ($id) => (int) $id)
-            ->unique()
-            ->values()
-            ->all();
-    }
-
-    /**
-     * Versión de jefaturasDe() que devuelve TODOS los candidatos a
-     * jefe inmediato (no uno solo), junto al jefe de área tal cual.
-     * Usada por CrearPapeletaAction para fotografiar en
-     * papeleta_jefes_candidatos (ver Papeleta::jefesCandidatos()).
-     *
-     * @return array{0: list<int>, 1: ?int}
-     */
-    public function jefaturasMultiplesDe(User $usuario, ?string $turno = null): array
-    {
-        $padre = $this->padre;
-
-        if ($this->esJefeDeLaUnidad($usuario)) {
-            return [
-                $padre?->resolverJefesInmediatos($turno) ?? [],
-                $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
-            ];
-        }
-
-        return [
-            $this->resolverJefesInmediatos($turno, exigirTurnoVigenteDelJefe: true),
-            $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
-        ];
-    }
-
-    /**
-     * ¿$usuario es jefe de ESTA unidad? Lo es quien figura como
-     * `jefe_id` o como jefe de algún turno en jefes_turno.
+     * ¿$usuario es el jefe de ESTA unidad? Un único jefe (`jefe_id`), sin
+     * importar su régimen ni el de su gente.
      */
     public function esJefeDeLaUnidad(User $usuario): bool
     {
@@ -285,10 +64,7 @@ class UnidadOrganica extends Model
             return false;
         }
 
-        return (int) $this->jefe_id === (int) $usuario->id
-            || $this->jefesTurno->contains(
-                fn (JefeTurno $jefeTurno) => (int) $jefeTurno->jefe_id === (int) $usuario->id
-            );
+        return $this->jefe_id !== null && (int) $this->jefe_id === (int) $usuario->id;
     }
 
     /** Trabajadores que pertenecen a esta unidad. */
@@ -324,41 +100,35 @@ class UnidadOrganica extends Model
      * (fotografía en la papeleta) y el comando jefaturas:recalcular,
      * para que nunca diverjan.
      *
-     * Quien encabeza la unidad (como `jefe_id` o como jefe de un turno)
+     * Quien encabeza la unidad (`jefe_id`)
      * también es miembro de ella, pero NO puede ser su propio jefe: su
      * superior está un nivel arriba (jefe
      * inmediato = jefe de la unidad padre; jefe de área = jefe de la
      * unidad abuela). Si no hay unidad padre, ese nivel queda en null.
      *
-     * $turno (MANANA/TARDE/NOCHE) resuelve el jefe inmediato por turno
-     * vía jefes_turno (ver resolverJefeInmediato); null usa el jefe_id
-     * de la unidad tal cual (lo que siguen usando UserObserver y el
-     * comando jefaturas:recalcular para las columnas fijas de `users`,
-     * que no dependen del turno de hoy). Solo CrearPapeletaAction pasa
-     * el turno vigente al fotografiar la papeleta.
      *
      * @return array{0: ?int, 1: ?int}
      */
-    public function jefaturasDe(User $usuario, ?string $turno = null): array
+    public function jefaturasDe(User $usuario): array
     {
         $padre = $this->padre;
 
         if ($this->esJefeDeLaUnidad($usuario)) {
             return [
-                $padre?->resolverJefeInmediato($turno),
+                $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
                 $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
             ];
         }
 
         return [
-            $this->resolverJefeInmediato($turno),
+            $this->jefe_id !== null ? (int) $this->jefe_id : null,
             $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
         ];
     }
 
     /**
      * Todas las unidades en memoria, por id, con lo que jefaturasDe()
-     * necesita ya cargado: `jefe`, `jefesTurno` y `padre` enlazado a la
+     * necesita ya cargado: `jefe` y `padre` enlazado a la
      * misma instancia del mapa (así padre->padre es gratis). Son 2 queries
      * fijas en total, en vez de varias por cada usuario al recalcular
      * jefaturas de un subárbol (UnidadOrganicaObserver, jefaturas:recalcular).
@@ -368,7 +138,7 @@ class UnidadOrganica extends Model
      */
     public static function arbolEnMemoria(): \Illuminate\Support\Collection
     {
-        $porId = static::query()->with(['jefe', 'jefesTurno'])->get()->keyBy('id');
+        $porId = static::query()->with(['jefe'])->get()->keyBy('id');
 
         foreach ($porId as $unidad) {
             $unidad->setRelation('padre', $unidad->parent_id !== null ? $porId->get($unidad->parent_id) : null);

@@ -3,10 +3,8 @@
 namespace App\Actions\Organigrama;
 
 use App\Exceptions\UsuarioException;
-use App\Models\Papeleta;
 use App\Models\UnidadOrganica;
 use App\Models\User;
-use App\States\Papeleta\PendienteJefe;
 
 /**
  * Reglas y vista previa de dos cambios sobre una unidad orgánica:
@@ -23,13 +21,10 @@ use App\States\Papeleta\PendienteJefe;
  * Reglas:
  * - El jefe nuevo debe existir, estar activo y no ser administrador (el admin
  *   administra cuentas: no tiene unidad, equipo ni bandeja de jefe).
- * - Régimen: todos en una unidad comparten el de su jefe (ver
- *   UnidadOrganica::regimen()). Si cambia el jefe, el régimen del nuevo debe
- *   coincidir con el de las personas activas y los jefes de turno que ya
- *   tiene la unidad. Una unidad vacía acepta cualquier régimen.
+ * - El régimen (276/728) del jefe y el de su gente son independientes.
  * - Si se pide pasar al jefe nuevo a la unidad (ubicarJefe), no puede
- *   encabezar ya otra unidad ni ser jefe de turno en otra: dejaría a esa
- *   otra unidad con un jefe que ya no pertenece a ella.
+ *   encabezar ya otra unidad: dejaría a esa otra unidad con un jefe que
+ *   ya no pertenece a ella.
  * - Una unidad desactivada no recibe sub-unidades.
  */
 class JefaturaUnidadService
@@ -67,35 +62,6 @@ class JefaturaUnidadService
             throw new UsuarioException($jefe->nombre_completo.' es administrador: un administrador no pertenece al organigrama ni puede encabezar una unidad.');
         }
 
-        if ($unidad !== null && $jefe->regimen !== null) {
-            $excluidos = array_filter([(int) $unidad->jefe_id, (int) $jefe->id]);
-
-            $personas = $unidad->miembros()
-                ->where('activo', true)
-                ->whereNotIn('id', $excluidos)
-                ->where('regimen', '!=', $jefe->regimen)
-                ->count();
-
-            $jefesDeTurno = $unidad->jefesTurno()
-                ->whereHas('jefe', fn ($q) => $q->where('regimen', '!=', $jefe->regimen))
-                ->count();
-
-            if ($personas > 0) {
-                throw new UsuarioException(
-                    'El régimen de '.$jefe->nombre_completo.' ('.$jefe->regimen.') no coincide con el de '
-                    .$personas.' '.($personas === 1 ? 'persona' : 'personas').' de la unidad. '
-                    .'Todos en una unidad comparten el régimen de su jefe: muévelas primero a otra unidad.'
-                );
-            }
-
-            if ($jefesDeTurno > 0) {
-                throw new UsuarioException(
-                    'La unidad tiene jefes de turno de otro régimen que el de '.$jefe->nombre_completo
-                    .' ('.$jefe->regimen.'). Quítalos primero.'
-                );
-            }
-        }
-
         if ($ubicarJefe) {
             $otraUnidad = $jefe->unidadesQueEncabeza()
                 ->when($unidad, fn ($q) => $q->whereKeyNot($unidad->id))
@@ -104,17 +70,6 @@ class JefaturaUnidadService
             if ($otraUnidad) {
                 throw new UsuarioException(
                     $jefe->nombre_completo.' ya encabeza «'.$otraUnidad->nombre.'»: cambia primero esa jefatura '
-                    .'o desmarca «Pasarlo a esta unidad».'
-                );
-            }
-
-            $turnoEnOtra = $jefe->turnosQueEncabeza()
-                ->when($unidad, fn ($q) => $q->where('unidad_organica_id', '!=', $unidad->id))
-                ->exists();
-
-            if ($turnoEnOtra) {
-                throw new UsuarioException(
-                    $jefe->nombre_completo.' es jefe de turno en otra unidad: quítalo de allí '
                     .'o desmarca «Pasarlo a esta unidad».'
                 );
             }
@@ -170,19 +125,17 @@ class JefaturaUnidadService
             $avisos[] = $jefeAntes->nombre_completo.' deja de encabezar la unidad y sigue en ella como trabajador; muévelo si hace falta.';
         }
 
-        if ($cambiaJefe && $jefeAntes) {
-            $pendientes = Papeleta::whereState('estado', PendienteJefe::class)
-                ->where('jefe_inmediato_id', $jefeAntes->id)
-                ->count();
+        if ($cambiaJefe && $jefeAntes && $jefeId !== null) {
+            $pendientes = app(PapeletasAbiertasService::class)->contarPendientesDeJefe($jefeAntes);
 
             if ($pendientes > 0) {
-                $avisos[] = $pendientes.' '.($pendientes === 1 ? 'papeleta pendiente seguirá' : 'papeletas pendientes seguirán')
-                    .' con '.$jefeAntes->nombre_completo.' (cada papeleta guarda a su jefe al crearse; no pasan al jefe nuevo).';
+                $avisos[] = $pendientes.' '.($pendientes === 1 ? 'papeleta pendiente pasa' : 'papeletas pendientes pasan')
+                    .' al jefe nuevo.';
             }
         }
 
         if ($cambiaJefe && $jefeId === null && $personas > 0) {
-            $avisos[] = 'Sin jefe, las papeletas de '.$personas.' '.($personas === 1 ? 'persona' : 'personas').' no tendrán a quién llegar.';
+            $avisos[] = 'Sin jefe, no podrán crear papeletas quienes dependen directamente de esta jefatura.';
         }
 
         if ($fueraDeLaUnidad) {

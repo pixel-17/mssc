@@ -102,12 +102,9 @@ class CrearPapeletaAction
 
         $unidad = $trabajador->unidadOrganica;
 
-        // Misma regla que UserObserver: quien encabeza su unidad NO es su propio jefe.
-        // El código de turno (MANANA/TARDE/NOCHE, null para 276) resuelve
-        // TODOS los candidatos a jefe inmediato de ESTE turno vía
-        // jefes_turno — ver UnidadOrganica::resolverJefesInmediatos().
-        // Para 276 (turno null) esto sigue siendo, como mucho, un único
-        // candidato: jefe_id de la unidad.
+        // Un único jefe por unidad (`jefe_id`), sin importar régimen ni turno.
+        // Misma regla que UserObserver: quien encabeza su unidad NO es su
+        // propio jefe, su superior está un nivel arriba.
         // Jefe de área: no sube a nadie, su papeleta va directo a RRHH.
         $directoARrhh = $trabajador->esJefeDeArea();
 
@@ -117,74 +114,47 @@ class CrearPapeletaAction
             );
         }
 
-        [$jefesInmediatosIds, $jefeAreaId] = (! $directoARrhh && $unidad)
-            ? $unidad->jefaturasMultiplesDe($trabajador, $turno?->codigo())
-            : [[], null];
+        [$jefeInmediatoResuelto, $jefeAreaId] = (! $directoARrhh && $unidad)
+            ? $unidad->jefaturasDe($trabajador)
+            : [null, null];
 
-        // resolverJefesInmediatos() solo filtra por activo en 728; en 276 devuelve jefe_id tal
-        // cual. Se filtra aquí para todos: un jefe dado de baja no cuenta como candidato (0 o más).
-        $jefesInmediatos = $jefesInmediatosIds !== []
-            ? User::whereKey($jefesInmediatosIds)->where('activo', true)->get()
-            : collect();
+        // Un jefe dado de baja cuenta como jefatura vacante.
+        $jefeInmediato = $jefeInmediatoResuelto !== null
+            ? User::whereKey($jefeInmediatoResuelto)->where('activo', true)->first()
+            : null;
 
-        // ¿Quien crea la papeleta es, él mismo, jefe inmediato de su
-        // unidad? Si lo es, jefaturasMultiplesDe() ya resolvió más
-        // arriba en el organigrama (su Jefe de Área) en $jefesInmediatos.
-        // Es el único rol cuya papeleta puede escalar a RRHH o a
-        // autorización del sistema (ver $estadoInicial más abajo): un
-        // trabajador raso nunca escala, solo espera a su jefe inmediato.
+        // ¿Quien crea la papeleta es, él mismo, jefe de su unidad? Si lo es,
+        // jefaturasDe() ya resolvió más arriba en el organigrama (su Jefe de
+        // Área). Es el único rol cuya papeleta puede escalar a RRHH o a
+        // autorización del sistema (ver $estadoInicial): un trabajador raso
+        // nunca escala, solo espera a su jefe inmediato.
         $esJefeInmediatoDeLaUnidad = $unidad?->esJefeDeLaUnidad($trabajador) ?? false;
 
-        // Regla de estructura: el jefe inmediato (o, si quien crea la
-        // papeleta es él mismo jefe inmediato, su Jefe de Área) SIEMPRE
-        // debe existir y estar activo — sin excepción por régimen ni por
-        // posición en el organigrama. Sin él, no se puede crear la
-        // papeleta: bloqueo total, nunca se queda esperando a alguien
-        // que no existe ni escala a RRHH por defecto.
-        if (! $directoARrhh && $jefesInmediatos->isEmpty()) {
+        // Regla de estructura: el jefe inmediato (o, si quien crea es él
+        // mismo jefe inmediato, su Jefe de Área) debe existir y estar activo.
+        // Una jefatura vacante solo afecta a quien depende de ella: los
+        // trabajadores propios del jefe de área y sus jefes inmediatos. Los
+        // trabajadores de un jefe inmediato activo no se ven afectados.
+        if (! $directoARrhh && ! $jefeInmediato) {
             if ($esJefeInmediatoDeLaUnidad) {
                 throw new PapeletaException(
                     'Tu unidad no tiene un Jefe de Área activo asignado. Comunícate con Administración para regularizar la jefatura antes de crear una papeleta.'
                 );
             }
 
-            // El jefe existe y está activo, pero ninguno tiene hoy un turno
-            // vigente: se dice eso (y no "no hay jefe"), porque lo que hay
-            // que regularizar es el turno del jefe, no su asignación.
-            $jefesSinTurno = $unidad?->jefesInmediatosSinTurnoVigente() ?? collect();
-
-            if ($jefesSinTurno->isNotEmpty()) {
-                throw new PapeletaException(
-                    ($jefesSinTurno->count() === 1
-                        ? 'Tu jefe inmediato no tiene un turno vigente asignado en este momento, por eso no puedes crear la papeleta. '
-                        : 'Tus jefes inmediatos no tienen un turno vigente asignado en este momento, por eso no puedes crear la papeleta. ').
-                    'Comunícate con tu Jefe de Área para que regularice su turno.'
-                );
-            }
-
             throw new PapeletaException(
-                'Tu turno actual no tiene un jefe inmediato activo asignado. Comunícate con tu Jefe de Área para regularizar la jefatura antes de crear una papeleta.'
+                'Tu unidad no tiene un jefe activo asignado. Comunícate con Administración para regularizar la jefatura antes de crear una papeleta.'
             );
         }
 
         // Disponibilidad real: estar asignado en la BD no implica poder
-        // decidir ahora (ver DecisorDisponibleService). Con varios
-        // candidatos basta con que UNO esté disponible para no escalar.
-        // En 728 un decisor está disponible salvo en su día de descanso
-        // (ver DecisorDisponibleService). Solo importa para decidir si
-        // se escala, y solo se escala cuando $esJefeInmediatoDeLaUnidad
-        // es true (ver $estadoInicial).
-        $jefeDisponible = $jefesInmediatos->contains(
-            fn (User $jefe) => $this->decisorDisponible->estaDisponibleAhora($jefe)
-        );
+        // decidir ahora (ver DecisorDisponibleService). Solo importa para
+        // decidir si se escala, y solo escala quien es jefe de su unidad.
+        $jefeDisponible = $jefeInmediato
+            ? $this->decisorDisponible->estaDisponibleAhora($jefeInmediato)
+            : false;
 
-        // Columna única (compatibilidad con reportes/dashboards): se
-        // fotografía preferentemente a un candidato disponible, o al
-        // primero si ninguno lo está. La lista completa de candidatos se
-        // guarda aparte, ver Papeleta::jefesCandidatos().
-        $jefeInmediatoId = $jefesInmediatos
-            ->first(fn (User $jefe) => $this->decisorDisponible->estaDisponibleAhora($jefe))
-            ?->id ?? $jefesInmediatos->first()?->id;
+        $jefeInmediatoId = $jefeInmediato?->id;
 
         $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 
@@ -207,7 +177,7 @@ class CrearPapeletaAction
 
         $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefesInmediatosIds, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $directoARrhh, $estadoInicial, $autorizaSistema) {
+        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $directoARrhh, $estadoInicial, $autorizaSistema) {
             // Revalidación bajo lock: la fila del trabajador sirve de candado, así dos
             // envíos casi simultáneos se atienden uno tras otro y el segundo ve al primero.
             User::whereKey($trabajador->id)->lockForUpdate()->first();
@@ -240,16 +210,6 @@ class CrearPapeletaAction
             }
 
             $papeleta = Papeleta::create($campos);
-
-            // Fotografía de TODOS los candidatos resueltos (no solo el
-            // guardado en jefe_inmediato_id): cualquiera puede decidir
-            // esta papeleta, el que actúe primero — ver
-            // Papeleta::scopeDeJefeInmediato().
-            if ($jefesInmediatosIds !== []) {
-                $papeleta->jefesCandidatos()->createMany(
-                    collect($jefesInmediatosIds)->map(fn (int $id) => ['user_id' => $id])->all()
-                );
-            }
 
             HistorialPapeleta::create([
                 'papeleta_id' => $papeleta->id,

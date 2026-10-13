@@ -4,11 +4,9 @@ namespace App\Actions\Organigrama;
 
 use App\Exceptions\UsuarioException;
 use App\Models\ConfiguracionTurno;
-use App\Models\JefeTurno;
 use App\Models\MovimientoOrganigrama;
 use App\Models\UnidadOrganica;
 use App\Models\User;
-use App\Services\AlertaJefaturaService;
 use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -26,19 +24,14 @@ use Illuminate\Support\Facades\DB;
  * - Por cada unidad que encabeza, si quedan trabajadores activos o
  *   sub-unidades, es OBLIGATORIO designar un reemplazo (para un jefe de área,
  *   otro jefe de área). Sin reemplazo no se mueve a nadie. Si la unidad tiene
- *   otros jefes de turno (728), uno de ellos asciende a titular y no hace
- *   falta elegir. Una unidad sin gente puede quedar sin jefe (se avisa).
+ *   gente ni sub-unidades puede quedar sin jefe (se avisa).
  * - El reemplazo pasa las mismas reglas que cambiar el jefe desde la unidad
- *   (JefaturaUnidadService::validar: activo, régimen compatible, no encabeza
- *   ya otra unidad) y pasa a pertenecer a esa unidad.
+ *   (JefaturaUnidadService::validar: activo, no encabeza ya otra unidad) y pasa a pertenecer a esa unidad.
  * - Al entrar al destino se comporta como un trabajador más, igual que uno
  *   recién creado: la sede por defecto es la del jefe de la unidad destino,
- *   su jefe inmediato y de área los recalcula el observer, el régimen debe
- *   coincidir con el de la unidad destino y, si es 728, necesita turno (los
- *   jefes no tienen turno; los trabajadores sí). Si ya tenía su propia
+ *   su jefe inmediato y de área los recalcula el observer y, si es 728,
+ *   necesita turno (los jefes no tienen turno; los trabajadores sí). Si ya tenía su propia
  *   configuración de turno, se conserva. En 276 no se pide turno.
- * - Deja de ser jefe inmediato adicional de otros trabajadores y de ser jefe
- *   de turno en cualquier unidad.
  *
  * El traslado final lo hace MoverTrabajadorAction, así queda en
  * movimientos_organigrama con sus mismas validaciones.
@@ -49,16 +42,14 @@ class MoverJefeComoTrabajadorAction
     public const COMO_TRABAJADOR = 'trabajador';
 
     /**
-     * La persona entra al destino como jefe inmediato: en 728 se suma a los
-     * jefes de turno (máximo 3 por unidad); en 276, o con los 3 puestos
-     * ocupados, releva a uno de los jefes actuales, que sigue en la unidad
-     * como trabajador. Conserva su sede y no recibe turno (se programa el suyo).
+     * La persona entra al destino como jefe de la unidad: si ya tenía jefe,
+     * lo releva y ese sigue en la unidad como trabajador. Conserva su sede y
+     * no recibe turno (se programa el suyo).
      */
     public const COMO_JEFE = 'jefe';
 
     public function __construct(
         private GeneradorTurnoMensualService $generadorTurno,
-        private AlertaJefaturaService $alertaJefatura,
     ) {}
 
     /**
@@ -67,7 +58,7 @@ class MoverJefeComoTrabajadorAction
      * @return array{
      *     jefe: User,
      *     destino: UnidadOrganica,
-     *     unidades: Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int, subunidades: int, requiere_reemplazo: bool, promueve: ?User, candidatos: Collection<int, User>}>,
+     *     unidades: Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int, subunidades: int, requiere_reemplazo: bool, candidatos: Collection<int, User>}>,
      *     sede: array{actual: ?\App\Models\Sede, propuesta: ?\App\Models\Sede},
      *     necesita_turno: bool,
      *     turnos_validos: list<string>,
@@ -83,10 +74,9 @@ class MoverJefeComoTrabajadorAction
         $filas = $unidades->map(function (UnidadOrganica $unidad) use ($jefe, &$avisos) {
             $subunidades = $unidad->hijos()->count();
             $personas = $this->miembrosActivos($unidad, $jefe)->count();
-            $promueve = $this->jefeDeTurnoQueAsciende($unidad, $jefe);
             $requiere = $this->requiereReemplazo($unidad, $jefe);
 
-            if (! $requiere && (int) $unidad->jefe_id === (int) $jefe->id && $promueve === null) {
+            if (! $requiere && (int) $unidad->jefe_id === (int) $jefe->id) {
                 $avisos[] = '«'.$unidad->nombre.'» no tiene más personas: quedará sin jefe.';
             }
 
@@ -96,7 +86,6 @@ class MoverJefeComoTrabajadorAction
                 'personas' => $personas,
                 'subunidades' => $subunidades,
                 'requiere_reemplazo' => $requiere,
-                'promueve' => $promueve,
                 'candidatos' => $this->candidatos($unidad, $jefe),
             ];
         })->values();
@@ -107,17 +96,11 @@ class MoverJefeComoTrabajadorAction
         $necesitaTurno = ! $comoJefe && $this->necesitaTurno($jefe);
 
         if ($reemplazaDestino) {
-            $avisos[] = $jefe->regimen === '728'
-                ? '«'.$destino->nombre.'» ya tiene sus 3 jefes inmediatos: elige a cuál releva; seguirá en la unidad como trabajador y, siendo 728, necesitará su turno.'
-                : '«'.$destino->nombre.'» solo admite un jefe inmediato (276): releva al actual, que seguirá en la unidad como trabajador.';
+            $avisos[] = '«'.$destino->nombre.'» ya tiene jefe: '.$jefe->nombre_completo.' lo releva y el actual seguirá en la unidad como trabajador.';
         }
 
         if ($necesitaTurno) {
             $avisos[] = $jefe->nombre_completo.' es 728: como trabajador necesita un turno y su fecha de inicio de ciclo.';
-        }
-
-        if (! $comoJefe && DB::table('jefes_inmediatos_adicionales')->where('jefe_inmediato_id', $jefe->id)->exists()) {
-            $avisos[] = $jefe->nombre_completo.' deja de ser jefe inmediato adicional de otros trabajadores.';
         }
 
         $sedePropuesta = $destino->jefe?->sede;
@@ -161,7 +144,7 @@ class MoverJefeComoTrabajadorAction
 
         $comoJefe = $modo === self::COMO_JEFE;
 
-        $resultado = DB::transaction(function () use ($actor, $jefeId, $destinoId, $reemplazos, $turno, $modo, $comoJefe, $reemplazaDestinoId) {
+        return DB::transaction(function () use ($actor, $jefeId, $destinoId, $reemplazos, $turno, $modo, $comoJefe, $reemplazaDestinoId) {
             $jefe = User::query()->lockForUpdate()->find($jefeId)
                 ?? throw new UsuarioException('La persona ya no existe.');
             $destino = UnidadOrganica::query()->lockForUpdate()->find($destinoId)
@@ -181,17 +164,11 @@ class MoverJefeComoTrabajadorAction
                 $this->relevarJefatura($actor, $unidad, $jefe, $plan[$unidad->id]);
             }
 
-            // Deja de ser jefe de turno en las unidades que deja.
-            JefeTurno::where('jefe_id', $jefe->id)->delete();
-
             if ($comoJefe) {
                 $jefe->refresh();
 
-                return [$this->colocarComoJefe($actor, $jefe, $destino, $saliente), $destino, null];
+                return $this->colocarComoJefe($actor, $jefe, $destino, $saliente);
             }
-
-            // Como trabajador ya no es jefe adicional de nadie.
-            DB::table('jefes_inmediatos_adicionales')->where('jefe_inmediato_id', $jefe->id)->delete();
 
             $jefe->refresh();
 
@@ -217,23 +194,13 @@ class MoverJefeComoTrabajadorAction
                 );
             }
 
-            return [$movimiento, $destino, $datosTurno['turno'] ?? null];
+            return $movimiento;
         });
-
-        [$movimiento, $destino, $turnoCargado] = $resultado;
-
-        // Fuera de la transacción (igual que CrearUsuarioAction): un fallo al avisar nunca revierte el movimiento.
-        if ($turnoCargado !== null) {
-            $this->alertaJefatura->avisarSiFaltaJefeDeTurno($destino, $turnoCargado);
-        }
-
-        return $movimiento;
     }
 
     /**
      * Única puerta de reglas de quién y adónde. Devuelve las unidades que
-     * encabeza (jefe_id) y que hay que relevar; vacío si solo es jefe de
-     * turno de alguna.
+     * encabeza (jefe_id) y que hay que relevar.
      *
      * @return Collection<int, UnidadOrganica>
      *
@@ -265,7 +232,7 @@ class MoverJefeComoTrabajadorAction
         $unidades = $jefe->unidadesQueEncabeza()->get();
 
         // Un trabajador que no encabeza nada solo puede entrar como jefe (ascenso); como trabajador se mueve con MoverTrabajadorAction.
-        if ($modo === self::COMO_TRABAJADOR && $unidades->isEmpty() && ! $jefe->turnosQueEncabeza()->exists()) {
+        if ($modo === self::COMO_TRABAJADOR && $unidades->isEmpty()) {
             throw new UsuarioException($jefe->nombre_completo.' no encabeza ninguna unidad: se mueve como trabajador.');
         }
 
@@ -320,8 +287,6 @@ class MoverJefeComoTrabajadorAction
             }
         }
 
-        $reglas->exigirRegimenCompatible($jefe, $destino);
-
         return $unidades;
     }
 
@@ -331,22 +296,7 @@ class MoverJefeComoTrabajadorAction
         return $unidad->miembros()->where('activo', true)->whereKeyNot($jefe->id);
     }
 
-    /** Otro jefe de turno activo de la unidad que puede ascender a titular (728). */
-    private function jefeDeTurnoQueAsciende(UnidadOrganica $unidad, User $jefe): ?User
-    {
-        if ((int) $unidad->jefe_id !== (int) $jefe->id) {
-            return null;
-        }
-
-        return $unidad->jefesTurno()
-            ->where('jefe_id', '!=', $jefe->id)
-            ->with('jefe')
-            ->get()
-            ->map(fn (JefeTurno $jt) => $jt->jefe)
-            ->first(fn (?User $u) => $u?->activo);
-    }
-
-    /** ¿Hay que elegir un reemplazo? Sí si quedan personas o sub-unidades y nadie asciende solo. */
+    /** ¿Hay que elegir un reemplazo? Sí si quedan personas o sub-unidades. */
     private function requiereReemplazo(UnidadOrganica $unidad, User $jefe): bool
     {
         if ((int) $unidad->jefe_id !== (int) $jefe->id) {
@@ -355,7 +305,7 @@ class MoverJefeComoTrabajadorAction
 
         $quedaGente = $this->miembrosActivos($unidad, $jefe)->exists() || $unidad->hijos()->exists();
 
-        return $quedaGente && $this->jefeDeTurnoQueAsciende($unidad, $jefe) === null;
+        return $quedaGente;
     }
 
     /**
@@ -409,7 +359,7 @@ class MoverJefeComoTrabajadorAction
     private function reemplazoPara(UnidadOrganica $unidad, User $jefe, array $reemplazos): ?int
     {
         if ((int) $unidad->jefe_id !== (int) $jefe->id) {
-            return null; // solo era jefe de turno aquí: se quita su fila y listo
+            return null;
         }
 
         $elegido = (int) ($reemplazos[$unidad->id] ?? 0);
@@ -419,7 +369,7 @@ class MoverJefeComoTrabajadorAction
                 throw new UsuarioException('El reemplazo de «'.$unidad->nombre.'» no puede ser la misma persona.');
             }
 
-            // Mismas reglas que cambiar el jefe desde la unidad (activo, régimen, no encabeza otra).
+            // Mismas reglas que cambiar el jefe desde la unidad (activo, no encabeza otra).
             $candidato = User::find($elegido)
                 ?? throw new UsuarioException('El reemplazo elegido para «'.$unidad->nombre.'» ya no existe.');
 
@@ -441,57 +391,34 @@ class MoverJefeComoTrabajadorAction
             );
         }
 
-        return $this->jefeDeTurnoQueAsciende($unidad, $jefe)?->id;
+        return null;
     }
 
     /**
-     * Jefes inmediatos que tiene hoy la unidad (titular + jefes de turno),
-     * sin repetir y sin contar a $excepto.
+     * Jefe actual del destino (distinto de $jefe), o vacío si no tiene.
      *
      * @return Collection<int, User>
      */
     private function jefesDelDestino(UnidadOrganica $destino, User $excepto): Collection
     {
         return collect([$destino->jefe_id ? User::find($destino->jefe_id) : null])
-            ->merge($destino->jefesTurno()->with('jefe')->get()->map(fn (JefeTurno $jt) => $jt->jefe))
             ->filter()
             ->reject(fn (User $u) => (int) $u->id === (int) $excepto->id)
-            ->unique('id')
             ->values();
     }
 
-    /** ¿No hay lugar para sumar a $jefe como jefe de la unidad? Entonces releva a uno. */
+    /** ¿El destino ya tiene jefe? Entonces $jefe lo releva. */
     private function requiereReemplazarDestino(UnidadOrganica $destino, User $jefe): bool
     {
-        $jefes = $this->jefesDelDestino($destino, $jefe);
-
-        if ($jefes->isEmpty()) {
-            return false;
-        }
-
-        return $jefe->regimen === '728' ? $jefes->count() >= 3 : true;
+        return $this->jefesDelDestino($destino, $jefe)->isNotEmpty();
     }
 
     /**
-     * Jefe del destino al que releva (null si hay lugar libre).
-     *
-     * @throws UsuarioException
+     * Jefe del destino al que releva (null si no tenía).
      */
     private function validarReemplazoDestino(UnidadOrganica $destino, User $jefe, ?int $elegidoId): ?User
     {
-        if (! $this->requiereReemplazarDestino($destino, $jefe)) {
-            return null;
-        }
-
-        $jefes = $this->jefesDelDestino($destino, $jefe);
-
-        // 276: un solo jefe, no hay nada que elegir.
-        if ($jefe->regimen !== '728' && $jefes->count() === 1) {
-            return $jefes->first();
-        }
-
-        return $jefes->firstWhere('id', $elegidoId)
-            ?? throw new UsuarioException('«'.$destino->nombre.'» ya tiene todos sus jefes inmediatos: elige a cuál releva '.$jefe->nombre_completo.'.');
+        return $this->jefesDelDestino($destino, $jefe)->first();
     }
 
     /**
@@ -509,38 +436,19 @@ class MoverJefeComoTrabajadorAction
             'jefe_area' => $jefe->jefe_area_id,
         ];
 
-        $hayTitular = $destino->jefe_id !== null && (int) $destino->jefe_id !== (int) $jefe->id;
-        $seraTitular = ! $hayTitular || ($saliente !== null && (int) $saliente->id === (int) $destino->jefe_id);
-
-        if ($saliente !== null) {
-            JefeTurno::where('unidad_organica_id', $destino->id)->where('jefe_id', $saliente->id)->delete();
-        }
-
-        if ($seraTitular) {
-            // Misma acción que el catálogo: valida régimen y, con ubicarJefe, lo pasa a la unidad.
-            app(GuardarUnidadOrganicaAction::class)->ejecutar(
-                $actor,
-                $destino,
-                [
-                    'nombre' => $destino->nombre,
-                    'tipo' => $destino->tipo,
-                    'parent_id' => $destino->parent_id,
-                    'jefe_id' => $jefe->id,
-                    'activo' => $destino->activo,
-                ],
-                null,
-                ubicarJefe: true,
-            );
-        }
-
-        // En 728 todos los jefes (titular incluido) figuran en jefes_turno, igual que al crearlos.
-        if ($jefe->regimen === '728') {
-            JefeTurno::firstOrCreate(['unidad_organica_id' => $destino->id, 'jefe_id' => $jefe->id]);
-        }
-
-        if (! $seraTitular && $jefe->regimen !== '728') {
-            throw new UsuarioException('«'.$destino->nombre.'» ya tiene su jefe inmediato.');
-        }
+        // Misma acción que el catálogo: con ubicarJefe lo pasa a la unidad.
+        app(GuardarUnidadOrganicaAction::class)->ejecutar(
+            $actor,
+            $destino,
+            [
+                'nombre' => $destino->nombre,
+                'tipo' => $destino->tipo,
+                'parent_id' => $destino->parent_id,
+                'jefe_id' => $jefe->id,
+                'activo' => $destino->activo,
+            ],
+            ubicarJefe: true,
+        );
 
         // Pertenece a la unidad destino: su superior pasa a ser el de la unidad padre (UserObserver lo recalcula).
         // Conserva su sede; solo si no tenía ninguna toma la del jefe de la unidad (nunca queda sin sede).
@@ -564,7 +472,6 @@ class MoverJefeComoTrabajadorAction
             'jefe_inmediato_nuevo_id' => $jefe->jefe_inmediato_id,
             'jefe_area_anterior_id' => $antes['jefe_area'],
             'jefe_area_nuevo_id' => $jefe->jefe_area_id,
-            'jefes_adicionales_quitados' => null,
             'revierte_id' => null,
         ]);
     }
@@ -626,13 +533,7 @@ class MoverJefeComoTrabajadorAction
                 'jefe_id' => $reemplazoId,
                 'activo' => $unidad->activo,
             ],
-            null,
             ubicarJefe: $reemplazoId !== null,
         );
-
-        // En 728 el titular también figura en jefes_turno (igual que al crearlo, ver CrearUsuarioAction).
-        if ($reemplazoId !== null && User::whereKey($reemplazoId)->value('regimen') === '728') {
-            JefeTurno::firstOrCreate(['unidad_organica_id' => $unidad->id, 'jefe_id' => $reemplazoId]);
-        }
     }
 }

@@ -45,38 +45,12 @@
                 <x-organigrama.switch model="activo" label="Trabajador activo" ayuda="Si lo desactivas, deja de aparecer salvo que marques «Mostrar desactivados»." />
             </section>
 
-            {{-- Jefes --}}
+            {{-- Jefe --}}
             <section class="space-y-3 border-t border-gray-100 pt-5 dark:border-white/10">
-                <div>
-                    <h3 class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefes inmediatos</h3>
-                    <p class="text-xs text-gray-500 dark:text-tinta-50/60">Los cambios de esta sección se aplican al instante, sin pulsar Guardar.</p>
-                </div>
-
+                <h3 class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefe inmediato</h3>
                 <div class="flex items-center justify-between rounded-xl bg-gray-50 px-3 py-2 text-sm dark:bg-white/5">
                     <span class="text-tinta-950 dark:text-white">{{ $t->jefeInmediato?->nombre_completo ?? 'Sin jefe inmediato' }}</span>
                     <span class="text-[11px] text-gray-500 dark:text-tinta-50/60">por su unidad</span>
-                </div>
-
-                @foreach ($adicionales as $a)
-                    <div class="flex items-center justify-between rounded-xl bg-tinta-50/60 px-3 py-2 text-sm dark:bg-white/5" wire:key="org-adic-{{ $a->id }}">
-                        <span class="text-tinta-950 dark:text-white">{{ $a->nombre_completo }}
-                            <span class="ml-1 rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100">adicional</span>
-                        </span>
-                        <button type="button" wire:click="quitarJefe({{ $a->id }})" wire:confirm="¿Quitar a este jefe adicional?" class="rounded-lg p-1.5 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10" aria-label="Quitar jefe adicional">
-                            <x-icon name="trash" class="size-4" />
-                        </button>
-                    </div>
-                @endforeach
-
-                @if ($ok)
-                    <p class="text-xs font-medium text-emerald-700 dark:text-emerald-300" role="status">{{ $ok }}</p>
-                @endif
-
-                <div class="flex items-center gap-2">
-                    <div class="min-w-0 flex-1">
-                        <x-organigrama.combobox model="nuevoJefeId" :options="$jefes" placeholder="Buscar por nombre…" vacio="Agregar jefe adicional…" :limpiable="false" />
-                    </div>
-                    <button type="button" wire:click="agregarJefe" wire:loading.attr="disabled" wire:target="agregarJefe" class="btn-secondary text-xs">Asignar</button>
                 </div>
             </section>
 

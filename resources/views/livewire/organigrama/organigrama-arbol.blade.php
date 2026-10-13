@@ -112,7 +112,7 @@
         <x-stat-card label="Unidades" :value="$stats['unidades']" />
         <x-stat-card label="Personas" :value="$stats['personas']" />
         <x-stat-card label="Sin sede" :value="$stats['sin_sede']" :hint="$stats['sin_sede'] ? 'Hay que asignarles sede' : 'Todos tienen sede'" />
-        <x-stat-card label="Turnos sin jefe" :value="$stats['turnos_sin_jefe']" hint="Unidades 728" />
+        <x-stat-card label="Sin jefe" :value="$stats['sin_jefe']" hint="Unidades sin jefe activo" />
     </div>
 
     <div class="flex flex-wrap items-end gap-4">
@@ -168,7 +168,7 @@
         <div @class(['org-tree overflow-x-auto pb-4', 'org-editando' => $modoEdicion])>
             <ul>
                 @foreach ($raices as $nodo)
-                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => 0])
+                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => 0])
                 @endforeach
             </ul>
         </div>
@@ -189,9 +189,6 @@
                         @endif
                         @if ($h->cambioSede())
                             <span class="rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100">Sede: {{ $h->sedeAnterior?->nombre ?? 'Sin sede' }} → {{ $h->sedeNueva?->nombre ?? 'Sin sede' }}</span>
-                        @endif
-                        @if (! empty($h->jefes_adicionales_quitados))
-                            <span class="rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100">Quitó {{ count($h->jefes_adicionales_quitados) }} {{ count($h->jefes_adicionales_quitados) === 1 ? 'jefe adicional' : 'jefes adicionales' }}</span>
                         @endif
                         @if ($h->deshecho_at)
                             <span class="rounded-full bg-gray-200 px-2 py-0.5 text-[11px] text-gray-700 dark:bg-white/10 dark:text-tinta-50/80">Deshecho</span>
@@ -261,18 +258,6 @@
                             @endif
                         </dd>
                     </div>
-                    @if ($movimiento['adicionales']->isNotEmpty())
-                        <div>
-                            <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefes inmediatos adicionales</dt>
-                            <dd class="mt-0.5 text-tinta-950 dark:text-white">
-                                {{ $movimiento['adicionales']->map->nombre_completo->implode(', ') }}
-                                <label class="mt-1 flex items-start gap-2">
-                                    <input type="checkbox" wire:model="propuesta.quitar_adicionales" class="mt-0.5 rounded border-gray-300 text-tinta-600 focus:ring-tinta-500">
-                                    <span>Quitarlos al mover <span class="block text-xs text-gray-500 dark:text-tinta-50/60">Si no lo marcas, los conserva.</span></span>
-                                </label>
-                            </dd>
-                        </div>
-                    @endif
                 </dl>
 
                 @if ($movimiento['avisos'] !== [] || $movimiento['pendientes'] > 0)
@@ -281,7 +266,7 @@
                             <li>{{ $aviso }}</li>
                         @endforeach
                         @if ($movimiento['pendientes'] > 0)
-                            <li>Tiene {{ $movimiento['pendientes'] }} {{ $movimiento['pendientes'] === 1 ? 'papeleta pendiente' : 'papeletas pendientes' }}.</li>
+                            <li>Tiene {{ $movimiento['pendientes'] }} {{ $movimiento['pendientes'] === 1 ? 'papeleta pendiente' : 'papeletas pendientes' }}; las que esperan a su jefe pasan al jefe nuevo.</li>
                         @endif
                     </ul>
                 @endif
@@ -374,10 +359,8 @@
                                     @endforeach
                                 </select>
                                 @if ($fila['candidatos']->isEmpty())
-                                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Nadie de la unidad puede relevarlo ahora (régimen distinto, o ya encabeza otra unidad). Cámbialo desde la ficha de la unidad.</p>
+                                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Nadie de la unidad puede relevarlo ahora (ya encabeza otra unidad). Cámbialo desde la ficha de la unidad.</p>
                                 @endif
-                            @elseif ($fila['promueve'])
-                                <p class="mt-2 text-xs text-gray-600 dark:text-tinta-50/70">Lo releva <strong>{{ $fila['promueve']->nombre_completo }}</strong>, que ya es jefe de turno de la unidad.</p>
                             @endif
                         </div>
                     @endforeach
@@ -390,17 +373,9 @@
                             </p>
 
                             @if ($mp['requiere_reemplazar_destino'])
-                                <label class="mt-2 block text-xs font-semibold text-gray-600 dark:text-tinta-50/70" for="reemplaza-destino">
-                                    {{ $mp['jefes_destino']->count() > 1 ? 'No hay lugar libre: ¿a cuál jefe releva? (obligatorio)' : 'Solo admite un jefe: releva a' }}
-                                </label>
-                                <select id="reemplaza-destino" wire:model="reemplazaDestino" class="mt-1 w-full rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
-                                    @if ($mp['jefes_destino']->count() > 1)<option value="">Elige…</option>@endif
-                                    @foreach ($mp['jefes_destino'] as $jd)
-                                        <option value="{{ $jd->id }}" @selected($mp['jefes_destino']->count() === 1)>{{ $jd->nombre_completo }}</option>
-                                    @endforeach
-                                </select>
+                                <p class="mt-1 text-xs text-gray-600 dark:text-tinta-50/70">La unidad solo tiene un jefe: lo releva y ese jefe sigue en la unidad como trabajador.</p>
                             @else
-                                <p class="mt-1 text-xs text-gray-600 dark:text-tinta-50/70">Hay lugar libre: se suma como un jefe más de la oficina, sin sacar a nadie.</p>
+                                <p class="mt-1 text-xs text-gray-600 dark:text-tinta-50/70">La unidad no tiene jefe: queda como su jefe inmediato.</p>
                             @endif
                         </div>
                     @else
@@ -422,7 +397,7 @@
                                 <select wire:model="turnoJefe.turno" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
                                     <option value="">Turno…</option>
                                     @foreach ($mp['turnos_validos'] as $codigo)
-                                        <option value="{{ $codigo }}">{{ $etiquetasTurno[$codigo] ?? $codigo }}</option>
+                                        <option value="{{ $codigo }}">{{ \App\Models\ConfiguracionTurno::etiquetaDeTurno($codigo) }}</option>
                                     @endforeach
                                 </select>
                                 <input type="date" wire:model="turnoJefe.fecha_ancla" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800" aria-label="Inicio del ciclo">
@@ -528,14 +503,11 @@
                     </div>
 
                     <div>
-                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefes inmediatos</dt>
+                        <dt class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Jefe inmediato</dt>
                         <dd class="mt-1 space-y-1">
                             @forelse ($ficha['jefes'] as $j)
                                 <div class="flex items-center gap-2 text-tinta-950 dark:text-white">
                                     <span>{{ $j['nombre'] }}</span>
-                                    @if ($j['adicional'])
-                                        <span class="rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100">adicional</span>
-                                    @endif
                                 </div>
                             @empty
                                 <span class="text-amber-700 dark:text-amber-400">Sin jefe inmediato asignado</span>
@@ -591,5 +563,6 @@
     @if ($esAdmin)
         <livewire:organigrama.unidad-modal />
         <livewire:organigrama.trabajador-modal />
+        <livewire:usuarios.baja-con-reemplazo />
     @endif
 </div>

@@ -45,29 +45,25 @@ class UnidadModal extends Component
     /** Al cambiar de jefe: pasarlo a esta unidad (su superior pasa a ser el de la unidad padre). */
     public bool $pasarJefe = true;
 
-    /** @var list<int|null> */
-    public array $jefesAdicionales = [];
-
     public ?string $error = null;
 
     #[On('org-unidad-abrir')]
     public function abrir(?int $id = null, ?int $parentId = null): void
     {
         $this->autorizarAdmin();
-        $this->reset(['nombre', 'tipo', 'parentId', 'jefeId', 'jefesAdicionales', 'error', 'pasarJefe']);
+        $this->reset(['nombre', 'tipo', 'parentId', 'jefeId', 'error', 'pasarJefe']);
         $this->activo = true;
         $this->unidadId = null;
         $this->resetValidation();
 
         if ($id !== null) {
-            $unidad = UnidadOrganica::with('jefesTurno')->findOrFail($id);
+            $unidad = UnidadOrganica::findOrFail($id);
             $this->unidadId = $unidad->id;
             $this->nombre = $unidad->nombre;
             $this->tipo = $unidad->tipo;
             $this->parentId = $unidad->parent_id;
             $this->jefeId = $unidad->jefe_id;
             $this->activo = (bool) $unidad->activo;
-            $this->jefesAdicionales = $unidad->jefesTurno->pluck('jefe_id')->all();
         } else {
             $this->parentId = $parentId;
         }
@@ -80,17 +76,6 @@ class UnidadModal extends Component
         $this->abierto = false;
     }
 
-    public function agregarJefeAdicional(): void
-    {
-        $this->jefesAdicionales[] = null;
-    }
-
-    public function quitarJefeAdicional(int $indice): void
-    {
-        unset($this->jefesAdicionales[$indice]);
-        $this->jefesAdicionales = array_values($this->jefesAdicionales);
-    }
-
     protected function rules(): array
     {
         return [
@@ -100,7 +85,6 @@ class UnidadModal extends Component
             'jefeId' => ['nullable', 'exists:users,id'],
             'activo' => ['boolean'],
             'pasarJefe' => ['boolean'],
-            'jefesAdicionales.*' => ['nullable', 'exists:users,id'],
         ];
     }
 
@@ -125,7 +109,7 @@ class UnidadModal extends Component
                 'parent_id' => $datos['parentId'],
                 'jefe_id' => $datos['jefeId'],
                 'activo' => $datos['activo'],
-            ], $unidad ? ($datos['jefesAdicionales'] ?? []) : null, (bool) $datos['pasarJefe']);
+            ], (bool) $datos['pasarJefe']);
         } catch (UsuarioException $e) {
             $this->error = $e->getMessage();
 

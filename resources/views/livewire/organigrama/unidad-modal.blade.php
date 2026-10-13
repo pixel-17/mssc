@@ -81,31 +81,6 @@
                     </div>
                 @endif
 
-                @if ($unidadId)
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-tinta-950 dark:text-white">Jefes de turno adicionales <span class="font-normal text-gray-500 dark:text-tinta-50/60">(728)</span></p>
-                            <button type="button" wire:click="agregarJefeAdicional" class="inline-flex items-center gap-1 text-xs font-medium text-tinta-700 hover:underline dark:text-tinta-200">
-                                <x-icon name="plus-circle" class="size-4" /> Agregar
-                            </button>
-                        </div>
-
-                        @forelse ($jefesAdicionales as $indice => $jefeAdicional)
-                            <div class="flex items-center gap-2" wire:key="org-ja-{{ $indice }}">
-                                <div class="min-w-0 flex-1">
-                                    <x-organigrama.combobox :model="'jefesAdicionales.'.$indice" :options="$jefes" placeholder="Buscar por nombre…" vacio="Elegir jefe…" :limpiable="false" />
-                                </div>
-                                <button type="button" wire:click="quitarJefeAdicional({{ $indice }})" class="rounded-lg p-2 text-gray-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10" aria-label="Quitar jefe">
-                                    <x-icon name="trash" class="size-4" />
-                                </button>
-                            </div>
-                        @empty
-                            <p class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-white/5 dark:text-tinta-50/60">Ninguno. El turno que cubre cada uno sale de su propio calendario.</p>
-                        @endforelse
-                    </div>
-                @else
-                    <p class="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500 dark:bg-white/5 dark:text-tinta-50/60">Los jefes de turno adicionales se agregan después de crear la unidad.</p>
-                @endif
             </section>
 
             {{-- Estado --}}

@@ -43,18 +43,16 @@ class ArmadorOrganigrama
      */
     public function armar(User $usuario): array
     {
-        // Las unidades (oficinas) son pocas: se traen todas, pero SOLO con
-        // jefesTurno (lo que necesitan raicesPara y la ficha). Los jefes con
+        // Las unidades (oficinas) son pocas: se traen todas. Los jefes con
         // su sede y los trabajadores —el volumen grande— se cargan en
         // cargarRama() únicamente para la rama que quien mira puede ver.
         $unidades = UnidadOrganica::query()
-            ->with('jefesTurno')
             ->orderBy('nombre')
             ->get();
 
         $porPadre = $unidades->groupBy('parent_id');
 
-        $stats = ['unidades' => 0, 'personas' => 0, 'sin_sede' => 0, 'turnos_sin_jefe' => 0];
+        $stats = ['unidades' => 0, 'personas' => 0, 'sin_sede' => 0, 'sin_jefe' => 0];
         // Personas por sede ('sin' = sin sede) con la búsqueda ya aplicada pero
         // SIN el filtro de sede, para que el selector muestre cuántos hay en cada una.
         $conteoSedes = [];
@@ -63,15 +61,14 @@ class ArmadorOrganigrama
         $enAlcance = $this->idsEnAlcance($raicesDeAlcance, $porPadre);
 
         $this->cargarRama($unidades, $enAlcance);
-        $configurados = $this->turnosConfiguradosDeJefes($unidades, $enAlcance);
 
         $raices = $raicesDeAlcance
             // Closure con `use (&...)` y NO `fn`: las arrow functions capturan por
             // valor, así que $stats y $conteoSedes (acumuladores por referencia de
             // construirNodo) se quedaban en 0 y las tarjetas y el selector de sedes
             // del organigrama mostraban siempre cero.
-            ->map(function (UnidadOrganica $u) use ($porPadre, &$stats, &$conteoSedes, $configurados) {
-                return $this->construirNodo($u, $porPadre, $stats, $conteoSedes, $configurados);
+            ->map(function (UnidadOrganica $u) use ($porPadre, &$stats, &$conteoSedes) {
+                return $this->construirNodo($u, $porPadre, $stats, $conteoSedes);
             })
             ->filter()
             ->values();
@@ -80,7 +77,7 @@ class ArmadorOrganigrama
     }
 
     /**
-     * Carga jefes (con sede), jefes de turno y trabajadores SOLO de las
+     * Carga jefes (con sede) y trabajadores SOLO de las
      * unidades dentro del alcance de quien mira. Un Jefe de Área ya no
      * trae a todos los trabajadores de la municipalidad para pintar su
      * rama. Las relaciones quedan en las mismas instancias que usa
@@ -94,32 +91,14 @@ class ArmadorOrganigrama
             ->filter(fn (UnidadOrganica $u) => isset($enAlcance[$u->id]))
             ->loadMissing([
                 'jefe.sede',
-                'jefesTurno.jefe.sede',
                 'miembros' => fn ($q) => $q
                     // Los inactivos solo se piden si el interruptor está activo
                     // (construirNodo también los descarta en memoria; es el mismo criterio).
                     ->when(! $this->verInactivos, fn ($q) => $q->where('activo', true))
-                    ->with(['sede', 'jefesInmediatosAdicionales'])
+                    ->with('sede')
                     ->orderBy('name')
                     ->orderBy('apellido'),
             ]);
-    }
-
-    /**
-     * Turnos configurados de los jefes de la rama, en UNA query, para que
-     * turnosSinJefe() no consulte `configuraciones_turno` por cada unidad
-     * y turno en cada interacción de Livewire.
-     *
-     * @param  array<int, true>  $enAlcance
-     * @return array<string, array<int, true>>
-     */
-    public function turnosConfiguradosDeJefes(Collection $unidades, array $enAlcance): array
-    {
-        $jefeIds = $unidades
-            ->filter(fn (UnidadOrganica $u) => isset($enAlcance[$u->id]))
-            ->flatMap(fn (UnidadOrganica $u) => [$u->jefe_id, ...$u->jefesTurno->pluck('jefe_id')]);
-
-        return ConfiguracionTurno::idsPorTurno($jefeIds);
     }
 
     /**
@@ -137,7 +116,7 @@ class ArmadorOrganigrama
             return null;
         }
 
-        $persona = User::with(['sede', 'unidadOrganica.padre', 'jefeInmediato', 'jefeArea', 'jefesInmediatosAdicionales'])
+        $persona = User::with(['sede', 'unidadOrganica.padre', 'jefeInmediato', 'jefeArea'])
             ->find($personaId);
 
         if (! $persona) {
@@ -151,8 +130,6 @@ class ArmadorOrganigrama
         if (! $dentro) {
             return null;
         }
-
-        $adicionalesIds = $persona->jefesInmediatosAdicionales->pluck('id');
 
         $porEstado = Papeleta::query()
             ->where('trabajador_id', $persona->id)
@@ -168,7 +145,6 @@ class ArmadorOrganigrama
             'encabeza' => $unidades->filter(fn (UnidadOrganica $u) => $u->esJefeDeLaUnidad($persona))->pluck('nombre')->values(),
             'jefes' => $persona->jefesInmediatos()->map(fn (User $j) => [
                 'nombre' => $j->nombre_completo,
-                'adicional' => $adicionalesIds->contains($j->id),
             ]),
             'turno' => $turno ? ConfiguracionTurno::etiquetaDeTurno($turno) : null,
             'pendientes' => collect(self::ESTADOS_PENDIENTES)
@@ -275,10 +251,9 @@ class ArmadorOrganigrama
      * de abajo quedan fuera del resultado.
      *
      * @param  array<string, int>  $conteoSedes
-     * @param  array<string, array<int, true>>  $configurados  ver turnosConfiguradosDeJefes()
-     * @return array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, turnos_sin_jefe: list<string>}|null
+     * @return array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, sin_jefe: bool}|null
      */
-    private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes, array $configurados): ?array
+    private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?array
     {
         $q = mb_strtolower(trim($this->buscar));
         $hayFiltroSede = $this->sede !== '';
@@ -289,10 +264,9 @@ class ArmadorOrganigrama
             default => (int) $p->sede_id === (int) $this->sede,
         };
 
-        // Quienes encabezan (jefe_id + jefes de turno) se pintan como
-        // jefes; no se repiten en la lista de trabajadores.
+        // Quien encabeza (jefe_id) se pinta como jefe; no se repite en la
+        // lista de trabajadores.
         $jefes = collect([$unidad->jefe])
-            ->merge($unidad->jefesTurno->map(fn ($jt) => $jt->jefe))
             ->filter()
             ->unique('id')
             ->values();
@@ -328,8 +302,8 @@ class ArmadorOrganigrama
         // Por referencia a propósito (ver armar()): con `fn` se perderían los
         // conteos de toda la rama hija.
         $hijos = $porPadre->get($unidad->id, collect())
-            ->map(function (UnidadOrganica $h) use ($porPadre, &$stats, &$conteoSedes, $configurados) {
-                return $this->construirNodo($h, $porPadre, $stats, $conteoSedes, $configurados);
+            ->map(function (UnidadOrganica $h) use ($porPadre, &$stats, &$conteoSedes) {
+                return $this->construirNodo($h, $porPadre, $stats, $conteoSedes);
             })
             ->filter()
             ->values();
@@ -341,12 +315,13 @@ class ArmadorOrganigrama
             return null;
         }
 
-        $turnosSinJefe = $unidad->turnosSinJefe($configurados);
+        // Sin jefe asignado o con el jefe dado de baja.
+        $sinJefe = ! $unidad->jefe?->activo;
 
         $stats['unidades']++;
         $stats['personas'] += $miembros->count() + $jefesEnFiltro->count();
         $stats['sin_sede'] += $miembros->whereNull('sede_id')->count() + $jefesEnFiltro->whereNull('sede_id')->count();
-        $stats['turnos_sin_jefe'] += count($turnosSinJefe);
+        $stats['sin_jefe'] += $sinJefe ? 1 : 0;
 
         return [
             'unidad' => $unidad,
@@ -356,7 +331,7 @@ class ArmadorOrganigrama
             'miembros' => $miembros,
             'hijos' => $hijos,
             'total' => $miembros->count() + $jefesEnFiltro->count() + $hijos->sum('total'),
-            'turnos_sin_jefe' => $turnosSinJefe,
+            'sin_jefe' => $sinJefe,
         ];
     }
 }

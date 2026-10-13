@@ -74,3 +74,4 @@
         {{ $usuarios->links() }}
     </div>
 </div>
+<livewire:usuarios.baja-con-reemplazo />

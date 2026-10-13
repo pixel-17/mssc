@@ -30,7 +30,7 @@ use Spatie\ModelStates\HasStates;
  * Jefe Inmediato (jefe_inmediato_id): no escala a nadie más por
  * inacción, ni siquiera al Jefe de Área. jefe_area_id se mantiene solo
  * para reportes/dashboards (scopeDeEquipoDe) y para asignar jefes
- * inmediatos adicionales (AsignarJefeAdicionalAction).
+ * inmediatos adicionales (ya no existen).
  */
 class Papeleta extends Model
 {
@@ -183,22 +183,14 @@ class Papeleta extends Model
     }
 
     /**
-     * Papeletas que el usuario decide como jefe inmediato: automático
-     * (jefe_inmediato_id, columna fotografiada), adicional
-     * (jefes_inmediatos_adicionales, asignación manual permanente) o
-     * candidato de turno 728 (papeleta_jefes_candidatos, fotografiado
-     * al crear — ver UnidadOrganica::resolverJefesInmediatos()).
+     * Papeletas que el usuario decide como jefe inmediato: las que tienen su
+     * id en jefe_inmediato_id. Es UN solo jefe por papeleta; si la jefatura
+     * de la unidad cambia, las papeletas abiertas se reasignan al jefe nuevo
+     * (ver ReasignarPapeletasAbiertasAction) y solo él las decide.
      */
     public function scopeDeJefeInmediato(Builder $query, User $jefe): Builder
     {
-        return $query->where(fn (Builder $q) => $q
-            ->where('papeletas.jefe_inmediato_id', $jefe->id)
-            ->orWhereIn('papeletas.trabajador_id', DB::table('jefes_inmediatos_adicionales')
-                ->where('jefe_inmediato_id', $jefe->id)
-                ->select('trabajador_id'))
-            ->orWhereIn('papeletas.id', DB::table('papeleta_jefes_candidatos')
-                ->where('user_id', $jefe->id)
-                ->select('papeleta_id')));
+        return $query->where('papeletas.jefe_inmediato_id', $jefe->id);
     }
 
     /**
@@ -219,7 +211,7 @@ class Papeleta extends Model
      * Fuente única de "papeletas de mi equipo" para reportes y dashboards.
      * Une las columnas fotografiadas (historial estable si cambia el
      * organigrama) con el equipo vivo, que sí incluye a los trabajadores
-     * asignados como jefe adicional y a las unidades hijas.
+     * a las unidades hijas.
      */
     public function scopeDeEquipoDe(Builder $query, User $jefe): Builder
     {
@@ -231,17 +223,11 @@ class Papeleta extends Model
 
     /**
      * ¿Este usuario es el Jefe Inmediato que decide ESTA papeleta? Compara
-     * contra la columna fotografiada (jefe_inmediato_id, resuelta por
-     * turno en CrearPapeletaAction vía jefes_turno) más los adicionales
-     * vigentes — mismo criterio que scopeDeJefeInmediato, para que quien
-     * ve la papeleta en su bandeja sea siempre quien puede decidirla.
-     * No usar User::esJefeInmediatoDe() aquí: esa compara contra
-     * users.jefe_inmediato_id, la columna estática que UserObserver
-     * calcula SIN turno y por lo tanto no refleja jefes_turno.
+     * contra jefe_inmediato_id de la papeleta (ver scopeDeJefeInmediato).
      */
     public function tieneComoJefeInmediatoA(User $user): bool
     {
-        return static::whereKey($this->id)->deJefeInmediato($user)->exists();
+        return $this->jefe_inmediato_id !== null && (int) $this->jefe_inmediato_id === (int) $user->id;
     }
 
     /**
@@ -348,16 +334,5 @@ class Papeleta extends Model
     public function historial(): HasMany
     {
         return $this->hasMany(HistorialPapeleta::class);
-    }
-
-    /**
-     * Todos los candidatos a jefe inmediato fotografiados al crear esta
-     * papeleta (ver UnidadOrganica::resolverJefesInmediatos()). Para
-     * papeletas creadas antes de este cambio, o de régimen 276, puede
-     * estar vacía — ahí sigue mandando solo jefe_inmediato_id.
-     */
-    public function jefesCandidatos(): HasMany
-    {
-        return $this->hasMany(PapeletaJefeCandidato::class);
     }
 }

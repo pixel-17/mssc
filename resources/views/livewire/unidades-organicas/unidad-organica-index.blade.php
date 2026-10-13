@@ -12,21 +12,13 @@
             </x-admin.filtro-campo>
         </div>
 
-        <x-admin.tabla :columnas="['Nombre', 'Unidad padre', 'Tipo', 'Jefe', 'Turnos sin jefe', 'Activo', '']">
+        <x-admin.tabla :columnas="['Nombre', 'Unidad padre', 'Tipo', 'Jefe', 'Activo', '']">
             @forelse ($unidades as $unidad)
                 <tr wire:key="unidad-{{ $unidad->id }}">
                     <td class="px-4 py-3">{{ $unidad->nombre }}</td>
                     <td class="px-4 py-3">{{ $unidad->padre?->nombre ?? '— (raíz)' }}</td>
                     <td class="px-4 py-3">{{ $unidad->tipo }}</td>
                     <td class="px-4 py-3">{{ $unidad->jefe?->name }}</td>
-                    <td class="px-4 py-3 text-sm">
-                        @php($faltan = $unidad->turnosSinJefe())
-                        @if ($faltan !== [])
-                            <span class="text-ambar-700 dark:text-ambar-400">{{ collect($faltan)->map(fn ($t) => \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ') }}</span>
-                        @else
-                            —
-                        @endif
-                    </td>
                     <td class="px-4 py-3"><x-admin.estado :activo="$unidad->activo" /></td>
                     <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                         <x-admin.accion-editar :href="route('unidades-organicas.editar', $unidad)" />
@@ -37,7 +29,7 @@
                     </td>
                 </tr>
             @empty
-                <x-admin.fila-vacia :colspan="7">{{ $buscar ? 'Ninguna unidad coincide con la búsqueda.' : 'Aún no hay unidades orgánicas registradas.' }}</x-admin.fila-vacia>
+                <x-admin.fila-vacia :colspan="6">{{ $buscar ? 'Ninguna unidad coincide con la búsqueda.' : 'Aún no hay unidades orgánicas registradas.' }}</x-admin.fila-vacia>
             @endforelse
         </x-admin.tabla>
     </div>

@@ -2,11 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Fuente única de "qué trabajadores ve este jefe" en las pantallas de
@@ -15,9 +13,7 @@ use Illuminate\Support\Facades\DB;
  * papeletas/reportes/dashboard, donde el Jefe de Área debe ver a todo
  * su personal en cadena de aprobación/histórico):
  *
- * - Jefe Inmediato: sus trabajadores directos (automáticos o
- *   adicionales), los de su unidad que trabajan el turno que cubre
- *   como jefe de turno (jefes_turno) y él mismo. Además VE (solo
+ * - Jefe Inmediato: sus trabajadores directos y él mismo. Además VE (solo
  *   lectura, no los programa) a los demás jefes inmediatos de sus
  *   unidades: ver el tercer elemento de para().
  * - Jefe de Área: sus Jefes Inmediatos (los jefes de las sub-unidades
@@ -42,9 +38,7 @@ class EquipoDelJefeService
 
         $paresSoloLectura = collect();
 
-        $directos = $user->subordinadosInmediatos()->get()
-            ->merge($user->trabajadoresAdicionales()->get())
-            ->merge(User::deLosTurnosQueCubre($user)->get());
+        $directos = $user->subordinadosInmediatos()->get();
 
         // Un Jefe Inmediato (que no es Jefe de Área) solo ve y programa a
         // trabajadores, no a otros jefes inmediatos (ver
@@ -70,7 +64,6 @@ class EquipoDelJefeService
             ? User::whereIn('id', UnidadOrganica::whereIn('id', $unidadIds)
                 ->whereNotNull('jefe_id')
                 ->pluck('jefe_id')
-                ->merge(JefeTurno::whereIn('unidad_organica_id', $unidadIds)->pluck('jefe_id'))
                 ->unique())
                 ->get()
             : collect();
@@ -91,16 +84,13 @@ class EquipoDelJefeService
     }
 
     /**
-     * Jefes inmediatos (jefe de la unidad + adicionales de jefes_turno)
-     * de las unidades donde $user es jefe inmediato (de la unidad o adicional).
+     * Jefes de las unidades donde $user es jefe (para verlos en solo lectura).
      *
      * @return Collection<int, User>
      */
     private function jefesDeSusUnidades(User $user): Collection
     {
-        $unidadIds = JefeTurno::where('jefe_id', $user->id)->pluck('unidad_organica_id')
-            ->merge(UnidadOrganica::where('jefe_id', $user->id)->pluck('id'))
-            ->unique();
+        $unidadIds = UnidadOrganica::where('jefe_id', $user->id)->pluck('id');
 
         if ($unidadIds->isEmpty()) {
             return collect();
@@ -109,16 +99,14 @@ class EquipoDelJefeService
         $jefeIds = UnidadOrganica::whereIn('id', $unidadIds)
             ->whereNotNull('jefe_id')
             ->pluck('jefe_id')
-            ->merge(JefeTurno::whereIn('unidad_organica_id', $unidadIds)->pluck('jefe_id'))
             ->unique();
 
         return User::whereIn('id', $jefeIds)->where('activo', true)->get();
     }
 
     /**
-     * IDs de todos los usuarios que son jefe de alguien: jefe de unidad,
-     * jefe de turno (jefes_turno), jefe adicional o jefe inmediato de al
-     * menos un trabajador. Mismo criterio que User::esJefeDeAlguien(),
+     * IDs de todos los usuarios que son jefe de alguien: jefe de unidad
+     * o jefe inmediato de al menos un trabajador. Mismo criterio que User::esJefeDeAlguien(),
      * pero en pocas consultas para no repetirlo por cada trabajador.
      *
      * @return Collection<int, int>
@@ -126,8 +114,6 @@ class EquipoDelJefeService
     public function idsDeJefes(): Collection
     {
         return UnidadOrganica::whereNotNull('jefe_id')->pluck('jefe_id')
-            ->merge(JefeTurno::pluck('jefe_id'))
-            ->merge(DB::table('jefes_inmediatos_adicionales')->pluck('jefe_inmediato_id'))
             ->merge(User::whereNotNull('jefe_inmediato_id')->distinct()->pluck('jefe_inmediato_id'))
             ->map(fn ($id) => (int) $id)
             ->unique()

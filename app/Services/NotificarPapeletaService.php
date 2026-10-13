@@ -273,29 +273,13 @@ class NotificarPapeletaService
     }
 
     /**
-     * Todos los jefes que pueden decidir/atender esta papeleta: los
-     * candidatos fotografiados en papeleta_jefes_candidatos (turno 728
-     * con varios jefes posibles, ver
-     * UnidadOrganica::resolverJefesInmediatos()), o si no hay ninguna
-     * fila ahí (papeletas de antes de este cambio, o régimen 276 con
-     * un solo candidato), el jefe_inmediato_id fotografiado tal cual.
-     * Nunca los dos a la vez, para no duplicar notificaciones a la
-     * misma persona en el caso normal.
+     * El jefe que decide/atiende esta papeleta: el jefe_inmediato_id de la
+     * papeleta (si se reasignó por un cambio de jefatura, ya es el nuevo).
      *
      * @return Collection<int, User>
      */
     private function destinatariosJefe(Papeleta $papeleta): Collection
     {
-        $candidatos = $papeleta->jefesCandidatos()
-            ->with('jefe')
-            ->get()
-            ->pluck('jefe')
-            ->filter();
-
-        if ($candidatos->isNotEmpty()) {
-            return $candidatos->values();
-        }
-
         return $papeleta->jefeInmediato ? collect([$papeleta->jefeInmediato]) : collect();
     }
 

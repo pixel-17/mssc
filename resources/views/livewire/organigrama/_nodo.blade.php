@@ -77,10 +77,8 @@
                     @endif
                 </div>
 
-                @if ($nodo['turnos_sin_jefe'] !== [])
-                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">
-                        Turnos sin jefe: {{ collect($nodo['turnos_sin_jefe'])->map(fn ($t) => $etiquetasTurno[$t] ?? $t)->implode(', ') }}
-                    </p>
+                @if ($nodo['sin_jefe'])
+                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Sin jefe activo</p>
                 @endif
 
                 {{-- Jefes de la unidad --}}
@@ -132,12 +130,6 @@
                             <x-avatar :user="$m" class="ring-2 ring-emerald-500" />
                             <button type="button" wire:click="verPersona({{ $m->id }})" class="min-w-0 truncate text-left text-tinta-950 hover:underline dark:text-white">{{ $m->nombre_completo }}</button>
                             @include('livewire.organigrama._chips', ['persona' => $m, 'sedeReferencia' => $sedeJefe])
-                            @if ($m->jefesInmediatosAdicionales->isNotEmpty())
-                                <span class="rounded-full bg-tinta-50 px-2 py-0.5 text-[11px] text-tinta-700 dark:bg-white/10 dark:text-tinta-100"
-                                      title="Jefes adicionales: {{ $m->jefesInmediatosAdicionales->map->nombre_completo->implode(', ') }}">
-                                    +{{ $m->jefesInmediatosAdicionales->count() }} {{ $m->jefesInmediatosAdicionales->count() === 1 ? 'jefe adicional' : 'jefes adicionales' }}
-                                </span>
-                            @endif
                             @unless ($m->activo)<span class="text-[11px] text-red-600">desactivado</span>@endunless
                             @if ($modoEdicion && $esAdmin)
                                 <button type="button" title="Editar trabajador" class="ms-auto rounded-lg p-1 text-gray-500 opacity-70 hover:bg-white hover:text-tinta-700 hover:opacity-100 dark:hover:bg-white/10"
@@ -156,7 +148,7 @@
     @if ($tieneHijos)
         <ul x-show="open" x-collapse>
             @foreach ($nodo['hijos'] as $hijo)
-                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'etiquetasTurno' => $etiquetasTurno, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => $nivel + 1])
+                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => $nivel + 1])
             @endforeach
         </ul>
     @endif

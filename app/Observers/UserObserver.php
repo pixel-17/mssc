@@ -17,7 +17,8 @@ use App\Models\User;
  *    de unidad, eso se hace cambiando jefe_id en la UnidadOrganica
  *    (ver UnidadOrganicaObserver), no aquí.
  *
- * 2) saved(): si cambió sede_id, resincroniza los `turnos` futuros ya
+ * 2) saved(): si cambió jefe_inmediato_id, reasigna sus papeletas abiertas
+ *    al jefe nuevo; si cambió sede_id, resincroniza los `turnos` futuros ya
  *    generados por GeneradorTurnoMensualService (ver ese método para
  *    el por qué).
  */
@@ -33,8 +34,8 @@ class UserObserver
     }
 
     /**
-     * @param  UnidadOrganica|null  $unidad  unidad del usuario ya cargada (con `jefe`,
-     *                                       `jefesTurno` y `padre`, ver UnidadOrganica::arbolEnMemoria()).
+     * @param  UnidadOrganica|null  $unidad  unidad del usuario ya cargada (con `jefe`
+     *                                       y `padre`, ver UnidadOrganica::arbolEnMemoria()).
      *                                       Quien recalcula muchos usuarios la pasa para no
      *                                       hacer queries por usuario; sin ella se busca.
      */
@@ -65,6 +66,11 @@ class UserObserver
      */
     public function saved(User $user): void
     {
+        // Cambió su jefe inmediato: sus papeletas abiertas pasan al jefe nuevo.
+        if ($user->wasChanged('jefe_inmediato_id')) {
+            app(\App\Actions\Organigrama\PapeletasAbiertasService::class)->reasignarDeTrabajador($user);
+        }
+
         if (! $user->wasChanged('sede_id')) {
             return;
         }

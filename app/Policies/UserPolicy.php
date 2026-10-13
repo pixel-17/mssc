@@ -31,10 +31,8 @@ class UserPolicy
     }
 
     /**
-     * ¿Puede $creator crear un Trabajador y asignarse a sí mismo como
-     * jefe inmediato adicional? Cualquier jefe inmediato (todos son iguales)
-     * de al menos un trabajador puede hacerlo, sin importar
-     * el área — igual que hoy cualquier jefe de unidad ya puede.
+     * ¿Puede $creator crear un Trabajador en su propia unidad? Cualquier
+     * jefe inmediato de al menos un trabajador puede hacerlo.
      */
     public function crearTrabajadorPropio(User $creator): bool
     {
@@ -69,11 +67,8 @@ class UserPolicy
      *
      * - admin: cualquiera.
      * - Jefe de Área: cualquiera de su área (unidad que encabeza + sub-unidades).
-     * - Jefe Inmediato "puro": solo sus propios trabajadores (de cualquier
-     *   origen), y nunca a un Jefe de Área ni a un admin — mismo
-     *   límite que esVinculable() en VincularJefeInmediatoAction, para
-     *   que vincularse como jefe adicional de alguien no se convierta en
-     *   una puerta trasera para editar a quien en realidad manda sobre él.
+     * - Jefe Inmediato "puro": solo sus propios trabajadores, y nunca a un
+     *   Jefe de Área ni a un admin.
      */
     public function editar(User $editor, User $target): bool
     {

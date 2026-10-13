@@ -263,18 +263,6 @@ class UsuarioAdminForm extends Component
             }
         }
 
-        if (! $datos['activo'] && $this->usuario?->esJefeInmediatoDeAlgunTurno()) {
-            $this->addError('activo', 'Es jefe inmediato de un turno (MAÑANA/TARDE/NOCHE) en su unidad: reasigna primero ese turno a otro jefe antes de desactivarlo.');
-
-            return;
-        }
-
-        if ($this->cambioDeRegimen() && $this->regimen !== '728' && $this->usuario->esJefeInmediatoDeAlgunTurno()) {
-            $this->addError('regimen', 'Es jefe inmediato de un turno (MAÑANA/TARDE/NOCHE) en su unidad: reasigna primero ese turno a otro jefe antes de cambiarlo de régimen.');
-
-            return;
-        }
-
         // Mismas reglas que desactivar desde la lista o el organigrama (jefe con personas a cargo, etc.).
         if ($this->usuario?->activo && ! $datos['activo']) {
             $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);

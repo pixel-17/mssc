@@ -3,10 +3,8 @@
 namespace App\Actions\Usuario;
 
 use App\Exceptions\UsuarioException;
-use App\Models\JefeTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
-use App\Services\AlertaJefaturaService;
 use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -15,16 +13,13 @@ use Illuminate\Support\Facades\Hash;
 /**
  * Alta de un usuario nuevo dentro de la pirámide (ver UserPolicy):
  *
- * - Jefe Inmediato crea un Trabajador y se asigna a sí mismo como jefe
- *   inmediato ADICIONAL (tabla jefes_inmediatos_adicionales), sin
- *   importar la unidad orgánica del trabajador.
+ * - Jefe Inmediato crea un Trabajador: queda en la unidad del creador, así
+ *   que su jefe inmediato (jefe_id de la unidad) es el propio creador.
  * - Jefe de Área crea un Trabajador (con unidad_organica_id dentro de
- *   su propia área) o un Jefe Inmediato. El primer jefe_inmediato de
- *   una unidad queda como jefe_id (titular); en régimen 728 puede
- *   haber hasta 3 en total (jefe_id + hasta 2 más en jefes_turno, ver
- *   asignarComoJefeDeUnidad()) — uno no puede coincidir con el turno
- *   YA cubierto (según su propia configuración de calendario) por otro
- *   jefe activo de la misma unidad. En 276 solo se admite uno.
+ *   su propia área) o un Jefe Inmediato. Cada unidad tiene UN solo jefe
+ *   (jefe_id): si la unidad ya tiene uno, el cambio se hace desde el
+ *   organigrama. El régimen (276/728) del jefe y el de su gente son
+ *   independientes.
  *
  * jefe_inmediato_id/jefe_area_id del nuevo usuario se recalculan solos
  * vía UserObserver en cuanto se guarda con unidad_organica_id (si la
@@ -33,10 +28,8 @@ use Illuminate\Support\Facades\Hash;
  * Herencia cuando el creador es Jefe Inmediato (! $esJefeDeArea):
  * sede_id y unidad_organica_id del trabajador nuevo se heredan SIEMPRE
  * del creador (no son editables desde el formulario, aunque lleguen en
- * $datos) — así unidad_organica_id queda igual a la del Jefe Inmediato
- * y UserObserver calcula jefe_inmediato_id = el propio creador. Cuando
- * el creador es Jefe de Área, unidad_organica_id sí viene del
- * formulario (una de las unidades de su subárbol) y sede_id se deja
+ * $datos). Cuando el creador es Jefe de Área, unidad_organica_id sí viene
+ * del formulario (una de las unidades de su subárbol) y sede_id se deja
  * como lo eligió el formulario, porque una misma área puede abarcar
  * más de una sede.
  *
@@ -50,16 +43,11 @@ use Illuminate\Support\Facades\Hash;
  *
  * admin NO pasa por aquí: usa UsuarioAdminForm (mismo criterio de
  * contraseña = DNI, ver ese componente).
- *
- * Si el trabajador 728 recién cargado queda en un turno sin jefe
- * inmediato activo, se avisa a admin + Jefe de Área (ver
- * AlertaJefaturaService) — no bloquea el alta, solo informa.
  */
 class CrearUsuarioAction
 {
     public function __construct(
         private GeneradorTurnoMensualService $generadorTurno,
-        private AlertaJefaturaService $alertaJefatura,
     ) {}
 
     /**
@@ -115,17 +103,7 @@ class CrearUsuarioAction
             }
 
             if ($esJefeInmediatoNuevo) {
-                $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id'], $datos['regimen']);
-            }
-
-            if (! $esJefeDeArea) {
-                // Jefe Inmediato creando (o reingresando a) un trabajador
-                // propio: se asigna a sí mismo directo. syncWithoutDetaching
-                // en vez de attach() para no romper si la relación ya
-                // existía de una asignación anterior al reingreso.
-                $nuevo->jefesInmediatosAdicionales()->syncWithoutDetaching([
-                    $creador->id => ['asignado_por_id' => $creador->id],
-                ]);
+                $this->asignarComoJefeDeUnidad($nuevo, (int) $datos['unidad_organica_id']);
             }
 
             // 728 SIEMPRE necesita su turno vigente para crear una
@@ -147,14 +125,6 @@ class CrearUsuarioAction
 
             return $nuevo->fresh();
         });
-
-        // Fuera de la transacción: mismo motivo que CrearPapeletaAction —
-        // si el envío de la notificación falla, nunca debe revertir el
-        // alta ya confirmada en BD. Solo aplica a 728 (jefes_turno no se
-        // usa en 276, ver AlertaJefaturaService).
-        if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo && ! empty($datos['turno']) && $nuevo->unidadOrganica) {
-            $this->alertaJefatura->avisarSiFaltaJefeDeTurno($nuevo->unidadOrganica, $datos['turno']);
-        }
 
         return $nuevo;
     }
@@ -187,43 +157,17 @@ class CrearUsuarioAction
         }
     }
 
-    private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId, string $regimen): void
+    private function asignarComoJefeDeUnidad(User $nuevo, int $unidadId): void
     {
         $unidad = UnidadOrganica::findOrFail($unidadId);
 
-        if (! $unidad->jefe_id) {
-            $unidad->update(['jefe_id' => $nuevo->id]);
-
-            // 728: el titular también entra a jefes_turno como uno más —
-            // resolverJefeInmediato()/resolverJefesInmediatos() para los
-            // turnos rotativos SOLO miran jefes_turno (ver UnidadOrganica),
-            // el turno que cubre sale de su propia configuración de
-            // calendario (cargada más abajo en ejecutar()), no de aquí.
-            if ($regimen === '728') {
-                JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $nuevo->id]);
-            }
-
-            return;
-        }
-
-        if ($regimen !== '728') {
+        if ($unidad->jefe_id) {
             throw new UsuarioException(
-                "La unidad \"{$unidad->nombre}\" ya tiene su jefe inmediato. Reasígnala desde el organigrama antes de crear otro."
+                "La unidad \"{$unidad->nombre}\" ya tiene su jefe. Cámbialo desde el organigrama antes de crear otro."
             );
         }
 
-        $jefesActuales = JefeTurno::where('unidad_organica_id', $unidad->id)->pluck('jefe_id');
-
-        if ($jefesActuales->count() >= 3) {
-            throw new UsuarioException(
-                "La unidad \"{$unidad->nombre}\" ya tiene sus 3 jefes inmediatos (uno por turno)."
-            );
-        }
-
-        // Sin chequeo de turno ocupado: el jefe nuevo nace SIN turno y se
-        // programa el suyo después; si dos jefes terminan cubriendo el
-        // mismo turno, AlertaJefaturaService avisa los huecos.
-        JefeTurno::create(['unidad_organica_id' => $unidad->id, 'jefe_id' => $nuevo->id]);
+        $unidad->update(['jefe_id' => $nuevo->id]);
     }
 
     /**

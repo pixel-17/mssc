@@ -2,7 +2,6 @@
 
 namespace App\Actions\Organigrama;
 
-use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 
@@ -13,8 +12,6 @@ use App\Models\User;
  *
  * - Área de un jefe: la unidad más alta de la cadena (la unidad y sus
  *   ancestros) que encabeza y que tiene sub-unidades.
- * - Régimen: todos en una unidad comparten el de su jefe (ver
- *   UnidadOrganica::regimen()).
  */
 class ReglasOrganigrama
 {
@@ -60,23 +57,5 @@ class ReglasOrganigrama
         $unidad = UnidadOrganica::find($unidadId);
 
         return $unidad !== null && $this->areaDe($user, $unidad) !== null;
-    }
-
-    /**
-     * El régimen de la persona debe coincidir con el de la unidad de
-     * destino (una unidad vacía acepta cualquiera).
-     *
-     * @throws UsuarioException
-     */
-    public function exigirRegimenCompatible(User $persona, UnidadOrganica $destino): void
-    {
-        $regimenDestino = $destino->regimen();
-
-        if ($regimenDestino !== null && $persona->regimen !== $regimenDestino) {
-            throw new UsuarioException(
-                'El régimen de '.$persona->nombre_completo.' ('.($persona->regimen ?? 'sin régimen')
-                .') no coincide con el de la unidad de destino (régimen '.$regimenDestino.').'
-            );
-        }
     }
 }

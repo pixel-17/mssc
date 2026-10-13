@@ -18,25 +18,8 @@ use Livewire\Component;
  * de esta unidad es el Jefe Inmediato de sus miembros; el jefe_id de
  * la unidad padre es el Jefe de Área (ver UnidadOrganica::jefeInmediato()
  * / jefeArea()). `tipo` es solo decorativo, nunca condiciona el
- * escalamiento de papeletas.
- *
- * Jefes inmediatos adicionales (jefes_turno, ver Avance 00.59, 00.68 y
- * 00.73): asignación manual de QUIÉN es Jefe Inmediato adicional de
- * esta unidad para régimen 728, uno o VARIOS — ya NO se elige a mano
- * un turno fijo (MANANA/TARDE/NOCHE) para cada uno; el turno que cada
- * uno cubre sale siempre de su propia programación de calendario
- * (configuraciones_turno). CrearPapeletaAction guarda a todos los
- * candidatos resueltos (los que hoy están de servicio en el turno del
- * trabajador) y "el que actúa primero decide" (ver
- * UnidadOrganica::resolverJefesInmediatos() y Papeleta::jefesCandidatos()).
- * Solo aplica editando una unidad ya creada (jefes_turno exige
- * unidad_organica_id).
- *
- * Cada jefe agregado aquí necesita, además, su propio ciclo de turno
- * (configuraciones_turno) para que el sistema sepa qué turno cubre y
- * si está "de servicio" hoy — este formulario no lo carga, enlaza a la
- * pantalla dedicada (turnos.configuracion, ver ConfiguracionTurnoForm)
- * que ya reutiliza GeneradorTurnoMensualService::cargarConfiguracion.
+ * escalamiento de papeletas. Cada unidad tiene UN solo jefe, de cualquier
+ * régimen.
  */
 #[Layout('layouts.app')]
 #[Title('Unidad orgánica')]
@@ -57,17 +40,6 @@ class UnidadOrganicaForm extends Component
 
     public bool $activo = true;
 
-    /**
-     * Lista de jefe_id, jefes inmediatos adicionales de esta unidad
-     * (régimen 728) — sin turno: el que cada uno cubre sale de su
-     * propia programación de calendario, no de una selección aquí. Un
-     * slot en null es una fila añadida en el formulario y aún sin
-     * elegir.
-     *
-     * @var list<int|null>
-     */
-    public array $jefesAdicionales = [];
-
     public const TIPOS = [
         'alta_direccion' => 'Alta dirección',
         'consultivo' => 'Consultivo',
@@ -79,19 +51,6 @@ class UnidadOrganicaForm extends Component
         'linea_3er_nivel' => 'Línea - 3er nivel',
     ];
 
-    /**
-     * Etiquetas de los códigos de turno rotativo (MANANA/TARDE/NOCHE).
-     * Ya NO se usa para elegir un turno fijo al asignar un jefe
-     * inmediato adicional (ver $jefesAdicionales) — solo queda como
-     * mapa código -> etiqueta para los avisos de "turnos sin jefe"
-     * (ver UsuarioController y unidad-organica-index.blade.php).
-     */
-    public const TURNOS = [
-        'MANANA' => 'Mañana',
-        'TARDE' => 'Tarde',
-        'NOCHE' => 'Noche',
-    ];
-
     public function mount(?UnidadOrganica $unidad = null): void
     {
         if ($unidad?->exists) {
@@ -101,20 +60,7 @@ class UnidadOrganicaForm extends Component
             $this->parentId = $unidad->parent_id;
             $this->jefeId = $unidad->jefe_id;
             $this->activo = $unidad->activo;
-
-            $this->jefesAdicionales = $unidad->jefesTurno->pluck('jefe_id')->all();
         }
-    }
-
-    public function agregarJefeAdicional(): void
-    {
-        $this->jefesAdicionales[] = null;
-    }
-
-    public function quitarJefeAdicional(int $indice): void
-    {
-        unset($this->jefesAdicionales[$indice]);
-        $this->jefesAdicionales = array_values($this->jefesAdicionales);
     }
 
     protected function rules(): array
@@ -125,7 +71,6 @@ class UnidadOrganicaForm extends Component
             'parentId' => ['nullable', 'exists:unidad_organicas,id'],
             'jefeId' => ['nullable', 'exists:users,id'],
             'activo' => ['boolean'],
-            'jefesAdicionales.*' => ['nullable', 'exists:users,id'],
         ];
     }
 
@@ -144,14 +89,13 @@ class UnidadOrganicaForm extends Component
                 'parent_id' => $datos['parentId'],
                 'jefe_id' => $datos['jefeId'],
                 'activo' => $datos['activo'],
-            ], $esNueva ? null : ($datos['jefesAdicionales'] ?? []));
+            ]);
         } catch (UsuarioException $e) {
             $this->addError('parentId', $e->getMessage());
 
             return;
         }
 
-        // Crear primero; los jefes adicionales se asignan editando (jefes_turno exige la unidad).
         session()->flash('mensaje', $esNueva ? 'Unidad orgánica creada.' : 'Unidad orgánica actualizada.');
 
         $this->redirectRoute('unidades-organicas.index', navigate: false);

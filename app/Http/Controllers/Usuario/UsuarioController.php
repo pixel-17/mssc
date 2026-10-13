@@ -8,7 +8,6 @@ use App\Exceptions\UsuarioException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Usuario\CrearUsuarioRequest;
 use App\Http\Requests\Usuario\EditarUsuarioRequest;
-use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -46,7 +45,7 @@ class UsuarioController extends Controller
             'usuarios' => $usuarios,
             'esJefeDeArea' => $unidadIds->isNotEmpty(),
             'puedeCrear' => $user->can('puedeCrearAlgo', User::class),
-            'avisosTurnos' => $this->avisosDeTurnosSinJefe($unidadIds),
+            'avisosJefatura' => $this->avisosDeUnidadesSinJefe($unidadIds),
         ]);
     }
 
@@ -109,8 +108,7 @@ class UsuarioController extends Controller
         // A diferencia de create() (donde $esJefeDeArea es una capacidad
         // global del creador), aquí se mira si la unidad ACTUAL del
         // trabajador cae en el subárbol del editor: un Jefe de Área que
-        // edita a alguien que solo le llegó como jefe inmediato adicional
-        // (fuera de su área) no debe ver el selector de unidad/sede, o el
+        // edita a alguien fuera de su área no debe ver el selector de unidad/sede, o el
         // valor actual del trabajador ni siquiera aparecería en la lista.
         $esJefeDeArea = $trabajador->unidad_organica_id && $unidadIds->contains($trabajador->unidad_organica_id);
 
@@ -137,59 +135,38 @@ class UsuarioController extends Controller
     }
 
     /**
-     * Un trabajador 728 se crea aunque su turno no tenga jefe todavía,
-     * pero se avisa: hasta que se asigne, no podrá crear papeletas.
+     * Un trabajador 728 se crea aunque todavía no tenga turno, pero se
+     * avisa: hasta que se lo programen, no podrá crear papeletas.
      */
     private function advertenciaTurnoSinJefe(User $nuevo, ?string $turno): ?string
     {
-        if ($nuevo->regimen !== '728') {
+        if ($nuevo->regimen !== '728' || $turno !== null) {
             return null;
         }
 
-        if ($turno === null) {
-            return $nuevo->nombre_completo.' es 728 y todavía no tiene turno: cárgalo en la programación de turnos; '
-                .'hasta entonces no podrá crear papeletas.';
-        }
-
-        $unidad = UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])->find($nuevo->unidad_organica_id);
-
-        if (! $unidad || ! in_array($turno, $unidad->turnosSinJefe(), true)) {
-            return null;
-        }
-
-        $etiqueta = UnidadOrganicaForm::TURNOS[$turno] ?? $turno;
-
-        return "La unidad {$unidad->nombre} todavía no tiene jefe inmediato para el turno {$etiqueta}: ".
-            'hasta que se asigne, sus trabajadores de ese turno no podrán crear papeletas.';
+        return $nuevo->nombre_completo.' es 728 y todavía no tiene turno: cárgalo en la programación de turnos; '
+            .'hasta entonces no podrá crear papeletas.';
     }
 
     /**
-     * Una línea por unidad 728 del área con turnos sin jefe inmediato.
+     * Una línea por unidad activa del área que no tiene un jefe activo
+     * (sin jefe asignado o con el jefe dado de baja).
      *
      * @return list<string>
      */
-    private function avisosDeTurnosSinJefe(\Illuminate\Support\Collection $unidadIds): array
+    private function avisosDeUnidadesSinJefe(\Illuminate\Support\Collection $unidadIds): array
     {
         if ($unidadIds->isEmpty()) {
             return [];
         }
 
-        $unidades = UnidadOrganica::with(['jefe', 'jefesTurno.jefe'])
+        return UnidadOrganica::with('jefe')
             ->whereIn('id', $unidadIds)
             ->where('activo', true)
             ->orderBy('nombre')
-            ->get();
-
-        // Una sola query de configuraciones para todas las unidades (no 3 por unidad).
-        $configurados = \App\Models\ConfiguracionTurno::idsPorTurno(
-            $unidades->flatMap(fn (UnidadOrganica $u) => [$u->jefe_id, ...$u->jefesTurno->pluck('jefe_id')])
-        );
-
-        return $unidades
-            ->map(fn (UnidadOrganica $unidad) => [$unidad, $unidad->turnosSinJefe($configurados)])
-            ->filter(fn (array $par) => $par[1] !== [])
-            ->map(fn (array $par) => "{$par[0]->nombre}: falta jefe inmediato para ".
-                collect($par[1])->map(fn (string $t) => UnidadOrganicaForm::TURNOS[$t] ?? $t)->implode(', ').'.')
+            ->get()
+            ->filter(fn (UnidadOrganica $unidad) => ! $unidad->jefe?->activo)
+            ->map(fn (UnidadOrganica $unidad) => "{$unidad->nombre}: sin jefe activo.")
             ->values()
             ->all();
     }

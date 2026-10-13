@@ -57,9 +57,8 @@ return Application::configure(basePath: dirname(__DIR__))
             ->monthlyOn(25, '02:00')
             ->withoutOverlapping(120);
 
-        // Huecos de cobertura por turno que aparecen sin un alta de por
-        // medio (baja de un jefe titular, reasignación manual de
-        // jefes_turno). No es sensible al minuto: cada hora alcanza.
+        // Unidades con gente cuya jefatura quedó vacante (baja de un jefe
+        // sin reemplazo). No es sensible al minuto: cada hora alcanza.
         $schedule->command('jefaturas:avisar-faltantes')
             ->hourly()
             ->withoutOverlapping(30);

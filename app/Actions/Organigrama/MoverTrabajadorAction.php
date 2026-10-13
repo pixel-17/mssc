@@ -3,12 +3,10 @@
 namespace App\Actions\Organigrama;
 
 use App\Exceptions\UsuarioException;
-use App\Models\ConfiguracionTurno;
 use App\Models\MovimientoOrganigrama;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -23,11 +21,10 @@ use Illuminate\Support\Facades\DB;
  *   de Área solo dentro de SU área (origen y destino bajo la misma
  *   unidad que encabeza y que tiene sub-unidades); mover entre áreas
  *   distintas es solo del admin. El resto de usuarios no mueve a nadie.
- * - Régimen: todos los de una unidad comparten el régimen de su jefe
- *   (ver UnidadOrganica::regimen()); no se mueve a un 276 a una unidad
- *   728 ni al revés. Una unidad sin jefe todavía no define régimen.
+ * - El régimen (276/728) del trabajador y el de la unidad o su jefe son
+ *   independientes: no se valida.
  * - La unidad destino debe tener un jefe inmediato activo (jefe_id).
- * - Quien encabeza una unidad (jefe_id o jefes_turno) no se mueve
+ * - Quien encabeza una unidad (jefe_id) no se mueve
  *   desde aquí: un jefe inmediato se mueve entre áreas con
  *   MoverJefeInmediatoAction; para cambiar la jefatura, desde la unidad.
  *
@@ -37,13 +34,13 @@ use Illuminate\Support\Facades\DB;
  * previsualizar() calcula "qué cambia" — así la vista previa y el
  * resultado no pueden divergir.
  *
- * Dos decisiones opcionales de quien confirma (ver ejecutar()):
+ * Decisión opcional de quien confirma (ver ejecutar()):
  * - Sede: se PROPONE la del jefe de la unidad destino (solo si tiene
  *   sede y es distinta). La sede la decide el servidor; quien confirma
  *   solo dice sí o no, nunca manda un id de sede.
- * - Jefes inmediatos adicionales anteriores: conservar (por defecto) o
- *   quitar. Los que se quitan quedan anotados en el movimiento para
- *   devolverlos si se deshace.
+ *
+ * Al cambiar su jefe, las papeletas abiertas de la persona pasan al jefe
+ * nuevo (ver UserObserver y PapeletasAbiertasService).
  */
 class MoverTrabajadorAction
 {
@@ -60,7 +57,6 @@ class MoverTrabajadorAction
      *     jefe_inmediato: array{antes: ?User, despues: ?User, cambia: bool},
      *     jefe_area: array{antes: ?User, despues: ?User, cambia: bool},
      *     sede: array{actual: ?Sede, propuesta: ?Sede, propone_cambio: bool},
-     *     adicionales: Collection<int, User>,
      *     avisos: list<string>
      * }
      */
@@ -78,13 +74,6 @@ class MoverTrabajadorAction
         $usuarioDe = fn (?int $id): ?User => $id === null ? null : $usuarios->get($id);
 
         $avisos = [];
-
-        $turno = ConfiguracionTurno::where('user_id', $trabajador->id)->value('turno');
-        if (in_array($turno, ConfiguracionTurno::TURNOS_728, true)
-            && $destino->resolverJefeInmediato($turno) === null) {
-            $avisos[] = 'En '.$destino->nombre.' nadie cubre el turno '
-                .ConfiguracionTurno::etiquetaDeTurno($turno).': quedaría sin jefe inmediato para ese turno.';
-        }
 
         $sedePropuestaId = $this->sedePropuestaId($trabajador, $destino);
         $sedeActual = $trabajador->sede_id ? Sede::find($trabajador->sede_id) : null;
@@ -108,7 +97,6 @@ class MoverTrabajadorAction
                 'propuesta' => $sedePropuestaId ? Sede::find($sedePropuestaId) : null,
                 'propone_cambio' => $sedePropuestaId !== null,
             ],
-            'adicionales' => $trabajador->jefesInmediatosAdicionales()->get(),
             'avisos' => $avisos,
         ];
     }
@@ -130,16 +118,14 @@ class MoverTrabajadorAction
     }
 
     /**
-     * Ejecuta el movimiento. $confirmado es obligatorio y sin default
-     * (mismo criterio que AsignarJefeAdicionalAction): no se puede
-     * mover a nadie sin haber pasado por la confirmación.
+     * Ejecuta el movimiento. $confirmado es obligatorio y sin default:
+     * no se puede mover a nadie sin haber pasado por la confirmación.
      *
      * $origenEsperadoId es la unidad en la que la pantalla vio a la
      * persona; si entretanto cambió (otro admin la movió), se aborta.
      *
      * $cambiarSede: aceptar la sede propuesta (la del jefe del destino).
-     * Se ignora si no hay propuesta. $quitarAdicionales: quitarle sus
-     * jefes inmediatos adicionales; false los conserva.
+     * Se ignora si no hay propuesta.
      *
      * @throws UsuarioException
      */
@@ -150,13 +136,12 @@ class MoverTrabajadorAction
         int $origenEsperadoId,
         bool $confirmado,
         bool $cambiarSede = false,
-        bool $quitarAdicionales = false,
     ): MovimientoOrganigrama {
         if (! $confirmado) {
             throw new UsuarioException('Falta confirmar explícitamente el movimiento.');
         }
 
-        return DB::transaction(function () use ($actor, $trabajadorId, $destinoId, $origenEsperadoId, $cambiarSede, $quitarAdicionales) {
+        return DB::transaction(function () use ($actor, $trabajadorId, $destinoId, $origenEsperadoId, $cambiarSede) {
             $trabajador = User::query()->lockForUpdate()->find($trabajadorId)
                 ?? throw new UsuarioException('La persona ya no existe.');
             $destino = UnidadOrganica::find($destinoId)
@@ -170,7 +155,6 @@ class MoverTrabajadorAction
 
             return $this->aplicar($actor, $trabajador, $destino, [
                 'sede_id' => $cambiarSede ? $this->sedePropuestaId($trabajador, $destino) : null,
-                'quitar_adicionales' => $quitarAdicionales,
             ]);
         });
     }
@@ -188,9 +172,8 @@ class MoverTrabajadorAction
      * Los jefes inmediato y de área se recalculan con el organigrama
      * VIGENTE, no se restauran los que tenía: si la jefatura cambió
      * mientras tanto, la persona queda con los jefes actuales de su
-     * unidad de antes. Sí se restaura lo que el movimiento cambió por
-     * decisión de quien confirmó: la sede anterior (si se había cambiado)
-     * y los jefes adicionales que se quitaron.
+     * unidad de antes. Sí se restaura la sede anterior si el
+     * movimiento la había cambiado.
      *
      * @throws UsuarioException
      */
@@ -207,7 +190,6 @@ class MoverTrabajadorAction
 
             $reversion = $this->aplicar($actor, $trabajador, $destino, [
                 'sede_id' => $original->cambioSede() ? $original->sede_anterior_id : null,
-                'restaurar_adicionales' => $original->jefes_adicionales_quitados ?? [],
                 'revierte' => $original,
             ]);
 
@@ -271,8 +253,8 @@ class MoverTrabajadorAction
     }
 
     /**
-     * Nadie entra a una unidad que no tiene jefe inmediato (activo): sus
-     * papeletas no tendrían a quién llegar. Vale también para el admin.
+     * Nadie entra a una unidad sin jefe activo: sus papeletas no tendrían a
+     * quién llegar. Vale también para el admin.
      *
      * @throws UsuarioException
      */
@@ -326,11 +308,9 @@ class MoverTrabajadorAction
             }
         }
 
-        if ($trabajador->unidadesQueEncabeza()->exists() || $trabajador->turnosQueEncabeza()->exists()) {
+        if ($trabajador->unidadesQueEncabeza()->exists()) {
             throw new UsuarioException('Quien encabeza una unidad no se mueve desde el organigrama: cambia primero su jefatura en la unidad.');
         }
-
-        app(ReglasOrganigrama::class)->exigirRegimenCompatible($trabajador, $destino);
 
         if (! $esAdmin) {
             $areaOrigen = app(ReglasOrganigrama::class)->areaDe($actor, $origen);
@@ -346,7 +326,7 @@ class MoverTrabajadorAction
     }
 
     /**
-     * @param  array{sede_id?: ?int, quitar_adicionales?: bool, restaurar_adicionales?: list<array{jefe_id: int, asignado_por_id: ?int}>, revierte?: ?MovimientoOrganigrama}  $opciones
+     * @param  array{sede_id?: ?int, revierte?: ?MovimientoOrganigrama}  $opciones
      */
     private function aplicar(User $actor, User $trabajador, UnidadOrganica $destino, array $opciones = []): MovimientoOrganigrama
     {
@@ -357,15 +337,6 @@ class MoverTrabajadorAction
             'jefe_area' => $trabajador->jefe_area_id,
         ];
 
-        $quitados = null;
-        if (! empty($opciones['quitar_adicionales'])) {
-            $quitados = $trabajador->jefesInmediatosAdicionales()->get()
-                ->map(fn (User $j) => ['jefe_id' => (int) $j->id, 'asignado_por_id' => $j->pivot->asignado_por_id])
-                ->values()
-                ->all();
-            $trabajador->jefesInmediatosAdicionales()->detach();
-        }
-
         // UserObserver::saving() recalcula jefe_inmediato_id / jefe_area_id;
         // UserObserver::saved() resincroniza los turnos futuros si cambia la sede.
         $trabajador->unidad_organica_id = $destino->id;
@@ -373,21 +344,6 @@ class MoverTrabajadorAction
             $trabajador->sede_id = $opciones['sede_id'];
         }
         $trabajador->save();
-
-        foreach ($opciones['restaurar_adicionales'] ?? [] as $fila) {
-            $jefeId = (int) ($fila['jefe_id'] ?? 0);
-
-            // Fuera: él mismo, uno que ya no existe, o quien ahora ya es su jefe inmediato por la unidad.
-            if ($jefeId === (int) $trabajador->id
-                || $jefeId === (int) $trabajador->jefe_inmediato_id
-                || ! User::whereKey($jefeId)->exists()) {
-                continue;
-            }
-
-            $trabajador->jefesInmediatosAdicionales()->syncWithoutDetaching([
-                $jefeId => ['asignado_por_id' => User::whereKey($fila['asignado_por_id'] ?? 0)->exists() ? $fila['asignado_por_id'] : null],
-            ]);
-        }
 
         $trabajador->refresh();
 
@@ -402,7 +358,6 @@ class MoverTrabajadorAction
             'jefe_inmediato_nuevo_id' => $trabajador->jefe_inmediato_id,
             'jefe_area_anterior_id' => $antes['jefe_area'],
             'jefe_area_nuevo_id' => $trabajador->jefe_area_id,
-            'jefes_adicionales_quitados' => $quitados,
             'revierte_id' => ($opciones['revierte'] ?? null)?->id,
         ]);
     }

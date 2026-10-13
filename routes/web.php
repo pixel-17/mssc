@@ -11,9 +11,7 @@ use App\Http\Controllers\Rrhh\SustentoController as RrhhSustentoController;
 use App\Http\Controllers\Trabajador\PapeletaController as TrabajadorPapeletaController;
 use App\Http\Controllers\Trabajador\RetornoController as TrabajadorRetornoController;
 use App\Http\Controllers\Trabajador\SustentoController as TrabajadorSustentoController;
-use App\Http\Controllers\Usuario\JefeAdicionalController;
 use App\Http\Controllers\Usuario\UsuarioController;
-use App\Http\Controllers\Usuario\VinculoController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -243,20 +241,9 @@ Route::middleware([
     Route::delete('/push-subscriptions', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
 
     /*
-     * jefes_inmediatos_adicionales: sin middleware de rol porque puede
-     * asignar/quitar un admin, el jefe de área del trabajador, o
-     * cualquier jefe inmediato (automático o adicional) que el
-     * trabajador ya tenga — la autorización real vive en las Actions
-     * (AsignarJefeAdicionalAction / DesasignarJefeAdicionalAction).
-     */
-    Route::post('/trabajadores/{trabajador}/jefes-adicionales', [JefeAdicionalController::class, 'store'])->name('jefes-adicionales.store');
-    Route::delete('/trabajadores/{trabajador}/jefes-adicionales/{jefe}', [JefeAdicionalController::class, 'destroy'])->name('jefes-adicionales.destroy');
-
-    /*
-     * Alta, edición y vinculación de jefe inmediato por Jefe de Área /
+     * Alta y edición de usuarios por Jefe de Área /
      * Jefe Inmediato (Admin NO pasa por aquí: gestiona usuarios desde el
-     * panel de administración / el organigrama). Sin middleware de rol por el mismo motivo que
-     * jefes-adicionales: la autorización real vive en UserPolicy
+     * panel de administración / el organigrama). Sin middleware de rol: la autorización real vive en UserPolicy
      * (ver UserPolicy::editar() para el alcance de edit/update).
      */
     Route::prefix('usuarios')->name('usuarios.')->group(function () {
@@ -265,14 +252,11 @@ Route::middleware([
         Route::post('/', [UsuarioController::class, 'store'])->name('store');
         Route::get('/{trabajador}/editar', [UsuarioController::class, 'edit'])->name('edit');
         Route::put('/{trabajador}', [UsuarioController::class, 'update'])->name('update');
-
-        Route::post('/vincular/buscar', [VinculoController::class, 'buscar'])->name('buscar');
-        Route::post('/{trabajador}/vincular', [VinculoController::class, 'vincular'])->name('vincular');
     });
 
     /*
      * Ver/descargar el archivo de un sustento (Paso 5/8): sin
-     * middleware de rol (igual que jefes-adicionales) — la
+     * middleware de rol — la
      * autorización real vive en PapeletaPolicy::verSustento
      * (trabajador dueño, jefe inmediato o RRHH).
      */
