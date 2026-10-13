@@ -157,7 +157,8 @@ class TurnoInicialAlCrearTest extends TestCase
 
     public function test_jefe_de_area_puede_crear_un_728_sin_turno_por_http(): void
     {
-        $jefeDeArea = $this->usuarioDePrueba([], ['admin']); // dueño de la unidad para simplificar autorización
+        // Jefe de área = trabajador que encabeza la unidad (un admin no puede dar altas por esta vía).
+        $jefeDeArea = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
         $this->conUnidadHija($unidad);
 

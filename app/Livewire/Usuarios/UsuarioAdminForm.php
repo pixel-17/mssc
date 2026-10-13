@@ -234,6 +234,13 @@ class UsuarioAdminForm extends Component
         $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
         $roles = array_map('intval', $datos['rolesSeleccionados']);
 
+        // Un administrador no lleva régimen: si el alta es solo de admin, el régimen debe quedar vacío.
+        if ($this->esSoloAdmin() && $this->regimen !== '') {
+            $this->addError('rolesSeleccionados', 'Un administrador no lleva régimen: deja el régimen vacío.');
+
+            return;
+        }
+
         if (in_array($adminId, $roles, true) && in_array($trabajadorId, $roles, true)) {
             $this->addError('rolesSeleccionados', 'Un administrador no puede tener también el rol de trabajador: no tiene papeletas, equipo ni jefe.');
 

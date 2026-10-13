@@ -29,8 +29,7 @@ use Spatie\ModelStates\HasStates;
  * Decidir sobre una papeleta como jefe es SIEMPRE responsabilidad del
  * Jefe Inmediato (jefe_inmediato_id): no escala a nadie más por
  * inacción, ni siquiera al Jefe de Área. jefe_area_id se mantiene solo
- * para reportes/dashboards (scopeDeEquipoDe) y para asignar jefes
- * inmediatos adicionales (ya no existen).
+ * para reportes/dashboards (scopeDeEquipoDe).
  */
 class Papeleta extends Model
 {
@@ -246,7 +245,7 @@ class Papeleta extends Model
     /**
      * Revisión post-hoc observada por RRHH: solo el MISMO jefe que
      * autorizó la papeleta (resuelto_por_jefe_id) puede responderla,
-     * no cualquier otro candidato de turno ni un jefe adicional.
+     * no cualquier otro jefe de la unidad.
      */
     public function puedeResponderPosthoc(User $user): bool
     {

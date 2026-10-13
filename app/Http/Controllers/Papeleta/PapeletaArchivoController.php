@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  * (el de sustentos ya lo sirve
  * SustentoArchivoController).
  *
- * Autorización: PapeletaPolicy::verArchivos (dueño, jefe inmediato/adicional,
+ * Autorización: PapeletaPolicy::verArchivos (dueño, jefe inmediato,
  * jefe de área o RRHH; el admin NO, aunque vea el detalle). Disco 'local'
  * privado, nunca URL directa.
  */

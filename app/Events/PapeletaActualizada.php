@@ -23,8 +23,7 @@ use Throwable;
  * que ven la papeleta.
  *
  * Destinatarios (canales privados App.Models.User.{id}, ya autorizados
- * en routes/channels.php): el trabajador, su jefe inmediato (automático
- * y adicionales), el jefe de área, y RRHH/admin (bandeja y dashboard).
+ * en routes/channels.php): el trabajador, su jefe inmediato, el jefe de área, y RRHH/admin (bandeja y dashboard).
  *
  * ShouldBroadcastNow: con QUEUE_CONNECTION=database un ShouldBroadcast
  * normal esperaría a un worker y dejaría de ser tiempo real.

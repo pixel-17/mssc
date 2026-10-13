@@ -53,7 +53,7 @@ class EquipoDelJefeService
         }
 
         // Los demás jefes inmediatos de las unidades donde este usuario es
-        // jefe (de la unidad o adicional) sí se ven, pero solo lectura:
+        // jefe sí se ven, pero solo lectura:
         // entre jefes inmediatos cada uno programa solo su propio turno.
         if (! $user->hasRole('admin')) {
             $paresSoloLectura = $this->jefesDeSusUnidades($user)

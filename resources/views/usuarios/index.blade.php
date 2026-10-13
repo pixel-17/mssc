@@ -71,22 +71,6 @@
                 @endif
             </div>
 
-            @if ($puedeCrear)
-                <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-2">¿Vas a asignarte como jefe inmediato de alguien que ya existe en el sistema?</h3>
-                    <p class="text-sm text-gray-500 dark:text-tinta-100/60 mb-4">Búscalo por DNI. Si ya tiene jefe(s) asignado(s), te los mostraremos antes de confirmar.</p>
-                    <form method="POST" action="{{ route('usuarios.buscar') }}" class="flex items-end gap-3">
-                        @csrf
-                        <div>
-                            <x-label for="dni" value="DNI" />
-                            <x-input id="dni" name="dni" type="text" maxlength="8" required class="mt-1 block" />
-                        </div>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                            Buscar
-                        </button>
-                    </form>
-                </div>
-            @endif
         </div>
     </div>
 </x-app-layout>

@@ -87,6 +87,10 @@ class HorasAcumuladasIndex extends Component
      */
     public function exportar(ReporteHorasAcumuladasService $service)
     {
+        $this->validate([
+            'mes' => ['required', 'regex:/^\d{4}-(0[1-9]|1[0-2])$/'],
+        ]);
+
         /** @var User $user */
         $user = Auth::user();
 

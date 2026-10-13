@@ -21,12 +21,10 @@ use App\States\Papeleta\PendienteRrhh;
  * referencia (jefe_inmediato_id vs jefe_area_id), no por una tabla
  * o rol de permiso separado.
  *
- * Un trabajador puede tener varios jefes inmediatos (el automático de
- * su unidad orgánica + adicionales asignados a mano, ver
- * User::esJefeInmediatoDe()). Cualquiera de ellos puede decidir sus
- * papeletas — el que llegue primero — por eso los checks de abajo ya
- * no comparan solo contra el jefe_inmediato_id fotografiado en la
- * papeleta, sino contra TODOS los jefes actuales del trabajador.
+ * Cada trabajador tiene un solo jefe inmediato: el de su unidad
+ * orgánica (users.jefe_inmediato_id, ver User::esJefeInmediatoDe()).
+ * Los checks de abajo comparan contra el jefe fotografiado en la
+ * papeleta, quien la resolvió y el jefe de área.
  */
 class PapeletaPolicy
 {

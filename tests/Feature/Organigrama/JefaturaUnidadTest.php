@@ -69,7 +69,7 @@ class JefaturaUnidadTest extends TestCase
             'jefe_id' => $unidad->jefe_id,
             'activo' => $unidad->activo,
             ...$cambios,
-        ], null, $ubicarJefe);
+        ], $ubicarJefe);
     }
 
     public function test_un_jefe_de_otro_regimen_no_puede_encabezar_una_unidad_con_personas(): void

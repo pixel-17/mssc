@@ -31,7 +31,6 @@ class MovimientoOrganigrama extends Model
         'jefe_inmediato_nuevo_id',
         'jefe_area_anterior_id',
         'jefe_area_nuevo_id',
-        'jefes_adicionales_quitados',
         'revierte_id',
     ];
 
@@ -40,7 +39,6 @@ class MovimientoOrganigrama extends Model
         return [
             'deshecho_at' => 'datetime',
             // list<array{jefe_id: int, asignado_por_id: ?int}>|null
-            'jefes_adicionales_quitados' => 'array',
         ];
     }
 

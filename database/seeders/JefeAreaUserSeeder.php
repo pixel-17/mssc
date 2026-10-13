@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Database\Seeder;
 
 /**
@@ -42,5 +43,25 @@ class JefeAreaUserSeeder extends Seeder
         }
 
         $unidad->update(['jefe_id' => $jefeArea->id]);
+
+        // Un 728 sin turno vigente no está disponible para decidir (ver
+        // DecisorDisponibleService::estaDeDescanso). Mismo criterio que el
+        // jefe inmediato: turno según la hora de la siembra.
+        $ahora = now();
+        $hora = (int) $ahora->format('G');
+        $turno = match (true) {
+            $hora >= 6 && $hora < 14 => 'MANANA',
+            $hora >= 14 && $hora < 22 => 'TARDE',
+            default => 'NOCHE',
+        };
+        $fechaAncla = $hora < 6 ? $ahora->copy()->subDay() : $ahora->copy();
+        $actor = User::where('email', 'admin@mssc.test')->firstOrFail();
+
+        app(GeneradorTurnoMensualService::class)->cargarConfiguracion(
+            trabajador: $jefeArea,
+            turno: $turno,
+            fechaAncla: $fechaAncla,
+            actor: $actor,
+        );
     }
 }

@@ -19,8 +19,8 @@ class HistorialTrabajadorService
 {
     /**
      * Trabajadores que $usuario puede buscar: admin/RRHH a cualquiera,
-     * jefe solo a quienes ya ve en su propio equipo (automáticos +
-     * adicionales, ver User::trabajadoresParaReportes()).
+     * jefe solo a quienes ya ve en su propio equipo (ver
+     * User::equipoDe()).
      */
     public function trabajadoresVisibles(User $usuario, string $buscar = ''): Collection
     {
@@ -53,7 +53,7 @@ class HistorialTrabajadorService
 
     /**
      * ¿Puede $usuario ver la ficha de $trabajador? Admin/RRHH siempre;
-     * jefe solo si es su jefe inmediato (automático o adicional) o su
+     * jefe solo si es su jefe inmediato o su
      * jefe de área explícito.
      */
     public function puedeVer(User $usuario, User $trabajador): bool

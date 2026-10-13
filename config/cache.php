@@ -131,6 +131,8 @@ return [
     |
     */
 
-    'serializable_classes' => false,
+    // true: el dashboard cachea colecciones Eloquent (ver DashboardMetricsService::recordar).
+    // Con false se vuelven __PHP_Incomplete_Class y la página falla en el segundo render.
+    'serializable_classes' => true,
 
 ];

@@ -37,8 +37,8 @@ use Illuminate\Support\Facades\DB;
  * - Jefe inmediato (o, si quien crea la papeleta es él mismo jefe
  *   inmediato, su Jefe de Área) sin resolver o inactivo: bloqueo total
  *   SIEMPRE, sin excepción por régimen ni por posición en el
- *   organigrama — es un hueco de configuración (turno sin jefe
- *   asignado, jefe dado de baja, o tope del organigrama sin nadie
+ *   organigrama — es un hueco de configuración (unidad sin jefe
+ *   asignada, jefe dado de baja, o tope del organigrama sin nadie
  *   arriba), no una indisponibilidad temporal. La papeleta nunca se
  *   crea esperando a alguien que no existe.
  * - Jefe de ÁREA (encabeza una unidad con sub-unidades, ver

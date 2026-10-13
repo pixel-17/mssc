@@ -26,8 +26,9 @@ class FormularioCrearUsuarioTest extends TestCase
 
         $this->prepararBase();
 
-        // Mismo atajo que TurnoInicialAlCrearTest: un admin dueño de la unidad hace de jefe de área.
-        $this->jefeDeArea = $this->usuarioDePrueba([], ['admin']);
+        // Jefe de área = trabajador que encabeza la unidad. Un admin no sirve aquí:
+        // UserPolicy::puedeCrearAlgo() lo excluye a propósito (sus altas van por Cuentas).
+        $this->jefeDeArea = $this->usuarioDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $this->jefeDeArea->id]);
         $this->conUnidadHija($unidad);
     }
@@ -42,12 +43,12 @@ class FormularioCrearUsuarioTest extends TestCase
             ->assertSee('Sede central');
     }
 
-    public function test_el_turno_se_ofrece_con_tilde_pero_el_valor_enviado_no_cambia(): void
+    public function test_el_alta_no_pide_turno_porque_el_trabajador_lo_programa_despues(): void
     {
         $this->actingAs($this->jefeDeArea)
             ->get(route('usuarios.create'))
             ->assertOk()
-            ->assertSee('<option value="MANANA"', false)
-            ->assertSee('>Mañana</option>', false);
+            ->assertDontSee('name="turno"', false)
+            ->assertSee('se carga después', false);
     }
 }

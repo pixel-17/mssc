@@ -349,8 +349,8 @@ class MoverJefeComoTrabajadorAction
     }
 
     /**
-     * Quién releva a $jefe en $unidad: el elegido, o el jefe de turno que
-     * asciende, o null si la unidad puede quedar sin jefe.
+     * Quién releva a $jefe en $unidad: el elegido, o null si la unidad
+     * puede quedar sin jefe.
      *
      * @param  array<int|string, int|string|null>  $reemplazos
      *

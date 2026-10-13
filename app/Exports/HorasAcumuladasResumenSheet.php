@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -11,7 +12,7 @@ class HorasAcumuladasResumenSheet implements FromCollection, WithHeadings, WithM
 {
     public function __construct(protected \Illuminate\Support\Collection $resumen) {}
 
-    public function collection()
+    public function collection(): Collection
     {
         return $this->resumen;
     }

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
  * RRHH vuelve a decidir (aprobar u observar de nuevo).
  *
  * Solo responde el MISMO jefe que autorizó (resuelto_por_jefe_id), no
- * otro candidato de turno. Responder NO aprueba nada: solo devuelve la
+ * otro jefe de la unidad. Responder NO aprueba nada: solo devuelve la
  * decisión a RRHH. Igual que las demás acciones, la fila se relee bajo
  * lock para no pisar una revisión que ya cambió.
  */
