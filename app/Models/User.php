@@ -282,6 +282,18 @@ class User extends Authenticatable
     }
 
     /**
+     * ¿Es este usuario el ÚNICO con rol 'admin' que sigue activo? Sin
+     * ningún admin activo nadie podría gestionar el sistema, así que no
+     * se permite desactivarlo ni quitarle el rol.
+     */
+    public function esUnicoAdminActivo(): bool
+    {
+        return $this->activo
+            && $this->hasRole('admin')
+            && ! static::role('admin')->where('activo', true)->whereKeyNot($this->getKey())->exists();
+    }
+
+    /**
      * ¿Es este usuario el jefe inmediato del trabajador dado? Hay UN solo jefe
      * inmediato por trabajador (users.jefe_inmediato_id, derivado de
      * unidades_organicas.jefe_id), sin importar régimen ni turno.

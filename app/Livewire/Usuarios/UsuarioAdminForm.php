@@ -270,6 +270,23 @@ class UsuarioAdminForm extends Component
             }
         }
 
+        if ($this->usuario?->esUnicoAdminActivo()) {
+            $rolAdminId = (int) Role::where('name', 'admin')->value('id');
+            $conservaRol = in_array($rolAdminId, array_map('intval', $datos['rolesSeleccionados']), true);
+
+            if (! $datos['activo']) {
+                $this->addError('activo', 'Es el único administrador activo: sin él nadie puede gestionar el sistema. Designa primero a otro administrador.');
+
+                return;
+            }
+
+            if (! $conservaRol) {
+                $this->addError('rolesSeleccionados', 'Es el único administrador activo: no puedes quitarle ese rol hasta crear o activar a otro administrador.');
+
+                return;
+            }
+        }
+
         // Mismas reglas que desactivar desde la lista o el organigrama (jefe con personas a cargo, etc.).
         if ($this->usuario?->activo && ! $datos['activo']) {
             $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);

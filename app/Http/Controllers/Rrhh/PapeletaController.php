@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Rrhh;
 
 use App\Http\Controllers\Controller;
 use App\Models\Papeleta;
+use App\Services\BloqueoRevisionService;
 use App\Services\ReporteHorasAcumuladasService;
 use App\States\Papeleta\Rechazada;
 use Illuminate\Http\Request;
@@ -17,15 +18,20 @@ use Illuminate\View\View;
  */
 class PapeletaController extends Controller
 {
-    public function show(Request $request, Papeleta $papeleta, ReporteHorasAcumuladasService $reporte): View
+    public function show(Request $request, Papeleta $papeleta, ReporteHorasAcumuladasService $reporte, BloqueoRevisionService $bloqueo): View
     {
         $this->authorize('view', $papeleta);
 
-        $papeleta->load(['motivo', 'sede', 'trabajador', 'retorno', 'sustentos', 'historial.actor', 'jefeInmediato', 'jefeArea']);
+        $papeleta->load(['motivo', 'sede', 'trabajador', 'retorno', 'sustentos', 'historial.actor', 'jefeInmediato', 'jefeArea', 'enRevisionPor']);
+
+        // Bloqueo suave: se intenta tomar la revisión. Si la tiene otro, se
+        // pasa $enRevisionPor a la vista para mostrar el aviso (no bloquea).
+        $tomado = $bloqueo->marcar($papeleta, $request->user());
+        $enRevisionPor = $tomado ? null : $bloqueo->nombreRevisor($papeleta);
 
         $historialMes = $this->historialDelMes($request, $papeleta, $reporte);
 
-        return view('rrhh.papeletas.show', compact('papeleta', 'historialMes'));
+        return view('rrhh.papeletas.show', compact('papeleta', 'historialMes', 'enRevisionPor'));
     }
 
     /**

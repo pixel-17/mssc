@@ -35,7 +35,7 @@ use Illuminate\Support\Facades\Notification;
  * - Sustento de Salud vencido sin presentar (reclasificado a
  *   Particular): notifica al trabajador.
  * - Sustento presentado sin revisar a tiempo (requiere visto bueno):
- *   notifica a Jefe Inmediato y RRHH.
+ *   notifica a RRHH.
  * - Sustento observado (debe volver a presentar): notifica al
  *   trabajador.
  */

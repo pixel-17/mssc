@@ -78,6 +78,8 @@ class Papeleta extends Model
         'observacion_adjunto_path',
         'observacion_subsanada_at',
         'reloj_jefe_at',
+        'en_revision_por_id',
+        'en_revision_desde',
     ];
 
     protected function casts(): array
@@ -100,6 +102,7 @@ class Papeleta extends Model
             'observacion_requiere_adjunto' => 'boolean',
             'observacion_subsanada_at' => 'datetime',
             'reloj_jefe_at' => 'datetime',
+            'en_revision_desde' => 'datetime',
         ];
     }
 
@@ -139,7 +142,6 @@ class Papeleta extends Model
      *
      * @param  class-string<PapeletaState>  $destino
      * @param  \Closure(self): void|null  $cambios  Columnas extra a fijar antes de guardar.
-     * @param  array<string, mixed>  $historialExtra  Columnas adicionales de la fila de historial (p. ej. motivo_anterior_id).
      */
     public function transicionarConHistorial(
         string $destino,
@@ -147,7 +149,6 @@ class Papeleta extends Model
         string $actorTipo,
         ?string $justificacion = null,
         ?\Closure $cambios = null,
-        array $historialExtra = [],
     ): HistorialPapeleta {
         $estadoAnterior = class_basename($this->estado);
 
@@ -166,7 +167,6 @@ class Papeleta extends Model
             'estado_anterior' => $estadoAnterior,
             'estado_nuevo' => class_basename($this->estado),
             'justificacion' => $justificacion,
-            ...$historialExtra,
         ]);
     }
 
@@ -378,6 +378,11 @@ class Papeleta extends Model
     public function rechazadaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rechazada_por_id');
+    }
+
+    public function enRevisionPor(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'en_revision_por_id');
     }
 
     public function retorno(): HasOne
