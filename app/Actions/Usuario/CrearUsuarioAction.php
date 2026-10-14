@@ -39,7 +39,7 @@ use Illuminate\Support\Facades\Hash;
  * Contraseña inicial: siempre el DNI del propio usuario (nunca la
  * elige quien lo crea). debe_actualizar_password queda en true para
  * que RedirigirSiDebeActualizarPassword le pida cambiarla —de forma
- * opcional, puede omitirlo— la primera vez que entre.
+ * obligatoria— la primera vez que entre.
  *
  * admin NO pasa por aquí: usa UsuarioAdminForm (mismo criterio de
  * contraseña = DNI, ver ese componente).

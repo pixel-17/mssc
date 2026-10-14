@@ -5,6 +5,7 @@ namespace App\Livewire\Auth;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -14,10 +15,10 @@ use Livewire\Component;
  * CrearUsuarioAction / UsuarioAdminForm) la primera vez que entra.
  * RedirigirSiDebeActualizarPassword es quien lo trae hasta aquí.
  *
- * Es opcional a propósito: "actualizar" y "omitir" hacen lo mismo en
- * cuanto a la bandera (la apagan), la única diferencia es si además
- * cambia la contraseña. Una vez apagada, el middleware no vuelve a
- * traerlo aquí.
+ * Es OBLIGATORIA: la contraseña inicial es el DNI (un dato semipúblico),
+ * así que el usuario no puede seguir usando el sistema hasta definir una
+ * propia y distinta de su DNI. Solo guardar una contraseña nueva apaga la
+ * bandera; el middleware no vuelve a traerlo aquí después.
  */
 #[Layout('layouts.app')]
 #[Title('Actualiza tu contraseña')]
@@ -29,8 +30,21 @@ class ActualizarPasswordInicial extends Component
 
     protected function rules(): array
     {
+        $dni = (string) Auth::user()?->dni;
+
         return [
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => array_filter([
+                'required', 'string', 'min:8', 'confirmed',
+                $dni !== '' ? Rule::notIn([$dni]) : null,
+            ]),
+        ];
+    }
+
+    /** @return array<string, string> */
+    protected function messages(): array
+    {
+        return [
+            'password.not_in' => 'La nueva contraseña no puede ser tu DNI.',
         ];
     }
 
@@ -44,13 +58,6 @@ class ActualizarPasswordInicial extends Component
         ]);
 
         session()->flash('mensaje', 'Contraseña actualizada.');
-
-        $this->redirectRoute('dashboard', navigate: false);
-    }
-
-    public function omitir(): void
-    {
-        Auth::user()->update(['debe_actualizar_password' => false]);
 
         $this->redirectRoute('dashboard', navigate: false);
     }

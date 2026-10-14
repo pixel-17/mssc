@@ -1,5 +1,5 @@
 <div
-    x-data="{ todos: null, arrastrando: null, sobre: null }"
+    x-data="{ todos: null, arrastrando: null, sobre: null, leyenda: false, ayuda: false, pendientes: false }"
     class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6"
 >
     {{-- Conectores del árbol. Van aquí (no en app.css) para que funcionen sin recompilar. --}}
@@ -26,13 +26,31 @@
         .dark .org-n3 { --org-tono: #436164; --org-velo: rgba(67, 97, 100, .14); }
         .dark .org-n4 { --org-tono: #324e52; --org-velo: rgba(50, 78, 82, .16); }
         .dark .org-n5 { --org-tono: #293f43; --org-velo: rgba(41, 63, 67, .18); }
+        /* Mientras se arrastra, toda unidad que puede recibir se marca; la que está bajo el cursor se resalta más. */
+        .org-arrastrando .org-nivel { outline: 2px dashed rgba(245, 158, 11, .55); outline-offset: 2px; }
+        .org-foco > .org-nivel { box-shadow: 0 0 0 3px rgba(245, 158, 11, .75); transition: box-shadow .3s; }
+        .org-persona .org-asa { color: #94a3b8; }
+        .org-persona:hover .org-asa { color: #475569; }
+        .org-persona[draggable="true"]:active { opacity: .6; }
+        .org-tree button:focus-visible, .org-tree a:focus-visible { outline: 2px solid #f59e0b; outline-offset: 2px; border-radius: .5rem; }
         .org-tree > ul { margin-left: 0; }
         .org-tree > ul > li { padding-left: 0; }
         .org-tree > ul > li::before, .org-tree > ul > li::after { display: none; }
     </style>
 
     <x-admin.encabezado titulo="Organigrama del área">
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center justify-end gap-2">
+            <div class="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs dark:border-white/15" role="group" aria-label="Qué tanto del árbol se ve">
+                <button type="button" class="px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                        :class="todos === null && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === null"
+                        @click="todos = null; $dispatch('org-areas')">Solo áreas</button>
+                <button type="button" class="border-s border-gray-200 px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
+                        :class="todos === true && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === true"
+                        @click="todos = true; $dispatch('org-expandir')">Todo abierto</button>
+                <button type="button" class="border-s border-gray-200 px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
+                        :class="todos === false && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === false"
+                        @click="todos = false; $dispatch('org-contraer')">Todo cerrado</button>
+            </div>
             <button type="button"
                     wire:click="alternarEdicion"
                     aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
@@ -67,20 +85,27 @@
                     <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
                 </a>
             @endif
-            <button type="button" class="btn-secondary text-xs" @click="todos = null; $dispatch('org-areas')">Solo áreas</button>
-            <button type="button" class="btn-secondary text-xs" @click="todos = true; $dispatch('org-expandir')">Expandir todo</button>
-            <button type="button" class="btn-secondary text-xs" @click="todos = false; $dispatch('org-contraer')">Contraer todo</button>
         </div>
     </x-admin.encabezado>
 
     @if ($modoEdicion)
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="status">
-            <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
-            <strong>Modo edición</strong>
-            <span class="text-amber-800/80 dark:text-amber-200/80">
-                Arrastra trabajadores y jefes inmediatos a otra unidad{{ $esAdmin ? '; sobre un área con jefe de área puedes mover también su unidad con su gente' : '' }} (se pide confirmación){{ $esAdmin ? ' · usa los íconos de cada unidad y persona para editar' : '' }}.
-                Sin arrastrar (táctil o teclado): abre a la persona con clic en su nombre y usa «Mover a otra unidad».
-            </span>
+        <div class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+            <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
+                <strong>Modo edición</strong>
+                <span class="text-amber-800/80 dark:text-amber-200/80">Arrastra a una persona sobre otra unidad para moverla. Siempre se pide confirmación.</span>
+                <button type="button" class="ms-auto text-xs font-medium underline hover:no-underline" @click="ayuda = ! ayuda" :aria-expanded="ayuda">
+                    <span x-text="ayuda ? 'Ocultar ayuda' : '¿Cómo funciona?'"></span>
+                </button>
+            </div>
+            <ul x-show="ayuda" x-cloak x-collapse class="mt-2 list-disc space-y-1 ps-5 text-xs text-amber-800/90 dark:text-amber-200/90">
+                <li>Se pueden arrastrar trabajadores y jefes inmediatos a otra unidad.</li>
+                @if ($esAdmin)
+                    <li>Sobre un área con jefe de área puedes mover también su unidad con toda su gente.</li>
+                    <li>Los íconos de cada unidad y persona sirven para editar, agregar sub-unidades o altas.</li>
+                @endif
+                <li>Sin arrastrar (táctil o teclado): abre a la persona con clic en su nombre y usa «Mover a otra unidad».</li>
+            </ul>
         </div>
     @endif
 
@@ -115,6 +140,55 @@
         <x-stat-card label="Sin jefe" :value="$stats['sin_jefe']" hint="Unidades sin jefe activo" />
     </div>
 
+    @php
+        // Unidades sin jefe activo, con la ruta de sus ancestros para poder abrir el árbol hasta ellas.
+        $recolectarSinJefe = function ($nodos, array $ruta = []) use (&$recolectarSinJefe): array {
+            $filas = [];
+            foreach ($nodos as $n) {
+                if ($n['sin_jefe']) {
+                    $filas[] = ['unidad' => $n['unidad'], 'ruta' => $ruta];
+                }
+                $filas = array_merge($filas, $recolectarSinJefe($n['hijos'], [...$ruta, $n['unidad']->id]));
+            }
+
+            return $filas;
+        };
+        $sinJefe = $recolectarSinJefe($raices);
+    @endphp
+
+    @if (count($sinJefe) > 0 || $stats['sin_sede'] > 0)
+        <div class="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                <strong class="text-amber-900 dark:text-amber-200">Por atender</strong>
+                @if (count($sinJefe) > 0)
+                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-amber-900 shadow-sm ring-1 ring-amber-200 hover:bg-amber-100 dark:bg-white/10 dark:text-amber-100 dark:ring-amber-500/30"
+                            @click="pendientes = ! pendientes" :aria-expanded="pendientes">
+                        {{ count($sinJefe) }} {{ count($sinJefe) === 1 ? 'unidad sin jefe' : 'unidades sin jefe' }}
+                        <svg class="size-3.5 transition-transform" :class="pendientes && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                    </button>
+                @endif
+                @if ($stats['sin_sede'] > 0 && $sede !== 'sin')
+                    <button type="button" wire:click="$set('sede', 'sin')"
+                            class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-red-800 shadow-sm ring-1 ring-red-200 hover:bg-red-50 dark:bg-white/10 dark:text-red-200 dark:ring-red-500/30">
+                        {{ $stats['sin_sede'] }} {{ $stats['sin_sede'] === 1 ? 'persona sin sede' : 'personas sin sede' }} · ver solo ellas
+                    </button>
+                @endif
+            </div>
+            @if (count($sinJefe) > 0)
+                <ul x-show="pendientes" x-cloak x-collapse class="mt-2 flex flex-wrap gap-2">
+                    @foreach ($sinJefe as $fila)
+                        <li wire:key="sin-jefe-{{ $fila['unidad']->id }}">
+                            <button type="button" class="rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs text-tinta-950 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-gray-900 dark:text-white dark:hover:bg-white/10"
+                                    @click="$dispatch('org-ir', { id: {{ $fila['unidad']->id }}, ruta: @js($fila['ruta']) })">
+                                {{ $fila['unidad']->nombre }}
+                            </button>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
+
     <div class="flex flex-wrap items-end gap-4">
         <x-admin.filtro-campo label="Buscar" for="organigrama-buscar">
             <x-input id="organigrama-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Unidad, jefe, trabajador o DNI" />
@@ -139,19 +213,26 @@
             Mostrar desactivados
         </label>
 
-        <div class="ms-auto flex flex-wrap items-center gap-3 pb-2 text-xs text-gray-600 dark:text-tinta-50/70">
-            <span class="inline-flex items-center gap-1" title="Cada nivel del organigrama tiene un tono más claro que el anterior">
-                Nivel
-                <span class="inline-flex overflow-hidden rounded">
-                    @foreach (['#223437', '#324e52', '#436164', '#647d7d', '#98adab', '#c3d0ce'] as $tono)
-                        <span class="inline-block h-2.5 w-3" style="background: {{ $tono }}"></span>
-                    @endforeach
+        <div class="ms-auto pb-2 text-xs text-gray-600 dark:text-tinta-50/70">
+            <button type="button" class="inline-flex items-center gap-1 rounded-lg px-2 py-1 font-medium text-tinta-700 hover:bg-tinta-50 dark:text-tinta-100 dark:hover:bg-white/10"
+                    @click="leyenda = ! leyenda" :aria-expanded="leyenda">
+                <svg class="size-4 transition-transform" :class="leyenda && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                Leyenda
+            </button>
+            <div x-show="leyenda" x-cloak x-collapse class="mt-1 flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+                <span class="inline-flex items-center gap-1" title="Cada nivel del organigrama tiene un tono más claro que el anterior">
+                    Nivel
+                    <span class="inline-flex overflow-hidden rounded">
+                        @foreach (['#223437', '#324e52', '#436164', '#647d7d', '#98adab', '#c3d0ce'] as $tono)
+                            <span class="inline-block h-2.5 w-3" style="background: {{ $tono }}"></span>
+                        @endforeach
+                    </span>
                 </span>
-            </span>
-            <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-tinta-600"></span> Jefe</span>
-            <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-emerald-500"></span> Trabajador</span>
-            <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-amber-500"></span> Sede distinta a la de su jefe</span>
-            <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-red-500"></span> Sin sede</span>
+                <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-tinta-600"></span> Jefe</span>
+                <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-emerald-500"></span> Trabajador</span>
+                <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-amber-500"></span> Sede distinta a la de su jefe</span>
+                <span class="inline-flex items-center gap-1"><span class="inline-block size-2.5 rounded-full bg-red-500"></span> Sin sede</span>
+            </div>
         </div>
     </div>
 
@@ -165,10 +246,10 @@
             @endif
         </div>
     @else
-        <div @class(['org-tree overflow-x-auto pb-4', 'org-editando' => $modoEdicion])>
+        <div @class(['org-tree overflow-x-auto pb-4', 'org-editando' => $modoEdicion]) :class="arrastrando && 'org-arrastrando'">
             <ul>
                 @foreach ($raices as $nodo)
-                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => 0])
+                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => 0, 'buscar' => $buscar])
                 @endforeach
             </ul>
         </div>

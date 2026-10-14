@@ -11,10 +11,10 @@ use Symfony\Component\HttpFoundation\Response;
  * Si el usuario autenticado tiene debe_actualizar_password = true
  * (se marca al crearlo con contraseña = DNI, ver CrearUsuarioAction y
  * UsuarioAdminForm), lo manda a la pantalla de actualizar contraseña
- * en su próxima navegación de página completa. Es opcional: desde ahí
- * puede actualizarla u omitirla — cualquiera de las dos apaga la
- * bandera (ver ActualizarPasswordInicial), así que esto solo se
- * dispara una vez, en su primer ingreso real.
+ * en su próxima navegación de página completa. Es obligatorio: solo
+ * guardar una contraseña nueva apaga la bandera (ver
+ * ActualizarPasswordInicial), así que esto deja de dispararse tras su
+ * primer ingreso real.
  *
  * Solo actúa sobre GET de página completa: las peticiones internas de
  * Livewire (POST a /livewire/update) no pasan por aquí, para no

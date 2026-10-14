@@ -5,8 +5,8 @@
                 Actualiza tu contraseña
             </h2>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Tu contraseña actual es tu DNI. Por seguridad, te recomendamos cambiarla ahora —
-                aunque puedes omitir este paso y hacerlo después desde tu perfil.
+                Tu contraseña actual es tu DNI. Por seguridad, debes definir una contraseña
+                propia antes de continuar.
             </p>
         </div>
 
@@ -22,15 +22,7 @@
                 <input id="actualizar-password-inicial-password_confirmation" type="password" wire:model="password_confirmation" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
             </div>
 
-            <div class="flex items-center justify-between pt-2">
-                <button
-                    type="button"
-                    wire:click="omitir"
-                    class="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                >
-                    Omitir por ahora
-                </button>
-
+            <div class="flex items-center justify-end pt-2">
                 <button type="submit" class="px-4 py-2 rounded-md bg-tinta-600 text-white text-sm font-semibold hover:bg-tinta-700">
                     Actualizar contraseña
                 </button>

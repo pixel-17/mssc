@@ -8,6 +8,7 @@ use App\Actions\Papeleta\ObservarRrhhAction;
 use App\Actions\Papeleta\RechazarRrhhAction;
 use App\Actions\Papeleta\RevisionPosthocAction;
 use App\Exceptions\PapeletaException;
+use App\Http\Controllers\Concerns\ResuelveDecisionDePapeleta;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\ComentarioRequest;
 use App\Http\Requests\Papeleta\CorregirPapeletaRequest;
@@ -22,82 +23,72 @@ use Illuminate\Support\Facades\Auth;
  */
 class DecisionController extends Controller
 {
+    use ResuelveDecisionDePapeleta;
+
     public function aprobar(Papeleta $papeleta, AprobarRrhhAction $action): RedirectResponse
     {
         $this->authorize('decidirComoRrhh', $papeleta);
 
-        try {
-            $action->ejecutar($papeleta, Auth::user());
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Papeleta autorizada.');
+        return $this->resolverDecision(
+            fn () => $action->ejecutar($papeleta, Auth::user()),
+            'success',
+            'Papeleta autorizada.',
+        );
     }
 
     public function rechazar(ComentarioRequest $request, Papeleta $papeleta, RechazarRrhhAction $action): RedirectResponse
     {
         $this->authorize('decidirComoRrhh', $papeleta);
 
-        try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('warning', 'Papeleta rechazada.');
+        return $this->resolverDecision(
+            fn () => $action->ejecutar($papeleta, Auth::user(), $request->input('comentario')),
+            'warning',
+            'Papeleta rechazada.',
+        );
     }
 
     public function observar(ComentarioRequest $request, Papeleta $papeleta, ObservarRrhhAction $action): RedirectResponse
     {
         $this->authorize('decidirComoRrhh', $papeleta);
 
-        try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Observación registrada, vuelve al jefe inmediato.');
+        return $this->resolverDecision(
+            fn () => $action->ejecutar($papeleta, Auth::user(), $request->input('comentario')),
+            'success',
+            'Observación registrada, vuelve al jefe inmediato.',
+        );
     }
 
     public function posthocAprobar(Papeleta $papeleta, RevisionPosthocAction $action): RedirectResponse
     {
         $this->authorize('revisarPosthoc', $papeleta);
 
-        try {
-            $action->aprobar($papeleta, Auth::user());
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Revisión post-hoc aprobada.');
+        return $this->resolverDecision(
+            fn () => $action->aprobar($papeleta, Auth::user()),
+            'success',
+            'Revisión post-hoc aprobada.',
+        );
     }
 
     public function posthocObservar(ComentarioRequest $request, Papeleta $papeleta, RevisionPosthocAction $action): RedirectResponse
     {
         $this->authorize('revisarPosthoc', $papeleta);
 
-        try {
-            $action->observar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Revisión post-hoc observada.');
+        return $this->resolverDecision(
+            fn () => $action->observar($papeleta, Auth::user(), $request->input('comentario')),
+            'success',
+            'Revisión post-hoc observada.',
+        );
     }
 
     public function posthocNoAprobar(ComentarioRequest $request, Papeleta $papeleta, RevisionPosthocAction $action): RedirectResponse
     {
         $this->authorize('revisarPosthoc', $papeleta);
 
-        try {
-            $action->noAprobar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Revisión post-hoc no aprobada: la papeleta pasó a Particular (con descuento).');
+        return $this->resolverDecision(
+            fn () => $action->noAprobar($papeleta, Auth::user(), $request->input('comentario')),
+            'success',
+            'Revisión post-hoc no aprobada: la papeleta pasó a Particular (con descuento).',
+        );
     }
 
     public function corregir(CorregirPapeletaRequest $request, Papeleta $papeleta, CorregirPapeletaRrhhAction $action): RedirectResponse

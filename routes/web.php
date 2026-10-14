@@ -173,11 +173,11 @@ Route::middleware($autenticado)->group(function () {
     });
 
     /*
-     * Pantalla opcional de "actualiza tu contraseña" para quien entra
+     * Pantalla obligatoria de "actualiza tu contraseña" para quien entra
      * por primera vez con la contraseña = DNI que le asignó
      * CrearUsuarioAction/UsuarioAdminForm. A esta ruta la trae
      * RedirigirSiDebeActualizarPassword (bootstrap/app.php); ella
-     * misma apaga la bandera al guardar o al omitir.
+     * misma apaga la bandera al guardar la contraseña nueva.
      */
     Route::get('/actualizar-password-inicial', \App\Livewire\Auth\ActualizarPasswordInicial::class)
         ->name('password.actualizar-inicial');

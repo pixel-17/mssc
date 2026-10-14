@@ -9,6 +9,7 @@ use App\Actions\Papeleta\RechazarJefeAction;
 use App\Actions\Papeleta\ReconocerObservacionRrhhAction;
 use App\Actions\Papeleta\ResponderPosthocAction;
 use App\Exceptions\PapeletaException;
+use App\Http\Controllers\Concerns\ResuelveDecisionDePapeleta;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\ComentarioRequest;
 use App\Http\Requests\Papeleta\ObservarJefeRequest;
@@ -29,64 +30,61 @@ use Throwable;
  */
 class DecisionController extends Controller
 {
+    use ResuelveDecisionDePapeleta;
+
     public function aprobar(Papeleta $papeleta, AprobarJefeAction $action): RedirectResponse
     {
         $this->authorize('decidirComoJefe', $papeleta);
 
-        try {
-            $this->reabrirSiObservadaPorRrhh($papeleta, 'Aprobada directamente tras observación de RRHH.');
-            $action->ejecutar($papeleta, Auth::user());
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
+        $this->reabrirSiObservadaPorRrhh($papeleta, 'Aprobada directamente tras observación de RRHH.');
 
-        return back()->with('success', 'Papeleta aprobada.');
+        return $this->resolverDecision(
+            fn () => $action->ejecutar($papeleta, Auth::user()),
+            'success',
+            'Papeleta aprobada.',
+        );
     }
 
     public function rechazar(ComentarioRequest $request, Papeleta $papeleta, RechazarJefeAction $action): RedirectResponse
     {
         $this->authorize('decidirComoJefe', $papeleta);
 
-        try {
-            $this->reabrirSiObservadaPorRrhh($papeleta, 'Rechazada directamente tras observación de RRHH.');
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
+        $this->reabrirSiObservadaPorRrhh($papeleta, 'Rechazada directamente tras observación de RRHH.');
 
-        return back()->with('warning', 'Papeleta rechazada.');
+        return $this->resolverDecision(
+            fn () => $action->ejecutar($papeleta, Auth::user(), $request->input('comentario')),
+            'warning',
+            'Papeleta rechazada.',
+        );
     }
 
     public function observar(ObservarJefeRequest $request, Papeleta $papeleta, ObservarJefeAction $action): RedirectResponse
     {
         $this->authorize('decidirComoJefe', $papeleta);
 
-        try {
-            $this->reabrirSiObservadaPorRrhh($papeleta, 'Observada directamente tras observación de RRHH.');
-            $action->ejecutar(
+        $this->reabrirSiObservadaPorRrhh($papeleta, 'Observada directamente tras observación de RRHH.');
+
+        return $this->resolverDecision(
+            fn () => $action->ejecutar(
                 $papeleta,
                 Auth::user(),
                 $request->input('comentario'),
                 requiereAdjunto: $request->boolean('requiere_adjunto'),
-            );
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Observación registrada.');
+            ),
+            'success',
+            'Observación registrada.',
+        );
     }
 
     public function reconocerObservacionRrhh(ComentarioRequest $request, Papeleta $papeleta, ReconocerObservacionRrhhAction $action): RedirectResponse
     {
         $this->authorize('reconocerObservacionRrhh', $papeleta);
 
-        try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Observación de RRHH reconocida, papeleta reabierta para tu decisión.');
+        return $this->resolverDecision(
+            fn () => $action->ejecutar($papeleta, Auth::user(), $request->input('comentario')),
+            'success',
+            'Observación de RRHH reconocida, papeleta reabierta para tu decisión.',
+        );
     }
 
     /**
@@ -130,13 +128,11 @@ class DecisionController extends Controller
     {
         $this->authorize('marcarRetornoManual', $papeleta);
 
-        try {
-            $action->manual($papeleta, Auth::user(), $request->input('justificacion'));
-        } catch (PapeletaException $e) {
-            return back()->with('error', $e->getMessage());
-        }
-
-        return back()->with('success', 'Retorno manual registrado por falla de conectividad.');
+        return $this->resolverDecision(
+            fn () => $action->manual($papeleta, Auth::user(), $request->input('justificacion')),
+            'success',
+            'Retorno manual registrado por falla de conectividad.',
+        );
     }
 
     /**
