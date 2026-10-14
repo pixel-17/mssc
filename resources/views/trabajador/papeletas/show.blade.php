@@ -237,6 +237,10 @@
             </div>
         @endif
 
+        <div class="text-right">
+            <a href="{{ route('trabajador.papeletas.pdf', $papeleta) }}" class="text-sm font-medium text-tinta-600 dark:text-tinta-300 hover:underline">Descargar PDF</a>
+        </div>
+
         {{-- Detalle --}}
         <div class="glass-card divide-y divide-tinta-100/70 dark:divide-white/10">
             @foreach ($filas as [$etiqueta, $valor])
@@ -259,7 +263,7 @@
                     <div class="flex items-center justify-between">
                         <span class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</span>
                         <span class="font-medium text-tinta-950 dark:text-white">
-                            @if(is_null($papeleta->retorno->dentro_de_radio)) — @else {{ $papeleta->retorno->dentro_de_radio ? 'Sí' : 'No' }} @endif
+                            <x-radio-sede :dentro="$papeleta->retorno->dentro_de_radio" />
                         </span>
                     </div>
                     @if ($papeleta->retorno->marcado_manual)

@@ -88,7 +88,7 @@
             <div>
                 <dt class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</dt>
                 <dd class="text-gray-900 dark:text-white">
-                    @if(is_null($papeleta->retorno->dentro_de_radio)) — @else {{ $papeleta->retorno->dentro_de_radio ? 'Sí' : 'No' }} @endif
+                    <x-radio-sede :dentro="$papeleta->retorno->dentro_de_radio" />
                 </dd>
             </div>
             @if ($papeleta->retorno->marcado_manual)

@@ -11,6 +11,7 @@
                 Todas mis papeletas
             </button>
         </div>
+        <a href="{{ route('trabajador.papeletas.pdf-lista', ['todas' => $verTodas ? 1 : 0]) }}" class="inline-flex text-sm font-medium text-tinta-600 dark:text-tinta-300 hover:underline">Descargar PDF</a>
         @unless ($verTodas)
             <p class="text-xs text-gray-500 dark:text-tinta-100/60">Se muestran las papeletas de tu turno actual; salen de aquí cuando el turno termina.</p>
         @endunless
