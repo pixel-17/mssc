@@ -15,6 +15,11 @@ use App\Http\Controllers\Usuario\UsuarioController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+// Pilas de middleware compartidas por casi todos los grupos de abajo
+// (antes el mismo array se repetía 11 veces).
+$autenticado = ['auth:sanctum', config('jetstream.auth_session'), 'verified'];
+$soloAdmin = [...$autenticado, 'role:admin'];
+
 Route::get('/', function () {
     return Auth::check()
         ? redirect()->route('dashboard')
@@ -31,12 +36,7 @@ Route::get('/', function () {
  * Sedes: catálogo de administración en Blade + Livewire puro
  * (App\Livewire\Sedes\*).
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('sedes')->name('sedes.')->group(function () {
+Route::middleware($soloAdmin)->prefix('sedes')->name('sedes.')->group(function () {
     Route::get('/', \App\Livewire\Sedes\SedeIndex::class)->name('index');
     Route::get('/crear', \App\Livewire\Sedes\SedeForm::class)->name('crear');
     Route::get('/{sede}/editar', \App\Livewire\Sedes\SedeForm::class)->name('editar');
@@ -46,12 +46,7 @@ Route::middleware([
  * Motivos: catálogo de administración en Blade + Livewire puro
  * (App\Livewire\Motivos\*), mismo patrón que Sedes.
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('motivos')->name('motivos.')->group(function () {
+Route::middleware($soloAdmin)->prefix('motivos')->name('motivos.')->group(function () {
     Route::get('/', \App\Livewire\Motivos\MotivoIndex::class)->name('index');
     Route::get('/crear', \App\Livewire\Motivos\MotivoForm::class)->name('crear');
     Route::get('/{motivo}/editar', \App\Livewire\Motivos\MotivoForm::class)->name('editar');
@@ -62,12 +57,7 @@ Route::middleware([
  * (Mañana, Tarde, Noche, Día). No programa a ningún trabajador: eso lo
  * hacen los jefes en el calendario de equipo (ver más abajo).
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('turnos')->name('turnos.')->group(function () {
+Route::middleware($soloAdmin)->prefix('turnos')->name('turnos.')->group(function () {
     Route::get('/', \App\Livewire\Turnos\DefinicionTurnos::class)->name('index');
 
     // Programar horarios por usuario: el admin busca a la persona y le arma su calendario.
@@ -86,11 +76,7 @@ Route::middleware([
  * (CalendarioEquipoIndex resuelve solo por relación; CalendarioIndividualIndex
  * aborta con 403 si no es Admin ni el propio trabajador).
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->prefix('turnos')->name('turnos.')->group(function () {
+Route::middleware($autenticado)->prefix('turnos')->name('turnos.')->group(function () {
     Route::get('/configuracion/{trabajador}', \App\Livewire\Turnos\ConfiguracionTurnoForm::class)->name('configuracion');
 
     // Programación día por día (solo 728): la autorización fina vive en el componente.
@@ -107,56 +93,36 @@ Route::middleware([
  * y personas): admin ve y edita todo; el Jefe de Área, su unidad y lo que
  * cuelga de ella. La autorización vive en el componente y en las Actions.
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->get('/organigrama', \App\Livewire\Organigrama\OrganigramaArbol::class)->name('organigrama.index');
+Route::middleware($autenticado)->get('/organigrama', \App\Livewire\Organigrama\OrganigramaArbol::class)->name('organigrama.index');
 
 /*
- * Unidades orgánicas: quinto recurso migrado — Blade + Livewire puro
+ * Unidades orgánicas: Blade + Livewire puro
  * (App\Livewire\UnidadesOrganicas\*).
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('unidades-organicas')->name('unidades-organicas.')->group(function () {
+Route::middleware($soloAdmin)->prefix('unidades-organicas')->name('unidades-organicas.')->group(function () {
     Route::get('/', \App\Livewire\UnidadesOrganicas\UnidadOrganicaIndex::class)->name('index');
     Route::get('/crear', \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::class)->name('crear');
     Route::get('/{unidad}/editar', \App\Livewire\UnidadesOrganicas\UnidadOrganicaForm::class)->name('editar');
 });
 
 /*
- * Configuraciones: sexto recurso migrado — Blade + Livewire puro
+ * Configuraciones: Blade + Livewire puro
  * (App\Livewire\Configuraciones\*). Sin ruta de creación: son filas
  * fijas sembradas por ConfiguracionSeeder, solo se editan.
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('configuraciones')->name('configuraciones.')->group(function () {
+Route::middleware($soloAdmin)->prefix('configuraciones')->name('configuraciones.')->group(function () {
     Route::get('/', \App\Livewire\Configuraciones\ConfiguracionIndex::class)->name('index');
     Route::get('/{configuracion}/editar', \App\Livewire\Configuraciones\ConfiguracionForm::class)->name('editar');
 });
 
 /*
- * Usuarios (gestión de admin): octavo y último recurso migrado —
- * Blade + Livewire puro (App\Livewire\Usuarios\*). Prefijo
+ * Usuarios (gestión de admin): Blade + Livewire puro (App\Livewire\Usuarios\*). Prefijo
  * 'usuarios-admin' (no 'usuarios') para no chocar con las rutas
  * 'usuarios.*' de más abajo, que son la vía de alta para Jefe de
  * Área / Jefe Inmediato con reglas propias (UserPolicy) — control
  * total sin esas restricciones de área es exclusivo de admin.
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('usuarios-admin')->name('usuarios-admin.')->group(function () {
+Route::middleware($soloAdmin)->prefix('usuarios-admin')->name('usuarios-admin.')->group(function () {
     Route::get('/', \App\Livewire\Usuarios\UsuarioAdminIndex::class)->name('index');
     Route::get('/crear', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('crear');
     Route::get('/{usuario}/editar', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('editar');
@@ -166,28 +132,14 @@ Route::middleware([
  * Papeletas para el admin: TODAS, de cualquier estado, SOLO LECTURA.
  * El admin no decide ni aprueba (eso es de jefe y RRHH).
  */
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware($soloAdmin)->prefix('admin')->name('admin.')->group(function () {
     Route::get('/papeletas', \App\Livewire\Papeletas\AdminPapeletasIndex::class)->name('papeletas.index');
     Route::get('/papeletas/{papeleta}', [\App\Http\Controllers\Admin\PapeletaController::class, 'show'])->name('papeletas.show');
 });
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-    'role:admin',
-])->get('/catalogos', \App\Livewire\Catalogos\CatalogoIndex::class)->name('catalogos.index');
+Route::middleware($soloAdmin)->get('/catalogos', \App\Livewire\Catalogos\CatalogoIndex::class)->name('catalogos.index');
 
-Route::middleware([
-    'auth:sanctum',
-    config('jetstream.auth_session'),
-    'verified',
-])->group(function () {
+Route::middleware($autenticado)->group(function () {
     Route::get('/dashboard', \App\Livewire\DashboardIndex::class)->name('dashboard');
 
     /*

@@ -3,7 +3,6 @@
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\States\Papeleta\Cancelada;
@@ -56,19 +55,12 @@ class CancelarPapeletaAction
                 throw new PapeletaException('RRHH está fuera de horario: no se puede cancelar la papeleta mientras espera a RRHH.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(Cancelada::class);
-            $actual->cancelada_at = now();
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $trabajador->id,
-                'actor_tipo' => 'trabajador',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-            ]);
+            $actual->transicionarConHistorial(
+                Cancelada::class,
+                $trabajador->id,
+                'trabajador',
+                cambios: fn (Papeleta $p) => $p->cancelada_at = now(),
+            );
 
             return $actual;
         });

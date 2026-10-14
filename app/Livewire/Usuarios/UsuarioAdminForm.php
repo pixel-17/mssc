@@ -339,6 +339,7 @@ class UsuarioAdminForm extends Component
             // Los checkboxes de Livewire llegan como strings ("3"): Spatie los tomaría por
             // NOMBRE de rol (RoleDoesNotExist). Con enteros los busca por id.
             $this->usuario->syncRoles(array_map('intval', $datos['rolesSeleccionados']));
+            \App\Events\PapeletaActualizada::olvidarDestinatariosFijos();
 
             if ($requiereTurno && $datos['activo']) {
                 $generador->cargarConfiguracion(

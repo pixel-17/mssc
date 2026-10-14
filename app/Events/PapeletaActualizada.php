@@ -9,6 +9,7 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -34,6 +35,11 @@ class PapeletaActualizada implements ShouldBroadcastNow
 
     /** Reverb/Pusher aceptan hasta 100 canales por publicación. */
     private const CANALES_POR_ENVIO = 50;
+
+    /** Ids de RRHH y admin: reciben todo cambio, así que se cachean unos segundos. */
+    private const CACHE_DESTINATARIOS_FIJOS = 'broadcast.destinatarios_fijos';
+
+    private const TTL_DESTINATARIOS_FIJOS = 60;
 
     /**
      * Papeletas con un afterCommit ya agendado en este ciclo. Una sola
@@ -110,28 +116,66 @@ class PapeletaActualizada implements ShouldBroadcastNow
                     report($e);
                 }
 
-                $papeleta = Papeleta::find($papeletaId);
-
-                if (! $papeleta) {
-                    return;
-                }
-
-                $ids = collect([$papeleta->trabajador_id, $papeleta->jefe_inmediato_id, $papeleta->jefe_area_id])
-                    ->merge(User::role(['rrhh', 'admin'])->pluck('id'))
-                    ->filter()
-                    ->map(fn ($id) => (int) $id)
-                    ->unique()
-                    ->values();
-
-                [$etiqueta] = ($papeleta->esAbandono() ? PapeletaEstadoPresentacion::porAbandono($papeleta->estado) : null)
-                    ?? PapeletaEstadoPresentacion::para($papeleta->estado);
-
-                foreach ($ids->chunk(self::CANALES_POR_ENVIO) as $grupo) {
-                    event(new self($papeleta->id, class_basename($papeleta->estado), $etiqueta, $grupo->all()));
+                // El envío a Reverb es una llamada de red síncrona (ShouldBroadcastNow).
+                // En una petición web se hace tras enviar la respuesta, así el usuario
+                // no espera al websocket; en consola (comandos, tests) sigue inmediato.
+                if (app()->runningInConsole()) {
+                    self::emitir($papeletaId);
+                } else {
+                    app()->terminating(fn () => self::emitir($papeletaId));
                 }
             } catch (Throwable $e) {
                 report($e);
             }
         });
+    }
+
+    /** Lee la papeleta ya confirmada y la publica a quienes la ven. */
+    private static function emitir(int $papeletaId): void
+    {
+        try {
+            $papeleta = Papeleta::find($papeletaId);
+
+            if (! $papeleta) {
+                return;
+            }
+
+            $ids = collect([$papeleta->trabajador_id, $papeleta->jefe_inmediato_id, $papeleta->jefe_area_id])
+                ->merge(self::destinatariosFijos())
+                ->filter()
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values();
+
+            [$etiqueta] = ($papeleta->esAbandono() ? PapeletaEstadoPresentacion::porAbandono($papeleta->estado) : null)
+                ?? PapeletaEstadoPresentacion::para($papeleta->estado);
+
+            foreach ($ids->chunk(self::CANALES_POR_ENVIO) as $grupo) {
+                event(new self($papeleta->id, class_basename($papeleta->estado), $etiqueta, $grupo->all()));
+            }
+        } catch (Throwable $e) {
+            report($e);
+        }
+    }
+
+    /**
+     * Ids de RRHH y admin. Se consultan una vez por minuto en vez de en cada
+     * cambio de papeleta; olvidarDestinatariosFijos() los renueva al cambiar roles.
+     *
+     * @return array<int, int>
+     */
+    private static function destinatariosFijos(): array
+    {
+        return Cache::remember(
+            self::CACHE_DESTINATARIOS_FIJOS,
+            self::TTL_DESTINATARIOS_FIJOS,
+            fn () => User::role(['rrhh', 'admin'])->pluck('id')->map(fn ($id) => (int) $id)->all(),
+        );
+    }
+
+    /** Llamar cuando se asigna o cambia un rol: el próximo aviso vuelve a leerlos. */
+    public static function olvidarDestinatariosFijos(): void
+    {
+        Cache::forget(self::CACHE_DESTINATARIOS_FIJOS);
     }
 }

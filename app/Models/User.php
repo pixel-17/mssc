@@ -215,6 +215,20 @@ class User extends Authenticatable
     }
 
     /**
+     * Usuarios que son jefe de alguien: encabezan una unidad o figuran como
+     * jefe inmediato de otro usuario. Misma regla que esJefeDeAlguien(), pero
+     * resuelta en SQL para filtrar listas enteras sin 2 consultas por fila.
+     */
+    public function scopeQueEsJefe(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where(fn ($q) => $q
+            ->whereHas('unidadesQueEncabeza')
+            ->orWhereIn('users.id', User::query()
+                ->select('jefe_inmediato_id')
+                ->whereNotNull('jefe_inmediato_id')));
+    }
+
+    /**
      * Fuente ÚNICA de "mi equipo": trabajadores cuyo jefe inmediato o de
      * área (columnas explícitas) soy yo y todos los de las unidades que
      * encabezo (y sus sub-unidades).

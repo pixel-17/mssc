@@ -39,6 +39,7 @@ class ProcesarAbandonoNoMarcado extends Command
     public function handle(DeterminadorFinDeTurno $finDeTurno, NotificarPapeletaService $notificar): int
     {
         Papeleta::whereState('estado', AutorizadaYCorriendo::class)
+            ->conTurnoTerminado()
             ->whereDoesntHave('retorno')
             ->chunkById(100, function ($lote) use ($finDeTurno, $notificar) {
                 foreach ($lote as $candidata) {

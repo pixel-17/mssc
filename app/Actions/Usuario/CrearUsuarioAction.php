@@ -100,6 +100,7 @@ class CrearUsuarioAction
 
             if (! $nuevo->hasRole('trabajador')) {
                 $nuevo->assignRole('trabajador');
+                \App\Events\PapeletaActualizada::olvidarDestinatariosFijos();
             }
 
             if ($esJefeInmediatoNuevo) {

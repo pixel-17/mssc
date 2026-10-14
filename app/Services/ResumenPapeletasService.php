@@ -44,6 +44,7 @@ class ResumenPapeletasService
         [$inicio, $fin] = $this->reporte->rangoDelMes($mes);
 
         $papeletas = Papeleta::query()
+            ->select(['id', 'motivo_id', 'trabajador_id', 'estado', 'dia_operativo', 'created_at', 'jefe_resuelto_at', 'rrhh_resuelto_at', 'resuelto_por_jefe_id'])
             ->with(['motivo:id,nombre', 'trabajador:id,unidad_organica_id', 'trabajador.unidadOrganica:id,nombre', 'resueltoPorJefe:id,name,apellido'])
             ->whereBetween('dia_operativo', [$inicio->toDateString(), $fin->toDateString()])
             ->get();

@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Actions\Papeleta\RrhhHorarioService;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Services\DeterminadorFinDeTurno;
 use App\Services\NotificarPapeletaService;
@@ -76,15 +75,14 @@ class ProcesarVencimientosPapeletas extends Command
         // raso nunca se autoriza por sistema: si RRHH no decide a
         // tiempo, su papeleta sigue esperando hasta que venza (ver
         // vencerPapeletasSinTurnoVigente) — nunca escala a nadie más.
+        // Filtros en SQL: solo papeletas de jefes cuyo turno sigue vigente (antes
+        // se cargaban todas y se descartaban en PHP, con 2 EXISTS por fila).
         Papeleta::whereState('estado', PendienteRrhh::class)
             ->whereNotNull('jefe_resuelto_at')
-            ->with('trabajador')
+            ->conTurnoSinTerminar()
+            ->whereHas('trabajador', fn ($q) => $q->queEsJefe())
             ->chunkById(100, function ($lote) {
                 foreach ($lote as $candidata) {
-                    if (! $candidata->trabajador?->esJefeDeAlguien()) {
-                        continue;
-                    }
-
                     try {
                         $this->autorizarPorCierreDeRrhh($candidata);
                     } catch (Throwable $e) {
@@ -107,22 +105,17 @@ class ProcesarVencimientosPapeletas extends Command
                 return null;
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(AutorizadaYCorriendo::class);
-            $actual->autorizado_con_rrhh_fuera_horario = true;
-            $actual->hora_salida_real = now();
-            $actual->revision_posthoc_estado = 'pendiente';
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => null,
-                'actor_tipo' => 'sistema',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => 'RRHH salió de horario con la papeleta ya aprobada por el jefe: se autoriza y queda pendiente de revisión post-hoc.',
-            ]);
+            $actual->transicionarConHistorial(
+                AutorizadaYCorriendo::class,
+                null,
+                'sistema',
+                'RRHH salió de horario con la papeleta ya aprobada por el jefe: se autoriza y queda pendiente de revisión post-hoc.',
+                function (Papeleta $p) {
+                    $p->autorizado_con_rrhh_fuera_horario = true;
+                    $p->hora_salida_real = now();
+                    $p->revision_posthoc_estado = 'pendiente';
+                },
+            );
 
             return $actual;
         });
@@ -136,6 +129,7 @@ class ProcesarVencimientosPapeletas extends Command
     private function vencerPapeletasSinTurnoVigente(): void
     {
         Papeleta::whereState('estado', $this->estadosNoTerminalesPreAutorizacion())
+            ->conTurnoTerminado()
             ->chunkById(100, function ($lote) {
                 foreach ($lote as $candidata) {
                     if (! $this->finDeTurno->yaTermino($candidata)) {
@@ -164,20 +158,13 @@ class ProcesarVencimientosPapeletas extends Command
                 return null;
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(Vencida::class);
-            $actual->vencida_at = now();
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => null,
-                'actor_tipo' => 'sistema',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => 'Vencida automáticamente: fin de turno/día sin decisión.',
-            ]);
+            $actual->transicionarConHistorial(
+                Vencida::class,
+                null,
+                'sistema',
+                'Vencida automáticamente: fin de turno/día sin decisión.',
+                fn (Papeleta $p) => $p->vencida_at = now(),
+            );
 
             return $actual;
         });

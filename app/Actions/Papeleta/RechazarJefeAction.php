@@ -4,7 +4,6 @@ namespace App\Actions\Papeleta;
 
 use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
@@ -36,21 +35,16 @@ class RechazarJefeAction
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(Rechazada::class);
-            $actual->rechazada_por_id = $jefe->id;
-            $actual->motivo_rechazo = $motivo;
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $jefe->id,
-                'actor_tipo' => $actorTipo,
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => $motivo,
-            ]);
+            $actual->transicionarConHistorial(
+                Rechazada::class,
+                $jefe->id,
+                $actorTipo,
+                $motivo,
+                function (Papeleta $p) use ($jefe, $motivo) {
+                    $p->rechazada_por_id = $jefe->id;
+                    $p->motivo_rechazo = $motivo;
+                },
+            );
 
             return $actual;
         });

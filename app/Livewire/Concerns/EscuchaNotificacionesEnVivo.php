@@ -31,19 +31,20 @@ trait EscuchaNotificacionesEnVivo
     {
         $id = Auth::id();
 
-        $escuchas = [
-            "echo-notification:App.Models.User.{$id}" => 'refrescarPorNotificacionEnVivo',
-        ];
-
-        // Además de las notificaciones (que solo llegan a quien
-        // corresponde), cada cambio de una papeleta que este usuario ve
-        // (ver PapeletaActualizada) vuelve a renderizar la bandeja: así
-        // el estado se ve en vivo aunque nadie haya sido notificado.
+        // Un solo canal por componente. Antes las bandejas escuchaban ambos y
+        // cada transición con aviso las re-renderizaba dos veces (y sonaba el
+        // tono dos veces: ya lo dispara la campana). PapeletaActualizada cubre
+        // TODO cambio de papeleta, notifique o no, así que las bandejas se
+        // quedan solo con él; la campana solo con las notificaciones.
         if ($this->escuchaCambiosDeEstado()) {
-            $escuchas["echo-private:App.Models.User.{$id},PapeletaActualizada"] = 'refrescarPorCambioDeEstado';
+            return [
+                "echo-private:App.Models.User.{$id},PapeletaActualizada" => 'refrescarPorCambioDeEstado',
+            ];
         }
 
-        return $escuchas;
+        return [
+            "echo-notification:App.Models.User.{$id}" => 'refrescarPorNotificacionEnVivo',
+        ];
     }
 
     /** Los componentes que no muestran estados (la campana) lo sobrescriben en false. */

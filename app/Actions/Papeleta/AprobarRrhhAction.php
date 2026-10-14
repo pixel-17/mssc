@@ -4,7 +4,6 @@ namespace App\Actions\Papeleta;
 
 use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
@@ -43,21 +42,16 @@ class AprobarRrhhAction
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión de RRHH.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(AutorizadaYCorriendo::class);
-            $actual->resuelto_por_rrhh_id = $rrhh->id;
-            $actual->rrhh_resuelto_at = now();
-            $actual->hora_salida_real = now();
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $rrhh->id,
-                'actor_tipo' => 'rrhh',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-            ]);
+            $actual->transicionarConHistorial(
+                AutorizadaYCorriendo::class,
+                $rrhh->id,
+                'rrhh',
+                cambios: function (Papeleta $p) use ($rrhh) {
+                    $p->resuelto_por_rrhh_id = $rrhh->id;
+                    $p->rrhh_resuelto_at = now();
+                    $p->hora_salida_real = now();
+                },
+            );
 
             return $actual;
         });

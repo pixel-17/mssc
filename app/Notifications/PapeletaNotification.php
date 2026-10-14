@@ -3,12 +3,6 @@
 namespace App\Notifications;
 
 use App\Models\Papeleta;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Notification;
-use NotificationChannels\WebPush\WebPushChannel;
-use NotificationChannels\WebPush\WebPushMessage;
 
 /**
  * Notificación única para todos los eventos de papeleta (ver
@@ -32,76 +26,39 @@ use NotificationChannels\WebPush\WebPushMessage;
  * para que el broadcast sea instantáneo hace falta un worker corriendo,
  * ver `php artisan queue:work`).
  */
-class PapeletaNotification extends Notification implements ShouldQueue
+class PapeletaNotification extends NotificacionEnVivo
 {
-    use Queueable;
-
     public function __construct(
         private readonly Papeleta $papeleta,
-        private readonly string $tipo,
-        private readonly string $titulo,
-        private readonly string $mensaje,
-        private readonly ?string $url = null,
-    ) {}
-
-    /**
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database', WebPushChannel::class, 'broadcast'];
+        string $tipo,
+        string $titulo,
+        string $mensaje,
+        ?string $url = null,
+    ) {
+        parent::__construct($tipo, $titulo, $mensaje, $url);
     }
 
-    /**
-     * Mismo payload que toDatabase(), más 'id' y 'created_at' para que
-     * el front (NotificationBell) pueda pintar la notificación al
-     * vuelo sin ir a buscarla de nuevo a la base de datos.
-     */
-    public function toBroadcast(object $notifiable): BroadcastMessage
+    protected function datosExtra(): array
     {
-        return new BroadcastMessage([
-            'id' => $this->id,
-            'tipo' => $this->tipo,
-            'papeleta_id' => $this->papeleta->id,
-            'titulo' => $this->titulo,
-            'mensaje' => $this->mensaje,
-            'url' => $this->url,
-            'created_at' => now()->toIso8601String(),
-        ]);
+        return ['papeleta_id' => $this->papeleta->id];
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function toDatabase(object $notifiable): array
+    protected function etiquetaPush(): string
+    {
+        return "papeleta-{$this->papeleta->id}";
+    }
+
+    protected function textoAccion(): string
+    {
+        return 'Ver papeleta';
+    }
+
+    protected function datosPush(): array
     {
         return [
             'tipo' => $this->tipo,
             'papeleta_id' => $this->papeleta->id,
-            'titulo' => $this->titulo,
-            'mensaje' => $this->mensaje,
             'url' => $this->url,
         ];
-    }
-
-    public function toWebPush(object $notifiable, self $notification): WebPushMessage
-    {
-        $mensaje = (new WebPushMessage)
-            ->title($this->titulo)
-            ->body($this->mensaje)
-            ->icon('/icons/icon-192.png')
-            ->badge('/icons/badge-72.png')
-            ->tag("papeleta-{$this->papeleta->id}")
-            ->data([
-                'tipo' => $this->tipo,
-                'papeleta_id' => $this->papeleta->id,
-                'url' => $this->url,
-            ]);
-
-        if ($this->url) {
-            $mensaje->action('Ver papeleta', 'ver');
-        }
-
-        return $mensaje;
     }
 }

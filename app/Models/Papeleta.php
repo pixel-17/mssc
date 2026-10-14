@@ -132,6 +132,42 @@ class Papeleta extends Model
     }
 
     /**
+     * Único camino para mover una papeleta de estado dejando rastro: valida la
+     * transición, aplica los cambios de columnas que la acompañan, guarda y
+     * escribe la fila de HistorialPapeleta. Debe llamarse dentro de la
+     * transacción que ya tiene la fila bloqueada (lockForUpdate).
+     *
+     * @param  class-string<PapeletaState>  $destino
+     * @param  \Closure(self): void|null  $cambios  Columnas extra a fijar antes de guardar.
+     */
+    public function transicionarConHistorial(
+        string $destino,
+        ?int $actorId,
+        string $actorTipo,
+        ?string $justificacion = null,
+        ?\Closure $cambios = null,
+    ): HistorialPapeleta {
+        $estadoAnterior = class_basename($this->estado);
+
+        $this->transicionarA($destino);
+
+        if ($cambios) {
+            $cambios($this);
+        }
+
+        $this->save();
+
+        return HistorialPapeleta::create([
+            'papeleta_id' => $this->id,
+            'actor_id' => $actorId,
+            'actor_tipo' => $actorTipo,
+            'estado_anterior' => $estadoAnterior,
+            'estado_nuevo' => class_basename($this->estado),
+            'justificacion' => $justificacion,
+        ]);
+    }
+
+    /**
      * El trabajador salió y no regresó (abandono). El estado dice cómo
      * terminó: EnJustificacion (aún puede justificar), Cerrada (abandono
      * justificado, sin descuento) o Finalizada (sin justificar, con
@@ -179,6 +215,27 @@ class Papeleta extends Model
         }
 
         return "Ya tienes la papeleta #{$this->id} en trámite. Cancélala o espera su resolución antes de crear otra.";
+    }
+
+    /**
+     * Papeletas cuyo turno/día ya terminó según fin_turno_at. Las que no
+     * tienen fin_turno_at (legadas) se incluyen siempre: ahí decide
+     * DeterminadorFinDeTurno en PHP. Permite que los comandos del minuto
+     * filtren en SQL (índice estado + fin_turno_at) en vez de cargar todas.
+     */
+    public function scopeConTurnoTerminado(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereNull('papeletas.fin_turno_at')
+            ->orWhere('papeletas.fin_turno_at', '<', now()));
+    }
+
+    /** Complemento de scopeConTurnoTerminado: turno aún vigente (o legada sin fin_turno_at). */
+    public function scopeConTurnoSinTerminar(Builder $query): Builder
+    {
+        return $query->where(fn (Builder $q) => $q
+            ->whereNull('papeletas.fin_turno_at')
+            ->orWhere('papeletas.fin_turno_at', '>=', now()));
     }
 
     /**
