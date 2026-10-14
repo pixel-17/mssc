@@ -5,7 +5,6 @@ namespace App\Actions\Papeleta;
 use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\Configuracion;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
@@ -52,29 +51,24 @@ class ObservarRrhhAction
                 throw new PapeletaException('Esta papeleta no tiene jefe superior que pueda responder una observación: solo puedes aprobarla o rechazarla.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
             $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
 
             $actual->contador_observaciones_rrhh++;
 
-            if ($actual->contador_observaciones_rrhh >= $tope) {
-                $actual->transicionarA(Rechazada::class);
-                $actual->rechazada_por_id = $rrhh->id;
-                $actual->motivo_rechazo = "Tope de {$tope} observaciones de RRHH alcanzado.";
-            } else {
-                $actual->transicionarA(ObservadaPorRrhh::class);
-            }
+            $alcanzoElTope = $actual->contador_observaciones_rrhh >= $tope;
 
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $rrhh->id,
-                'actor_tipo' => 'rrhh',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => $comentario,
-            ]);
+            $actual->transicionarConHistorial(
+                $alcanzoElTope ? Rechazada::class : ObservadaPorRrhh::class,
+                $rrhh->id,
+                'rrhh',
+                $comentario,
+                function (Papeleta $p) use ($alcanzoElTope, $rrhh, $tope) {
+                    if ($alcanzoElTope) {
+                        $p->rechazada_por_id = $rrhh->id;
+                        $p->motivo_rechazo = "Tope de {$tope} observaciones de RRHH alcanzado.";
+                    }
+                },
+            );
 
             return $actual;
         });

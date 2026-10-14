@@ -3,7 +3,6 @@
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Services\NotificarPapeletaService;
@@ -47,26 +46,25 @@ class ReclasificarAParticularAction
                 throw new PapeletaException('Esta papeleta no está en un estado que se pueda reclasificar a Particular.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
             $motivoAnteriorId = $actual->motivo_id;
 
             $actual->motivo_original_id = $motivoAnteriorId;
             $actual->motivo_id = $motivoParticular->id;
-            $actual->transicionarA(Finalizada::class);
-            $actual->causa_finalizacion_sin_retorno ??= 'salud_no_justificada';
-            $actual->requiere_visto_bueno = false;
-            $actual->save();
 
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $actorId,
-                'actor_tipo' => $actorTipo,
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'motivo_anterior_id' => $motivoAnteriorId,
-                'motivo_nuevo_id' => $motivoParticular->id,
-                'justificacion' => $justificacion,
-            ]);
+            $actual->transicionarConHistorial(
+                Finalizada::class,
+                $actorId,
+                $actorTipo,
+                $justificacion,
+                function (Papeleta $p) {
+                    $p->causa_finalizacion_sin_retorno ??= 'salud_no_justificada';
+                    $p->requiere_visto_bueno = false;
+                },
+                [
+                    'motivo_anterior_id' => $motivoAnteriorId,
+                    'motivo_nuevo_id' => $motivoParticular->id,
+                ],
+            );
 
             return $actual;
         });

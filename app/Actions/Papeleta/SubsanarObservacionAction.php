@@ -3,7 +3,6 @@
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
@@ -55,24 +54,19 @@ class SubsanarObservacionAction
                 throw new PapeletaException('Tu jefe pidió que adjuntes un archivo junto con tu respuesta.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(PendienteJefe::class);
-            $actual->observacion_respuesta = $respuesta;
-            $actual->observacion_adjunto_path = $adjuntoPath;
-            $actual->observacion_subsanada_at = now();
-            $actual->jefe_resuelto_at = null;
-            $actual->reloj_jefe_at = now();
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $trabajador->id,
-                'actor_tipo' => 'trabajador',
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => $respuesta,
-            ]);
+            $actual->transicionarConHistorial(
+                PendienteJefe::class,
+                $trabajador->id,
+                'trabajador',
+                $respuesta,
+                function (Papeleta $p) use ($respuesta, $adjuntoPath) {
+                    $p->observacion_respuesta = $respuesta;
+                    $p->observacion_adjunto_path = $adjuntoPath;
+                    $p->observacion_subsanada_at = now();
+                    $p->jefe_resuelto_at = null;
+                    $p->reloj_jefe_at = now();
+                },
+            );
 
             return $actual;
         });

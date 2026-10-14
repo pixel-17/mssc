@@ -4,7 +4,6 @@ namespace App\Actions\Papeleta;
 
 use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\States\Papeleta\ObservadaPorRrhh;
@@ -36,21 +35,16 @@ class ReconocerObservacionRrhhAction
                 throw new PapeletaException('Esta papeleta no tiene una observación de RRHH pendiente de reconocer.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
-
-            $actual->transicionarA(PendienteJefe::class);
-            $actual->jefe_resuelto_at = null;
-            $actual->reloj_jefe_at = now();
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $jefe->id,
-                'actor_tipo' => $actorTipo,
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => $comentario,
-            ]);
+            $actual->transicionarConHistorial(
+                PendienteJefe::class,
+                $jefe->id,
+                $actorTipo,
+                $comentario,
+                function (Papeleta $p) {
+                    $p->jefe_resuelto_at = null;
+                    $p->reloj_jefe_at = now();
+                },
+            );
 
             return $actual;
         });

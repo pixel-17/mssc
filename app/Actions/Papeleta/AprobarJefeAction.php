@@ -4,7 +4,6 @@ namespace App\Actions\Papeleta;
 
 use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
@@ -53,30 +52,23 @@ class AprobarJefeAction
                 throw new PapeletaException('Esta papeleta espera la respuesta del trabajador a tu observación: aprueba cuando responda o recházala.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
             $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
 
             $actual->resuelto_por_jefe_id = $quienAprueba->id;
             $actual->jefe_resuelto_at = now();
 
-            if ($rrhhEnHorario) {
-                $actual->transicionarA(PendienteRrhh::class);
-            } else {
-                $actual->transicionarA(AutorizadaYCorriendo::class);
-                $actual->autorizado_con_rrhh_fuera_horario = true;
-                $actual->hora_salida_real = now();
-                $actual->revision_posthoc_estado = 'pendiente'; // Paso 4: obligatoria al día siguiente
-            }
-
-            $actual->save();
-
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $quienAprueba->id,
-                'actor_tipo' => $actorTipo,
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-            ]);
+            $actual->transicionarConHistorial(
+                $rrhhEnHorario ? PendienteRrhh::class : AutorizadaYCorriendo::class,
+                $quienAprueba->id,
+                $actorTipo,
+                cambios: function (Papeleta $p) use ($rrhhEnHorario) {
+                    if (! $rrhhEnHorario) {
+                        $p->autorizado_con_rrhh_fuera_horario = true;
+                        $p->hora_salida_real = now();
+                        $p->revision_posthoc_estado = 'pendiente'; // Paso 4: obligatoria al día siguiente
+                    }
+                },
+            );
 
             return $actual;
         });

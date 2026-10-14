@@ -74,7 +74,9 @@ class MoverJefeComoTrabajadorAction
         $filas = $unidades->map(function (UnidadOrganica $unidad) use ($jefe, &$avisos) {
             $subunidades = $unidad->hijos()->count();
             $personas = $this->miembrosActivos($unidad, $jefe)->count();
-            $requiere = $this->requiereReemplazo($unidad, $jefe);
+            // Misma regla que requiereReemplazo(), derivada de los conteos que ya
+            // tenemos: se evitan 2 consultas por unidad (y otras 2 dentro de candidatos()).
+            $requiere = (int) $unidad->jefe_id === (int) $jefe->id && ($personas > 0 || $subunidades > 0);
 
             if (! $requiere && (int) $unidad->jefe_id === (int) $jefe->id) {
                 $avisos[] = '«'.$unidad->nombre.'» no tiene más personas: quedará sin jefe.';
@@ -86,7 +88,7 @@ class MoverJefeComoTrabajadorAction
                 'personas' => $personas,
                 'subunidades' => $subunidades,
                 'requiere_reemplazo' => $requiere,
-                'candidatos' => $this->candidatos($unidad, $jefe),
+                'candidatos' => $this->candidatos($unidad, $jefe, $requiere),
             ];
         })->values();
 
@@ -315,9 +317,10 @@ class MoverJefeComoTrabajadorAction
      *
      * @return Collection<int, User>
      */
-    private function candidatos(UnidadOrganica $unidad, User $jefe): Collection
+    private function candidatos(UnidadOrganica $unidad, User $jefe, ?bool $requiere = null): Collection
     {
-        if (! $this->requiereReemplazo($unidad, $jefe)) {
+        // $requiere permite a quien ya lo calculó (previsualizar) no repetir las consultas.
+        if (! ($requiere ?? $this->requiereReemplazo($unidad, $jefe))) {
             return collect();
         }
 

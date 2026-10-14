@@ -5,7 +5,6 @@ namespace App\Actions\Papeleta;
 use App\Actions\Papeleta\Concerns\ExigeDecisorAjeno;
 use App\Exceptions\PapeletaException;
 use App\Models\Configuracion;
-use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Services\NotificarPapeletaService;
@@ -53,36 +52,34 @@ class ObservarJefeAction
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
             }
 
-            $estadoAnterior = class_basename($actual->estado);
             $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
 
             $actual->contador_observaciones_jefe++;
 
-            if ($actual->contador_observaciones_jefe >= $tope) {
-                $actual->transicionarA(Rechazada::class);
-                $actual->rechazada_por_id = $jefe->id;
-                $actual->motivo_rechazo = "Tope de {$tope} observaciones alcanzado.";
-            } else {
-                $actual->transicionarA(ObservadaPorJefe::class);
-                $actual->observacion_requiere_adjunto = $requiereAdjunto;
-                $actual->observacion_respuesta = null;
-                // Cada ronda empieza limpia: el adjunto de la ronda anterior no
-                // debe mostrarse como respuesta a esta observación. El archivo
-                // viejo NO se borra del disco (es evidencia de la ronda previa).
-                $actual->observacion_adjunto_path = null;
-                $actual->observacion_subsanada_at = null;
-            }
+            $alcanzoElTope = $actual->contador_observaciones_jefe >= $tope;
 
-            $actual->save();
+            $actual->transicionarConHistorial(
+                $alcanzoElTope ? Rechazada::class : ObservadaPorJefe::class,
+                $jefe->id,
+                $actorTipo,
+                $comentario,
+                function (Papeleta $p) use ($alcanzoElTope, $jefe, $tope, $requiereAdjunto) {
+                    if ($alcanzoElTope) {
+                        $p->rechazada_por_id = $jefe->id;
+                        $p->motivo_rechazo = "Tope de {$tope} observaciones alcanzado.";
 
-            HistorialPapeleta::create([
-                'papeleta_id' => $actual->id,
-                'actor_id' => $jefe->id,
-                'actor_tipo' => $actorTipo,
-                'estado_anterior' => $estadoAnterior,
-                'estado_nuevo' => class_basename($actual->estado),
-                'justificacion' => $comentario,
-            ]);
+                        return;
+                    }
+
+                    $p->observacion_requiere_adjunto = $requiereAdjunto;
+                    $p->observacion_respuesta = null;
+                    // Cada ronda empieza limpia: el adjunto de la ronda anterior no
+                    // debe mostrarse como respuesta a esta observación. El archivo
+                    // viejo NO se borra del disco (es evidencia de la ronda previa).
+                    $p->observacion_adjunto_path = null;
+                    $p->observacion_subsanada_at = null;
+                },
+            );
 
             return $actual;
         });
