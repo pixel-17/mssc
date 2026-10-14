@@ -41,7 +41,11 @@ return [
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
             'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
-            'after_commit' => false,
+            // true: el job se encola SOLO si la transacción que lo disparó
+            // confirma (commit). Con false, un rollback puede dejar un job
+            // huérfano que intenta notificar sobre una papeleta que nunca existió
+            // → ModelNotFoundException en el worker.
+            'after_commit' => true,
         ],
 
         'beanstalkd' => [
@@ -70,7 +74,7 @@ return [
             'queue' => env('REDIS_QUEUE', 'default'),
             'retry_after' => (int) env('REDIS_QUEUE_RETRY_AFTER', 90),
             'block_for' => null,
-            'after_commit' => false,
+            'after_commit' => true, // mismo criterio que database
         ],
 
         'deferred' => [

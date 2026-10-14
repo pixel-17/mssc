@@ -7,8 +7,7 @@ use Carbon\Carbon;
 
 /**
  * ÚNICA definición de "día hábil" del sistema: día laborable según
- * Configuraciones (HORARIO_ORDINARIO_DIAS_LABORABLES). Los feriados no se
- * consideran. Lo usan:
+ * Configuraciones (HORARIO_ORDINARIO_DIAS_LABORABLES). Lo usan:
  * - HorarioOrdinarioService (ventana de 276, disponibilidad de RRHH y
  *   de decisores 276).
  * - Los plazos en horas/días hábiles (sustento de Salud: 48h hábiles).

@@ -25,6 +25,22 @@ abstract class NotificacionEnVivo extends Notification implements ShouldQueue
 {
     use Queueable;
 
+    /**
+     * Reintentos ante fallos transitorios (red, Reverb caído, push
+     * rechazado). El canal 'database' casi nunca falla; webpush y
+     * broadcast son los candidatos. Con 3 intentos y backoff creciente
+     * se cubre la mayoría de caídas breves sin saturar la cola.
+     * El primer reintento es a los 10 s, el segundo al minuto, el
+     * tercero a los 5 min; tras eso el job va a failed_jobs.
+     */
+    public int $tries = 3;
+
+    /** @return int[] segundos de espera entre cada intento */
+    public function backoff(): array
+    {
+        return [10, 60, 300];
+    }
+
     public function __construct(
         protected readonly string $tipo,
         protected readonly string $titulo,
