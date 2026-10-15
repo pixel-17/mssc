@@ -123,11 +123,11 @@ Route::middleware($soloAdmin)->prefix('configuraciones')->name('configuraciones.
  * Área / Jefe Inmediato con reglas propias (UserPolicy) — control
  * total sin esas restricciones de área es exclusivo de admin.
  */
-Route::middleware($soloAdmin)->prefix('usuarios-admin')->name('usuarios-admin.')->group(function () {
-    Route::get('/', \App\Livewire\Usuarios\UsuarioAdminIndex::class)->name('index');
-    Route::get('/crear', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('crear');
-    Route::get('/{usuario}/editar', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('editar');
-});
+/*
+ * Listado del admin. Crear y editar comparten ruta con los jefes (usuarios.crear /
+ * usuarios.editar): UsuarioForm calcula el alcance (admin | area | equipo) en mount().
+ */
+Route::middleware($soloAdmin)->get('/usuarios-admin', \App\Livewire\Usuarios\UsuarioAdminIndex::class)->name('usuarios-admin.index');
 
 /*
  * Papeletas para el admin: TODAS, de cualquier estado, SOLO LECTURA.
@@ -176,7 +176,7 @@ Route::middleware($autenticado)->group(function () {
     /*
      * Pantalla obligatoria de "actualiza tu contraseña" para quien entra
      * por primera vez con la contraseña = DNI que le asignó
-     * CrearUsuarioAction/UsuarioAdminForm. A esta ruta la trae
+     * CrearUsuarioAction/UsuarioForm. A esta ruta la trae
      * RedirigirSiDebeActualizarPassword (bootstrap/app.php); ella
      * misma apaga la bandera al guardar la contraseña nueva.
      */
@@ -201,10 +201,8 @@ Route::middleware($autenticado)->group(function () {
      */
     Route::prefix('usuarios')->name('usuarios.')->group(function () {
         Route::get('/', [UsuarioController::class, 'index'])->name('index');
-        Route::get('/crear', [UsuarioController::class, 'create'])->name('create');
-        Route::post('/', [UsuarioController::class, 'store'])->name('store');
-        Route::get('/{trabajador}/editar', [UsuarioController::class, 'edit'])->name('edit');
-        Route::put('/{trabajador}', [UsuarioController::class, 'update'])->name('update');
+        Route::get('/crear', \App\Livewire\Usuarios\UsuarioForm::class)->name('crear');
+        Route::get('/{usuario}/editar', \App\Livewire\Usuarios\UsuarioForm::class)->name('editar');
     });
 
     /*

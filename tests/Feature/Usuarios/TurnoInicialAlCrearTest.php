@@ -163,16 +163,16 @@ class TurnoInicialAlCrearTest extends TestCase
         $this->conUnidadHija($unidad);
 
         $this->actingAs($jefeDeArea)
-            ->post(route('usuarios.store'), [
-                'name' => 'Luis',
-                'apellido' => 'Mamani',
-                'dni' => '70998877',
-                'email' => 'luis@example.com',
-                'regimen' => '728',
-                'unidad_organica_id' => $unidad->id,
-                'tipo' => 'trabajador',
-            ])
-            ->assertSessionHasNoErrors();
+            ->livewire(UsuarioForm::class)
+            ->set('name', 'Luis')
+            ->set('apellido', 'Mamani')
+            ->set('dni', '70998877')
+            ->set('email', 'luis@example.com')
+            ->set('regimen', '728')
+            ->set('unidadOrganicaId', $unidad->id)
+            ->set('tipo', 'trabajador')
+            ->call('guardar')
+            ->assertHasNoErrors();
 
         $nuevo = User::where('dni', '70998877')->firstOrFail();
 

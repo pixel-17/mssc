@@ -28,8 +28,8 @@ use Livewire\Component;
  * - Cambiar de unidad pasa por MoverTrabajadorAction (mismas reglas e
  *   historial que arrastrar). Aquí NO se cambia la sede de forma
  *   implícita: eso se decide en los campos.
- * - Datos personales, roles y turno: "Edición completa" (usuarios-admin.editar).
- * - Alta de un trabajador: usuarios-admin.crear (exige turno en 728).
+ * - Datos personales, roles y turno: "Edición completa" (usuarios.editar).
+ * - Alta de un trabajador: usuarios.crear (el turno de un 728 se carga después).
  */
 class TrabajadorModal extends Component
 {

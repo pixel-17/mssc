@@ -97,8 +97,8 @@ class AdminSinRolOperativoTest extends TestCase
 
         $this->assertFalse($admin->can('puedeCrearAlgo', \App\Models\User::class));
 
-        $this->actingAs($admin)->get(route('usuarios.create'))->assertForbidden();
+        $this->actingAs($admin)->get(route('usuarios.crear'))->assertForbidden();
         $this->actingAs($admin)->get(route('usuarios.index'))->assertRedirect(route('usuarios-admin.index'));
-        $this->actingAs($admin)->get(route('usuarios-admin.crear'))->assertOk();
+        $this->actingAs($admin)->get(route('usuarios.crear'))->assertOk();
     }
 }

@@ -29,7 +29,7 @@
                 </p>
 
                 @if ($puedeCrear)
-                    <a href="{{ route('usuarios.create') }}"
+                    <a href="{{ route('usuarios.crear') }}"
                        class="inline-flex items-center px-4 py-2 bg-tinta-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-tinta-700">
                         Crear usuario
                     </a>
@@ -60,7 +60,7 @@
                                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $usuario->unidadOrganica?->nombre ?? '—' }}</td>
                                         <td class="px-4 py-3 text-sm text-right">
                                             @can('editar', $usuario)
-                                                <a href="{{ route('usuarios.edit', $usuario) }}" class="text-tinta-600 hover:text-tinta-800 font-medium">Editar</a>
+                                                <a href="{{ route('usuarios.editar', $usuario) }}" class="text-tinta-600 hover:text-tinta-800 font-medium">Editar</a>
                                             @endcan
                                         </td>
                                     </tr>

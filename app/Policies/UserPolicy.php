@@ -49,8 +49,8 @@ class UserPolicy
     public function puedeCrearAlgo(User $creator): bool
     {
         // Sin bypass de admin: esta es la vía de alta de los jefes (Trabajadores /
-        // usuarios.create). La admin no tiene trabajadores propios; sus altas
-        // (incluido otro admin) van por Cuentas de usuario (usuarios-admin.crear)
+        // usuarios.crear). La admin no tiene trabajadores propios; sus altas
+        // (incluido otro admin) van por Cuentas de usuario (usuarios.crear)
         // o por el organigrama.
         if ($creator->hasRole('admin')) {
             return false;

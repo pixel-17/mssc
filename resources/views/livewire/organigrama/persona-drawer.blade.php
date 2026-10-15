@@ -150,7 +150,7 @@
                 </section>
 
                 @if ($esAdmin)
-                    <a href="{{ route('usuarios-admin.editar', $persona) }}" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
+                    <a href="{{ route('usuarios.editar', $persona) }}" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
                         <x-icon name="cog" class="size-4" /> Edición completa (DNI, régimen, roles, contraseña, turno)
                     </a>
                 @elseif ($persona->regimen === '728')

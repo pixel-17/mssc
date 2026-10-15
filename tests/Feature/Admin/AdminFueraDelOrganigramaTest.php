@@ -82,7 +82,7 @@ class AdminFueraDelOrganigramaTest extends TestCase
     public function test_nuevo_administrador_viene_con_el_rol_admin_marcado(): void
     {
         $this->actingAs($this->admin)
-            ->get(route('usuarios-admin.crear', ['tipo' => 'admin']))
+            ->get(route('usuarios.crear', ['tipo' => 'admin']))
             ->assertOk()
             ->assertSee('Nuevo administrador');
     }

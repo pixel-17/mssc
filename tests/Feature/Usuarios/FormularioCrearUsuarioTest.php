@@ -36,7 +36,7 @@ class FormularioCrearUsuarioTest extends TestCase
     public function test_el_formulario_muestra_la_sede_que_heredara_el_trabajador(): void
     {
         $this->actingAs($this->jefeDeArea)
-            ->get(route('usuarios.create'))
+            ->get(route('usuarios.crear'))
             ->assertOk()
             ->assertSee('Sede del trabajador')
             // La sede del jefe de la unidad viaja al formulario para mostrarse en vivo.
@@ -46,7 +46,7 @@ class FormularioCrearUsuarioTest extends TestCase
     public function test_el_alta_no_pide_turno_porque_el_trabajador_lo_programa_despues(): void
     {
         $this->actingAs($this->jefeDeArea)
-            ->get(route('usuarios.create'))
+            ->get(route('usuarios.crear'))
             ->assertOk()
             ->assertDontSee('name="turno"', false)
             ->assertSee('se carga después', false);
