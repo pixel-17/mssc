@@ -42,6 +42,12 @@
                 <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="whitespace-nowrap" /></span>
             </div>
 
+            <div class="px-5 pb-4 -mt-2">
+                <a href="{{ route('trabajador.papeletas.pdf', $papeleta) }}" class="inline-flex items-center gap-1 text-sm font-medium text-tinta-600 dark:text-tinta-300 hover:underline">
+                    Descargar PDF
+                </a>
+            </div>
+
             <div class="mx-5 border-t border-dashed border-tinta-200/70 dark:border-white/15"></div>
 
             @if ($papeleta->justificacion)

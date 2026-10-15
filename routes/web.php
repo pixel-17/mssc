@@ -9,6 +9,7 @@ use App\Http\Controllers\Rrhh\DecisionController as RrhhDecisionController;
 use App\Http\Controllers\Rrhh\PapeletaController as RrhhPapeletaController;
 use App\Http\Controllers\Rrhh\SustentoController as RrhhSustentoController;
 use App\Http\Controllers\Trabajador\PapeletaController as TrabajadorPapeletaController;
+use App\Http\Controllers\Trabajador\PdfController as TrabajadorPdfController;
 use App\Http\Controllers\Trabajador\RetornoController as TrabajadorRetornoController;
 use App\Http\Controllers\Trabajador\SustentoController as TrabajadorSustentoController;
 use App\Http\Controllers\Usuario\UsuarioController;
@@ -230,6 +231,7 @@ Route::middleware($autenticado)->group(function () {
         Route::get('/crear', [TrabajadorPapeletaController::class, 'create'])->name('create');
         Route::post('/', [TrabajadorPapeletaController::class, 'store'])->name('store');
         Route::get('/{papeleta}', [TrabajadorPapeletaController::class, 'show'])->name('show');
+        Route::get('/{papeleta}/pdf', [TrabajadorPdfController::class, 'papeleta'])->name('pdf');
         Route::delete('/{papeleta}', [TrabajadorPapeletaController::class, 'cancelar'])->name('cancelar');
 
         Route::post('/{papeleta}/subsanar', [TrabajadorPapeletaController::class, 'subsanar'])->name('subsanar');
