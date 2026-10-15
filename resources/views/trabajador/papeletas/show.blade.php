@@ -14,17 +14,39 @@
         ? $papeleta->sustentos->firstWhere('estado', 'pendiente')
         : null;
 
-    $filas = collect([
-        ['Sede', $papeleta->sede->nombre ?? '—'],
-        ['Día operativo', $papeleta->dia_operativo?->format('d/m/Y')],
-        ['Jefe inmediato', $papeleta->jefeInmediato?->nombre_completo ?? '—'],
-        ['Jefe de área', $papeleta->jefeArea?->nombre_completo ?: '—'],
-        ['Hora de salida real', $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—'],
-        ['Retorno estimado', $papeleta->hora_retorno_estimado?->format('d/m/Y H:i') ?? '—'],
-    ]);
+    // El PDF solo certifica una papeleta que terminó aprobada: Cerrada (sin
+    // descuento) o Finalizada (con descuento). Rechazada, Cancelada y Vencida
+    // también son estados terminales, pero no hay nada que certificar ahí.
+    $puedeDescargarPdf = $papeleta->estado->equals(\App\States\Papeleta\Cerrada::class)
+        || $papeleta->estado->equals(\App\States\Papeleta\Finalizada::class);
+
+    // Detalle agrupado: qué pasó (información) y quién decidió y cuándo (aprobación).
+    $seccionesDetalle = [
+        'Información' => collect([
+            ['Sede', $papeleta->sede->nombre ?? '—'],
+            ['Día operativo', $papeleta->dia_operativo?->format('d/m/Y') ?? '—'],
+            ['Hora de salida real', $papeleta->hora_salida_real?->format('d/m/Y H:i') ?? '—'],
+            ['Retorno estimado', $papeleta->hora_retorno_estimado?->format('d/m/Y H:i') ?? '—'],
+            ['Creada el', $papeleta->created_at?->format('d/m/Y H:i') ?? '—'],
+        ]),
+        'Aprobación' => collect([
+            ['Jefe inmediato', $papeleta->jefeInmediato?->nombre_completo ?? '—'],
+            ['Decisión del jefe', $papeleta->jefe_resuelto_at
+                ? ($papeleta->resueltoPorJefe?->nombre_completo ?? '—').' · '.$papeleta->jefe_resuelto_at->format('d/m/Y H:i')
+                : '—'],
+            ['Jefe de área', $papeleta->jefeArea?->nombre_completo ?: '—'],
+        ]),
+    ];
+
+    if ($papeleta->rrhh_resuelto_at) {
+        $seccionesDetalle['Aprobación']->push([
+            'Decisión de RRHH',
+            ($papeleta->resueltoPorRrhh?->nombre_completo ?? '—').' · '.$papeleta->rrhh_resuelto_at->format('d/m/Y H:i'),
+        ]);
+    }
 
     if ($papeleta->autorizado_con_rrhh_fuera_horario) {
-        $filas->push(['Revisión post-hoc RRHH', $papeleta->etiquetaPosthoc()]);
+        $seccionesDetalle['Aprobación']->push(['Revisión post-hoc RRHH', $papeleta->etiquetaPosthoc()]);
     }
 @endphp
 
@@ -42,11 +64,16 @@
                 <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="whitespace-nowrap" /></span>
             </div>
 
-            <div class="px-5 pb-4 -mt-2">
-                <a href="{{ route('trabajador.papeletas.pdf', $papeleta) }}" class="inline-flex items-center gap-1 text-sm font-medium text-tinta-600 dark:text-tinta-300 hover:underline">
-                    Descargar PDF
-                </a>
-            </div>
+            @if ($puedeDescargarPdf)
+                <div class="px-5 pb-4 -mt-2">
+                    <a href="{{ route('trabajador.papeletas.pdf', $papeleta) }}" class="btn-secondary inline-flex items-center gap-2 text-sm py-2 px-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        Descargar PDF
+                    </a>
+                </div>
+            @endif
 
             <div class="mx-5 border-t border-dashed border-tinta-200/70 dark:border-white/15"></div>
 
@@ -243,19 +270,20 @@
             </div>
         @endif
 
-        <div class="text-right">
-            <a href="{{ route('trabajador.papeletas.pdf', $papeleta) }}" class="text-sm font-medium text-tinta-600 dark:text-tinta-300 hover:underline">Descargar PDF</a>
-        </div>
-
-        {{-- Detalle --}}
-        <div class="glass-card divide-y divide-tinta-100/70 dark:divide-white/10">
-            @foreach ($filas as [$etiqueta, $valor])
-                <div class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
-                    <span class="text-gray-500 dark:text-tinta-100/50">{{ $etiqueta }}</span>
-                    <span class="font-medium text-tinta-950 dark:text-white text-right">{{ $valor ?? '—' }}</span>
+        {{-- Detalle agrupado --}}
+        @foreach ($seccionesDetalle as $titulo => $filas)
+            <section>
+                <h3 class="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-100/50 mb-2 px-1">{{ $titulo }}</h3>
+                <div class="glass-card divide-y divide-tinta-100/70 dark:divide-white/10">
+                    @foreach ($filas as [$etiqueta, $valor])
+                        <div class="px-5 py-3 flex items-center justify-between gap-3 text-sm">
+                            <span class="text-gray-500 dark:text-tinta-100/50">{{ $etiqueta }}</span>
+                            <span class="font-medium text-tinta-950 dark:text-white text-right">{{ $valor ?? '—' }}</span>
+                        </div>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
+            </section>
+        @endforeach
 
         {{-- Retorno registrado --}}
         @if ($papeleta->retorno)

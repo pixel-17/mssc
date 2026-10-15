@@ -38,6 +38,20 @@
         .org-tree > ul > li::before, .org-tree > ul > li::after { display: none; }
     </style>
 
+    {{-- Botón de modo edición: fijo al borde derecho de la pantalla,
+         siempre visible aunque se haga scroll por el árbol. --}}
+    <button type="button"
+            wire:click="alternarEdicion"
+            aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
+            @class([
+                'fixed right-4 top-1/2 z-20 inline-flex -translate-y-1/2 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs shadow-glass-lg sm:right-6',
+                'btn-primary' => $modoEdicion,
+                'btn-secondary' => ! $modoEdicion,
+            ])>
+        <x-icon name="pencil" class="size-4" />
+        {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
+    </button>
+
     <x-admin.encabezado titulo="Organigrama del área">
         <div class="flex flex-wrap items-center justify-end gap-2">
             <div class="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs dark:border-white/15" role="group" aria-label="Qué tanto del árbol se ve">
@@ -51,16 +65,6 @@
                         :class="todos === false && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === false"
                         @click="todos = false; $dispatch('org-contraer')">Todo cerrado</button>
             </div>
-            <button type="button"
-                    wire:click="alternarEdicion"
-                    aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
-                    @class([
-                        'text-xs',
-                        'btn-primary' => $modoEdicion,
-                        'btn-secondary' => ! $modoEdicion,
-                    ])>
-                {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
-            </button>
             @if ($modoEdicion && $esAdmin)
                 <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
                     <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">

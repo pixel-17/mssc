@@ -42,6 +42,15 @@ class PdfController extends Controller
     {
         $this->authorize('view', $papeleta);
 
+        // El PDF solo certifica una papeleta que terminó aprobada: Cerrada
+        // (sin descuento) o Finalizada (con descuento). No para las que
+        // siguen en trámite ni para Rechazada/Cancelada/Vencida: ahí no hay
+        // nada que certificar.
+        $puedeDescargar = $papeleta->estado->equals(\App\States\Papeleta\Cerrada::class)
+            || $papeleta->estado->equals(\App\States\Papeleta\Finalizada::class);
+
+        abort_unless($puedeDescargar, 403, 'El PDF solo está disponible cuando la papeleta ya fue cerrada o finalizada.');
+
         $papeleta->load(['motivo', 'sede', 'retorno', 'trabajador', 'resueltoPorJefe', 'resueltoPorRrhh']);
 
         return Pdf::loadView('pdf.trabajador.papeleta', ['papeleta' => $papeleta])
