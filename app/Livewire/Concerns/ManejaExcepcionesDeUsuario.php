@@ -9,7 +9,7 @@ use Closure;
 
 /**
  * Centraliza el patrón que se repetía, casi idéntico, en más de diez
- * componentes Livewire (OrganigramaArbol, TrabajadorModal, UnidadModal,
+ * componentes Livewire (OrganigramaArbol, UnidadModal,
  * UsuarioAdminIndex, BajaConReemplazo, UnidadOrganicaForm...):
  *
  *     try {

@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 /**
  * Drawer único de alta/edición de personas desde el organigrama (reemplaza al
- * TrabajadorModal solo-admin y da a admin y jefe de área el mismo flujo).
+ * Unifica alta y edición para admin y jefe de área en un solo flujo.
  * Escenario: Gerencia (raíz, jefe Gina) → Oficina A (jefe Omar, con Carla) y
  * Oficina B (otra rama, fuera del área de Gina).
  */

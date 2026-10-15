@@ -75,9 +75,10 @@
                                 @click="m = false; $dispatch('org-unidad-abrir', { id: null, parentId: null })">
                             <x-icon name="building" class="size-4" /> Unidad orgánica
                         </button>
-                        <a href="{{ route('usuarios-admin.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
+                        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                                @click="m = false; $dispatch('org-persona-abrir', {})">
                             <x-icon name="users" class="size-4" /> Trabajador
-                        </a>
+                        </button>
                         <a href="{{ route('sedes.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
                             <x-icon name="map-pin" class="size-4" /> Sede
                         </a>
@@ -85,9 +86,10 @@
                 </div>
             @elseif ($modoEdicion)
                 {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
-                <a href="{{ route('usuarios.create') }}" class="btn-primary inline-flex items-center gap-1 text-xs">
+                <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
+                        @click="$dispatch('org-persona-abrir', {})">
                     <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
-                </a>
+                </button>
             @endif
         </div>
     </x-admin.encabezado>
@@ -546,8 +548,8 @@
                         <h2 class="truncate text-lg font-semibold text-tinta-950 dark:text-white">{{ $p->nombre_completo }}</h2>
                         <p class="text-sm text-gray-500 dark:text-tinta-50/60">DNI {{ $p->dni ?? '—' }}</p>
                     </div>
-                    @if ($esAdmin)
-                        <button type="button" class="btn-secondary shrink-0 text-xs" @click="$dispatch('org-trabajador-abrir', { id: {{ $p->id }} }); $wire.cerrarPersona()">Editar</button>
+                    @if ($esAdmin || $modoEdicion)
+                        <button type="button" class="btn-secondary shrink-0 text-xs" @click="$dispatch('org-persona-abrir', { id: {{ $p->id }} }); $wire.cerrarPersona()">Editar</button>
                     @endif
                     <button type="button" wire:click="cerrarPersona" class="rounded p-1 text-gray-500 hover:bg-gray-100 dark:hover:bg-white/10" aria-label="Cerrar">
                         <svg class="size-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
@@ -645,9 +647,10 @@
         </div>
     @endif
 
+    <livewire:organigrama.persona-drawer />
+
     @if ($esAdmin)
         <livewire:organigrama.unidad-modal />
-        <livewire:organigrama.trabajador-modal />
         <livewire:usuarios.baja-con-reemplazo />
     @endif
 </div>

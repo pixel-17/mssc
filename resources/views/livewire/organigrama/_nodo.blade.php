@@ -99,15 +99,17 @@
                                     @click="$dispatch('org-unidad-abrir', { id: null, parentId: {{ $unidad->id }} })">
                                 <x-icon name="plus-circle" class="size-4" /><span class="sr-only">Agregar sub-unidad</span>
                             </button>
-                            <a href="{{ route('usuarios-admin.crear', ['unidad' => $unidad->id]) }}" title="Agregar trabajador a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10">
+                            <button type="button" title="Agregar trabajador a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                                    @click="$dispatch('org-persona-abrir', { unidadId: {{ $unidad->id }} })">
                                 <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador</span>
-                            </a>
+                            </button>
                         </div>
                     @elseif ($modoEdicion)
                         <div class="flex items-center gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                            <a href="{{ route('usuarios.create', ['unidad' => $unidad->id]) }}" title="Agregar trabajador o jefe inmediato a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10">
+                            <button type="button" title="Agregar trabajador o jefe inmediato a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                                    @click="$dispatch('org-persona-abrir', { unidadId: {{ $unidad->id }} })">
                                 <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador o jefe inmediato</span>
-                            </a>
+                            </button>
                         </div>
                     @endif
                 </div>
@@ -164,9 +166,9 @@
                             <button type="button" wire:click="verPersona({{ $m->id }})" class="min-w-0 truncate text-left text-tinta-950 hover:underline dark:text-white">{{ $resaltar($m->nombre_completo) }}</button>
                             @include('livewire.organigrama._chips', ['persona' => $m, 'sedeReferencia' => $sedeJefe])
                             @unless ($m->activo)<span class="text-[11px] text-red-600">desactivado</span>@endunless
-                            @if ($modoEdicion && $esAdmin)
+                            @if ($modoEdicion)
                                 <button type="button" title="Editar trabajador" class="ms-auto rounded-lg p-1.5 text-gray-500 opacity-70 hover:bg-white hover:text-tinta-700 hover:opacity-100 dark:hover:bg-white/10"
-                                        @click="$dispatch('org-trabajador-abrir', { id: {{ $m->id }} })">
+                                        @click="$dispatch('org-persona-abrir', { id: {{ $m->id }} })">
                                     <x-icon name="pencil" class="size-3.5" /><span class="sr-only">Editar trabajador</span>
                                 </button>
                             @endif

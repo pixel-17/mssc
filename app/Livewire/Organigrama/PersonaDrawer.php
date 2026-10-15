@@ -20,8 +20,7 @@ use Livewire\Component;
 
 /**
  * Alta y edición de una persona DENTRO del organigrama, en un solo panel
- * lateral para admin y jefe de área (antes: TrabajadorModal solo-admin +
- * dos formularios de página distintos: usuarios-admin y usuarios).
+ * lateral para admin y jefe de área.
  *
  * Se abre con `org-persona-abrir`:
  *  - {id}                  → editar a esa persona.
