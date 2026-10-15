@@ -1,112 +1,72 @@
-<x-form-section submit="guardar">
-    <x-slot name="title">
-        {{ __('Preferencias del dispositivo') }}
-    </x-slot>
-
-    <x-slot name="description">
-        {{ __('Notificaciones, ubicación, cámara e instalación de la app en este dispositivo.') }}
-    </x-slot>
+<x-form-section id="dispositivo" submit="guardar">
+    <x-slot name="title">{{ __('Preferencias del dispositivo') }}</x-slot>
+    <x-slot name="description">{{ __('Notificaciones, ubicación, cámara e instalación de la app en este dispositivo.') }}</x-slot>
 
     <x-slot name="form">
-        {{-- Notificaciones: activar/desactivar sigue en el botón del
-             menú (msscPushToggle); aquí solo el volumen del sonido
-             in-app. --}}
-        <div class="col-span-6 sm:col-span-4" x-data="msscVolumenNotificacion(@js($volumen))">
-            <x-label for="volumen-notificacion" value="{{ __('Volumen de sonido de notificación') }}" />
+        <div class="col-span-6 divide-y divide-tinta-100 dark:divide-white/10">
+            {{-- Notificaciones: activar/desactivar sigue en el botón del
+                 menú (msscPushToggle); aquí solo el volumen del sonido
+                 in-app. --}}
+            <x-fila-ajuste x-data="msscVolumenNotificacion(@js($volumen))"
+                           :titulo="__('Volumen de sonido de notificación')"
+                           :descripcion="__('Qué tan fuerte suena el aviso dentro de la app.')">
+                <x-slot name="detalle">
+                    <div class="flex items-center gap-3">
+                        <input id="volumen-notificacion" type="range" min="0" max="100" step="5"
+                               aria-label="{{ __('Volumen de sonido de notificación') }}"
+                               wire:model="volumen"
+                               x-on:input="volumen = $event.target.value"
+                               class="w-full accent-tinta-600 dark:accent-sello-500">
+                        <span class="w-12 text-end text-sm tabular-nums text-tinta-600 dark:text-zinc-400" x-text="volumen + '%'"></span>
+                    </div>
 
-            <div class="flex items-center gap-3 mt-1">
-                <input
-                    id="volumen-notificacion"
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="5"
-                    wire:model="volumen"
-                    x-on:input="volumen = $event.target.value"
-                    class="w-full"
-                >
-                <span class="text-sm text-gray-600 dark:text-gray-400 w-10 text-right" x-text="volumen + '%'"></span>
-            </div>
+                    <button type="button" x-on:click="probar()"
+                            class="mt-2 text-sm font-medium text-tinta-700 underline underline-offset-2 hover:text-tinta-950 dark:text-tinta-200 dark:hover:text-white">
+                        {{ __('Probar sonido') }}
+                    </button>
 
-            <button
-                type="button"
-                x-on:click="probar()"
-                class="mt-2 text-sm text-tinta-700 dark:text-tinta-300 underline"
-            >
-                {{ __('Probar sonido') }}
-            </button>
+                    <x-input-error for="volumen" class="mt-2" />
+                </x-slot>
+            </x-fila-ajuste>
 
-            <x-input-error for="volumen" class="mt-2" />
-        </div>
+            <x-fila-ajuste x-data="msscGpsToggle()"
+                           :titulo="__('Acceso a ubicación (GPS)')"
+                           :descripcion="__('Permitir que la app use mi ubicación cuando la necesite')">
+                <x-interruptor :etiqueta="__('Acceso a ubicación (GPS)')" wire:model="permiteGps" id="permite_gps" />
 
-        <div class="col-span-6 sm:col-span-4" x-data="msscGpsToggle()">
-            <x-label value="{{ __('Acceso a ubicación (GPS)') }}" />
+                <x-slot name="detalle">
+                    <p class="text-xs text-tinta-600 dark:text-zinc-400" x-text="estado"></p>
+                    <button type="button" x-on:click="pedirPermiso()" x-show="estado !== 'Permiso concedido'"
+                            class="mt-1 text-sm font-medium text-tinta-700 underline underline-offset-2 hover:text-tinta-950 dark:text-tinta-200 dark:hover:text-white">
+                        {{ __('Solicitar permiso al navegador') }}
+                    </button>
+                </x-slot>
+            </x-fila-ajuste>
 
-            <div class="flex items-center gap-3 mt-1">
-                <input type="checkbox" wire:model="permiteGps" id="permite_gps" class="rounded">
-                <label for="permite_gps" class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Permitir que la app use mi ubicación cuando la necesite') }}
-                </label>
-            </div>
+            <x-fila-ajuste x-data="msscCamaraToggle()"
+                           :titulo="__('Acceso a la cámara')"
+                           :descripcion="__('Permitir que la app use mi cámara cuando la necesite')">
+                <x-interruptor :etiqueta="__('Acceso a la cámara')" wire:model="permiteCamara" id="permite_camara" />
 
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="estado"></p>
+                <x-slot name="detalle">
+                    <p class="text-xs text-tinta-600 dark:text-zinc-400" x-text="estado"></p>
+                    <button type="button" x-on:click="pedirPermiso()" x-show="estado !== 'Permiso concedido'"
+                            class="mt-1 text-sm font-medium text-tinta-700 underline underline-offset-2 hover:text-tinta-950 dark:text-tinta-200 dark:hover:text-white">
+                        {{ __('Solicitar permiso al navegador') }}
+                    </button>
+                </x-slot>
+            </x-fila-ajuste>
 
-            <button
-                type="button"
-                x-on:click="pedirPermiso()"
-                x-show="estado !== 'Permiso concedido'"
-                class="mt-1 text-sm text-tinta-700 dark:text-tinta-300 underline"
-            >
-                {{ __('Solicitar permiso al navegador') }}
-            </button>
-        </div>
-
-        <div class="col-span-6 sm:col-span-4" x-data="msscCamaraToggle()">
-            <x-label value="{{ __('Acceso a la cámara') }}" />
-
-            <div class="flex items-center gap-3 mt-1">
-                <input type="checkbox" wire:model="permiteCamara" id="permite_camara" class="rounded">
-                <label for="permite_camara" class="text-sm text-gray-600 dark:text-gray-400">
-                    {{ __('Permitir que la app use mi cámara cuando la necesite') }}
-                </label>
-            </div>
-
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" x-text="estado"></p>
-
-            <button
-                type="button"
-                x-on:click="pedirPermiso()"
-                x-show="estado !== 'Permiso concedido'"
-                class="mt-1 text-sm text-tinta-700 dark:text-tinta-300 underline"
-            >
-                {{ __('Solicitar permiso al navegador') }}
-            </button>
-        </div>
-
-        <div class="col-span-6 sm:col-span-4" x-data="msscInstalarApp()" x-show="instalable">
-            <x-label value="{{ __('Instalar la app') }}" />
-
-            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {{ __('Agrega MSSC a la pantalla de inicio de este dispositivo.') }}
-            </p>
-
-            <button
-                type="button"
-                x-on:click="instalar()"
-                class="mt-2 inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm"
-            >
-                {{ __('Instalar app') }}
-            </button>
+            <x-fila-ajuste x-data="msscInstalarApp()" x-show="instalable"
+                           :titulo="__('Instalar la app')"
+                           :descripcion="__('Agrega MSSC a la pantalla de inicio de este dispositivo.')">
+                <x-secondary-button type="button" x-on:click="instalar()">{{ __('Instalar app') }}</x-secondary-button>
+            </x-fila-ajuste>
         </div>
     </x-slot>
 
     <x-slot name="actions">
-        <x-action-message class="me-3" on="saved">
-            {{ __('Guardado.') }}
-        </x-action-message>
-
-        <x-button>
-            {{ __('Guardar') }}
-        </x-button>
+        <x-action-message on="saved">{{ __('Guardado.') }}</x-action-message>
+        <x-button>{{ __('Guardar') }}</x-button>
     </x-slot>
 </x-form-section>

@@ -1,24 +1,19 @@
-@props(['submit'])
+@props(['submit', 'peligro' => false])
 
-<div {{ $attributes->merge(['class' => 'md:grid md:grid-cols-3 md:gap-6']) }}>
-    <x-section-title>
-        <x-slot name="title">{{ $title }}</x-slot>
-        <x-slot name="description">{{ $description }}</x-slot>
-    </x-section-title>
+{{--
+    Sección con <form wire:submit>: campos en rejilla de 6 columnas (usa
+    col-span-6 md:col-span-N en cada campo) y barra de acciones al pie.
+--}}
+<x-seccion :titulo="$title" :descripcion="$description" :peligro="$peligro" {{ $attributes }}>
+    <form wire:submit="{{ $submit }}">
+        <div class="grid grid-cols-6 gap-x-6 gap-y-5 px-5 py-5 sm:px-6 sm:py-6">
+            {{ $form }}
+        </div>
 
-    <div class="mt-5 md:mt-0 md:col-span-2">
-        <form wire:submit="{{ $submit }}">
-            <div class="px-4 py-5 glass sm:p-6 {{ isset($actions) ? 'rounded-t-2xl' : 'rounded-2xl' }}">
-                <div class="grid grid-cols-6 gap-6">
-                    {{ $form }}
-                </div>
+        @isset($actions)
+            <div class="flex items-center justify-end gap-3 border-t border-tinta-100 bg-tinta-50/60 px-5 py-3 dark:border-white/10 dark:bg-white/5 sm:px-6">
+                {{ $actions }}
             </div>
-
-            @if (isset($actions))
-                <div class="flex items-center justify-end px-4 py-3 bg-tinta-50/70 backdrop-blur text-end sm:px-6 rounded-b-2xl border-t border-tinta-100">
-                    {{ $actions }}
-                </div>
-            @endif
-        </form>
-    </div>
-</div>
+        @endisset
+    </form>
+</x-seccion>

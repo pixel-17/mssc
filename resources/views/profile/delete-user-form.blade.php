@@ -1,4 +1,4 @@
-<x-action-section>
+<x-action-section id="eliminar" peligro>
     <x-slot name="title">
         {{ __('Delete Account') }}
     </x-slot>
@@ -8,11 +8,11 @@
     </x-slot>
 
     <x-slot name="content">
-        <div class="max-w-xl text-sm text-gray-600">
+        <x-texto-seccion>
             {{ __('Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.') }}
-        </div>
+        </x-texto-seccion>
 
-        <div class="mt-5">
+        <div class="mt-6">
             <x-danger-button wire:click="confirmUserDeletion" wire:loading.attr="disabled">
                 {{ __('Delete Account') }}
             </x-danger-button>

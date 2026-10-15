@@ -13,7 +13,7 @@
     ya usa.
 --}}
 
-<div>
+<div {{ $attributes }}>
     <x-label :for="$for" :value="$label" class="block mb-1" />
 
     {{ $slot }}
