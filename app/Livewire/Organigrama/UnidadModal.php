@@ -1,11 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Organigrama;
 
 use App\Actions\Organigrama\EliminarUnidadOrganicaAction;
 use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
 use App\Actions\Organigrama\JefaturaUnidadService;
-use App\Exceptions\UsuarioException;
+use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Livewire\UnidadesOrganicas\UnidadOrganicaForm;
 use App\Models\UnidadOrganica;
@@ -25,6 +27,7 @@ use Livewire\Component;
  */
 class UnidadModal extends Component
 {
+    use ManejaExcepcionesDeUsuario;
     use RequiereAdmin;
 
     public bool $abierto = false;
@@ -102,17 +105,16 @@ class UnidadModal extends Component
             return;
         }
 
-        try {
-            $guardar->ejecutar(auth()->user(), $unidad, [
+        if (! $this->intentar(
+            fn () => $guardar->ejecutar(auth()->user(), $unidad, [
                 'nombre' => $datos['nombre'],
                 'tipo' => $datos['tipo'] ?: null,
                 'parent_id' => $datos['parentId'],
                 'jefe_id' => $datos['jefeId'],
                 'activo' => $datos['activo'],
-            ], (bool) $datos['pasarJefe']);
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+            ], (bool) $datos['pasarJefe']),
+            fn ($e) => $this->error = $e->getMessage(),
+        )) {
             return;
         }
 
@@ -133,11 +135,10 @@ class UnidadModal extends Component
             return;
         }
 
-        try {
-            $eliminar->ejecutar(auth()->user(), $unidad);
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+        if (! $this->intentar(
+            fn () => $eliminar->ejecutar(auth()->user(), $unidad),
+            fn ($e) => $this->error = $e->getMessage(),
+        )) {
             return;
         }
 

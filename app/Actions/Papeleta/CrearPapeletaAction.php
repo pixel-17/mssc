@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Papeleta;
 
 use App\Exceptions\PapeletaException;
@@ -77,6 +79,42 @@ class CrearPapeletaAction
 
     public function ejecutar(User $trabajador, Motivo $motivo, array $datos): Papeleta
     {
+        $this->validarMotivoYRegimen($trabajador, $motivo, $datos);
+        $this->exigirSinPapeletaViva($trabajador);
+
+        $turno = $this->resolverTurnoActivo($trabajador);
+        $finTurno = $this->resolverFinDeTurno($trabajador, $turno);
+
+        $jefatura = $this->resolverJefatura($trabajador);
+
+        $estadoInicial = $this->determinarEstadoInicial($jefatura);
+        $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
+
+        $papeleta = DB::transaction(fn () => $this->crearPapeletaConHistorial(
+            $trabajador,
+            $motivo,
+            $datos,
+            $turno,
+            $finTurno,
+            $jefatura,
+            $estadoInicial,
+            $autorizaSistema,
+        ));
+
+        // Fuera de la transacción: si algo falla en el envío (push caído,
+        // cola no disponible) nunca debe revertir la creación ya
+        // confirmada en BD.
+        $this->notificarCreacion($papeleta, $estadoInicial, $autorizaSistema);
+
+        return $papeleta;
+    }
+
+    /**
+     * Validaciones que no dependen de jefatura ni de turno: régimen
+     * asignado, motivo vigente y justificación cuando el motivo la exige.
+     */
+    private function validarMotivoYRegimen(User $trabajador, Motivo $motivo, array $datos): void
+    {
         // Sin régimen 276/728 no hay regla de horario que aplicar (antes caía
         // como 276 por descarte y fallaba en el INSERT: papeletas.regimen no
         // admite null). Se corta aquí con un mensaje que el usuario entienda.
@@ -93,13 +131,17 @@ class CrearPapeletaAction
         if ($motivo->adjunto === 'obligatorio' && empty($datos['justificacion'] ?? null)) {
             throw new PapeletaException("La justificación es obligatoria para el motivo {$motivo->nombre}.");
         }
+    }
 
-        $this->exigirSinPapeletaViva($trabajador);
-
-        $turno = $this->resolverTurnoActivo($trabajador);
-
-        $finTurno = $this->resolverFinDeTurno($trabajador, $turno);
-
+    /**
+     * Resuelve a quién le corresponde decidir esta papeleta: directo a RRHH
+     * (jefe de área), o jefe inmediato (y, si quien crea es él mismo jefe de
+     * su unidad, su disponibilidad real para decidir ahora).
+     *
+     * @return array{directoARrhh: bool, jefeInmediatoId: ?int, jefeAreaId: ?int, jefeDisponible: bool, esJefeInmediatoDeLaUnidad: bool, rrhhEnHorario: bool}
+     */
+    private function resolverJefatura(User $trabajador): array
+    {
         $unidad = $trabajador->unidadOrganica;
 
         // Un único jefe por unidad (`jefe_id`), sin importar régimen ni turno.
@@ -126,8 +168,8 @@ class CrearPapeletaAction
         // ¿Quien crea la papeleta es, él mismo, jefe de su unidad? Si lo es,
         // jefaturasDe() ya resolvió más arriba en el organigrama (su Jefe de
         // Área). Es el único rol cuya papeleta puede escalar a RRHH o a
-        // autorización del sistema (ver $estadoInicial): un trabajador raso
-        // nunca escala, solo espera a su jefe inmediato.
+        // autorización del sistema (ver determinarEstadoInicial): un
+        // trabajador raso nunca escala, solo espera a su jefe inmediato.
         $esJefeInmediatoDeLaUnidad = $unidad?->esJefeDeLaUnidad($trabajador) ?? false;
 
         // Regla de estructura: el jefe inmediato (o, si quien crea es él
@@ -154,10 +196,22 @@ class CrearPapeletaAction
             ? $this->decisorDisponible->estaDisponibleAhora($jefeInmediato)
             : false;
 
-        $jefeInmediatoId = $jefeInmediato?->id;
+        return [
+            'directoARrhh' => $directoARrhh,
+            'jefeInmediatoId' => $jefeInmediato?->id,
+            'jefeAreaId' => $jefeAreaId,
+            'jefeDisponible' => $jefeDisponible,
+            'esJefeInmediatoDeLaUnidad' => $esJefeInmediatoDeLaUnidad,
+            'rrhhEnHorario' => $this->horarioRrhh->estaEnHorarioAhora(),
+        ];
+    }
 
-        $rrhhEnHorario = $this->horarioRrhh->estaEnHorarioAhora();
-
+    /**
+     * @param  array{directoARrhh: bool, jefeDisponible: bool, esJefeInmediatoDeLaUnidad: bool, rrhhEnHorario: bool}  $jefatura
+     * @return class-string<PendienteJefe|PendienteRrhh|AutorizadaYCorriendo>
+     */
+    private function determinarEstadoInicial(array $jefatura): string
+    {
         // Trabajador raso (no es jefe de nadie): SIEMPRE PendienteJefe,
         // sin importar si el jefe está "disponible ahora mismo" — nunca
         // salta a RRHH ni el sistema la autoriza por sí solo. Si el jefe
@@ -167,101 +221,131 @@ class CrearPapeletaAction
         // RRHH y, si RRHH también está fuera de horario, el sistema
         // autoriza con revisión post-hoc — es el ÚNICO caso en que el
         // sistema autoriza.
-        $estadoInicial = match (true) {
-            $directoARrhh => PendienteRrhh::class,
-            ! $esJefeInmediatoDeLaUnidad => PendienteJefe::class,
-            $jefeDisponible => PendienteJefe::class,
-            $rrhhEnHorario => PendienteRrhh::class,
+        return match (true) {
+            $jefatura['directoARrhh'] => PendienteRrhh::class,
+            ! $jefatura['esJefeInmediatoDeLaUnidad'] => PendienteJefe::class,
+            $jefatura['jefeDisponible'] => PendienteJefe::class,
+            $jefatura['rrhhEnHorario'] => PendienteRrhh::class,
             default => AutorizadaYCorriendo::class,
         };
+    }
 
-        $autorizaSistema = $estadoInicial === AutorizadaYCorriendo::class;
+    /**
+     * Crea la papeleta y su historial inicial. Debe correr dentro de
+     * DB::transaction (ver ejecutar()): revalida bajo lock que el
+     * trabajador sigue sin papeleta viva antes de insertar.
+     *
+     * @param  array{directoARrhh: bool, jefeInmediatoId: ?int, jefeAreaId: ?int, jefeDisponible: bool, esJefeInmediatoDeLaUnidad: bool}  $jefatura
+     */
+    private function crearPapeletaConHistorial(
+        User $trabajador,
+        Motivo $motivo,
+        array $datos,
+        ?Turno $turno,
+        Carbon $finTurno,
+        array $jefatura,
+        string $estadoInicial,
+        bool $autorizaSistema,
+    ): Papeleta {
+        // Revalidación bajo lock: la fila del trabajador sirve de candado, así dos
+        // envíos casi simultáneos se atienden uno tras otro y el segundo ve al primero.
+        User::whereKey($trabajador->id)->lockForUpdate()->first();
+        $this->exigirSinPapeletaViva($trabajador);
 
-        $papeleta = DB::transaction(function () use ($trabajador, $motivo, $datos, $turno, $finTurno, $jefeInmediatoId, $jefeAreaId, $jefeDisponible, $esJefeInmediatoDeLaUnidad, $directoARrhh, $estadoInicial, $autorizaSistema) {
-            // Revalidación bajo lock: la fila del trabajador sirve de candado, así dos
-            // envíos casi simultáneos se atienden uno tras otro y el segundo ve al primero.
-            User::whereKey($trabajador->id)->lockForUpdate()->first();
-            $this->exigirSinPapeletaViva($trabajador);
+        $campos = [
+            'trabajador_id' => $trabajador->id,
+            'motivo_id' => $motivo->id,
+            'sede_id' => $trabajador->sede_id,
+            'regimen' => $trabajador->regimen,
+            'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
+            'fin_turno_at' => $finTurno,
+            'estado' => $estadoInicial,
+            'jefe_inmediato_id' => $jefatura['jefeInmediatoId'],
+            'jefe_area_id' => $jefatura['jefeAreaId'],
+            'hora_retorno_estimado' => $datos['hora_retorno_estimado'] ?? null,
+            'justificacion' => $datos['justificacion'] ?? null,
+            'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
+            'autorizado_con_rrhh_fuera_horario' => $autorizaSistema,
+            'hora_salida_real' => $autorizaSistema ? now() : null,
+        ];
 
-            $campos = [
-                'trabajador_id' => $trabajador->id,
-                'motivo_id' => $motivo->id,
-                'sede_id' => $trabajador->sede_id,
-                'regimen' => $trabajador->regimen,
-                'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
-                'fin_turno_at' => $finTurno,
-                'estado' => $estadoInicial,
-                'jefe_inmediato_id' => $jefeInmediatoId,
-                'jefe_area_id' => $jefeAreaId,
-                'hora_retorno_estimado' => $datos['hora_retorno_estimado'] ?? null,
-                'justificacion' => $datos['justificacion'] ?? null,
-                'adjunto_inicial_path' => $datos['adjunto_inicial_path'] ?? null,
-                'autorizado_con_rrhh_fuera_horario' => $autorizaSistema,
-                'hora_salida_real' => $autorizaSistema ? now() : null,
-            ];
+        // No se manda 'no_aplica' a mano: se deja que la BD aplique
+        // su propio default (columna no nullable) y así ningún otro
+        // punto de creación de Papeleta puede volver a colar un
+        // null aquí por accidente. Solo el caso que de verdad
+        // necesita otro valor lo pisa explícitamente.
+        if ($autorizaSistema) {
+            $campos['revision_posthoc_estado'] = 'pendiente';
+        }
 
-            // No se manda 'no_aplica' a mano: se deja que la BD aplique
-            // su propio default (columna no nullable) y así ningún otro
-            // punto de creación de Papeleta puede volver a colar un
-            // null aquí por accidente. Solo el caso que de verdad
-            // necesita otro valor lo pisa explícitamente.
-            if ($autorizaSistema) {
-                $campos['revision_posthoc_estado'] = 'pendiente';
-            }
+        $papeleta = Papeleta::create($campos);
 
-            $papeleta = Papeleta::create($campos);
+        HistorialPapeleta::create([
+            'papeleta_id' => $papeleta->id,
+            'actor_id' => $trabajador->id,
+            'actor_tipo' => 'trabajador',
+            'estado_nuevo' => class_basename($papeleta->estado),
+            'motivo_nuevo_id' => $motivo->id,
+            'justificacion' => $datos['justificacion'] ?? null,
+        ]);
 
+        $this->registrarHistorialDeEscalamiento($papeleta, $jefatura, $autorizaSistema);
+
+        return $papeleta;
+    }
+
+    /**
+     * Historial explicativo del sistema cuando la papeleta no quedó en el
+     * flujo "normal" (PendienteJefe decidido por un jefe disponible).
+     *
+     * @param  array{directoARrhh: bool, jefeDisponible: bool, esJefeInmediatoDeLaUnidad: bool}  $jefatura
+     */
+    private function registrarHistorialDeEscalamiento(Papeleta $papeleta, array $jefatura, bool $autorizaSistema): void
+    {
+        if ($jefatura['directoARrhh']) {
             HistorialPapeleta::create([
                 'papeleta_id' => $papeleta->id,
-                'actor_id' => $trabajador->id,
-                'actor_tipo' => 'trabajador',
+                'actor_id' => null,
+                'actor_tipo' => 'sistema',
                 'estado_nuevo' => class_basename($papeleta->estado),
-                'motivo_nuevo_id' => $motivo->id,
-                'justificacion' => $datos['justificacion'] ?? null,
+                'justificacion' => 'Jefe de área: la papeleta se envía directo a RRHH.',
             ]);
 
-            if ($directoARrhh) {
-                HistorialPapeleta::create([
-                    'papeleta_id' => $papeleta->id,
-                    'actor_id' => null,
-                    'actor_tipo' => 'sistema',
-                    'estado_nuevo' => class_basename($papeleta->estado),
-                    'justificacion' => 'Jefe de área: la papeleta se envía directo a RRHH.',
-                ]);
-            } elseif ($esJefeInmediatoDeLaUnidad && ! $jefeDisponible) {
-                // Este historial explicativo solo aplica al caso que sí
-                // puede escalar (jefe inmediato enviando su propia
-                // papeleta). Un trabajador raso siempre queda en
-                // PendienteJefe y no necesita esta explicación.
-                //
-                // Única fuente de verdad: se le pregunta a la papeleta ya
-                // creada, sobre las columnas fotografiadas — el mismo
-                // método que usan ObservarRrhhAction y el resto del
-                // sistema. Ya no se recalcula la regla del tope del
-                // organigrama por segunda vez aquí.
-                $sinJefatura = $papeleta->sinJefatura();
+            return;
+        }
 
-                HistorialPapeleta::create([
-                    'papeleta_id' => $papeleta->id,
-                    'actor_id' => null,
-                    'actor_tipo' => 'sistema',
-                    'estado_nuevo' => class_basename($papeleta->estado),
-                    'justificacion' => $sinJefatura
-                        ? ($autorizaSistema
-                            ? 'Sin jefe superior en el organigrama y RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
-                            : 'Sin jefe superior en el organigrama: la papeleta se envía directo a RRHH.')
-                        : ($autorizaSistema
-                            ? 'Jefe inmediato fuera de su horario y RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
-                            : 'Jefe inmediato fuera de su horario: la papeleta se envía directo a RRHH.'),
-                ]);
-            }
+        if (! $jefatura['esJefeInmediatoDeLaUnidad'] || $jefatura['jefeDisponible']) {
+            // Este historial explicativo solo aplica al caso que sí
+            // puede escalar (jefe inmediato enviando su propia
+            // papeleta). Un trabajador raso siempre queda en
+            // PendienteJefe y no necesita esta explicación.
+            return;
+        }
 
-            return $papeleta;
-        });
+        // Única fuente de verdad: se le pregunta a la papeleta ya
+        // creada, sobre las columnas fotografiadas — el mismo
+        // método que usan ObservarRrhhAction y el resto del
+        // sistema. Ya no se recalcula la regla del tope del
+        // organigrama por segunda vez aquí.
+        $sinJefatura = $papeleta->sinJefatura();
 
-        // Fuera de la transacción: si algo falla en el envío (push caído,
-        // cola no disponible) nunca debe revertir la creación ya
-        // confirmada en BD.
+        HistorialPapeleta::create([
+            'papeleta_id' => $papeleta->id,
+            'actor_id' => null,
+            'actor_tipo' => 'sistema',
+            'estado_nuevo' => class_basename($papeleta->estado),
+            'justificacion' => $sinJefatura
+                ? ($autorizaSistema
+                    ? 'Sin jefe superior en el organigrama y RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
+                    : 'Sin jefe superior en el organigrama: la papeleta se envía directo a RRHH.')
+                : ($autorizaSistema
+                    ? 'Jefe inmediato fuera de su horario y RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
+                    : 'Jefe inmediato fuera de su horario: la papeleta se envía directo a RRHH.'),
+        ]);
+    }
+
+    private function notificarCreacion(Papeleta $papeleta, string $estadoInicial, bool $autorizaSistema): void
+    {
         match (true) {
             $autorizaSistema => (function () use ($papeleta) {
                 $this->notificar->puedeSalir($papeleta);
@@ -270,8 +354,6 @@ class CrearPapeletaAction
             $estadoInicial === PendienteRrhh::class => $this->notificar->pendienteDeRrhh($papeleta),
             default => $this->notificar->creada($papeleta),
         };
-
-        return $papeleta;
     }
 
     private function exigirSinPapeletaViva(User $trabajador): void

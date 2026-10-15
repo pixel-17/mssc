@@ -1,10 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Organigrama;
 
 use App\Actions\Organigrama\MoverTrabajadorAction;
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
-use App\Exceptions\UsuarioException;
+use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -31,6 +33,7 @@ use Livewire\Component;
  */
 class TrabajadorModal extends Component
 {
+    use ManejaExcepcionesDeUsuario;
     use RequiereAdmin;
 
     public bool $abierto = false;
@@ -109,7 +112,7 @@ class TrabajadorModal extends Component
             }
         }
 
-        try {
+        if (! $this->intentar(function () use ($mover, $actor, $t) {
             // Primero la unidad: es la que puede rechazarse por reglas de negocio.
             if ($this->unidadId !== null && (int) $this->unidadId !== (int) $t->unidad_organica_id) {
                 if ($t->unidad_organica_id === null) {
@@ -123,23 +126,19 @@ class TrabajadorModal extends Component
                 }
                 $t->refresh();
             }
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+        }, fn ($e) => $this->error = $e->getMessage())) {
             return;
         }
 
         $t->forceFill(['sede_id' => $this->sedeId])->save();
 
-        try {
+        if (! $this->intentar(function () use ($estado, $actor, $t) {
             if ($t->activo && ! $this->activo) {
                 $estado->desactivar($actor, $t);
             } elseif (! $t->activo && $this->activo) {
                 $estado->reactivar($actor, $t);
             }
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+        }, fn ($e) => $this->error = $e->getMessage())) {
             return;
         }
 

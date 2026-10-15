@@ -1,14 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\UnidadesOrganicas;
 
 use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
-use App\Exceptions\UsuarioException;
+use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
+use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
-use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -25,6 +27,7 @@ use Livewire\Component;
 #[Title('Unidad orgánica')]
 class UnidadOrganicaForm extends Component
 {
+    use ManejaExcepcionesDeUsuario;
     use RequiereAdmin;
 
     #[Locked]
@@ -82,17 +85,16 @@ class UnidadOrganicaForm extends Component
 
         $esNueva = $this->unidad === null;
 
-        try {
-            $guardar->ejecutar(auth()->user(), $this->unidad, [
+        if (! $this->intentar(
+            fn () => $guardar->ejecutar(auth()->user(), $this->unidad, [
                 'nombre' => $datos['nombre'],
                 'tipo' => $datos['tipo'],
                 'parent_id' => $datos['parentId'],
                 'jefe_id' => $datos['jefeId'],
                 'activo' => $datos['activo'],
-            ]);
-        } catch (UsuarioException $e) {
-            $this->addError('parentId', $e->getMessage());
-
+            ]),
+            fn ($e) => $this->addError('parentId', $e->getMessage()),
+        )) {
             return;
         }
 

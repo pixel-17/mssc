@@ -1,9 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Usuarios;
 
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
-use App\Exceptions\UsuarioException;
+use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\Sede;
 use App\Models\User;
@@ -24,6 +26,7 @@ use Livewire\Component;
  */
 class BajaConReemplazo extends Component
 {
+    use ManejaExcepcionesDeUsuario;
     use RequiereAdmin;
 
     public bool $abierto = false;
@@ -97,11 +100,10 @@ class BajaConReemplazo extends Component
             }
         }
 
-        try {
-            $estado->desactivar(auth()->user(), $usuario, $reemplazos);
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+        if (! $this->intentar(
+            fn () => $estado->desactivar(auth()->user(), $usuario, $reemplazos),
+            fn ($e) => $this->error = $e->getMessage(),
+        )) {
             return;
         }
 

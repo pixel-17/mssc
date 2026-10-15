@@ -6,6 +6,27 @@ on:
   pull_request:
 
 jobs:
+  calidad:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, pdo_mysql, bcmath, intl
+          coverage: none
+
+      - name: Dependencias PHP
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Estilo de código (Pint)
+        run: vendor/bin/pint --test
+
+      - name: Análisis estático (PHPStan / Larastan)
+        run: vendor/bin/phpstan analyse --error-format=github --memory-limit=1G
+
   phpunit-mysql:
     runs-on: ubuntu-latest
 

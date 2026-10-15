@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Usuarios;
 
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
-use App\Exceptions\UsuarioException;
+use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\On;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -26,6 +29,7 @@ use Spatie\Permission\Models\Role;
 #[Title('Usuarios')]
 class UsuarioAdminIndex extends Component
 {
+    use ManejaExcepcionesDeUsuario;
     use RequiereAdmin;
     use WithPagination;
 
@@ -75,31 +79,27 @@ class UsuarioAdminIndex extends Component
             return;
         }
 
-        try {
-            $estado->desactivar(auth()->user(), $usuario);
-        } catch (UsuarioException $e) {
-            session()->now('error', $e->getMessage());
-
+        if (! $this->intentar(
+            fn () => $estado->desactivar(auth()->user(), $usuario),
+            fn ($e) => session()->now('error', $e->getMessage()),
+        )) {
             return;
         }
 
         session()->now('mensaje', 'Usuario desactivado: ya no podrá iniciar sesión.');
     }
 
-    #[\Livewire\Attributes\On('usuarios-actualizado')]
-    public function refrescar(): void
-    {
-    }
+    #[On('usuarios-actualizado')]
+    public function refrescar(): void {}
 
     public function reactivar(User $usuario, CambiarEstadoUsuarioAction $estado): void
     {
         $this->autorizarAdmin();
 
-        try {
-            $estado->reactivar(auth()->user(), $usuario);
-        } catch (UsuarioException $e) {
-            session()->now('error', $e->getMessage());
-
+        if (! $this->intentar(
+            fn () => $estado->reactivar(auth()->user(), $usuario),
+            fn ($e) => session()->now('error', $e->getMessage()),
+        )) {
             return;
         }
 

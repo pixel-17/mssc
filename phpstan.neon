@@ -1,0 +1,25 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+
+    # Nivel de partida conservador: sube el número a medida que se corrigen
+    # los hallazgos existentes (9 es el máximo). Empezar alto en un proyecto
+    # sin análisis estático previo genera cientos de falsos positivos de
+    # "warming up" que desalientan adoptarlo; mejor subir de a poco.
+    level: 5
+
+    excludePaths:
+        - app/Console/Kernel.php
+
+    # Mientras se migra el código existente, los errores ya conocidos se
+    # pueden congelar aquí (`vendor/bin/phpstan analyse --generate-baseline`)
+    # para que el CI solo falle con regresiones nuevas.
+    # baseline.neon no existe todavía: se genera la primera vez que se
+    # ejecute el análisis con el código real.
+    # baseline:
+    #     - phpstan-baseline.neon
+
+    checkMissingIterableValueType: false
