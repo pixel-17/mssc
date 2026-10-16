@@ -44,6 +44,13 @@ class TrabajadorIndex extends Component
 
     public function updatedVerTodas(): void
     {
+        // El buscador solo se muestra en "Todas mis papeletas"; si el
+        // trabajador vuelve a "Mi turno" se limpia para que no quede un
+        // filtro activo con el campo oculto.
+        if (! $this->verTodas) {
+            $this->buscar = '';
+        }
+
         $this->resetPage();
     }
 

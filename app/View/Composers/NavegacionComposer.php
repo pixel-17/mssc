@@ -143,7 +143,9 @@ class NavegacionComposer
             $personas[] = ['label' => 'Trabajadores', 'route' => route('usuarios.index'), 'active' => request()->routeIs('usuarios.*'), 'icon' => 'users'];
         }
 
-        if ($esAdmin || $usuario->esJefeDeArea()) {
+        // Antes solo admin / Jefe de Área: el Jefe Inmediato "puro" también
+        // puede consultar (solo lectura) el organigrama de su propia unidad.
+        if ($esAdmin || $esJefe) {
             $personas[] = ['label' => 'Organigrama', 'route' => route('organigrama.index'), 'active' => request()->routeIs('organigrama.*'), 'icon' => 'share'];
         }
 

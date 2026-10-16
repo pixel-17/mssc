@@ -2,9 +2,12 @@
     <div class="py-8">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-10">
 
-            <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
-                {{ __('Dashboard') }}
-            </h2>
+            <div>
+                <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
+                    {{ __('Dashboard') }}
+                </h2>
+                <p class="text-sm text-gray-500 dark:text-tinta-100/60 mt-1">Hola, {{ $nombre }}.</p>
+            </div>
 
             {{-- ============================= ADMIN ============================= --}}
             @if ($esAdmin)
@@ -183,13 +186,23 @@
                 <section class="space-y-4 animate-fade-in-up">
                     <div class="flex items-center justify-between flex-wrap gap-2">
                         <h3 class="text-lg font-bold text-tinta-950 dark:text-white">Tu equipo</h3>
-                        <a href="{{ route('jefe.papeletas.index') }}" class="btn-primary text-xs">
-                            Ir a la bandeja de Jefe
-                        </a>
+                        <div class="flex flex-wrap items-center gap-2">
+                            @if ($esJefeInmediatoPuro)
+                                <a href="{{ route('organigrama.index') }}" class="btn-secondary text-xs">
+                                    Ver mi organigrama
+                                </a>
+                            @endif
+                            <a href="{{ route('usuarios.index') }}" class="btn-secondary text-xs">
+                                Mis trabajadores
+                            </a>
+                            <a href="{{ route('jefe.papeletas.index') }}" class="btn-primary text-xs">
+                                Ir a la bandeja de Jefe
+                            </a>
+                        </div>
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                        <x-stat-card label="Trabajadores a tu cargo" :value="$jefe['equipo_total']" href="{{ route('usuarios.index') }}" tono="tinta">
+                        <x-stat-card label="Trabajadores a tu cargo" :value="$jefe['equipo_total']" href="{{ route('usuarios.index') }}">
                             <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg></x-slot:icon>
                         </x-stat-card>
 
@@ -203,21 +216,18 @@
                         </x-stat-card>
 
                         <x-stat-card
-                            label="En curso"
-                            :value="$jefe['en_curso']"
-                            href="{{ route('jefe.papeletas.index') }}"
-                            tono="azul"
-                        >
-                            <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.073a2.25 2.25 0 01-1.632 2.163l-1.32.377a9.76 9.76 0 01-5.396 0l-1.32-.377a2.25 2.25 0 01-1.632-2.163V14.15M3.75 8.511V6.75A2.25 2.25 0 016 4.5h12a2.25 2.25 0 012.25 2.25v1.76M3.75 8.511a60.147 60.147 0 0116.5 0M15 4.5V3.75A1.5 1.5 0 0013.5 2.25h-3A1.5 1.5 0 009 3.75V4.5" /></svg></x-slot:icon>
-                        </x-stat-card>
-
-                        <x-stat-card
                             label="Observaciones RRHH por reconocer"
                             :value="$jefe['observaciones_rrhh']"
                             href="{{ route('jefe.papeletas.index') }}"
                             tono="red"
+                        />
+
+                        <x-stat-card
+                            label="En curso"
+                            :value="$jefe['en_curso']"
+                            href="{{ route('jefe.papeletas.index') }}"
                         >
-                            <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" /></svg></x-slot:icon>
+                            <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M15.75 3v1.5M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg></x-slot:icon>
                         </x-stat-card>
 
                         <x-stat-card
@@ -225,35 +235,14 @@
                             :value="$jefe['sustentos_por_revisar']"
                             href="{{ route('jefe.papeletas.index') }}"
                             tono="purple"
-                        >
-                            <x-slot:icon><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m3 4.5H6a2.25 2.25 0 01-2.25-2.25V6.75A2.25 2.25 0 016 4.5h2.25a2.25 2.25 0 014.5 0H15a2.25 2.25 0 012.25 2.25v12A2.25 2.25 0 0115 21z" /></svg></x-slot:icon>
-                        </x-stat-card>
-                    </div>
+                        />
 
-                    {{-- Tasa de aprobación: antes era una stat-card más (un número suelto
-                    entre otros); como visual de progreso se lee de un vistazo y le da al
-                    bloque de Jefe el mismo peso visual que los paneles de Admin/RRHH. --}}
-                    <div class="glass-card p-5">
-                        <div class="flex items-center justify-between gap-3 mb-3">
-                            <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Tasa de aprobación</h4>
-                            <span class="text-xs text-gray-500 dark:text-tinta-100/50">Últimos 30 días</span>
-                        </div>
-
-                        @if ($jefe['tasa_aprobacion_periodo'] === null)
-                            <p class="text-sm text-gray-500 dark:text-tinta-100/50">Sin papeletas decididas en este periodo.</p>
-                        @else
-                            @php
-                                $tasa = $jefe['tasa_aprobacion_periodo'];
-                                $colorBarra = $tasa >= 80 ? 'from-emerald-400 to-emerald-600' : ($tasa >= 50 ? 'from-amber-400 to-amber-600' : 'from-red-400 to-red-600');
-                            @endphp
-                            <div class="flex items-center gap-4">
-                                <span class="text-3xl font-bold text-tinta-950 dark:text-white shrink-0">{{ $tasa }}%</span>
-                                <div class="h-2.5 w-full rounded-full bg-tinta-100 dark:bg-white/10 overflow-hidden">
-                                    <div class="h-full rounded-full bg-gradient-to-r {{ $colorBarra }}" style="width: {{ max(4, $tasa) }}%"></div>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gray-500 dark:text-tinta-100/50 mt-2">De las papeletas de tu equipo decididas en el periodo, el porcentaje que no terminó rechazada.</p>
-                        @endif
+                        <x-stat-card
+                            label="Tasa de aprobación"
+                            :value="$jefe['tasa_aprobacion_periodo'] !== null ? $jefe['tasa_aprobacion_periodo'].'%' : null"
+                            hint="Últimos 30 días"
+                            tono="emerald"
+                        />
                     </div>
                 </section>
             @endif

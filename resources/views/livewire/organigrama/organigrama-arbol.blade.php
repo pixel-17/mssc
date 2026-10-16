@@ -39,18 +39,22 @@
     </style>
 
     {{-- Botón de modo edición: fijo al borde derecho de la pantalla,
-         siempre visible aunque se haga scroll por el árbol. --}}
-    <button type="button"
-            wire:click="alternarEdicion"
-            aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
-            @class([
-                'fixed right-4 top-1/2 z-20 inline-flex -translate-y-1/2 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs shadow-glass-lg sm:right-6',
-                'btn-primary' => $modoEdicion,
-                'btn-secondary' => ! $modoEdicion,
-            ])>
-        <x-icon name="pencil" class="size-4" />
-        {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
-    </button>
+         siempre visible aunque se haga scroll por el árbol. Solo para
+         quien puede editar (admin / Jefe de Área): un Jefe Inmediato
+         "puro" consulta su organigrama en solo lectura. --}}
+    @if ($puedeEditar)
+        <button type="button"
+                wire:click="alternarEdicion"
+                aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
+                @class([
+                    'fixed right-4 top-1/2 z-20 inline-flex -translate-y-1/2 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs shadow-glass-lg sm:right-6',
+                    'btn-primary' => $modoEdicion,
+                    'btn-secondary' => ! $modoEdicion,
+                ])>
+            <x-icon name="pencil" class="size-4" />
+            {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
+        </button>
+    @endif
 
     <x-admin.encabezado titulo="Organigrama del área">
         <div class="flex flex-wrap items-center justify-end gap-2">

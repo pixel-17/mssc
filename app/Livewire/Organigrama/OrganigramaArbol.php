@@ -80,7 +80,7 @@ class OrganigramaArbol extends Component
 
     public function mount(): void
     {
-        $this->autorizar();
+        $this->autorizarLectura();
     }
 
     public function updatedSede(): void
@@ -126,6 +126,7 @@ class OrganigramaArbol extends Component
         }
     }
 
+    /** Puede EDITAR (arrastrar, mover, activar modo edición): admin o Jefe de Área. */
     private function autorizar(): User
     {
         /** @var User|null $usuario */
@@ -139,9 +140,36 @@ class OrganigramaArbol extends Component
         return $usuario;
     }
 
+    /**
+     * Puede VER el organigrama (de solo lectura): admin, Jefe de Área o
+     * Jefe Inmediato "puro" consultando la estructura de su propia unidad
+     * (antes solo entraba el Jefe de Área; el Jefe Inmediato de una unidad
+     * hoja recibía 403). esJefeDeEquipo() cubre ambos casos.
+     */
+    private function autorizarLectura(): User
+    {
+        /** @var User|null $usuario */
+        $usuario = auth()->user();
+
+        abort_unless(
+            $usuario && ($usuario->hasRole('admin') || $usuario->esJefeDeEquipo()),
+            403,
+        );
+
+        return $usuario;
+    }
+
     public function render(): View
     {
-        $usuario = $this->autorizar();
+        $usuario = $this->autorizarLectura();
+        $puedeEditar = $usuario->hasRole('admin') || $usuario->esJefeDeArea();
+
+        // El Jefe Inmediato "puro" solo consulta: si por alguna razón quedó
+        // con modoEdicion activo (no debería, el botón ni se le muestra),
+        // se fuerza a false para no exponer arrastre/ediciones sin permiso.
+        if (! $puedeEditar) {
+            $this->modoEdicion = false;
+        }
 
         $armador = new ArmadorOrganigrama($this->buscar, $this->sede, $this->verInactivos);
         ['raices' => $raices, 'stats' => $stats, 'conteoSedes' => $conteoSedes, 'unidades' => $unidades, 'enAlcance' => $enAlcance] = $armador->armar($usuario);
@@ -152,6 +180,7 @@ class OrganigramaArbol extends Component
             'raices' => $raices,
             'stats' => $stats,
             'esAdmin' => $usuario->hasRole('admin'),
+            'puedeEditar' => $puedeEditar,
             'sedes' => Sede::orderBy('nombre')->get(['id', 'nombre']),
             'conteoSedes' => $conteoSedes,
             'ficha' => $ficha,

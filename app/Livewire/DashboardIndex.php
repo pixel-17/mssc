@@ -47,9 +47,14 @@ class DashboardIndex extends Component
         $esJefe = $user->can('crearTrabajadorPropio', User::class);
 
         return view('livewire.dashboard', [
+            'nombre' => $user->name,
             'esAdmin' => $esAdmin,
             'esRrhh' => $esRrhh,
             'esJefe' => $esJefe,
+            // Jefe Inmediato "puro" (sin unidades con sub-unidades a cargo):
+            // la sección "Tu equipo" le suma un acceso directo al organigrama
+            // de su propia unidad, que ahora también puede consultar.
+            'esJefeInmediatoPuro' => $esJefe && ! $user->esJefeDeArea(),
             'admin' => $esAdmin ? $metricas->paraAdmin() : null,
             'rrhh' => $esRrhh ? $metricas->paraRrhh($user) : null,
             'jefe' => $esJefe ? $metricas->paraJefe($user) : null,

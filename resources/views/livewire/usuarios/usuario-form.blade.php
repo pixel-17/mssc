@@ -208,8 +208,8 @@
                 </div>
             @endif
 
-            {{-- Activo: admin siempre; jefe de área solo al editar --}}
-            @if ($esAdmin || ($esArea && $usuario))
+            {{-- Activo: admin siempre; jefe de área y jefe inmediato solo al editar --}}
+            @if ($esAdmin || (($esArea || $esEquipo) && $usuario))
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <x-admin.campo-checkbox
                         for="activo"

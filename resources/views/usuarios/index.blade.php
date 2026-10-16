@@ -48,21 +48,19 @@
                                     <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">DNI</th>
                                     <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Régimen</th>
                                     <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Unidad</th>
-                                    <th scope="col" class="px-4 py-2"></th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-tinta-100/50 uppercase">Estado</th>
                                     <th scope="col" class="px-4 py-2"></th>
                                 </tr>
                             </thead>
                             <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-white/10">
                                 @foreach ($usuarios as $usuario)
-                                    <tr>
+                                    <tr @class(['opacity-60 bg-gray-50 dark:bg-white/[0.03]' => ! $usuario->activo])>
                                         <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $usuario->nombre_completo }}</td>
                                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $usuario->dni }}</td>
                                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $usuario->regimen }}</td>
                                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $usuario->unidadOrganica?->nombre ?? '—' }}</td>
-                                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
-                                            <a href="{{ route('reportes.trabajador-historial', ['trabajadorId' => $usuario->id]) }}" class="text-tinta-600 hover:text-tinta-800 font-medium" title="Ver su historial de papeletas">Ficha</a>
-                                        </td>
-                                        <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
+                                        <td class="px-4 py-3"><x-admin.estado :activo="$usuario->activo" etiquetaNo="Desactivado" /></td>
+                                        <td class="px-4 py-3 text-sm text-right">
                                             @can('editar', $usuario)
                                                 <a href="{{ route('usuarios.editar', $usuario) }}" class="text-tinta-600 hover:text-tinta-800 font-medium">Editar</a>
                                             @endcan

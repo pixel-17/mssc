@@ -376,6 +376,12 @@ class UsuarioForm extends Component
             }
         }
 
+        // Jefe Inmediato "puro": puede activar/desactivar a sus propios
+        // trabajadores al editarlos (antes solo lo podían admin y área).
+        if ($this->esEquipo() && ! $creando) {
+            $reglas['activo'] = ['boolean'];
+        }
+
         if ($this->admiteConfiguracionTurno() && $this->turno !== '') {
             $reglas['turno'] = ['required', 'in:'.implode(',', ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen])))];
             $reglas['fechaAncla'] = ['required', 'date'];
@@ -483,7 +489,11 @@ class UsuarioForm extends Component
     }
 
     /**
-     * Jefe Inmediato editando a uno de los suyos: solo nombre, apellido y correo.
+     * Jefe Inmediato editando a uno de los suyos: nombre, apellido, correo
+     * y (desde ahora) activo/desactivado, con las mismas guardias que ya
+     * aplican a admin y Jefe de Área (no desactivarse a sí mismo —no aplica
+     * aquí—, no al único RR. HH. activo, resolver jefaturas pendientes si
+     * encabezara alguna unidad).
      *
      * @param  array<string, mixed>  $datos
      */
@@ -491,11 +501,45 @@ class UsuarioForm extends Component
     {
         abort_unless(Auth::user()->can('editar', $this->usuario), 403);
 
-        app(EditarUsuarioAction::class)->ejecutar($this->usuario, [
-            'name' => $datos['name'],
-            'apellido' => $datos['apellido'],
-            'email' => $datos['email'],
-        ], false);
+        $activo = (bool) ($datos['activo'] ?? $this->usuario->activo);
+
+        if ($this->usuario->activo && ! $activo) {
+            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+
+            if ($motivo !== null) {
+                $this->addError('activo', $motivo);
+
+                return;
+            }
+
+            $cargo = app(CambiarEstadoUsuarioAction::class)->jefaturasPorResolver($this->usuario);
+
+            if ($cargo->isNotEmpty()) {
+                $this->addError('activo', 'Tiene personas a cargo: desactívalo desde Usuarios para elegir su reemplazo.');
+
+                return;
+            }
+        }
+
+        $debeRetirarTurno = $this->usuario->activo && ! $activo;
+
+        DB::transaction(function () use ($datos, $activo, $debeRetirarTurno) {
+            app(EditarUsuarioAction::class)->ejecutar($this->usuario, [
+                'name' => $datos['name'],
+                'apellido' => $datos['apellido'],
+                'email' => $datos['email'],
+            ], false);
+
+            $this->usuario->update(['activo' => $activo]);
+
+            if (! $activo) {
+                $this->usuario->tokens()->delete();
+            }
+
+            if ($debeRetirarTurno) {
+                app(GeneradorTurnoMensualService::class)->retirarTurno($this->usuario);
+            }
+        });
 
         session()->flash('mensaje', "Usuario {$this->usuario->nombre_completo} actualizado.");
 
