@@ -288,18 +288,24 @@
         {{-- Retorno registrado --}}
         @if ($papeleta->retorno)
             <div class="glass-card p-5">
-                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Retorno registrado</h3>
+                <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">
+                    {{ $papeleta->retorno->generado_por_abandono ? 'Hora de fin (sin retorno marcado)' : 'Retorno registrado' }}
+                </h3>
                 <div class="space-y-2 text-sm">
                     <div class="flex items-center justify-between">
-                        <span class="text-gray-500 dark:text-tinta-100/50">Hora del servidor</span>
+                        <span class="text-gray-500 dark:text-tinta-100/50">{{ $papeleta->retorno->generado_por_abandono ? 'Hora de fin de turno/día' : 'Hora del servidor' }}</span>
                         <span class="font-medium text-tinta-950 dark:text-white">{{ $papeleta->retorno->hora_servidor->format('d/m/Y H:i') }}</span>
                     </div>
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</span>
-                        <span class="font-medium text-tinta-950 dark:text-white">
-                            <x-radio-sede :dentro="$papeleta->retorno->dentro_de_radio" />
-                        </span>
-                    </div>
+                    @if ($papeleta->retorno->generado_por_abandono)
+                        <p class="text-amber-700 dark:text-amber-400">No marcaste tu retorno: esta hora es la de fin de tu turno/día, registrada automáticamente solo para calcular el tiempo que estuviste afuera.</p>
+                    @else
+                        <div class="flex items-center justify-between">
+                            <span class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</span>
+                            <span class="font-medium text-tinta-950 dark:text-white">
+                                <x-radio-sede :dentro="$papeleta->retorno->dentro_de_radio" />
+                            </span>
+                        </div>
+                    @endif
                     @if ($papeleta->retorno->marcado_manual)
                         <div class="pt-2 border-t border-tinta-100/70 dark:border-white/10">
                             <p class="text-gray-500 dark:text-tinta-100/50">Marcado manual por falla de conectividad</p>

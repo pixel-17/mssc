@@ -79,18 +79,27 @@
 
 @if ($papeleta->retorno)
     <div class="glass-card p-6">
-        <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Retorno registrado</h3>
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">
+            {{ $papeleta->retorno->generado_por_abandono ? 'Hora de fin (sin retorno marcado)' : 'Retorno registrado' }}
+        </h3>
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
-                <dt class="text-gray-500 dark:text-tinta-100/50">Hora del servidor</dt>
+                <dt class="text-gray-500 dark:text-tinta-100/50">{{ $papeleta->retorno->generado_por_abandono ? 'Hora de fin de turno/día' : 'Hora del servidor' }}</dt>
                 <dd class="text-gray-900 dark:text-white">{{ $papeleta->retorno->hora_servidor->format('d/m/Y H:i') }}</dd>
             </div>
-            <div>
-                <dt class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</dt>
-                <dd class="text-gray-900 dark:text-white">
-                    <x-radio-sede :dentro="$papeleta->retorno->dentro_de_radio" />
-                </dd>
-            </div>
+            @if ($papeleta->retorno->generado_por_abandono)
+                <div class="sm:col-span-2">
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Nota</dt>
+                    <dd class="text-amber-700 dark:text-amber-400">El trabajador no marcó su retorno (abandono): esta hora es la del fin de su turno/día, registrada automáticamente solo para calcular cuánto tiempo estuvo afuera.</dd>
+                </div>
+            @else
+                <div>
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Dentro de radio de sede</dt>
+                    <dd class="text-gray-900 dark:text-white">
+                        <x-radio-sede :dentro="$papeleta->retorno->dentro_de_radio" />
+                    </dd>
+                </div>
+            @endif
             @if ($papeleta->retorno->marcado_manual)
                 <div class="sm:col-span-2">
                     <dt class="text-gray-500 dark:text-tinta-100/50">Marcado manual por falla de conectividad</dt>

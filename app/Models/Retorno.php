@@ -22,6 +22,7 @@ class Retorno extends Model
         'marcado_manual',
         'marcado_manual_por_id',
         'justificacion_manual',
+        'generado_por_abandono',
     ];
 
     protected function casts(): array
@@ -32,6 +33,7 @@ class Retorno extends Model
             'dentro_de_radio' => 'boolean',
             'hora_servidor' => 'datetime',
             'marcado_manual' => 'boolean',
+            'generado_por_abandono' => 'boolean',
         ];
     }
 

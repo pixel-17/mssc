@@ -181,7 +181,9 @@
                         @csrf
                         @if ($papeleta->retorno)
                             <div>
-                                <label for="corregir-hora" class="block text-xs font-medium text-gray-600 mb-1">Hora de retorno (actual: {{ $papeleta->retorno->hora_servidor?->format('d/m/Y H:i') }})</label>
+                                <label for="corregir-hora" class="block text-xs font-medium text-gray-600 mb-1">
+                                    {{ $papeleta->retorno->generado_por_abandono ? 'Hora de fin de turno/día (sin retorno marcado — actual' : 'Hora de retorno (actual' }}: {{ $papeleta->retorno->hora_servidor?->format('d/m/Y H:i') }})
+                                </label>
                                 <input id="corregir-hora" type="datetime-local" name="hora_retorno" value="{{ old('hora_retorno') }}" class="{{ $campo }}">
                             </div>
                         @endif

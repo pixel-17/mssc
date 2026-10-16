@@ -32,6 +32,21 @@
             @endforeach
         </div>
 
+        {{-- Leyenda de filas: distingue de un vistazo quién es trabajador propio
+        (sombreado) de quién es jefe de otra sub-unidad mostrado como referencia. --}}
+        @if ($esJefeDeArea)
+            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+                <span class="inline-flex items-center gap-1.5">
+                    <span class="size-3 rounded-sm bg-tinta-50 border border-tinta-200 dark:bg-tinta-500/10 dark:border-tinta-500/30"></span>
+                    Tu equipo directo
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                    <span class="size-3 rounded-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700"></span>
+                    Jefes de otras sub-unidades (referencia)
+                </span>
+            </div>
+        @endif
+
         {{-- wire:key con $version: al cambiar de mes o guardar, Alpine reinicia la grilla pintable desde la BD. --}}
         <div
             wire:key="calendario-equipo-{{ $version }}"
@@ -186,8 +201,13 @@
                         @click.self="celda($event, false)"
                     >
                         @forelse ($trabajadores as $trabajador)
-                            <tr wire:key="fila-{{ $trabajador->id }}">
-                                <td class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900 whitespace-nowrap align-middle">
+                            @php($esOtroJefe = in_array($trabajador->id, $idsJefes, true))
+                            <tr wire:key="fila-{{ $trabajador->id }}" @class(['bg-tinta-50/70 dark:bg-tinta-500/[0.06]' => ! $esOtroJefe])>
+                                <td @class([
+                                    'px-3 py-2 sticky left-0 whitespace-nowrap align-middle',
+                                    'bg-tinta-50 dark:bg-tinta-950' => ! $esOtroJefe,
+                                    'bg-white dark:bg-gray-900' => $esOtroJefe,
+                                ])>
                                     @if (in_array($trabajador->id, $soloLectura, true))
                                         <span class="text-tinta-800 dark:text-tinta-200">{{ $trabajador->nombre_completo }}</span>
                                     @else

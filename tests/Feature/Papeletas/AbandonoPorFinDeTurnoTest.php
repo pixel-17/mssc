@@ -86,6 +86,69 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->assertNull($papeleta->regularizacion_fecha_limite);
     }
 
+    /**
+     * El estado queda "finalizada" como siempre, pero igual se registra la
+     * hora de fin (la del turno, 06:00, no la del cron corriendo a 06:01)
+     * para que se pueda calcular cuánto tiempo estuvo afuera.
+     */
+    public function test_abandono_finalizado_registra_hora_de_fin_de_turno_como_retorno(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso();
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(Finalizada::class), 'el estado sigue mostrando finalizada');
+        $this->assertNotNull($papeleta->retorno);
+        $this->assertTrue($papeleta->retorno->generado_por_abandono);
+        $this->assertTrue($papeleta->retorno->hora_servidor->equalTo(Carbon::parse('2026-09-22 06:00:00')), 'usa la hora del fin de turno, no la del cron');
+
+        $minutos = \App\Support\Minutos::entre($papeleta->hora_salida_real, $papeleta->retorno->hora_servidor);
+        $this->assertSame(6 * 60 + 30, $minutos, 'ahora sí se puede calcular cuánto tiempo estuvo afuera (23:30 -> 06:00 = 6h30)');
+    }
+
+    /**
+     * La hora de fin se registra igual aunque el abandono no termine en
+     * Finalizada directo (Cerrada o EnJustificacion): es el mismo instante
+     * de "turno terminado", no depende de a dónde vaya el estado después.
+     */
+    public function test_abandono_de_comision_tambien_registra_hora_de_fin(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('COMISION');
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(Cerrada::class));
+        $this->assertNotNull($papeleta->retorno);
+        $this->assertTrue($papeleta->retorno->generado_por_abandono);
+        $this->assertTrue($papeleta->retorno->hora_servidor->equalTo(Carbon::parse('2026-09-22 06:00:00')));
+    }
+
+    public function test_abandono_de_salud_registra_hora_de_fin_desde_que_queda_en_justificacion(): void
+    {
+        $papeleta = $this->papeletaNocheEnCurso('SALUD');
+
+        $this->ir('2026-09-22 06:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(EnJustificacion::class));
+        $this->assertNotNull($papeleta->retorno, 'la hora de fin ya queda marcada desde EnJustificacion');
+        $this->assertTrue($papeleta->retorno->generado_por_abandono);
+        $this->assertTrue($papeleta->retorno->hora_servidor->equalTo(Carbon::parse('2026-09-22 06:00:00')));
+
+        $this->ir('2026-09-30 12:00:00');
+        $this->artisan('papeletas:procesar-vencimiento-sustentos')->assertSuccessful();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(Finalizada::class));
+        // No se pisa ni se duplica: sigue siendo el mismo registro del fin de turno.
+        $this->assertTrue($papeleta->retorno->hora_servidor->equalTo(Carbon::parse('2026-09-22 06:00:00')));
+    }
+
     public function test_noche_con_retorno_registrado_no_es_abandono_al_terminar_el_turno(): void
     {
         $papeleta = $this->papeletaNocheEnCurso();

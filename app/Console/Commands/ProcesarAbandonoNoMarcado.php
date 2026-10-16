@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
+use App\Models\Retorno;
 use App\Services\DeterminadorFinDeTurno;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
@@ -29,6 +30,15 @@ use Throwable;
  *
  * Solo el sistema marca abandono: ni el jefe ni RRHH pueden hacerlo a mano.
  * No toca papeletas con retorno ya registrado.
+ *
+ * Aunque no hubo marcación real, se crea igual un Retorno con
+ * hora_servidor = fin_turno_at (marcado generado_por_abandono = true):
+ * es la hora en que terminó su turno, y es la única fuente de verdad que
+ * usan HistorialTrabajadorService / ReporteHorasAcumuladasService para
+ * calcular cuánto tiempo estuvo afuera. Sin esto esas papeletas quedaban
+ * sin horas calculables (whereHas('retorno') las excluía siempre). El
+ * estado sigue siendo el que decida `consecuencia` más abajo: este
+ * registro no cambia nada de la máquina de estados.
  */
 class ProcesarAbandonoNoMarcado extends Command
 {
@@ -62,6 +72,18 @@ class ProcesarAbandonoNoMarcado extends Command
                             }
 
                             $estadoAnterior = class_basename($actual->estado);
+
+                            // Hora de fin para los cálculos de horas afuera: la del fin
+                            // de turno/día, no "ahora" (el cron puede correr minutos
+                            // después). whereDoesntHave('retorno') del query de arriba ya
+                            // lo filtra, pero se revalida bajo lock por si acaso.
+                            if (! $actual->retorno) {
+                                Retorno::create([
+                                    'papeleta_id' => $actual->id,
+                                    'hora_servidor' => $actual->fin_turno_at ?? now(),
+                                    'generado_por_abandono' => true,
+                                ]);
+                            }
 
                             $consecuencia = $actual->motivo->consecuenciaAlTerminar();
 
