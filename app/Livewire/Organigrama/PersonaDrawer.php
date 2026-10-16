@@ -1,12 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Organigrama;
 
 use App\Actions\Organigrama\MoverTrabajadorAction;
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
 use App\Actions\Usuario\CrearUsuarioAction;
 use App\Actions\Usuario\EditarUsuarioAction;
-use App\Exceptions\UsuarioException;
+use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -20,7 +22,8 @@ use Livewire\Component;
 
 /**
  * Alta y edición de una persona DENTRO del organigrama, en un solo panel
- * lateral para admin y jefe de área.
+ * lateral para admin y jefe de área (antes: TrabajadorModal solo-admin +
+ * dos formularios de página distintos: usuarios-admin y usuarios).
  *
  * Se abre con `org-persona-abrir`:
  *  - {id}                  → editar a esa persona.
@@ -45,6 +48,8 @@ use Livewire\Component;
  */
 class PersonaDrawer extends Component
 {
+    use ManejaExcepcionesDeUsuario;
+
     public bool $abierto = false;
 
     /** null = alta. */
@@ -169,7 +174,9 @@ class PersonaDrawer extends Component
             return;
         }
 
-        try {
+        $nuevo = null;
+
+        if (! $this->intentar(function () use ($actor, &$nuevo) {
             $nuevo = app(CrearUsuarioAction::class)->ejecutar($actor, [
                 'name' => $this->name,
                 'apellido' => $this->apellido,
@@ -184,9 +191,7 @@ class PersonaDrawer extends Component
                 'dias_trabajo' => null,
                 'dias_descanso' => null,
             ], true);
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+        }, fn ($e) => $this->error = $e->getMessage())) {
             return;
         }
 
@@ -260,7 +265,7 @@ class PersonaDrawer extends Component
             }
         }
 
-        try {
+        if (! $this->intentar(function () use ($actor, $persona, $cambiaUnidad, $esAdmin, $activo) {
             // Primero la unidad: es la que puede rechazarse por reglas de negocio.
             if ($cambiaUnidad) {
                 $mover = app(MoverTrabajadorAction::class);
@@ -298,9 +303,7 @@ class PersonaDrawer extends Component
             } elseif (! $persona->activo && $activo) {
                 $estado->reactivar($actor, $persona);
             }
-        } catch (UsuarioException $e) {
-            $this->error = $e->getMessage();
-
+        }, fn ($e) => $this->error = $e->getMessage())) {
             return;
         }
 

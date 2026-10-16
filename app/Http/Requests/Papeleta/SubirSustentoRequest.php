@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Papeleta;
 
+use App\Models\Sustento;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -16,7 +17,11 @@ class SubirSustentoRequest extends FormRequest
     {
         $sustento = $this->route('sustento');
 
-        return $sustento && $sustento->papeleta->trabajador_id === $this->user()->id;
+        if (! $sustento instanceof Sustento) {
+            return false;
+        }
+
+        return $sustento->papeleta->trabajador_id === $this->user()->id;
     }
 
     public function rules(): array

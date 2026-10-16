@@ -141,7 +141,8 @@ class Papeleta extends Model
      * transacción que ya tiene la fila bloqueada (lockForUpdate).
      *
      * @param  class-string<PapeletaState>  $destino
-     * @param  \Closure(self): void|null  $cambios  Columnas extra a fijar antes de guardar.
+     * @param  \Closure(self): void|null  $cambios  Columnas extra a fijar antes de guardar (en la papeleta).
+     * @param  array{motivo_anterior_id?: int|null, motivo_nuevo_id?: int|null, metadata?: array<string, mixed>|null}|null  $camposHistorial  Columnas propias de HistorialPapeleta (no de la papeleta), p. ej. cuando la transición cambia de motivo.
      */
     public function transicionarConHistorial(
         string $destino,
@@ -149,6 +150,7 @@ class Papeleta extends Model
         string $actorTipo,
         ?string $justificacion = null,
         ?\Closure $cambios = null,
+        ?array $camposHistorial = null,
     ): HistorialPapeleta {
         $estadoAnterior = class_basename($this->estado);
 
@@ -167,6 +169,9 @@ class Papeleta extends Model
             'estado_anterior' => $estadoAnterior,
             'estado_nuevo' => class_basename($this->estado),
             'justificacion' => $justificacion,
+            'motivo_anterior_id' => $camposHistorial['motivo_anterior_id'] ?? null,
+            'motivo_nuevo_id' => $camposHistorial['motivo_nuevo_id'] ?? null,
+            'metadata' => $camposHistorial['metadata'] ?? null,
         ]);
     }
 

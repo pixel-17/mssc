@@ -60,7 +60,7 @@ class ReclasificarAParticularAction
                     $p->causa_finalizacion_sin_retorno ??= 'salud_no_justificada';
                     $p->requiere_visto_bueno = false;
                 },
-                [
+                camposHistorial: [
                     'motivo_anterior_id' => $motivoAnteriorId,
                     'motivo_nuevo_id' => $motivoParticular->id,
                 ],
