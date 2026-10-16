@@ -1,21 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Usuarios;
 
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
+use App\Events\PapeletaActualizada;
+use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\ConfiguracionTurno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
+use App\Support\ReglasDatosUsuario;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use App\Support\ReglasDatosUsuario;
 use Livewire\Attributes\Layout;
-use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -234,81 +237,153 @@ class UsuarioAdminForm extends Component
         $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
         $roles = array_map('intval', $datos['rolesSeleccionados']);
 
+        if (! $this->validarRoles($roles, $adminId, $trabajadorId)) {
+            return;
+        }
+
+        if (! $this->validarUnicoRrhhActivo($datos)) {
+            return;
+        }
+
+        if (! $this->validarUnicoAdminActivo($datos)) {
+            return;
+        }
+
+        if (! $this->validarDesactivacion($datos)) {
+            return;
+        }
+
+        $atributos = $this->construirAtributos($datos, $roles, $adminId);
+
+        // Se calcula ANTES de guardar: después $this->usuario ya trae los valores nuevos.
+        $debeRetirarTurno = $this->usuario !== null
+            && ($this->cambioDeRegimen() || ($this->usuario->activo && ! $datos['activo']));
+
+        DB::transaction(fn () => $this->guardarUsuario($atributos, $datos, $requiereTurno, $generador, $debeRetirarTurno));
+
+        session()->flash('mensaje', $this->usuario->wasRecentlyCreated ? 'Usuario creado.' : 'Usuario actualizado.');
+
+        $this->redirectRoute('usuarios-admin.index', navigate: false);
+    }
+
+    /**
+     * Un administrador no lleva régimen, no puede ser también trabajador, y
+     * no puede dárselo a quien encabeza una unidad sin antes reasignarla.
+     *
+     * @param  list<int>  $roles
+     */
+    private function validarRoles(array $roles, int $adminId, int $trabajadorId): bool
+    {
         // Un administrador no lleva régimen: si el alta es solo de admin, el régimen debe quedar vacío.
         if ($this->esSoloAdmin() && $this->regimen !== '') {
             $this->addError('rolesSeleccionados', 'Un administrador no lleva régimen: deja el régimen vacío.');
 
-            return;
+            return false;
         }
 
         if (in_array($adminId, $roles, true) && in_array($trabajadorId, $roles, true)) {
             $this->addError('rolesSeleccionados', 'Un administrador no puede tener también el rol de trabajador: no tiene papeletas, equipo ni jefe.');
 
-            return;
+            return false;
         }
 
         if (in_array($adminId, $roles, true) && $this->usuario?->unidadesQueEncabeza()->exists()) {
             $this->addError('rolesSeleccionados', 'Encabeza una unidad: reasigna primero esa jefatura antes de darle el rol de administrador.');
 
-            return;
+            return false;
         }
 
-        if ($this->usuario?->esUnicoRrhhActivo()) {
-            $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');
-            $conservaRol = in_array($rolRrhhId, array_map('intval', $datos['rolesSeleccionados']), true);
+        return true;
+    }
 
-            if (! $datos['activo']) {
-                $this->addError('activo', 'Es el único usuario de RR. HH. activo: sin él, toda papeleta aprobada por el jefe se autorizaría sola. Designa primero a otra persona con rol RR. HH.');
-
-                return;
-            }
-
-            if (! $conservaRol) {
-                $this->addError('rolesSeleccionados', 'Es el único usuario de RR. HH. activo: no puedes quitarle ese rol hasta designar a otra persona.');
-
-                return;
-            }
+    /** Si es el único RR. HH. activo, no se lo puede desactivar ni quitarle el rol. */
+    private function validarUnicoRrhhActivo(array $datos): bool
+    {
+        if (! $this->usuario?->esUnicoRrhhActivo()) {
+            return true;
         }
 
-        if ($this->usuario?->esUnicoAdminActivo()) {
-            $rolAdminId = (int) Role::where('name', 'admin')->value('id');
-            $conservaRol = in_array($rolAdminId, array_map('intval', $datos['rolesSeleccionados']), true);
+        $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');
+        $conservaRol = in_array($rolRrhhId, array_map('intval', $datos['rolesSeleccionados']), true);
 
-            if (! $datos['activo']) {
-                $this->addError('activo', 'Es el único administrador activo: sin él nadie puede gestionar el sistema. Designa primero a otro administrador.');
+        if (! $datos['activo']) {
+            $this->addError('activo', 'Es el único usuario de RR. HH. activo: sin él, toda papeleta aprobada por el jefe se autorizaría sola. Designa primero a otra persona con rol RR. HH.');
 
-                return;
-            }
-
-            if (! $conservaRol) {
-                $this->addError('rolesSeleccionados', 'Es el único administrador activo: no puedes quitarle ese rol hasta crear o activar a otro administrador.');
-
-                return;
-            }
+            return false;
         }
 
-        // Mismas reglas que desactivar desde la lista o el organigrama (jefe con personas a cargo, etc.).
-        if ($this->usuario?->activo && ! $datos['activo']) {
-            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+        if (! $conservaRol) {
+            $this->addError('rolesSeleccionados', 'Es el único usuario de RR. HH. activo: no puedes quitarle ese rol hasta designar a otra persona.');
 
-            if ($motivo !== null) {
-                $this->addError('activo', $motivo);
-
-                return;
-            }
-
-            // Un jefe con personas a cargo no se desactiva desde el formulario:
-            // hay que elegir su reemplazo (baja con reemplazo, en Usuarios).
-            $cargo = app(CambiarEstadoUsuarioAction::class)->jefaturasPorResolver($this->usuario);
-
-            if ($cargo->isNotEmpty()) {
-                $this->addError('activo', 'Tiene personas a cargo: desactívalo desde Usuarios para elegir a quién reemplaza.');
-
-                return;
-            }
+            return false;
         }
 
-        $atributos = [
+        return true;
+    }
+
+    /** Si es el único administrador activo, no se lo puede desactivar ni quitarle el rol. */
+    private function validarUnicoAdminActivo(array $datos): bool
+    {
+        if (! $this->usuario?->esUnicoAdminActivo()) {
+            return true;
+        }
+
+        $rolAdminId = (int) Role::where('name', 'admin')->value('id');
+        $conservaRol = in_array($rolAdminId, array_map('intval', $datos['rolesSeleccionados']), true);
+
+        if (! $datos['activo']) {
+            $this->addError('activo', 'Es el único administrador activo: sin él nadie puede gestionar el sistema. Designa primero a otro administrador.');
+
+            return false;
+        }
+
+        if (! $conservaRol) {
+            $this->addError('rolesSeleccionados', 'Es el único administrador activo: no puedes quitarle ese rol hasta crear o activar a otro administrador.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Mismas reglas que desactivar desde la lista o el organigrama (jefe
+     * con personas a cargo, etc.).
+     */
+    private function validarDesactivacion(array $datos): bool
+    {
+        if (! ($this->usuario?->activo && ! $datos['activo'])) {
+            return true;
+        }
+
+        $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+
+        if ($motivo !== null) {
+            $this->addError('activo', $motivo);
+
+            return false;
+        }
+
+        // Un jefe con personas a cargo no se desactiva desde el formulario:
+        // hay que elegir su reemplazo (baja con reemplazo, en Usuarios).
+        $cargo = app(CambiarEstadoUsuarioAction::class)->jefaturasPorResolver($this->usuario);
+
+        if ($cargo->isNotEmpty()) {
+            $this->addError('activo', 'Tiene personas a cargo: desactívalo desde Usuarios para elegir a quién reemplaza.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  list<int>  $roles
+     * @return array<string, mixed>
+     */
+    private function construirAtributos(array $datos, array $roles, int $adminId): array
+    {
+        return [
             'name' => $datos['name'],
             'apellido' => $datos['apellido'],
             'dni' => $datos['dni'],
@@ -319,60 +394,60 @@ class UsuarioAdminForm extends Component
             'unidad_organica_id' => in_array($adminId, $roles, true) ? null : $datos['unidadOrganicaId'],
             'activo' => $datos['activo'],
         ];
+    }
 
-        // Se calcula ANTES de guardar: después $this->usuario ya trae los valores nuevos.
-        $debeRetirarTurno = $this->usuario !== null
-            && ($this->cambioDeRegimen() || ($this->usuario->activo && ! $datos['activo']));
-
-        DB::transaction(function () use ($atributos, $datos, $requiereTurno, $generador, $debeRetirarTurno) {
-            if ($this->usuario) {
-                // Reseteo manual opcional: si el admin llenó el campo, se
-                // le pedirá actualizarla de nuevo en su próximo ingreso.
-                if (filled($datos['password'])) {
-                    $atributos['password'] = Hash::make($datos['password']);
-                    $atributos['debe_actualizar_password'] = true;
-                }
-
-                $this->usuario->update($atributos);
-
-                if (! $datos['activo']) {
-                    $this->usuario->tokens()->delete();
-                }
-
-                // Desactivado o con otro régimen: el turno anterior ya no le corresponde.
-                if ($debeRetirarTurno) {
-                    $generador->retirarTurno($this->usuario);
-                }
-            } else {
-                // Alta nueva: la contraseña inicial siempre es el DNI,
-                // nunca lo que se haya escrito en el campo (que ni
-                // siquiera se muestra en este caso, ver la vista).
-                $atributos['password'] = Hash::make($datos['dni']);
+    /**
+     * Crea o actualiza al usuario, sincroniza roles y carga el turno si
+     * corresponde. Debe correr dentro de DB::transaction (ver guardar()).
+     *
+     * @param  array<string, mixed>  $atributos
+     * @param  array<string, mixed>  $datos
+     */
+    private function guardarUsuario(array $atributos, array $datos, bool $requiereTurno, GeneradorTurnoMensualService $generador, bool $debeRetirarTurno): void
+    {
+        if ($this->usuario) {
+            // Reseteo manual opcional: si el admin llenó el campo, se
+            // le pedirá actualizarla de nuevo en su próximo ingreso.
+            if (filled($datos['password'])) {
+                $atributos['password'] = Hash::make($datos['password']);
                 $atributos['debe_actualizar_password'] = true;
-
-                $this->usuario = User::create($atributos);
             }
 
-            // Los checkboxes de Livewire llegan como strings ("3"): Spatie los tomaría por
-            // NOMBRE de rol (RoleDoesNotExist). Con enteros los busca por id.
-            $this->usuario->syncRoles(array_map('intval', $datos['rolesSeleccionados']));
-            \App\Events\PapeletaActualizada::olvidarDestinatariosFijos();
+            $this->usuario->update($atributos);
 
-            if ($requiereTurno && $datos['activo']) {
-                $generador->cargarConfiguracion(
-                    trabajador: $this->usuario,
-                    turno: $datos['turno'],
-                    fechaAncla: Carbon::parse($datos['fechaAncla']),
-                    actor: Auth::user(),
-                    diasTrabajo: $datos['diasTrabajo'],
-                    diasDescanso: $datos['diasDescanso'],
-                );
+            if (! $datos['activo']) {
+                $this->usuario->tokens()->delete();
             }
-        });
 
-        session()->flash('mensaje', $this->usuario->wasRecentlyCreated ? 'Usuario creado.' : 'Usuario actualizado.');
+            // Desactivado o con otro régimen: el turno anterior ya no le corresponde.
+            if ($debeRetirarTurno) {
+                $generador->retirarTurno($this->usuario);
+            }
+        } else {
+            // Alta nueva: la contraseña inicial siempre es el DNI,
+            // nunca lo que se haya escrito en el campo (que ni
+            // siquiera se muestra en este caso, ver la vista).
+            $atributos['password'] = Hash::make($datos['dni']);
+            $atributos['debe_actualizar_password'] = true;
 
-        $this->redirectRoute('usuarios-admin.index', navigate: false);
+            $this->usuario = User::create($atributos);
+        }
+
+        // Los checkboxes de Livewire llegan como strings ("3"): Spatie los tomaría por
+        // NOMBRE de rol (RoleDoesNotExist). Con enteros los busca por id.
+        $this->usuario->syncRoles(array_map('intval', $datos['rolesSeleccionados']));
+        PapeletaActualizada::olvidarDestinatariosFijos();
+
+        if ($requiereTurno && $datos['activo']) {
+            $generador->cargarConfiguracion(
+                trabajador: $this->usuario,
+                turno: $datos['turno'],
+                fechaAncla: Carbon::parse($datos['fechaAncla']),
+                actor: Auth::user(),
+                diasTrabajo: $datos['diasTrabajo'],
+                diasDescanso: $datos['diasDescanso'],
+            );
+        }
     }
 
     /**

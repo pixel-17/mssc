@@ -226,6 +226,30 @@ class PersonaDrawer extends Component
             && $this->unidadId !== null
             && (int) $this->unidadId !== (int) $persona->unidad_organica_id;
 
+        $this->validate($this->reglasDeEdicion($actor, $persona, $esAdmin, $cambiaUnidad));
+
+        // Solo el admin activa/desactiva (EditarUsuarioRequest tampoco lo admite para los jefes).
+        $activo = $esAdmin ? $this->activo : (bool) $persona->activo;
+        $estado = app(CambiarEstadoUsuarioAction::class);
+
+        if (! $this->puedeDesactivar($actor, $persona, $estado, $activo)) {
+            return;
+        }
+
+        if (! $this->intentar(
+            fn () => $this->aplicarCambiosDePersona($actor, $persona, $estado, $cambiaUnidad, $esAdmin, $activo),
+            fn ($e) => $this->error = $e->getMessage(),
+        )) {
+            return;
+        }
+
+        $this->abierto = false;
+        $this->dispatch('org-actualizado', mensaje: "Datos de {$persona->nombre_completo} actualizados.", personaId: $persona->id);
+    }
+
+    /** @return array<string, array<int, mixed>|string> */
+    private function reglasDeEdicion(User $actor, User $persona, bool $esAdmin, bool $cambiaUnidad): array
+    {
         $reglas = [
             'name' => ['required', 'string', 'max:255'],
             'apellido' => ['required', 'string', 'max:255'],
@@ -240,75 +264,78 @@ class PersonaDrawer extends Component
             $reglas['unidadId'][] = Rule::in($this->unidadesPermitidas($actor)->pluck('id')->all());
         }
 
-        $this->validate($reglas);
+        return $reglas;
+    }
 
-        // Solo el admin activa/desactiva (EditarUsuarioRequest tampoco lo admite para los jefes).
-        $activo = $esAdmin ? $this->activo : (bool) $persona->activo;
-        $estado = app(CambiarEstadoUsuarioAction::class);
+    /**
+     * Valida la desactivación ANTES de tocar nada: si se rechaza, no queda a
+     * medias. Un jefe con gente a cargo no se desactiva aquí: el reemplazo
+     * se decide en su propio panel (BajaConReemplazo).
+     */
+    private function puedeDesactivar(User $actor, User $persona, CambiarEstadoUsuarioAction $estado, bool $activo): bool
+    {
+        if (! ($persona->activo && ! $activo)) {
+            return true;
+        }
 
-        // Validar la desactivación ANTES de tocar nada: si se rechaza, no queda a medias.
+        $motivo = $estado->motivoParaNoDesactivar($actor, $persona);
+
+        if ($motivo !== null) {
+            $this->error = $motivo;
+
+            return false;
+        }
+
+        if ($estado->jefaturasPorResolver($persona)->isNotEmpty()) {
+            $this->abierto = false;
+            $this->dispatch('usuario-baja-abrir', id: $persona->id);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /** Mueve de unidad si corresponde, actualiza datos y aplica el cambio de estado. Debe correr dentro de intentar() (ver editar()). */
+    private function aplicarCambiosDePersona(User $actor, User $persona, CambiarEstadoUsuarioAction $estado, bool $cambiaUnidad, bool $esAdmin, bool $activo): void
+    {
+        // Primero la unidad: es la que puede rechazarse por reglas de negocio.
+        if ($cambiaUnidad) {
+            $mover = app(MoverTrabajadorAction::class);
+
+            if ($persona->unidad_organica_id === null) {
+                // Sin unidad de origen no hay «movimiento»: se asigna directo,
+                // pero igual el destino debe tener jefe inmediato.
+                $mover->exigirJefeInmediato(UnidadOrganica::findOrFail($this->unidadId));
+                $persona->unidad_organica_id = $this->unidadId;
+                $persona->save(); // UserObserver recalcula jefe inmediato y de área.
+            } else {
+                $mover->ejecutar($actor, $persona->id, (int) $this->unidadId, (int) $persona->unidad_organica_id, true, false);
+            }
+
+            $persona->refresh();
+        }
+
+        app(EditarUsuarioAction::class)->ejecutar($persona, [
+            'name' => $this->name,
+            'apellido' => $this->apellido,
+            'email' => $this->email,
+            'sede_id' => $this->sedeId,
+            'unidad_organica_id' => $persona->unidad_organica_id,
+        ], true);
+
+        // EditarUsuarioAction usa sede_id ?? la actual (pensado para el jefe de área, que nunca
+        // envía null porque la tiene obligatoria): para el admin, que sí puede dejarla vacía,
+        // se fija aparte para que un null explícito (quitarle la sede) sí se guarde.
+        if ($esAdmin) {
+            $persona->forceFill(['sede_id' => $this->sedeId])->save();
+        }
+
         if ($persona->activo && ! $activo) {
-            $motivo = $estado->motivoParaNoDesactivar($actor, $persona);
-
-            if ($motivo !== null) {
-                $this->error = $motivo;
-
-                return;
-            }
-
-            // Jefe con gente a cargo: el reemplazo se decide en su propio panel.
-            if ($estado->jefaturasPorResolver($persona)->isNotEmpty()) {
-                $this->abierto = false;
-                $this->dispatch('usuario-baja-abrir', id: $persona->id);
-
-                return;
-            }
+            $estado->desactivar($actor, $persona);
+        } elseif (! $persona->activo && $activo) {
+            $estado->reactivar($actor, $persona);
         }
-
-        if (! $this->intentar(function () use ($actor, $persona, $cambiaUnidad, $esAdmin, $activo) {
-            // Primero la unidad: es la que puede rechazarse por reglas de negocio.
-            if ($cambiaUnidad) {
-                $mover = app(MoverTrabajadorAction::class);
-
-                if ($persona->unidad_organica_id === null) {
-                    // Sin unidad de origen no hay «movimiento»: se asigna directo,
-                    // pero igual el destino debe tener jefe inmediato.
-                    $mover->exigirJefeInmediato(UnidadOrganica::findOrFail($this->unidadId));
-                    $persona->unidad_organica_id = $this->unidadId;
-                    $persona->save(); // UserObserver recalcula jefe inmediato y de área.
-                } else {
-                    $mover->ejecutar($actor, $persona->id, (int) $this->unidadId, (int) $persona->unidad_organica_id, true, false);
-                }
-
-                $persona->refresh();
-            }
-
-            app(EditarUsuarioAction::class)->ejecutar($persona, [
-                'name' => $this->name,
-                'apellido' => $this->apellido,
-                'email' => $this->email,
-                'sede_id' => $this->sedeId,
-                'unidad_organica_id' => $persona->unidad_organica_id,
-            ], true);
-
-            // EditarUsuarioAction usa sede_id ?? la actual (pensado para el jefe de área, que nunca
-            // envía null porque la tiene obligatoria): para el admin, que sí puede dejarla vacía,
-            // se fija aparte para que un null explícito (quitarle la sede) sí se guarde.
-            if ($esAdmin) {
-                $persona->forceFill(['sede_id' => $this->sedeId])->save();
-            }
-
-            if ($persona->activo && ! $activo) {
-                $estado->desactivar($actor, $persona);
-            } elseif (! $persona->activo && $activo) {
-                $estado->reactivar($actor, $persona);
-            }
-        }, fn ($e) => $this->error = $e->getMessage())) {
-            return;
-        }
-
-        $this->abierto = false;
-        $this->dispatch('org-actualizado', mensaje: "Datos de {$persona->nombre_completo} actualizados.", personaId: $persona->id);
     }
 
     public function render(): View
