@@ -86,6 +86,11 @@ class DashboardMetricsService
     {
         $desde = now()->subDays($this->diasVentana);
 
+        $porEstado = Papeleta::whereNotState('estado', $this->estadosTerminales())
+            ->selectRaw('estado, count(*) as total')
+            ->groupBy('estado')
+            ->pluck('total', 'estado');
+
         return [
             'usuarios_total' => User::count(),
             'usuarios_por_rol' => [
@@ -97,6 +102,9 @@ class DashboardMetricsService
             'unidades_organicas' => UnidadOrganica::where('activo', true)->count(),
             'papeletas_activas' => Papeleta::whereNotState('estado', $this->estadosTerminales())->count(),
             'papeletas_periodo' => Papeleta::where('created_at', '>=', $desde)->count(),
+            'papeletas_vencidas' => $porEstado[Vencida::$name] ?? 0,
+            'papeletas_pendiente_jefe' => $porEstado[PendienteJefe::$name] ?? 0,
+            'papeletas_pendiente_rrhh' => ($porEstado[PendienteRrhh::$name] ?? 0) + ($porEstado[AutorizadaYCorriendo::$name] ?? 0),
             'retornos_manuales_periodo' => Retorno::where('marcado_manual', true)
                 ->where('created_at', '>=', $desde)
                 ->count(),

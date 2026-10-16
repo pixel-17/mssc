@@ -55,8 +55,8 @@ class PapeletaEstadoPresentacion
         $clave = $estado instanceof State ? get_class($estado) : (string) $estado;
 
         $etiqueta = match ($clave) {
-            Cerrada::class => 'Cerrada · abandono justificado',
-            Finalizada::class => 'Finalizada · abandono sin justificar',
+            Cerrada::class => 'Finalizada · abandono justificado (sin descuento)',
+            Finalizada::class => 'Finalizada · abandono sin justificar (con descuento)',
             EnJustificacion::class => 'En justificación · abandono',
             default => null,
         };
@@ -111,7 +111,7 @@ class PapeletaEstadoPresentacion
                 'bg-morado-500',
             ],
             Cerrada::class => [
-                'Cerrada',
+                'Finalizada',
                 'bg-verde-100 text-verde-800 ring-verde-400 dark:bg-verde-500/20 dark:text-verde-200 dark:ring-verde-400/40',
                 'bg-verde-500',
             ],
@@ -126,7 +126,7 @@ class PapeletaEstadoPresentacion
                 'bg-gray-500',
             ],
             Finalizada::class => [
-                'Finalizada (con descuento)',
+                'Finalizada',
                 'bg-indigo-100 text-indigo-800 ring-indigo-400 dark:bg-indigo-500/20 dark:text-indigo-200 dark:ring-indigo-400/40',
                 'bg-indigo-500',
             ],

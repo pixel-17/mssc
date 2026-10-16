@@ -11,7 +11,7 @@
     $puedePosthoc = ! $soloLectura && $papeleta->autorizado_con_rrhh_fuera_horario
         && in_array($papeleta->revision_posthoc_estado, ['pendiente', 'respondida'], true);
 
-    $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+    $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
     $posthocRespondida = $papeleta->revision_posthoc_estado === 'respondida';
 
     $sustentoPresentado = ! $soloLectura && $papeleta->estado->equals(EnJustificacion::class)
@@ -104,7 +104,7 @@
 
             @if ($puedePosthoc)
                 <div class="glass-card p-6">
-                    <h3 class="text-sm font-semibold text-gray-700 mb-1">Revisión post-hoc</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 mb-1">Revisión posterior</h3>
                     <p class="text-sm text-gray-600 mb-3">
                         El jefe inmediato autorizó esta papeleta fuera del horario de RRHH ({{ $papeleta->resueltoPorJefe?->nombre_completo ?? '—' }}). Deja constancia de la revisión.
                     </p>
@@ -119,7 +119,7 @@
                     @endif
                     @if ($papeleta->contador_observaciones_posthoc > 0)
                         <p class="text-xs text-gray-500 mb-3">
-                            Observaciones post-hoc: {{ $papeleta->contador_observaciones_posthoc }}/{{ $topePosthoc }}.
+                            Observaciones de la revisión posterior: {{ $papeleta->contador_observaciones_posthoc }}/{{ $topePosthoc }}.
                             @if ($papeleta->contador_observaciones_posthoc >= $topePosthoc - 1)
                                 Si observas de nuevo, quedará como reparo definitivo, sin más respuestas.
                             @endif

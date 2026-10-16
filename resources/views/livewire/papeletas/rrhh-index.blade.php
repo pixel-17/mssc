@@ -14,7 +14,7 @@
                 @endif
             </div>
             <div class="glass-card p-4">
-                <p class="text-xs text-gray-500 dark:text-tinta-100/50">Revisión post-hoc</p>
+                <p class="text-xs text-gray-500 dark:text-tinta-100/50">Revisión posterior</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ $posthocPendientes->total() }}</p>
             </div>
             <div class="glass-card p-4">
@@ -179,11 +179,11 @@
             </div>
         @endif
 
-        {{-- Revisión post-hoc --}}
+        {{-- Revisión posterior --}}
         @if ($posthocPendientes->isNotEmpty())
             <div class="glass-card overflow-hidden">
                 <div class="px-4 py-3 border-b border-gray-100 dark:border-white/10">
-                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Revisión post-hoc — jefe autorizó fuera de horario RRHH ({{ $posthocPendientes->total() }})</h3>
+                    <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80">Revisión posterior — el jefe autorizó fuera de tu horario ({{ $posthocPendientes->total() }})</h3>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full border-separate border-spacing-y-2">

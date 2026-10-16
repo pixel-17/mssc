@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Observación de RRHH. Contador independiente del de jefe
- * (contador_observaciones_rrhh, clave TOPE_OBSERVACIONES_RRHH) —
+ * (contador_observaciones_rrhh, clave TOPE_OBSERVACIONES) —
  * al alcanzar el tope, rechazo automático sin intervención humana
  * adicional (mismo criterio que ObservarJefeAction).
  *
@@ -51,7 +51,7 @@ class ObservarRrhhAction
                 throw new PapeletaException('Esta papeleta no tiene jefe superior que pueda responder una observación: solo puedes aprobarla o rechazarla.');
             }
 
-            $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+            $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
 
             $actual->contador_observaciones_rrhh++;
 

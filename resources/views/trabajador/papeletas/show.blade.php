@@ -46,7 +46,7 @@
     }
 
     if ($papeleta->autorizado_con_rrhh_fuera_horario) {
-        $seccionesDetalle['Aprobación']->push(['Revisión post-hoc RRHH', $papeleta->etiquetaPosthoc()]);
+        $seccionesDetalle['Aprobación']->push(['Revisión posterior de RR. HH.', $papeleta->etiquetaPosthoc()]);
     }
 @endphp
 

@@ -45,7 +45,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm border-t border-gray-100 dark:border-white/10 pt-4">
             @if ($papeleta->autorizado_con_rrhh_fuera_horario)
                 <div>
-                    <dt class="text-gray-500 dark:text-tinta-100/50">Revisión post-hoc RRHH</dt>
+                    <dt class="text-gray-500 dark:text-tinta-100/50">Revisión posterior de RR. HH.</dt>
                     <dd class="text-gray-900 dark:text-white">{{ $papeleta->etiquetaPosthoc() }}</dd>
                 </div>
             @endif

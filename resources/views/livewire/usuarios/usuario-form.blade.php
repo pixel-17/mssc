@@ -3,7 +3,9 @@
     $esArea   = $alcance === 'area';
     $esEquipo = $alcance === 'equipo';
     $creando  = $usuario === null;
-    $cancelar = $esAdmin ? route('usuarios-admin.index') : route('usuarios.index');
+    $cancelar = $volverAlOrganigrama
+        ? route('organigrama.index', ['persona' => $usuario?->id])
+        : ($esAdmin ? route('usuarios-admin.index') : route('usuarios.index'));
 @endphp
 
 <div>

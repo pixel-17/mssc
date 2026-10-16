@@ -18,7 +18,7 @@ use Tests\TestCase;
  * La observación post-hoc de RRHH ya no es un final mudo: vuelve al MISMO
  * jefe que autorizó, que responde por escrito (adjunto opcional) y la
  * revisión pasa a 'respondida' para que RRHH decida otra vez. Mismo tope
- * que TOPE_OBSERVACIONES_RRHH; al alcanzarlo queda 'observada_firme'.
+ * que TOPE_OBSERVACIONES; al alcanzarlo queda 'observada_firme'.
  */
 class PosthocRespuestaJefeTest extends TestCase
 {
@@ -103,7 +103,7 @@ class PosthocRespuestaJefeTest extends TestCase
 
         $papeleta = $this->posthoc();
 
-        // TOPE_OBSERVACIONES_RRHH = 3: las dos primeras esperan al jefe...
+        // TOPE_OBSERVACIONES = 3: las dos primeras esperan al jefe...
         foreach ([1, 2] as $vuelta) {
             $papeleta = $observar->observar($papeleta, $this->rrhh, "Observación {$vuelta}");
             $this->assertSame('observada', $papeleta->revision_posthoc_estado);

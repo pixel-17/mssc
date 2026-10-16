@@ -23,7 +23,7 @@
 
     // Observación post-hoc de RRHH: solo responde el MISMO jefe que autorizó.
     $puedeResponderPosthoc = $papeleta->puedeResponderPosthoc(auth()->user());
-    $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+    $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
 
     // El tope de observaciones es configurable (Configuraciones > TOPE_OBSERVACIONES,
     // por defecto 3) y ObservarJefeAction rechaza automáticamente la papeleta en

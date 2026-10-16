@@ -81,6 +81,14 @@ class OrganigramaArbol extends Component
     public function mount(): void
     {
         $this->autorizarLectura();
+
+        // Vuelta desde «Edición completa» (UsuarioForm, ?volver=organigrama):
+        // reabre la ficha de la misma persona en vez de dejar el panel cerrado.
+        $personaId = request()->integer('persona') ?: null;
+
+        if ($personaId) {
+            $this->personaId = $personaId;
+        }
     }
 
     public function updatedSede(): void

@@ -131,7 +131,6 @@ class NavegacionComposer
         ];
 
         if ($esRrhh || $esAdmin) {
-            $reportes[] = ['label' => 'Resumen de papeletas', 'route' => route('reportes.resumen-papeletas'), 'active' => request()->routeIs('reportes.resumen-papeletas'), 'icon' => 'chart'];
             $reportes[] = ['label' => 'Decisiones de RR. HH.', 'route' => route('reportes.decisiones-rrhh'), 'active' => request()->routeIs('reportes.decisiones-rrhh'), 'icon' => 'clipboard'];
         }
 

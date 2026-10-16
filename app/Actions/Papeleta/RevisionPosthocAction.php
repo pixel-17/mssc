@@ -27,7 +27,7 @@ use Illuminate\Support\Facades\DB;
  * autorizó (ver ResponderPosthocAction), que responde por escrito y,
  * si quiere, con un adjunto; entonces la revisión pasa a 'respondida'
  * y RRHH decide de nuevo. Mismo tope que la observación previa de RRHH
- * (TOPE_OBSERVACIONES_RRHH), con contador propio: al alcanzarlo, la
+ * (TOPE_OBSERVACIONES), con contador propio: al alcanzarlo, la
  * revisión queda 'observada_firme' (reparo definitivo de auditoría).
  * También queda firme si no hubo jefe que autorizara (autorización de
  * sistema): no hay quien responda.
@@ -86,7 +86,7 @@ class RevisionPosthocAction
             $estadoNuevo = $resultado;
 
             if ($resultado === 'observada') {
-                $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES_RRHH', 3);
+                $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
                 $actual->contador_observaciones_posthoc++;
                 $actual->posthoc_observacion = $comentario;
 
