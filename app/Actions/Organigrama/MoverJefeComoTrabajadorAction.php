@@ -1,10 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Actions\Organigrama;
 
 use App\Exceptions\UsuarioException;
 use App\Models\ConfiguracionTurno;
 use App\Models\MovimientoOrganigrama;
+use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
@@ -35,6 +38,10 @@ use Illuminate\Support\Facades\DB;
  *
  * El traslado final lo hace MoverTrabajadorAction, así queda en
  * movimientos_organigrama con sus mismas validaciones.
+ *
+ * Quién releva a cada jefe (en lo que deja y en lo que gana) lo resuelve
+ * ReemplazoDeJefeService: esta clase valida que el movimiento en sí sea
+ * posible y orquesta los pasos (relevar jefaturas, trasladar, cargar turno).
  */
 class MoverJefeComoTrabajadorAction
 {
@@ -50,6 +57,7 @@ class MoverJefeComoTrabajadorAction
 
     public function __construct(
         private GeneradorTurnoMensualService $generadorTurno,
+        private ReemplazoDeJefeService $reemplazoDeJefe,
     ) {}
 
     /**
@@ -59,7 +67,7 @@ class MoverJefeComoTrabajadorAction
      *     jefe: User,
      *     destino: UnidadOrganica,
      *     unidades: Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int, subunidades: int, requiere_reemplazo: bool, candidatos: Collection<int, User>}>,
-     *     sede: array{actual: ?\App\Models\Sede, propuesta: ?\App\Models\Sede},
+     *     sede: array{actual: ?Sede, propuesta: ?Sede},
      *     necesita_turno: bool,
      *     turnos_validos: list<string>,
      *     avisos: list<string>
@@ -73,9 +81,10 @@ class MoverJefeComoTrabajadorAction
         $avisos = [];
         $filas = $unidades->map(function (UnidadOrganica $unidad) use ($jefe, &$avisos) {
             $subunidades = $unidad->hijos()->count();
-            $personas = $this->miembrosActivos($unidad, $jefe)->count();
-            // Misma regla que requiereReemplazo(), derivada de los conteos que ya
-            // tenemos: se evitan 2 consultas por unidad (y otras 2 dentro de candidatos()).
+            $personas = $this->reemplazoDeJefe->miembrosActivos($unidad, $jefe)->count();
+            // Misma regla que ReemplazoDeJefeService::requiereReemplazo(), derivada de
+            // los conteos que ya tenemos: se evitan 2 consultas por unidad (y otras 2
+            // dentro de candidatos()).
             $requiere = (int) $unidad->jefe_id === (int) $jefe->id && ($personas > 0 || $subunidades > 0);
 
             if (! $requiere && (int) $unidad->jefe_id === (int) $jefe->id) {
@@ -88,13 +97,13 @@ class MoverJefeComoTrabajadorAction
                 'personas' => $personas,
                 'subunidades' => $subunidades,
                 'requiere_reemplazo' => $requiere,
-                'candidatos' => $this->candidatos($unidad, $jefe, $requiere),
+                'candidatos' => $this->reemplazoDeJefe->candidatos($unidad, $jefe, $requiere),
             ];
         })->values();
 
         $comoJefe = $modo === self::COMO_JEFE;
-        $jefesDestino = $this->jefesDelDestino($destino, $jefe);
-        $reemplazaDestino = $comoJefe && $this->requiereReemplazarDestino($destino, $jefe);
+        $jefesDestino = $this->reemplazoDeJefe->jefesDelDestino($destino, $jefe);
+        $reemplazaDestino = $comoJefe && $this->reemplazoDeJefe->requiereReemplazarDestino($destino, $jefe);
         $necesitaTurno = ! $comoJefe && $this->necesitaTurno($jefe);
 
         if ($reemplazaDestino) {
@@ -156,11 +165,11 @@ class MoverJefeComoTrabajadorAction
 
             // Todo lo que pueda fallar se revisa ANTES de tocar nada: reemplazos y turno.
             $plan = $unidades->mapWithKeys(fn (UnidadOrganica $unidad) => [
-                $unidad->id => $this->reemplazoPara($unidad, $jefe, $reemplazos),
+                $unidad->id => $this->reemplazoDeJefe->reemplazoPara($unidad, $jefe, $reemplazos),
             ]);
 
             $datosTurno = $comoJefe ? null : $this->validarTurno($jefe, $turno);
-            $saliente = $comoJefe ? $this->validarReemplazoDestino($destino, $jefe, $reemplazaDestinoId) : null;
+            $saliente = $comoJefe ? $this->reemplazoDeJefe->validarReemplazoDestino($destino, $jefe, $reemplazaDestinoId) : null;
 
             foreach ($unidades as $unidad) {
                 $this->relevarJefatura($actor, $unidad, $jefe, $plan[$unidad->id]);
@@ -290,138 +299,6 @@ class MoverJefeComoTrabajadorAction
         }
 
         return $unidades;
-    }
-
-    /** Trabajadores activos de la unidad, sin contar a $jefe. */
-    private function miembrosActivos(UnidadOrganica $unidad, User $jefe)
-    {
-        return $unidad->miembros()->where('activo', true)->whereKeyNot($jefe->id);
-    }
-
-    /** ¿Hay que elegir un reemplazo? Sí si quedan personas o sub-unidades. */
-    private function requiereReemplazo(UnidadOrganica $unidad, User $jefe): bool
-    {
-        if ((int) $unidad->jefe_id !== (int) $jefe->id) {
-            return false;
-        }
-
-        $quedaGente = $this->miembrosActivos($unidad, $jefe)->exists() || $unidad->hijos()->exists();
-
-        return $quedaGente;
-    }
-
-    /**
-     * Quienes pueden relevarlo: los trabajadores activos de la unidad y los
-     * jefes de sus sub-unidades (un jefe de área puede ser relevado por otro
-     * jefe). Solo los que pasan las reglas de cambio de jefe.
-     *
-     * @return Collection<int, User>
-     */
-    private function candidatos(UnidadOrganica $unidad, User $jefe, ?bool $requiere = null): Collection
-    {
-        // $requiere permite a quien ya lo calculó (previsualizar) no repetir las consultas.
-        if (! ($requiere ?? $this->requiereReemplazo($unidad, $jefe))) {
-            return collect();
-        }
-
-        $jefesDeHijos = $unidad->hijos()->whereNotNull('jefe_id')->pluck('jefe_id');
-
-        return User::query()
-            ->where('activo', true)
-            ->whereKeyNot($jefe->id)
-            ->where(fn ($q) => $q
-                ->where('unidad_organica_id', $unidad->id)
-                ->orWhereIn('id', $jefesDeHijos))
-            ->orderBy('name')->orderBy('apellido')
-            ->get()
-            ->filter(function (User $candidato) use ($unidad) {
-                try {
-                    app(JefaturaUnidadService::class)->validar(
-                        $unidad,
-                        (int) $candidato->id,
-                        null,
-                        (int) $candidato->unidad_organica_id !== (int) $unidad->id,
-                    );
-
-                    return true;
-                } catch (UsuarioException) {
-                    return false;
-                }
-            })
-            ->values();
-    }
-
-    /**
-     * Quién releva a $jefe en $unidad: el elegido, o null si la unidad
-     * puede quedar sin jefe.
-     *
-     * @param  array<int|string, int|string|null>  $reemplazos
-     *
-     * @throws UsuarioException
-     */
-    private function reemplazoPara(UnidadOrganica $unidad, User $jefe, array $reemplazos): ?int
-    {
-        if ((int) $unidad->jefe_id !== (int) $jefe->id) {
-            return null;
-        }
-
-        $elegido = (int) ($reemplazos[$unidad->id] ?? 0);
-
-        if ($elegido > 0) {
-            if ($elegido === (int) $jefe->id) {
-                throw new UsuarioException('El reemplazo de «'.$unidad->nombre.'» no puede ser la misma persona.');
-            }
-
-            // Mismas reglas que cambiar el jefe desde la unidad (activo, no encabeza otra).
-            $candidato = User::find($elegido)
-                ?? throw new UsuarioException('El reemplazo elegido para «'.$unidad->nombre.'» ya no existe.');
-
-            app(JefaturaUnidadService::class)->validar(
-                $unidad,
-                $elegido,
-                null,
-                (int) $candidato->unidad_organica_id !== (int) $unidad->id,
-            );
-
-            return $elegido;
-        }
-
-        if ($this->requiereReemplazo($unidad, $jefe)) {
-            throw new UsuarioException(
-                $jefe->nombre_completo.' encabeza «'.$unidad->nombre.'» y tiene '
-                .($unidad->hijos()->exists() ? 'sub-unidades a su cargo' : 'trabajadores a su cargo')
-                .': designa a su reemplazo antes de moverlo.'
-            );
-        }
-
-        return null;
-    }
-
-    /**
-     * Jefe actual del destino (distinto de $jefe), o vacío si no tiene.
-     *
-     * @return Collection<int, User>
-     */
-    private function jefesDelDestino(UnidadOrganica $destino, User $excepto): Collection
-    {
-        return collect([$destino->jefe_id ? User::find($destino->jefe_id) : null])
-            ->filter()
-            ->reject(fn (User $u) => (int) $u->id === (int) $excepto->id)
-            ->values();
-    }
-
-    /** ¿El destino ya tiene jefe? Entonces $jefe lo releva. */
-    private function requiereReemplazarDestino(UnidadOrganica $destino, User $jefe): bool
-    {
-        return $this->jefesDelDestino($destino, $jefe)->isNotEmpty();
-    }
-
-    /**
-     * Jefe del destino al que releva (null si no tenía).
-     */
-    private function validarReemplazoDestino(UnidadOrganica $destino, User $jefe, ?int $elegidoId): ?User
-    {
-        return $this->jefesDelDestino($destino, $jefe)->first();
     }
 
     /**

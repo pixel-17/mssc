@@ -69,6 +69,9 @@ class UserPolicy
      * - Jefe de Área: cualquiera de su área (unidad que encabeza + sub-unidades).
      * - Jefe Inmediato "puro": solo sus propios trabajadores, y nunca a un
      *   Jefe de Área ni a un admin.
+     * - Nadie salvo un admin edita a un usuario con rol admin o rrhh: quien
+     *   edita puede cambiar el correo y, con "olvidé mi contraseña", tomar
+     *   la cuenta. Dejarlo abierto rompería la separación jefe / RR. HH.
      */
     public function editar(User $editor, User $target): bool
     {
@@ -76,7 +79,7 @@ class UserPolicy
             return true;
         }
 
-        if ($target->hasRole('admin') || $editor->id === $target->id) {
+        if ($target->hasAnyRole(['admin', 'rrhh']) || $editor->id === $target->id) {
             return false;
         }
 
