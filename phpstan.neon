@@ -12,7 +12,8 @@ parameters:
     level: 5
 
     excludePaths:
-        - app/Console/Kernel.php
+        analyseAndScan:
+            - app/Console/Kernel.php (?)
 
     # Mientras se migra el código existente, los errores ya conocidos se
     # pueden congelar aquí (`vendor/bin/phpstan analyse --generate-baseline`)
@@ -22,4 +23,4 @@ parameters:
     # baseline:
     #     - phpstan-baseline.neon
 
-    checkMissingIterableValueType: false
+    checkGenericObjectWithoutType: false

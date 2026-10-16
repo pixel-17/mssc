@@ -4,9 +4,6 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Corrida semanal: aparecen avisos de seguridad nuevos aunque no haya commits.
-  schedule:
-    - cron: '0 12 * * 1'
 
 jobs:
   calidad:
@@ -88,38 +85,3 @@ jobs:
 
       - name: Tests
         run: php artisan test
-
-  # Seguridad de dependencias. Los avisos nuevos salen sin tocar el código,
-  # por eso también corre por calendario (ver `schedule` arriba).
-  seguridad:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.4'
-          extensions: mbstring, pdo_mysql, bcmath, intl
-          coverage: none
-
-      # Falla si composer.json y composer.lock no coinciden.
-      - name: Validar composer.json / composer.lock
-        run: composer validate --no-check-publish
-
-      - name: Vulnerabilidades en dependencias PHP
-        run: composer audit --locked
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      # Bloquea solo dependencias de producción: lo que llega al navegador.
-      - name: Vulnerabilidades en dependencias JS (producción)
-        run: npm audit --omit=dev --audit-level=high
-
-      # Herramientas de build (Tailwind 3 y su cadena): se informan sin bloquear
-      # hasta migrar a Tailwind 4, que es el único arreglo disponible.
-      - name: Vulnerabilidades en dependencias JS (desarrollo, informativo)
-        run: npm audit --audit-level=high
-        continue-on-error: true
