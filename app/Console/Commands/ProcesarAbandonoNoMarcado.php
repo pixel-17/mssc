@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Actions\Papeleta\MarcarRetornoAction;
 use App\Models\HistorialPapeleta;
 use App\Models\Papeleta;
 use App\Models\Retorno;
@@ -46,19 +47,19 @@ class ProcesarAbandonoNoMarcado extends Command
 
     protected $description = 'Cierra con causa de abandono las papeletas en curso cuyo turno/día terminó sin que el trabajador marcara retorno.';
 
-    public function handle(DeterminadorFinDeTurno $finDeTurno, NotificarPapeletaService $notificar): int
+    public function handle(DeterminadorFinDeTurno $finDeTurno, NotificarPapeletaService $notificar, MarcarRetornoAction $marcarRetorno): int
     {
         Papeleta::whereState('estado', AutorizadaYCorriendo::class)
             ->conTurnoTerminado()
             ->whereDoesntHave('retorno')
-            ->chunkById(100, function ($lote) use ($finDeTurno, $notificar) {
+            ->chunkById(100, function ($lote) use ($finDeTurno, $notificar, $marcarRetorno) {
                 foreach ($lote as $candidata) {
                     if (! $finDeTurno->yaTermino($candidata)) {
                         continue;
                     }
 
                     try {
-                        $papeleta = DB::transaction(function () use ($candidata, $finDeTurno) {
+                        $papeleta = DB::transaction(function () use ($candidata, $finDeTurno, $marcarRetorno) {
                             // Relectura bajo lock: si el trabajador marcó retorno
                             // (o el jefe lo hizo manual) mientras corría el lote,
                             // ya no es abandono.
@@ -78,11 +79,19 @@ class ProcesarAbandonoNoMarcado extends Command
                             // después). whereDoesntHave('retorno') del query de arriba ya
                             // lo filtra, pero se revalida bajo lock por si acaso.
                             if (! $actual->retorno) {
+                                $horaFin = $actual->fin_turno_at ?? now();
+
                                 Retorno::create([
                                     'papeleta_id' => $actual->id,
-                                    'hora_servidor' => $actual->fin_turno_at ?? now(),
+                                    'hora_servidor' => $horaFin,
                                     'generado_por_abandono' => true,
                                 ]);
+
+                                // Mismo cálculo que un retorno marcado normalmente (Paso 7):
+                                // si no se hace acá, el reporte de horas acumuladas cuenta
+                                // de más en 276 cuando la ausencia cruza el bloque de
+                                // almuerzo.
+                                $actual->descuento_refrigerio_minutos = $marcarRetorno->calcularDescuentoRefrigerio($actual, $horaFin);
                             }
 
                             $consecuencia = $actual->motivo->consecuenciaAlTerminar();

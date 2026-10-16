@@ -127,6 +127,33 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->assertTrue($papeleta->retorno->hora_servidor->equalTo(Carbon::parse('2026-09-22 06:00:00')));
     }
 
+    /**
+     * El refrigerio (Paso 7) también se calcula para el abandono, no solo
+     * para un retorno marcado a mano: si no, el reporte de horas
+     * acumuladas sobrecontaba en 276 cuando la ausencia cruzaba el
+     * bloque de almuerzo.
+     */
+    public function test_abandono_regimen_276_calcula_descuento_de_refrigerio_igual_que_un_retorno_normal(): void
+    {
+        $papeleta = $this->papeletaDePrueba($this->usuarioDePrueba(), AutorizadaYCorriendo::class, [
+            'motivo_id' => $this->motivoDe('PARTICULAR')->id,
+            'regimen' => '276',
+            'dia_operativo' => '2026-09-21',
+            'fin_turno_at' => '2026-09-21 15:00:00',
+            'hora_salida_real' => '2026-09-21 12:30:00',
+        ]);
+
+        $this->ir('2026-09-21 15:01:00');
+        $this->abandonos();
+
+        $papeleta = $papeleta->fresh();
+        $this->assertTrue($papeleta->estado->equals(Finalizada::class));
+        // Bloque de almuerzo por defecto 13:00-14:00, íntegro dentro de la
+        // ausencia (12:30 -> 15:00): 60 minutos, igual que si hubiera
+        // marcado retorno normalmente.
+        $this->assertSame(60, $papeleta->descuento_refrigerio_minutos);
+    }
+
     public function test_abandono_de_salud_registra_hora_de_fin_desde_que_queda_en_justificacion(): void
     {
         $papeleta = $this->papeletaNocheEnCurso('SALUD');
