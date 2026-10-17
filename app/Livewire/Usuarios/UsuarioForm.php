@@ -90,6 +90,10 @@ class UsuarioForm extends Component
     #[Locked]
     public bool $nuevoAdmin = false;
 
+    /** Volver al organigrama (?volver=organigrama) en vez de a la lista. Fijado en mount(). */
+    #[Locked]
+    public bool $volverAlOrganigrama = false;
+
     public string $turno = '';
 
     public string $fechaAncla = '';
@@ -107,6 +111,9 @@ class UsuarioForm extends Component
         $existente = $usuario?->exists ? $usuario : null;
 
         $this->alcance = $this->resolverAlcance($existente);
+        // Viene del organigrama (ver persona-drawer.blade.php, ?volver=organigrama):
+        // el botón «Cancelar» debe reabrir la ficha de la persona, no ir a la lista.
+        $this->volverAlOrganigrama = request()->query('volver') === 'organigrama';
 
         if ($existente) {
             $this->fechaAncla = now()->toDateString();
