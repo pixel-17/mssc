@@ -1,5 +1,9 @@
 <x-trabajador-layout titulo="Nueva papeleta" :volver-a="route('trabajador.papeletas.index')">
     <div x-data="{ motivoId: '{{ old('motivo_id') }}', motivos: {{ $motivos->toJson() }}, archivo: null, errorArchivo: null, enviando: false,
+        avisarAutorizacion: {{ $avisarAutorizacionAutomatica ? 'true' : 'false' }}, modalConfirmar: false,
+        intentarEnviar(ev) {
+            if (this.avisarAutorizacion) { ev.preventDefault(); this.modalConfirmar = true; }
+        },
         elegirArchivo(ev) {
             const f = ev.target.files[0] ?? null;
             this.errorArchivo = null;
@@ -19,8 +23,48 @@
             serif marca el orden real de llenado (motivo → justificación
             → hora → adjunto), no es decoración.
         --}}
-        <form method="POST" action="{{ route('trabajador.papeletas.store') }}" enctype="multipart/form-data" class="mt-4"
-              @submit="enviando = true" @pageshow.window="enviando = false">
+        {{-- Modal de confirmación: solo aparece cuando el jefe de área crea fuera del horario de RRHH --}}
+        <div
+            x-show="modalConfirmar"
+            x-cloak
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+            @keydown.escape.window="modalConfirmar = false"
+        >
+            <div class="glass-card w-full max-w-sm p-6 space-y-4" @click.outside="modalConfirmar = false">
+                <div class="flex items-start gap-3">
+                    <div class="shrink-0 mt-0.5 rounded-full bg-amber-100 dark:bg-amber-900/40 p-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5 text-amber-600 dark:text-amber-400">
+                            <path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="font-semibold text-tinta-900 dark:text-white text-sm">RRHH está fuera de horario</p>
+                        <p class="text-sm text-tinta-600 dark:text-tinta-300">
+                            Al enviar esta papeleta quedará <strong>autorizada automáticamente</strong> y podrás salir de inmediato.
+                            RRHH la revisará al inicio de su próxima jornada.
+                        </p>
+                        <p class="text-sm text-tinta-600 dark:text-tinta-300">
+                            ¿Confirmas que deseas crear la papeleta?
+                        </p>
+                    </div>
+                </div>
+                <div class="flex gap-3 pt-1">
+                    <button
+                        type="button"
+                        class="btn-secondary flex-1 text-sm py-2.5"
+                        @click="modalConfirmar = false"
+                    >Cancelar</button>
+                    <button
+                        type="button"
+                        class="btn-primary flex-1 text-sm py-2.5"
+                        @click="modalConfirmar = false; enviando = true; $nextTick(() => $refs.form.submit())"
+                    >Sí, crear papeleta</button>
+                </div>
+            </div>
+        </div>
+
+        <form x-ref="form" method="POST" action="{{ route('trabajador.papeletas.store') }}" enctype="multipart/form-data" class="mt-4"
+              @submit="intentarEnviar($event); if (!avisarAutorizacion) enviando = true" @pageshow.window="enviando = false">
             @csrf
 
             <div class="glass-card divide-y divide-tinta-100/70 dark:divide-white/10 px-4 sm:px-5">

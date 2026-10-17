@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Trabajador;
 
 use App\Actions\Papeleta\CancelarPapeletaAction;
 use App\Actions\Papeleta\CrearPapeletaAction;
+use App\Actions\Papeleta\RrhhHorarioService;
 use App\Actions\Papeleta\SubsanarObservacionAction;
 use App\Exceptions\PapeletaException;
 use App\Http\Controllers\Controller;
@@ -35,7 +36,7 @@ class PapeletaController extends Controller
         return view('trabajador.papeletas.index', compact('papeletas'));
     }
 
-    public function create(): View|RedirectResponse
+    public function create(RrhhHorarioService $horarioRrhh): View|RedirectResponse
     {
         $this->authorize('crear', Papeleta::class);
 
@@ -49,7 +50,13 @@ class PapeletaController extends Controller
 
         $motivos = Motivo::where('activo', true)->orderBy('nombre')->get();
 
-        return view('trabajador.papeletas.create', compact('motivos'));
+        // Si quien crea es jefe de área y RRHH está fuera de horario, la papeleta
+        // se autorizará automáticamente al enviar. Se pasa el flag a la vista para
+        // mostrar el aviso de confirmación antes de que el usuario envíe el formulario.
+        $usuario = Auth::user();
+        $avisarAutorizacionAutomatica = $usuario->esJefeDeArea() && ! $horarioRrhh->estaEnHorarioAhora();
+
+        return view('trabajador.papeletas.create', compact('motivos', 'avisarAutorizacionAutomatica'));
     }
 
     public function store(StorePapeletaRequest $request, CrearPapeletaAction $action): RedirectResponse

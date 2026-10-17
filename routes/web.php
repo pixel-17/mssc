@@ -166,6 +166,8 @@ Route::middleware($autenticado)->group(function () {
     Route::middleware('role:rrhh|admin')->group(function () {
         Route::get('/reportes/decisiones-rrhh', \App\Livewire\Reportes\DecisionesRrhhIndex::class)
             ->name('reportes.decisiones-rrhh');
+        Route::get('/reportes/resumen-papeletas', \App\Livewire\Reportes\ResumenPapeletasIndex::class)
+            ->name('reportes.resumen-papeletas');
         // Lista de abandonos y comisiones cerradas sin retorno (solo lectura).
         Route::get('/rrhh/abandonos', \App\Livewire\Papeletas\RrhhAbandonos::class)->name('rrhh.abandonos.index');
     });

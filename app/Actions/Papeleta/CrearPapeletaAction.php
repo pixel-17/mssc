@@ -55,15 +55,11 @@ use Illuminate\Support\Facades\DB;
  *   el jefe no decide a tiempo, la papeleta simplemente vence (ver
  *   ProcesarVencimientosPapeletas), nunca escala a nadie más.
  * - Jefe inmediato enviando SU PROPIA papeleta (sube un nivel, a su
- *   Jefe de Área): si su Jefe de Área no está disponible ahora mismo,
- *   sí escala:
- *     - Si RRHH está en horario -> PENDIENTE_RRHH directo.
- *     - Si RRHH también está fuera de horario -> el sistema autoriza
- *       (AUTORIZADA_Y_CORRIENDO) y queda para revisión post-hoc
- *       obligatoria al día siguiente (mismo mecanismo que AprobarJefeAction
- *       usa cuando el jefe aprueba con RRHH fuera de horario). Es el
- *       ÚNICO caso en que el sistema autoriza; queda registrado como
- *       actor_tipo = 'sistema', nadie "decidió" nada.
+ *   Jefe de Área): SIEMPRE queda en PENDIENTE_JEFE esperando a su
+ *   Jefe de Área, sin importar si está disponible ahora mismo o no.
+ *   Si no existe Jefe de Área activo, la papeleta no se crea (bloqueo
+ *   total, igual que cualquier otro trabajador sin jefe asignado).
+ *   Nunca escala a RRHH ni el sistema la autoriza por sí solo.
  * - Sede/regimen/dia_operativo/fin_turno_at quedan fijados como fotografía
  *   inmutable. fin_turno_at es el instante real en que termina el turno
  *   (728, con cruce de medianoche) o el horario ordinario (276): los jobs
@@ -212,21 +208,18 @@ class CrearPapeletaAction
      */
     private function determinarEstadoInicial(array $jefatura): string
     {
-        // Trabajador raso (no es jefe de nadie): SIEMPRE PendienteJefe,
-        // sin importar si el jefe está "disponible ahora mismo" — nunca
-        // salta a RRHH ni el sistema la autoriza por sí solo. Si el jefe
-        // no decide a tiempo, la papeleta simplemente vence (ver
-        // ProcesarVencimientosPapeletas), nunca escala a nadie más.
-        // Jefe inmediato enviando SU PROPIA papeleta: aquí sí escala a
-        // RRHH y, si RRHH también está fuera de horario, el sistema
-        // autoriza con revisión post-hoc — es el ÚNICO caso en que el
-        // sistema autoriza.
+        // Jefe de área: va directo a RRHH; si RRHH está fuera de horario,
+        // el sistema autoriza con revisión post-hoc obligatoria al día
+        // siguiente.
+        // Cualquier otro (trabajador raso o jefe inmediato enviando su
+        // propia papeleta): SIEMPRE PendienteJefe, esperando a su jefe
+        // inmediato o jefe de área respectivamente. Nunca escala a RRHH
+        // ni el sistema autoriza por sí solo — si el decisor no actúa a
+        // tiempo, la papeleta vence (ver ProcesarVencimientosPapeletas).
         return match (true) {
+            $jefatura['directoARrhh'] && ! $jefatura['rrhhEnHorario'] => AutorizadaYCorriendo::class,
             $jefatura['directoARrhh'] => PendienteRrhh::class,
-            ! $jefatura['esJefeInmediatoDeLaUnidad'] => PendienteJefe::class,
-            $jefatura['jefeDisponible'] => PendienteJefe::class,
-            $jefatura['rrhhEnHorario'] => PendienteRrhh::class,
-            default => AutorizadaYCorriendo::class,
+            default => PendienteJefe::class,
         };
     }
 
@@ -308,40 +301,17 @@ class CrearPapeletaAction
                 'actor_id' => null,
                 'actor_tipo' => 'sistema',
                 'estado_nuevo' => class_basename($papeleta->estado),
-                'justificacion' => 'Jefe de área: la papeleta se envía directo a RRHH.',
+                'justificacion' => $autorizaSistema
+                    ? 'Jefe de área con RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
+                    : 'Jefe de área: la papeleta se envía directo a RRHH.',
             ]);
 
             return;
         }
 
-        if (! $jefatura['esJefeInmediatoDeLaUnidad'] || $jefatura['jefeDisponible']) {
-            // Este historial explicativo solo aplica al caso que sí
-            // puede escalar (jefe inmediato enviando su propia
-            // papeleta). Un trabajador raso siempre queda en
-            // PendienteJefe y no necesita esta explicación.
-            return;
-        }
-
-        // Única fuente de verdad: se le pregunta a la papeleta ya
-        // creada, sobre las columnas fotografiadas — el mismo
-        // método que usan ObservarRrhhAction y el resto del
-        // sistema. Ya no se recalcula la regla del tope del
-        // organigrama por segunda vez aquí.
-        $sinJefatura = $papeleta->sinJefatura();
-
-        HistorialPapeleta::create([
-            'papeleta_id' => $papeleta->id,
-            'actor_id' => null,
-            'actor_tipo' => 'sistema',
-            'estado_nuevo' => class_basename($papeleta->estado),
-            'justificacion' => $sinJefatura
-                ? ($autorizaSistema
-                    ? 'Sin jefe superior en el organigrama y RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
-                    : 'Sin jefe superior en el organigrama: la papeleta se envía directo a RRHH.')
-                : ($autorizaSistema
-                    ? 'Jefe inmediato fuera de su horario y RRHH fuera de horario: autorización automática, pendiente de revisión post-hoc.'
-                    : 'Jefe inmediato fuera de su horario: la papeleta se envía directo a RRHH.'),
-        ]);
+        // Solo el jefe de área genera historial de sistema (rama directoARrhh
+        // arriba). Trabajador raso y jefe inmediato siempre quedan en
+        // PendienteJefe sin historial adicional.
     }
 
     private function notificarCreacion(Papeleta $papeleta, string $estadoInicial, bool $autorizaSistema): void
