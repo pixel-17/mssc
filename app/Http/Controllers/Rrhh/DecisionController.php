@@ -12,7 +12,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\ComentarioRequest;
 use App\Http\Requests\Papeleta\CorregirPapeletaRequest;
 use App\Models\Papeleta;
-use App\Services\BloqueoRevisionService;
+
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Auth;
  */
 class DecisionController extends Controller
 {
-    public function aprobar(Papeleta $papeleta, AprobarRrhhAction $action, BloqueoRevisionService $bloqueo): RedirectResponse
+    public function aprobar(Papeleta $papeleta, AprobarRrhhAction $action): RedirectResponse
     {
         $this->authorize('decidirComoRrhh', $papeleta);
 

@@ -68,10 +68,6 @@ class AppServiceProvider extends ServiceProvider
          * no hubiera ningún mapa en pantalla. Se excluye ese chunk del
          * preload: solo se pedirá cuando el mapa realmente se use.
          */
-        Vite::usePreloadTagAttributes(
-            fn (string $src, string $url, ?array $chunk, ?array $manifest) => str_contains($url, 'sede-mapa-leaflet')
-                ? false
-                : true
-        );
+        
     }
 }
