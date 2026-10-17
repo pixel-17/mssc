@@ -22,8 +22,8 @@ use Livewire\Component;
 
 /**
  * Alta y edición de una persona DENTRO del organigrama, en un solo panel
- * lateral para admin y jefe de área (antes: TrabajadorModal solo-admin +
- * dos formularios de página distintos: usuarios-admin y usuarios).
+ * lateral para admin, Jefe de Área y Jefe Inmediato (antes: TrabajadorModal
+ * solo-admin + dos formularios de página distintos: usuarios-admin y usuarios).
  *
  * Se abre con `org-persona-abrir`:
  *  - {id}                  → editar a esa persona.
@@ -89,7 +89,7 @@ class PersonaDrawer extends Component
         $this->resetValidation();
         $this->personaId = null;
         $this->activo = true;
-        $this->tipo = $tipo === 'jefe_inmediato' ? 'jefe_inmediato' : 'trabajador';
+        $this->tipo = $tipo === 'jefe_inmediato' && $this->puedeCrearJefeInmediato($actor) ? 'jefe_inmediato' : 'trabajador';
 
         if ($id !== null) {
             $persona = User::findOrFail($id);
@@ -123,8 +123,19 @@ class PersonaDrawer extends Component
             return;
         }
 
-        $this->tipo = $tipo === 'jefe_inmediato' ? 'jefe_inmediato' : 'trabajador';
+        $this->tipo = $tipo === 'jefe_inmediato' && $this->puedeCrearJefeInmediato($this->actor()) ? 'jefe_inmediato' : 'trabajador';
         $this->resetValidation(['sedeId', 'regimen']);
+    }
+
+    /**
+     * ¿Puede $actor dar de alta un Jefe Inmediato (jefe_id de una
+     * sub-unidad)? Solo admin y Jefe de Área: un Jefe Inmediato "puro"
+     * encabeza una unidad hoja (sin sub-unidades), así que no tiene dónde
+     * asignar un jefe nuevo; solo da de alta Trabajadores en su propia unidad.
+     */
+    private function puedeCrearJefeInmediato(User $actor): bool
+    {
+        return $actor->hasRole('admin') || $actor->esJefeDeArea();
     }
 
     /** Al elegir unidad en el alta de un trabajador se sugiere el régimen de su jefe (debe coincidir). */
@@ -158,7 +169,7 @@ class PersonaDrawer extends Component
             'dni' => ReglasDatosUsuario::dni(soloActivos: true),
             'email' => ReglasDatosUsuario::email($existenteInactivo?->id),
             'regimen' => ['required', Rule::in(['276', '728'])],
-            'tipo' => ['required', Rule::in(['trabajador', 'jefe_inmediato'])],
+            'tipo' => ['required', Rule::in($this->puedeCrearJefeInmediato($actor) ? ['trabajador', 'jefe_inmediato'] : ['trabajador'])],
             'unidadId' => ['required', Rule::in($permitidas->pluck('id')->all())],
             'sedeId' => $this->tipo === 'jefe_inmediato' ? ['required', 'exists:sedes,id'] : ['nullable'],
         ]);
@@ -366,6 +377,7 @@ class PersonaDrawer extends Component
             'creando' => $this->personaId === null,
             'persona' => $persona,
             'esAdmin' => $actor->hasRole('admin'),
+            'puedeCrearJefeInmediato' => $this->puedeCrearJefeInmediato($actor),
             'destino' => $destino,
             'unidades' => $unidades->all(),
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->get(['id', 'nombre'])
@@ -395,14 +407,16 @@ class PersonaDrawer extends Component
         $usuario = auth()->user();
 
         // La autorización se repite aquí: las llamadas de Livewire no re-evalúan el middleware de la ruta.
-        abort_unless($usuario && ($usuario->hasRole('admin') || $usuario->esJefeDeArea()), 403);
+        abort_unless($usuario && ($usuario->hasRole('admin') || $usuario->esJefeDeEquipo()), 403);
 
         return $usuario;
     }
 
     /**
-     * Unidades activas donde $actor puede ubicar gente: todas (admin) o su área
-     * (la que encabeza + sub-unidades), igual que CrearUsuarioRequest::unidadesDisponibles().
+     * Unidades activas donde $actor puede ubicar gente: todas (admin), su
+     * área (Jefe de Área: la que encabeza + sub-unidades) o su propia
+     * unidad (Jefe Inmediato "puro": solo la hoja que encabeza), igual que
+     * CrearUsuarioRequest::unidadesDisponibles().
      *
      * @return Collection<int, UnidadOrganica>
      */
@@ -417,7 +431,7 @@ class PersonaDrawer extends Component
         if (! $actor->hasRole('admin')) {
             $ids = collect();
 
-            foreach ($actor->unidadesDeArea as $unidad) {
+            foreach ($actor->unidadesQueEncabeza as $unidad) {
                 $ids->push($unidad->id);
                 $ids = $ids->merge($unidad->descendantIds());
             }

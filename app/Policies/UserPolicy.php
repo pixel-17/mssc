@@ -20,6 +20,10 @@ class UserPolicy
      * ¿Puede $creator crear un usuario dentro de la unidad orgánica
      * $unidadDestinoId? Cubre tanto crear un Trabajador como crear un
      * Jefe Inmediato (asignándolo como jefe_id de una sub-unidad).
+     *
+     * Admin: cualquiera. Jefe de Área: su área (unidad que encabeza +
+     * sub-unidades). Jefe Inmediato "puro": solo la unidad hoja que
+     * encabeza él mismo.
      */
     public function crearEnUnidad(User $creator, int $unidadDestinoId): bool
     {
@@ -27,7 +31,11 @@ class UserPolicy
             return true;
         }
 
-        return $this->esJefeDeAreaDe($creator, $unidadDestinoId);
+        if ($this->esJefeDeAreaDe($creator, $unidadDestinoId)) {
+            return true;
+        }
+
+        return $creator->unidadesQueEncabeza()->whereKey($unidadDestinoId)->exists();
     }
 
     /**

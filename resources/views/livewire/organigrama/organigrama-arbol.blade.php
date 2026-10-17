@@ -39,9 +39,9 @@
     </style>
 
     {{-- Botón de modo edición: fijo al borde derecho de la pantalla,
-         siempre visible aunque se haga scroll por el árbol. Solo para
-         quien puede editar (admin / Jefe de Área): un Jefe Inmediato
-         "puro" consulta su organigrama en solo lectura. --}}
+         siempre visible aunque se haga scroll por el árbol. Para quien
+         puede editar: admin, Jefe de Área o Jefe Inmediato (su propia
+         unidad). --}}
     @if ($puedeEditar)
         <button type="button"
                 wire:click="alternarEdicion"
@@ -88,11 +88,17 @@
                         </a>
                     </div>
                 </div>
-            @elseif ($modoEdicion)
+            @elseif ($modoEdicion && $esJefeDeArea)
                 {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
                 <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
                         @click="$dispatch('org-persona-abrir', {})">
                     <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
+                </button>
+            @elseif ($modoEdicion)
+                {{-- Jefe Inmediato "puro": solo da de alta trabajadores en su propia unidad. --}}
+                <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
+                        @click="$dispatch('org-persona-abrir', {})">
+                    <x-icon name="plus-circle" class="size-4" /> Agregar trabajador
                 </button>
             @endif
         </div>

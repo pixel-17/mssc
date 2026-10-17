@@ -36,7 +36,10 @@ use Livewire\Component;
  * - Jefe de Área (encabeza una unidad que tiene sub-unidades): su unidad y todo lo que
  *   cuelga de ella. Si encabeza varias, solo se pintan las de más
  *   arriba (las demás ya salen dentro).
- * - Cualquier otro (incluido el Jefe Inmediato de una unidad hoja): 403. La autorización se repite en render() porque
+ * - Jefe Inmediato "puro" (encabeza una unidad hoja): su propia unidad,
+ *   con permiso de edición (modo edición, agregar/editar trabajadores)
+ *   igual que un Jefe de Área, pero sin salir de su unidad.
+ * - Cualquier otro: 403. La autorización se repite en render() porque
  *   las llamadas de Livewire no re-evalúan el middleware de la ruta.
  *
  * Capa fina: el armado del árbol (consultas, alcance, filtros, ficha e
@@ -134,14 +137,14 @@ class OrganigramaArbol extends Component
         }
     }
 
-    /** Puede EDITAR (arrastrar, mover, activar modo edición): admin o Jefe de Área. */
+    /** Puede EDITAR (arrastrar, mover, activar modo edición): admin, Jefe de Área o Jefe Inmediato (su propia unidad). */
     private function autorizar(): User
     {
         /** @var User|null $usuario */
         $usuario = auth()->user();
 
         abort_unless(
-            $usuario && ($usuario->hasRole('admin') || $usuario->esJefeDeArea()),
+            $usuario && ($usuario->hasRole('admin') || $usuario->esJefeDeEquipo()),
             403,
         );
 
@@ -170,11 +173,12 @@ class OrganigramaArbol extends Component
     public function render(): View
     {
         $usuario = $this->autorizarLectura();
-        $puedeEditar = $usuario->hasRole('admin') || $usuario->esJefeDeArea();
+        $puedeEditar = $usuario->hasRole('admin') || $usuario->esJefeDeEquipo();
 
-        // El Jefe Inmediato "puro" solo consulta: si por alguna razón quedó
-        // con modoEdicion activo (no debería, el botón ni se le muestra),
-        // se fuerza a false para no exponer arrastre/ediciones sin permiso.
+        // Quien no puede editar (ni admin, ni Jefe de Área, ni Jefe Inmediato):
+        // si por alguna razón quedó con modoEdicion activo (no debería, el
+        // botón ni se le muestra), se fuerza a false para no exponer
+        // arrastre/ediciones sin permiso.
         if (! $puedeEditar) {
             $this->modoEdicion = false;
         }

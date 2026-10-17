@@ -19,8 +19,8 @@
                 @endif
             @endunless
 
-            {{-- Tipo (solo alta) --}}
-            @if ($creando)
+            {{-- Tipo (solo alta; el Jefe Inmediato "puro" solo da de alta Trabajadores en su propia unidad) --}}
+            @if ($creando && $puedeCrearJefeInmediato)
                 <section class="space-y-2">
                     <h3 class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">¿Qué vas a crear?</h3>
                     <div class="grid grid-cols-2 gap-2" role="group" aria-label="Tipo de persona">

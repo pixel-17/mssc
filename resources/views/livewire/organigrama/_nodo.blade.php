@@ -118,10 +118,11 @@
                             </button>
                         </div>
                     @elseif ($modoEdicion)
+                        {{-- Jefe Inmediato "puro": solo da de alta trabajadores en su propia unidad (no hay sub-unidad donde poner un jefe nuevo). --}}
                         <div class="flex items-center gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
-                            <button type="button" title="Agregar trabajador o jefe inmediato a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                            <button type="button" title="Agregar trabajador a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
                                     @click="$dispatch('org-persona-abrir', { unidadId: {{ $unidad->id }} })">
-                                <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador o jefe inmediato</span>
+                                <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador</span>
                             </button>
                         </div>
                     @endif
