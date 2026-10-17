@@ -189,8 +189,8 @@ class UsuarioForm extends Component
         /** @var User $actor */
         $actor = Auth::user();
 
-        if ($actor->hasRole('admin')) {
-            return 'admin';
+        if ($actor->hasRole('admin') && ($objetivo || request()->query('tipo') === 'admin')) {
+         return 'admin';
         }
 
         if ($objetivo) {

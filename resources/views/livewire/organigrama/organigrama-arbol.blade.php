@@ -36,73 +36,101 @@
         .org-tree > ul { margin-left: 0; }
         .org-tree > ul > li { padding-left: 0; }
         .org-tree > ul > li::before, .org-tree > ul > li::after { display: none; }
+        /* Barra del encabezado (título + Modo edición): pegada debajo de
+           la barra del sistema (.app-topbar en app.css), no encima ni
+           detrás. Va en CSS plano, no como clase de Tailwind
+           (top-[73px]), porque un valor arbitrario nuevo solo existe en
+           el CSS compilado después de un build (npm run build / dev);
+           si no se recompila, el navegador no tiene ese "top" y el
+           sticky no se pega a nada — se ve como si el botón
+           "desapareciera" al bajar el scroll. Así funciona siempre,
+           se haya recompilado Tailwind o no. */
+        .org-encabezado-fija {
+            position: sticky;
+            top: 73px; /* alto real de .app-topbar: padding 14px+14px + icon-btn 44px + borde 1px */
+            z-index: 20;
+            padding-block: .5rem;
+            background: var(--surface);
+            backdrop-filter: blur(6px);
+        }
     </style>
 
-    {{-- Botón de modo edición: fijo al borde derecho de la pantalla,
-         siempre visible aunque se haga scroll por el árbol. Para quien
-         puede editar: admin, Jefe de Área o Jefe Inmediato (su propia
-         unidad). --}}
-    @if ($puedeEditar)
-        <button type="button"
-                wire:click="alternarEdicion"
-                aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
-                @class([
-                    'fixed right-4 top-1/2 z-20 inline-flex -translate-y-1/2 items-center gap-1.5 rounded-full px-4 py-2.5 text-xs shadow-glass-lg sm:right-6',
-                    'btn-primary' => $modoEdicion,
-                    'btn-secondary' => ! $modoEdicion,
-                ])>
-            <x-icon name="pencil" class="size-4" />
-            {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
-        </button>
-    @endif
-
-    <x-admin.encabezado titulo="Organigrama del área">
-        <div class="flex flex-wrap items-center justify-end gap-2">
-            <div class="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs dark:border-white/15" role="group" aria-label="Qué tanto del árbol se ve">
-                <button type="button" class="px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
-                        :class="todos === null && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === null"
-                        @click="todos = null; $dispatch('org-areas')">Solo áreas</button>
-                <button type="button" class="border-s border-gray-200 px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
-                        :class="todos === true && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === true"
-                        @click="todos = true; $dispatch('org-expandir')">Todo abierto</button>
-                <button type="button" class="border-s border-gray-200 px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
-                        :class="todos === false && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === false"
-                        @click="todos = false; $dispatch('org-contraer')">Todo cerrado</button>
-            </div>
-            @if ($modoEdicion && $esAdmin)
-                <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
-                    <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">
-                        <x-icon name="plus-circle" class="size-4" /> Agregar
+    {{-- La barra entera (título + acciones) se desplaza con la página
+         como cualquier otro bloque, pero al llegar arriba del viewport
+         se queda pegada ahí en vez de seguir subiendo — así el botón de
+         modo edición sigue a mano sin volver a quedar "fixed" flotando
+         sobre el árbol como antes. Ver .org-encabezado-fija arriba. --}}
+    <div class="org-encabezado-fija">
+        <x-admin.encabezado titulo="Organigrama del área">
+            <div class="flex flex-wrap items-center justify-end gap-2">
+                {{-- Botón de modo edición: antes iba "fixed" sobre el árbol y
+                     quedaba flotando en medio de la pantalla, superponiéndose
+                     al contenido al hacer scroll. Ahora es un botón más de la
+                     barra de acciones del encabezado (que es la que queda
+                     pegada arriba al hacer scroll, ver arriba). Cuando está
+                     activo lleva un anillo ámbar a modo de "foco", para que
+                     se note que el árbol está en modo edición. Para quien
+                     puede editar: admin, Jefe de Área o Jefe Inmediato (su
+                     propia unidad). --}}
+                @if ($puedeEditar)
+                    <button type="button"
+                            wire:click="alternarEdicion"
+                            aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
+                            @class([
+                                'inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs transition-shadow',
+                                'btn-primary ring-2 ring-amber-400/80 ring-offset-2 ring-offset-white dark:ring-offset-tinta-950' => $modoEdicion,
+                                'btn-secondary' => ! $modoEdicion,
+                            ])>
+                        <x-icon name="pencil" class="size-4" />
+                        {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
                     </button>
-                    <div x-show="m" x-cloak x-transition.opacity.duration.120ms class="absolute right-0 z-30 mt-1 w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-gray-800">
-                        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
-                                @click="m = false; $dispatch('org-unidad-abrir', { id: null, parentId: null })">
-                            <x-icon name="building" class="size-4" /> Unidad orgánica
-                        </button>
-                        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
-                                @click="m = false; $dispatch('org-persona-abrir', {})">
-                            <x-icon name="users" class="size-4" /> Trabajador
-                        </button>
-                        <a href="{{ route('sedes.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
-                            <x-icon name="map-pin" class="size-4" /> Sede
-                        </a>
-                    </div>
+                @endif
+                <div class="inline-flex overflow-hidden rounded-lg border border-gray-200 text-xs dark:border-white/15" role="group" aria-label="Qué tanto del árbol se ve">
+                    <button type="button" class="px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                            :class="todos === null && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === null"
+                            @click="todos = null; $dispatch('org-areas')">Solo áreas</button>
+                    <button type="button" class="border-s border-gray-200 px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
+                            :class="todos === true && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === true"
+                            @click="todos = true; $dispatch('org-expandir')">Todo abierto</button>
+                    <button type="button" class="border-s border-gray-200 px-3 py-2 font-medium text-tinta-950 hover:bg-tinta-50 dark:border-white/15 dark:text-white dark:hover:bg-white/10"
+                            :class="todos === false && 'bg-tinta-50 dark:bg-white/10'" :aria-pressed="todos === false"
+                            @click="todos = false; $dispatch('org-contraer')">Todo cerrado</button>
                 </div>
-            @elseif ($modoEdicion && $esJefeDeArea)
-                {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
-                <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
-                        @click="$dispatch('org-persona-abrir', {})">
-                    <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
-                </button>
-            @elseif ($modoEdicion)
-                {{-- Jefe Inmediato "puro": solo da de alta trabajadores en su propia unidad. --}}
-                <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
-                        @click="$dispatch('org-persona-abrir', {})">
-                    <x-icon name="plus-circle" class="size-4" /> Agregar trabajador
-                </button>
-            @endif
-        </div>
-    </x-admin.encabezado>
+                @if ($modoEdicion && $esAdmin)
+                    <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
+                        <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">
+                            <x-icon name="plus-circle" class="size-4" /> Agregar
+                        </button>
+                        <div x-show="m" x-cloak x-transition.opacity.duration.120ms class="absolute right-0 z-30 mt-1 w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-gray-800">
+                            <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                                    @click="m = false; $dispatch('org-unidad-abrir', { id: null, parentId: null })">
+                                <x-icon name="building" class="size-4" /> Unidad orgánica
+                            </button>
+                            <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                                    @click="m = false; $dispatch('org-persona-abrir', {})">
+                                <x-icon name="users" class="size-4" /> Trabajador
+                            </button>
+                            <a href="{{ route('sedes.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
+                                <x-icon name="map-pin" class="size-4" /> Sede
+                            </a>
+                        </div>
+                    </div>
+                @elseif ($modoEdicion && $esJefeDeArea)
+                    {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
+                    <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
+                            @click="$dispatch('org-persona-abrir', {})">
+                        <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
+                    </button>
+                @elseif ($modoEdicion)
+                    {{-- Jefe Inmediato "puro": solo da de alta trabajadores en su propia unidad. --}}
+                    <button type="button" class="btn-primary inline-flex items-center gap-1 text-xs"
+                            @click="$dispatch('org-persona-abrir', {})">
+                        <x-icon name="plus-circle" class="size-4" /> Agregar trabajador
+                    </button>
+                @endif
+            </div>
+        </x-admin.encabezado>
+    </div>
 
     @if ($modoEdicion)
         <div class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="status">
@@ -273,14 +301,18 @@
         </div>
     @endif
 
-    {{-- Historial de movimientos --}}
+    {{-- Historial de movimientos: solo se ven los 2 más recientes por
+         defecto; el resto (hasta 10, los que trae $historial) se revela
+         con "Ver todo" para no alargar la pantalla de entrada. --}}
     @if ($historial->isNotEmpty())
-        <div class="glass-card p-4">
+        <div class="glass-card p-4" x-data="{ verTodo: false }">
             <h2 class="text-sm font-semibold text-tinta-950 dark:text-white">Movimientos recientes</h2>
             <ul class="mt-2 divide-y divide-gray-100 dark:divide-white/10">
                 @foreach ($historial as $fila)
                     @php($h = $fila['movimiento'])
-                    <li wire:key="org-mov-{{ $h->id }}" class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
+                    <li wire:key="org-mov-{{ $h->id }}"
+                        @if ($loop->index >= 2) x-show="verTodo" x-cloak @endif
+                        class="flex flex-wrap items-center gap-x-3 gap-y-1 py-2 text-sm">
                         <span class="font-medium text-tinta-950 dark:text-white">{{ $h->trabajador?->nombre_completo ?? 'Persona eliminada' }}</span>
                         <span class="text-gray-700 dark:text-tinta-50/80">{{ $h->unidadAnterior?->nombre ?? '—' }} → {{ $h->unidadNueva?->nombre ?? '—' }}</span>
                         @if ($h->esReversion())
@@ -299,6 +331,13 @@
                     </li>
                 @endforeach
             </ul>
+            @if ($historial->count() > 2)
+                <button type="button"
+                        class="mt-2 text-xs font-medium text-tinta-700 underline hover:no-underline dark:text-tinta-100"
+                        @click="verTodo = ! verTodo" :aria-expanded="verTodo">
+                    <span x-text="verTodo ? 'Ver menos' : 'Ver todo ({{ $historial->count() }})'"></span>
+                </button>
+            @endif
         </div>
     @endif
 
