@@ -25,6 +25,15 @@ return new class extends Migration
             $table->timestamp('hora_servidor')->nullable();
 
             $table->boolean('marcado_manual')->default(false);
+
+            // Cuando ProcesarAbandonoNoMarcado cierra una papeleta sin que el
+            // trabajador marcara su retorno, igual necesitamos UNA hora de fin
+            // para poder calcular cuánto tiempo estuvo afuera (hora_servidor
+            // = fin_turno_at en ese caso, no una marcación real). Este flag
+            // distingue ambos casos para que la UI no diga "retorno
+            // registrado" cuando en realidad es un abandono sin evidencia.
+            $table->boolean('generado_por_abandono')->default(false);
+
             $table->foreignId('marcado_manual_por_id')->nullable()->constrained('users')->nullOnDelete();
             $table->text('justificacion_manual')->nullable();
 

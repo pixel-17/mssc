@@ -11,6 +11,11 @@ return new class extends Migration
         Schema::create('papeletas', function (Blueprint $table) {
             $table->id();
 
+            // Bloqueo suave de revisión RRHH (ver App\Services\BloqueoRevisionService):
+            // indicativo, no impide la acción, solo avisa si otro revisor ya la tiene abierta.
+            $table->foreignId('en_revision_por_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamp('en_revision_desde')->nullable();
+
             $table->foreignId('trabajador_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('motivo_id')->constrained('motivos');
 
@@ -65,6 +70,8 @@ return new class extends Migration
             //   pendiente ──(RRHH observa)──► observada ──(jefe responde)──► respondida
             //   respondida ─(RRHH aprueba)──► aprobada | (RRHH observa)──► observada …
             //   al alcanzar el tope (o sin jefe que autorizara) ──► observada_firme
+            //   RRHH puede NO aprobarla -> reclasificada a Particular con descuento
+            //   (ver RevisionPosthocAction::noAprobar)
             $table->enum('revision_posthoc_estado', [
                 'no_aplica',
                 'pendiente',
@@ -72,6 +79,7 @@ return new class extends Migration
                 'respondida',
                 'aprobada',
                 'observada_firme',
+                'no_aprobada',
             ])->default('no_aplica');
             $table->foreignId('revision_posthoc_por_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('revision_posthoc_at')->nullable();
@@ -119,6 +127,13 @@ return new class extends Migration
             $table->index('dia_operativo');            // cierre de mes (ReporteHorasAcumuladasService)
             $table->index(['estado', 'dia_operativo']);
             $table->index(['estado', 'fin_turno_at']); // ProcesarAbandonoNoMarcado
+
+            // Índices compuestos para las bandejas y el badge del sidebar, que
+            // se recalculan en vivo (cada PapeletaActualizada): filtran por
+            // jefe + estado y por el estado de la revisión post-hoc.
+            $table->index(['jefe_inmediato_id', 'estado'], 'papeletas_jefe_inmediato_estado_index');
+            $table->index(['jefe_area_id', 'estado'], 'papeletas_jefe_area_estado_index');
+            $table->index(['autorizado_con_rrhh_fuera_horario', 'revision_posthoc_estado'], 'papeletas_posthoc_estado_index');
         });
     }
 
