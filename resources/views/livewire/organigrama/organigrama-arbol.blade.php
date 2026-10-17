@@ -113,6 +113,8 @@
                 @if ($esAdmin)
                     <li>Sobre un área con jefe de área puedes mover también su unidad con toda su gente.</li>
                     <li>Los íconos de cada unidad y persona sirven para editar, agregar sub-unidades o altas.</li>
+                @elseif ($esJefeDeArea)
+                    <li>El ícono «Agregar sub-unidad» de cada unidad de tu área sirve para crear una rama nueva.</li>
                 @endif
                 <li>Sin arrastrar (táctil o teclado): abre a la persona con clic en su nombre y usa «Mover a otra unidad».</li>
             </ul>
@@ -259,7 +261,7 @@
         <div @class(['org-tree overflow-x-auto pb-4', 'org-editando' => $modoEdicion]) :class="arrastrando && 'org-arrastrando'">
             <ul>
                 @foreach ($raices as $nodo)
-                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => 0, 'buscar' => $buscar])
+                    @include('livewire.organigrama._nodo', ['nodo' => $nodo, 'forzarAbierto' => $buscar !== '' || $sede !== '', 'esAdmin' => $esAdmin, 'esJefeDeArea' => $esJefeDeArea, 'modoEdicion' => $modoEdicion, 'nivel' => 0, 'buscar' => $buscar])
                 @endforeach
             </ul>
         </div>
@@ -653,8 +655,12 @@
 
     <livewire:organigrama.persona-drawer />
 
-    @if ($esAdmin)
+    {{-- unidad-modal también se monta para el Jefe de Área: crea sub-unidades dentro de su
+         propia área (ver UnidadModal::autorizarAccion). baja-con-reemplazo sigue solo admin. --}}
+    @if ($esAdmin || $esJefeDeArea)
         <livewire:organigrama.unidad-modal />
+    @endif
+    @if ($esAdmin)
         <livewire:usuarios.baja-con-reemplazo />
     @endif
 </div>

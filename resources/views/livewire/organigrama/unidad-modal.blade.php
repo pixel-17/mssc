@@ -29,7 +29,14 @@
                 </x-admin.campo>
 
                 <x-admin.campo label="Depende de" for="org-unidad-padre">
-                    <x-organigrama.combobox id="org-unidad-padre" model="parentId" :options="$padres" :live="true" placeholder="Buscar unidad…" vacio="— Unidad raíz —" />
+                    @if ($esAdmin)
+                        <x-organigrama.combobox id="org-unidad-padre" model="parentId" :options="$padres" :live="true" placeholder="Buscar unidad…" vacio="— Unidad raíz —" />
+                    @else
+                        {{-- Jefe de Área creando una sub-unidad: siempre depende de la unidad sobre la que pulsó «Agregar sub-unidad». --}}
+                        <p class="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-tinta-50/80">
+                            {{ $padres[0]['label'] ?? '—' }}
+                        </p>
+                    @endif
                 </x-admin.campo>
             </section>
 
@@ -88,8 +95,8 @@
                 <x-organigrama.switch model="activo" label="Unidad activa" ayuda="Una unidad desactivada sigue visible, atenuada, en el organigrama." />
             </section>
 
-            {{-- Zona de riesgo --}}
-            @if ($unidadId)
+            {{-- Zona de riesgo (eliminar): solo admin. Un Jefe de Área nunca llega aquí con $unidadId, porque solo crea, no edita. --}}
+            @if ($unidadId && $esAdmin)
                 <section class="space-y-2 rounded-xl border border-red-200/70 p-4 dark:border-red-500/20" x-data="{ confirmar: false }">
                     <h3 class="text-sm font-semibold text-red-700 dark:text-red-300">Eliminar unidad</h3>
 

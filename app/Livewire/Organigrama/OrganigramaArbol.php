@@ -188,6 +188,9 @@ class OrganigramaArbol extends Component
             'raices' => $raices,
             'stats' => $stats,
             'esAdmin' => $usuario->hasRole('admin'),
+            // Para mostrar «Agregar sub-unidad» por unidad: el Jefe de Área puede crear
+            // ramas nuevas dentro de su propia área (ver UnidadModal/GuardarUnidadOrganicaAction).
+            'esJefeDeArea' => $usuario->esJefeDeArea(),
             'puedeEditar' => $puedeEditar,
             'sedes' => Sede::orderBy('nombre')->get(['id', 'nombre']),
             'conteoSedes' => $conteoSedes,

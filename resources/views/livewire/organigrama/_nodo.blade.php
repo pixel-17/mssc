@@ -104,6 +104,19 @@
                                 <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador</span>
                             </button>
                         </div>
+                    @elseif ($modoEdicion && ($esJefeDeArea ?? false))
+                        {{-- Jefe de Área: no edita la unidad (pencil), pero sí puede agregar una
+                             sub-unidad nueva ("una rama más") dentro de su propia área, y gente. --}}
+                        <div class="flex items-center gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
+                            <button type="button" title="Agregar sub-unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                                    @click="$dispatch('org-unidad-abrir', { id: null, parentId: {{ $unidad->id }} })">
+                                <x-icon name="plus-circle" class="size-4" /><span class="sr-only">Agregar sub-unidad</span>
+                            </button>
+                            <button type="button" title="Agregar trabajador o jefe inmediato a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
+                                    @click="$dispatch('org-persona-abrir', { unidadId: {{ $unidad->id }} })">
+                                <x-icon name="users" class="size-4" /><span class="sr-only">Agregar trabajador o jefe inmediato</span>
+                            </button>
+                        </div>
                     @elseif ($modoEdicion)
                         <div class="flex items-center gap-0.5 opacity-70 transition group-hover:opacity-100 group-focus-within:opacity-100">
                             <button type="button" title="Agregar trabajador o jefe inmediato a esta unidad" class="rounded-lg p-1.5 text-gray-500 hover:bg-tinta-50 hover:text-tinta-700 dark:text-tinta-100 dark:hover:bg-white/10"
@@ -189,7 +202,7 @@
     @if ($tieneHijos)
         <ul x-show="open" x-collapse>
             @foreach ($nodo['hijos'] as $hijo)
-                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'modoEdicion' => $modoEdicion, 'nivel' => $nivel + 1, 'buscar' => $buscar])
+                @include('livewire.organigrama._nodo', ['nodo' => $hijo, 'forzarAbierto' => $forzarAbierto, 'esAdmin' => $esAdmin, 'esJefeDeArea' => $esJefeDeArea ?? false, 'modoEdicion' => $modoEdicion, 'nivel' => $nivel + 1, 'buscar' => $buscar])
             @endforeach
         </ul>
     @endif
