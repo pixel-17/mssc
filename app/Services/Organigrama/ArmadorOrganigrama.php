@@ -222,12 +222,14 @@ class ArmadorOrganigrama
         }
 
         $porId = $unidades->keyBy('id');
-        // Unidades que encabeza: de Jefe de Área (con sub-unidades) y
-        // también la propia unidad hoja de un Jefe Inmediato "puro" —
-        // antes se filtraban aquí y ese jefe nunca llegaba a ver su
-        // organigrama (autorizarLectura() ya decide quién entra).
+        $esJefeDeArea = $usuario->esJefeDeArea();
+
+        // Para Jefe de Área: solo las unidades CON sub-unidades (igual que antes).
+        // Para Jefe Inmediato "puro" (unidad hoja): se incluyen todas las
+        // que encabeza, aunque no tengan hijos, para que pueda ver su propia unidad.
         $encabezadas = $unidades
             ->where('jefe_id', $usuario->id)
+            ->when($esJefeDeArea, fn ($col) => $col->filter(fn (UnidadOrganica $u) => $porPadre->has($u->id)))
             ->pluck('id')
             ->all();
 

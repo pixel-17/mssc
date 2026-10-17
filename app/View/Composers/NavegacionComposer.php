@@ -124,13 +124,15 @@ class NavegacionComposer
 
         // Reportes: mismo criterio de acceso que las rutas (admin, RR. HH. o
         // jefe). Cada componente ya recorta los datos al alcance del usuario.
+        // "Ficha de trabajador" eliminada del menú: es accesible desde
+        // Trabajadores (usuarios.index) → editar, evitando la redundancia.
         $reportes = [
             ['label' => 'Horas acumuladas', 'route' => route('reportes.horas-acumuladas'), 'active' => request()->routeIs('reportes.horas-acumuladas'), 'icon' => 'chart'],
-            ['label' => 'Ficha de trabajador', 'route' => route('reportes.trabajador-historial'), 'active' => request()->routeIs('reportes.trabajador-historial'), 'icon' => 'user-circle'],
             ['label' => 'Sustentos', 'route' => route('reportes.sustentos'), 'active' => request()->routeIs('reportes.sustentos'), 'icon' => 'clipboard'],
         ];
 
         if ($esRrhh || $esAdmin) {
+            $reportes[] = ['label' => 'Resumen de papeletas', 'route' => route('reportes.resumen-papeletas'), 'active' => request()->routeIs('reportes.resumen-papeletas'), 'icon' => 'chart'];
             $reportes[] = ['label' => 'Decisiones de RR. HH.', 'route' => route('reportes.decisiones-rrhh'), 'active' => request()->routeIs('reportes.decisiones-rrhh'), 'icon' => 'clipboard'];
         }
 
@@ -158,7 +160,6 @@ class NavegacionComposer
 
         if ($esAdmin) {
             $secciones[] = ['label' => 'Catálogos', 'items' => [
-                ['label' => 'Resumen', 'route' => route('catalogos.index'), 'active' => request()->routeIs('catalogos.*'), 'icon' => 'grid'],
                 ['label' => 'Sedes', 'route' => route('sedes.index'), 'active' => request()->routeIs('sedes.*'), 'icon' => 'map-pin'],
                 ['label' => 'Unidades orgánicas', 'route' => route('unidades-organicas.index'), 'active' => request()->routeIs('unidades-organicas.*'), 'icon' => 'building'],
                 ['label' => 'Motivos', 'route' => route('motivos.index'), 'active' => request()->routeIs('motivos.*'), 'icon' => 'tag'],

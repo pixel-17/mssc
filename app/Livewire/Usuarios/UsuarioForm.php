@@ -90,14 +90,6 @@ class UsuarioForm extends Component
     #[Locked]
     public bool $nuevoAdmin = false;
 
-    /**
-     * Se llegó aquí desde «Edición completa» en la ficha del organigrama
-     * (?volver=organigrama): al guardar (o cancelar) se vuelve ahí en vez
-     * de saltar al listado plano de Usuarios, que no es de donde venía.
-     */
-    #[Locked]
-    public bool $volverAlOrganigrama = false;
-
     public string $turno = '';
 
     public string $fechaAncla = '';
@@ -115,7 +107,6 @@ class UsuarioForm extends Component
         $existente = $usuario?->exists ? $usuario : null;
 
         $this->alcance = $this->resolverAlcance($existente);
-        $this->volverAlOrganigrama = $existente !== null && request()->query('volver') === 'organigrama';
 
         if ($existente) {
             $this->fechaAncla = now()->toDateString();
@@ -722,12 +713,6 @@ class UsuarioForm extends Component
         });
 
         session()->flash('mensaje', $this->usuario->wasRecentlyCreated ? 'Usuario creado.' : 'Usuario actualizado.');
-
-        if ($this->volverAlOrganigrama) {
-            $this->redirectRoute('organigrama.index', ['persona' => $this->usuario->id], navigate: false);
-
-            return;
-        }
 
         $this->redirectRoute($esAdmin ? 'usuarios-admin.index' : 'usuarios.index', navigate: false);
     }
