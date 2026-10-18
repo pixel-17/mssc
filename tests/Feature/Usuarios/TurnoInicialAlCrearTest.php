@@ -4,6 +4,7 @@ namespace Tests\Feature\Usuarios;
 
 use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Livewire\Usuarios\UsuarioAdminForm;
+use App\Livewire\Usuarios\UsuarioForm;
 use App\Models\ConfiguracionTurno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -162,8 +163,8 @@ class TurnoInicialAlCrearTest extends TestCase
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
         $this->conUnidadHija($unidad);
 
-        $this->actingAs($jefeDeArea)
-            ->livewire(UsuarioForm::class)
+        Livewire::actingAs($jefeDeArea)
+            ->test(UsuarioForm::class)
             ->set('name', 'Luis')
             ->set('apellido', 'Mamani')
             ->set('dni', '70998877')

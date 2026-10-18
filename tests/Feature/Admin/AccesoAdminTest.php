@@ -29,7 +29,7 @@ class AccesoAdminTest extends TestCase
         'unidades-organicas.crear',
         'configuraciones.index',
         'usuarios-admin.index',
-        'usuarios.crear',
+        'usuarios-admin.crear',
     ];
 
     protected function setUp(): void

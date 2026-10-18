@@ -44,6 +44,12 @@ class JefeAreaUserSeeder extends Seeder
 
         $unidad->update(['jefe_id' => $jefeArea->id]);
 
+        // BUG detectado: updateOrCreate() no pasa 'activo', así que el objeto
+        // en memoria queda con activo=null aunque la fila sí default-ea a
+        // true; cargarConfiguracion() lee ese null como "inactivo" y lanza
+        // ValidationException. refresh() releva el valor real de la fila.
+        $jefeArea->refresh();
+
         // Un 728 sin turno vigente no está disponible para decidir (ver
         // DecisorDisponibleService::estaDeDescanso). Mismo criterio que el
         // jefe inmediato: turno según la hora de la siembra.

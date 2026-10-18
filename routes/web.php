@@ -128,6 +128,8 @@ Route::middleware($soloAdmin)->prefix('configuraciones')->name('configuraciones.
  * usuarios.editar): UsuarioForm calcula el alcance (admin | area | equipo) en mount().
  */
 Route::middleware($soloAdmin)->get('/usuarios-admin', \App\Livewire\Usuarios\UsuarioAdminIndex::class)->name('usuarios-admin.index');
+Route::middleware($soloAdmin)->get('/usuarios-admin/crear', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('usuarios-admin.crear');
+Route::middleware($soloAdmin)->get('/usuarios-admin/{usuario}/editar', \App\Livewire\Usuarios\UsuarioAdminForm::class)->name('usuarios-admin.editar');
 
 /*
  * Papeletas para el admin: TODAS, de cualquier estado, SOLO LECTURA.

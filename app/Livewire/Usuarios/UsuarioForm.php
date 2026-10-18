@@ -189,7 +189,15 @@ class UsuarioForm extends Component
         /** @var User $actor */
         $actor = Auth::user();
 
-        if ($actor->hasRole('admin')) {
+        // El bypass de admin aplica a EDITAR cualquier usuario (p. ej. desde
+        // usuario-admin-index.blade.php, route('usuarios.editar', $usuario))
+        // y a CREAR OTRO ADMIN (?tipo=admin, botón «Nuevo administrador»).
+        // Un admin creando sin ese query (alta de jefes/trabajadores) sigue
+        // el flujo normal de abajo, que lo rechaza: ver
+        // UserPolicy::puedeCrearAlgo() ("sin bypass de admin: esta es la vía
+        // de alta de los jefes; la alta de otro admin va por acá mismo con
+        // ?tipo=admin, o por Cuentas de usuario / usuarios-admin.crear").
+        if (($objetivo || request()->query('tipo') === 'admin') && $actor->hasRole('admin')) {
             return 'admin';
         }
 

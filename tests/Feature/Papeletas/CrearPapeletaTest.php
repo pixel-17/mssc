@@ -288,6 +288,7 @@ class CrearPapeletaTest extends TestCase
 
     public function test_la_papeleta_del_jefe_de_area_va_directo_a_rrhh(): void
     {
+        $this->ir('2026-09-22 10:00:00'); // martes hábil, dentro del horario ordinario: RRHH "en horario".
         [$jefeArea] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
         $rrhh = $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
         $this->turnoDePrueba($jefeArea);
@@ -309,6 +310,7 @@ class CrearPapeletaTest extends TestCase
 
     public function test_rrhh_aprueba_la_papeleta_del_jefe_de_area(): void
     {
+        $this->ir('2026-09-22 10:00:00'); // martes hábil, dentro del horario ordinario: RRHH "en horario".
         [$jefeArea] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
         $rrhh = $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
         $this->turnoDePrueba($jefeArea);

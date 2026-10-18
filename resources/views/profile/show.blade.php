@@ -14,7 +14,7 @@
     $ver = fn (string $id) => in_array($id, array_column($secciones, 'id'), true);
 @endphp
 
-<x-app-layout>
+<x-app-layout title="Perfil">
     {{-- Sin slot `header`: la cabecera de identidad vive dentro del mismo
          contenedor que las secciones, así todo comparte el mismo ancho
          y se alinea perfectamente. Sin menú de navegación: solo la

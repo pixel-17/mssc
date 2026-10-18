@@ -99,6 +99,6 @@ class AdminSinRolOperativoTest extends TestCase
 
         $this->actingAs($admin)->get(route('usuarios.crear'))->assertForbidden();
         $this->actingAs($admin)->get(route('usuarios.index'))->assertRedirect(route('usuarios-admin.index'));
-        $this->actingAs($admin)->get(route('usuarios.crear'))->assertOk();
+        $this->actingAs($admin)->get(route('usuarios-admin.crear'))->assertOk();
     }
 }
