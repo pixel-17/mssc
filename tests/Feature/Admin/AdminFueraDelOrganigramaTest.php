@@ -5,7 +5,7 @@ namespace Tests\Feature\Admin;
 use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
 use App\Exceptions\UsuarioException;
 use App\Livewire\Organigrama\UnidadModal;
-use App\Livewire\Usuarios\UsuarioAdminForm;
+use App\Livewire\Usuarios\UsuarioForm;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -89,8 +89,9 @@ class AdminFueraDelOrganigramaTest extends TestCase
 
     public function test_el_admin_crea_a_otro_admin_sin_unidad_ni_regimen(): void
     {
-        Livewire::actingAs($this->admin)
-            ->test(UsuarioAdminForm::class)
+        Livewire::withQueryParams(['tipo' => 'admin'])
+            ->actingAs($this->admin)
+            ->test(UsuarioForm::class)
             ->set('name', 'Nuevo')
             ->set('apellido', 'Administrador')
             ->set('dni', '40111222')
@@ -112,7 +113,7 @@ class AdminFueraDelOrganigramaTest extends TestCase
         $jefe = User::findOrFail($this->gerencia->jefe_id);
 
         Livewire::actingAs($this->admin)
-            ->test(UsuarioAdminForm::class, ['usuario' => $jefe])
+            ->test(UsuarioForm::class, ['usuario' => $jefe])
             ->set('rolesSeleccionados', [$this->rolId('admin')])
             ->call('guardar')
             ->assertHasErrors(['rolesSeleccionados']);

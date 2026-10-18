@@ -78,7 +78,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_noche_no_vence_a_medianoche_y_el_jefe_aun_puede_decidir_a_la_1_02(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador);
+        $this->turnoDePrueba($jefe);
         $this->turno($trabajador, '2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-21 23:58:00');
@@ -95,7 +96,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_noche_vence_recien_cuando_termina_el_turno_a_las_6(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador);
+        $this->turnoDePrueba($jefe);
         $this->turno($trabajador, '2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-21 23:58:00');
@@ -113,7 +115,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_noche_puede_crear_despues_de_medianoche_con_el_turno_del_dia_anterior(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador);
+        $this->turnoDePrueba($jefe);
         $this->turno($trabajador, '2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-22 01:00:00');
@@ -126,7 +129,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_728_manana_vence_a_las_14_y_no_a_medianoche(): void
     {
         $trabajador = $this->usuarioDePrueba();
-        $this->conJefeDePrueba($trabajador);
+        $jefe = $this->conJefeDePrueba($trabajador);
+        $this->turnoDePrueba($jefe);
         $this->turno($trabajador, '2026-09-21', 'MANANA', '06:00', '14:00');
 
         $this->ir('2026-09-21 13:00:00');
@@ -154,7 +158,8 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     public function test_276_vence_al_terminar_el_horario_ordinario(): void
     {
         $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
-        $this->conJefeDePrueba($trabajador); // jefe 728
+        $jefe = $this->conJefeDePrueba($trabajador); // jefe 728
+        $this->turnoDePrueba($jefe);
 
         $this->ir('2026-09-21 15:00:00');
         $papeleta = $this->crear($trabajador);

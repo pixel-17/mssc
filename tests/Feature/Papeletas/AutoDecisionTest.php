@@ -83,6 +83,7 @@ class AutoDecisionTest extends TestCase
     public function test_la_papeleta_del_jefe_fotografia_a_su_superior_y_no_a_si_mismo(): void
     {
         $this->turnoDePrueba($this->jefeOficina);
+        $this->turnoDePrueba($this->gerente); // recibe la papeleta: 728, necesita turno cargado
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar(
             $this->jefeOficina,

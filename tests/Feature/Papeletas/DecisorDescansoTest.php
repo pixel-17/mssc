@@ -125,6 +125,8 @@ class DecisorDescansoTest extends TestCase
 
         if ($gerenteDescansa) {
             $this->turnoDePrueba($gerente, $this->descanso('2026-09-21'));
+        } else {
+            $this->turnoDePrueba($gerente);
         }
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeOficina->fresh(), $this->motivoDe(), ['justificacion' => 'Urgencia']);

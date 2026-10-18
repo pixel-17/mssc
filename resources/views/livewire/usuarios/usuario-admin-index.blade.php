@@ -1,8 +1,8 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <x-admin.encabezado titulo="Usuarios">
-            <x-admin.boton-nuevo :href="route('usuarios.crear', ['tipo' => 'admin'])">Nuevo administrador</x-admin.boton-nuevo>
-            <x-admin.boton-nuevo :href="route('usuarios.crear')">Nuevo usuario</x-admin.boton-nuevo>
+            <x-admin.boton-nuevo :href="route('usuarios-admin.crear', ['tipo' => 'admin'])">Nuevo administrador</x-admin.boton-nuevo>
+            <x-admin.boton-nuevo :href="route('usuarios-admin.crear')">Nuevo usuario</x-admin.boton-nuevo>
         </x-admin.encabezado>
 
         <x-admin.mensajes />
@@ -45,7 +45,7 @@
                             <x-icon name="calendar" class="size-3.5" />
                             Calendario
                         </a>
-                        <x-admin.accion-editar :href="route('usuarios.editar', $usuario)" />
+                        <x-admin.accion-editar :href="route('usuarios-admin.editar', $usuario)" />
                         @if ($usuario->activo)
                             <x-admin.accion-eliminar
                                 wire:click="desactivar({{ $usuario->id }})"

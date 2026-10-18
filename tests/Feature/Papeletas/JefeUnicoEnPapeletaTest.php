@@ -17,8 +17,10 @@ use Tests\TestCase;
 
 /**
  * Un solo jefe por papeleta: el jefe de la unidad del trabajador
- * (jefe_inmediato_id, fotografiado al crear). El turno del jefe NO se
- * exige: solo el del trabajador 728, y que el jefe exista y esté activo.
+ * (jefe_inmediato_id, fotografiado al crear). Un jefe 728 sin ningún turno
+ * cargado bloquea la creación (ver FlujoPapeletaPorRolesTest); aquí se le
+ * carga uno "de sobra" donde no es el foco del test. Lo que SÍ se exige
+ * además es que el jefe exista y esté activo.
  * Fecha de referencia: lunes 2026-09-21, 10:00.
  */
 class JefeUnicoEnPapeletaTest extends TestCase
@@ -47,10 +49,11 @@ class JefeUnicoEnPapeletaTest extends TestCase
         return app(CrearPapeletaAction::class)->ejecutar($trabajador, $this->motivoDe('PARTICULAR'), []);
     }
 
-    public function test_trabajador_276_no_exige_turno_al_jefe_728_y_la_papeleta_le_llega(): void
+    public function test_trabajador_276_con_jefe_728_con_turno_la_papeleta_le_llega(): void
     {
         $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
-        $jefe = $this->conJefeDePrueba($trabajador); // 728, sin ningún turno cargado
+        $jefe = $this->conJefeDePrueba($trabajador); // 728
+        $this->turnoDePrueba($jefe);
 
         $papeleta = $this->crear($trabajador->fresh());
 
@@ -58,6 +61,17 @@ class JefeUnicoEnPapeletaTest extends TestCase
         $this->assertSame($jefe->id, $papeleta->jefe_inmediato_id);
         $this->assertTrue($papeleta->tieneComoJefeInmediatoA($jefe));
         $this->assertSame(1, Papeleta::deJefeInmediato($jefe)->count());
+    }
+
+    public function test_jefe_728_sin_ningun_turno_cargado_bloquea_la_creacion(): void
+    {
+        $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
+        $this->conJefeDePrueba($trabajador); // 728, sin ningún turno cargado
+
+        $this->expectException(PapeletaException::class);
+        $this->expectExceptionMessage('Tu jefe inmediato no tiene un turno asignado');
+
+        $this->crear($trabajador->fresh());
     }
 
     public function test_trabajador_276_con_jefe_728_en_descanso_tambien_puede_crear(): void
@@ -82,10 +96,11 @@ class JefeUnicoEnPapeletaTest extends TestCase
         $this->crear($trabajador->fresh());
     }
 
-    public function test_trabajador_728_con_turno_no_exige_turno_al_jefe(): void
+    public function test_trabajador_728_con_turno_y_jefe_con_turno(): void
     {
         $trabajador = $this->usuarioDePrueba(['regimen' => '728']);
         $jefe = $this->conJefeDePrueba($trabajador);
+        $this->turnoDePrueba($jefe);
         $this->turnoDePrueba($trabajador, ['turno' => 'MANANA', 'hora_inicio' => '06:00:00', 'hora_fin' => '14:00:00']);
 
         $papeleta = $this->crear($trabajador->fresh());
@@ -110,6 +125,7 @@ class JefeUnicoEnPapeletaTest extends TestCase
     {
         $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
         $jefe = $this->conJefeDePrueba($trabajador);
+        $this->turnoDePrueba($jefe);
 
         $this->crear($trabajador->fresh());
 

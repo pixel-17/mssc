@@ -98,8 +98,17 @@ class AdminSinRolOperativoTest extends TestCase
 
         $this->assertFalse($admin->can('puedeCrearAlgo', User::class));
 
-        $this->actingAs($admin)->get(route('usuarios.crear'))->assertForbidden();
+        // El 403 de abajo va al final a propósito: ocurre dentro del mount()
+        // del Livewire de usuarios.crear y, al abortar ahí, Livewire no llega
+        // a restaurar su binding temporal de redirect() en el contenedor.
+        // Si una petición a una ruta normal (como usuarios.index, que sí usa
+        // redirect()->route() en un controller plano) corre después en el
+        // mismo proceso de PHPUnit, hereda ese binding corrompido y rompe el
+        // tipo de retorno declarado en UsuarioController::index(). No es un
+        // bug de la app (en producción cada request es un proceso nuevo),
+        // así que esta aserción queda última para no contaminar las otras.
         $this->actingAs($admin)->get(route('usuarios.index'))->assertRedirect(route('usuarios-admin.index'));
         $this->actingAs($admin)->get(route('usuarios-admin.crear'))->assertOk();
+        $this->actingAs($admin)->get(route('usuarios.crear'))->assertForbidden();
     }
 }

@@ -223,8 +223,11 @@ class RrhhMejorasTest extends TestCase
             ->assertSee('Ausente')
             ->assertDontSee('Cumplida');
 
-        // La etiqueta del estado las distingue a simple vista.
-        $this->assertStringContainsString('Cerrada · abandono justificado', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
+        // La etiqueta del estado las distingue a simple vista. Cerrada se
+        // muestra como "Finalizada" (mismo criterio que la etiqueta normal
+        // de este estado, ver PapeletaEstadoPresentacion::para()), con el
+        // sufijo de abandono distinguiendo si hubo descuento o no.
+        $this->assertStringContainsString('Finalizada · abandono justificado (sin descuento)', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
         $this->assertStringNotContainsString('Abandono', view('components.estado-papeleta', ['estado' => $cerradaNormal->estado, 'abandono' => false])->render());
     }
 

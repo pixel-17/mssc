@@ -127,7 +127,17 @@
                         <p class="mt-1 text-xs text-gray-500 dark:text-tinta-100/60">Se asigna sola: es la sede del jefe inmediato de la unidad elegida.</p>
                     </div>
                 @endif
+            </div>
 
+            {{-- Jefe de Área creando: el turno no se pide en el alta, se carga después --}}
+            @if ($esArea && $creando)
+                <p class="text-xs text-gray-500 dark:text-tinta-100/60">
+                    El turno no se pide aquí: se carga después, desde la programación de turnos.
+                    Hasta entonces, el trabajador no podrá crear papeletas.
+                </p>
+            @endif
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {{-- Unidad orgánica --}}
                 @if ($esAdmin && !$esAdminRol)
                     <x-admin.campo label="Unidad orgánica" for="usuario-form-unidadOrganicaId" campo="unidadOrganicaId"

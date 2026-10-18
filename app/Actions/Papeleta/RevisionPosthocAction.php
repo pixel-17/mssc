@@ -158,6 +158,12 @@ class RevisionPosthocAction
 
         $actual->motivo_original_id = $actual->motivo_id;
         $actual->motivo_id = $particular->id;
+        // El chequeo de arriba (`$actual->motivo->suma_descuento`) ya dejó
+        // cacheada la relación con el motivo VIEJO; sin esto, cualquier
+        // lectura posterior de $actual->motivo en esta misma request (acá
+        // mismo, en el historial, o en quien llame a la Action) seguiría
+        // viendo el motivo anterior aunque motivo_id ya haya cambiado.
+        $actual->setRelation('motivo', $particular);
         $actual->requiere_visto_bueno = false;
 
         if ($actual->estado->equals(Cerrada::class)) {

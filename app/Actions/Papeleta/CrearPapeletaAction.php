@@ -185,6 +185,23 @@ class CrearPapeletaAction
             );
         }
 
+        // Un decisor 728 (rotativo) sin NINGÚN turno cargado (nunca se le
+        // programó nada) no es lo mismo que uno en su día de descanso de
+        // hoy: DecisorDisponibleService asume disponible a quien no tiene
+        // programación (no se puede afirmar que descansa), pero eso solo
+        // sirve para decidir si se escala AHORA — un jefe que sí tiene
+        // turno pero hoy descansa debe poder escalar con normalidad (ver
+        // DecisorDescansoTest). Esto es otra cosa: sin ninguna fila de
+        // turno jamás cargada, bloqueo total, igual que ya se exige al
+        // propio trabajador 728 en resolverTurnoActivo().
+        if ($jefeInmediato && $jefeInmediato->regimen === '728' && ! Turno::where('user_id', $jefeInmediato->id)->exists()) {
+            throw new PapeletaException(
+                $esJefeInmediatoDeLaUnidad
+                    ? 'Tu Jefe de Área no tiene un turno asignado. Comunícate con Administración para regularizarlo antes de crear una papeleta.'
+                    : 'Tu jefe inmediato no tiene un turno asignado. Comunícate con Administración para regularizarlo antes de crear una papeleta.'
+            );
+        }
+
         // Disponibilidad real: estar asignado en la BD no implica poder
         // decidir ahora (ver DecisorDisponibleService). Solo importa para
         // decidir si se escala, y solo escala quien es jefe de su unidad.

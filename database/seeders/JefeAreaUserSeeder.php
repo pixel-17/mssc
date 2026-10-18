@@ -35,6 +35,7 @@ class JefeAreaUserSeeder extends Seeder
                 'email_verified_at' => now(),
                 'regimen' => '728',
                 'unidad_organica_id' => $unidad->id,
+                'activo' => true,
             ]
         );
 

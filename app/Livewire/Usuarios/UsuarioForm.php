@@ -189,15 +189,15 @@ class UsuarioForm extends Component
         /** @var User $actor */
         $actor = Auth::user();
 
-        // El bypass de admin aplica a EDITAR cualquier usuario (p. ej. desde
-        // usuario-admin-index.blade.php, route('usuarios.editar', $usuario))
-        // y a CREAR OTRO ADMIN (?tipo=admin, botón «Nuevo administrador»).
-        // Un admin creando sin ese query (alta de jefes/trabajadores) sigue
-        // el flujo normal de abajo, que lo rechaza: ver
-        // UserPolicy::puedeCrearAlgo() ("sin bypass de admin: esta es la vía
-        // de alta de los jefes; la alta de otro admin va por acá mismo con
-        // ?tipo=admin, o por Cuentas de usuario / usuarios-admin.crear").
-        if (($objetivo || request()->query('tipo') === 'admin') && $actor->hasRole('admin')) {
+        // El bypass de admin aplica a EDITAR cualquier usuario y a CREAR
+        // OTRO ADMIN (?tipo=admin / botón «Nuevo administrador»).
+        // Un admin que crea sin esa query (alta de jefes/trabajadores) sigue
+        // el flujo normal, que lo rechaza (UserPolicy::puedeCrearAlgo).
+        //
+        // Nota: ?tipo=admin solo llega en el GET inicial; el POST de guardar()
+        // va a /livewire/update sin query string. $this->nuevoAdmin se fija en
+        // mount() y viaja en el snapshot de Livewire, cubriendo ese caso.
+        if ($actor->hasRole('admin') && ($objetivo || request()->query('tipo') === 'admin' || $this->nuevoAdmin)) {
             return 'admin';
         }
 
@@ -736,10 +736,15 @@ class UsuarioForm extends Component
     // Helpers de vista
     // ─────────────────────────────────────────────────────────────────
 
-    /** Sede que heredará el trabajador nuevo del Jefe de Área: la del jefe de la unidad elegida. */
+    /**
+     * Sede que heredará el trabajador nuevo del Jefe de Área: la del jefe de
+     * la unidad elegida. Antes de elegir unidad, se adelanta la sede propia
+     * del Jefe de Área como vista previa (es lo más probable, y se corrige
+     * sola en cuanto elige la unidad real).
+     */
     protected function sedeHeredada(): ?string
     {
-        if ($this->usuario !== null || ! $this->esArea() || $this->tipo !== 'trabajador' || ! $this->unidadOrganicaId) {
+        if ($this->usuario !== null || ! $this->esArea() || $this->tipo !== 'trabajador') {
             return null;
         }
 
