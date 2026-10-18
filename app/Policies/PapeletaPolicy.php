@@ -4,7 +4,10 @@ namespace App\Policies;
 
 use App\Actions\Papeleta\RrhhHorarioService;
 use App\Models\Papeleta;
+use App\Models\Sustento;
 use App\Models\User;
+use App\States\Papeleta\Cerrada;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
@@ -184,7 +187,7 @@ class PapeletaPolicy
      * Visto bueno humano sobre la justificación presentada (Paso 8): solo
      * RRHH, y nunca sobre su propia papeleta. El jefe inmediato no la revisa.
      */
-    public function revisarSustento(User $user, \App\Models\Sustento $sustento): bool
+    public function revisarSustento(User $user, Sustento $sustento): bool
     {
         return ! $this->esPropia($user, $sustento->papeleta)
             && $user->hasRole('rrhh');
@@ -195,7 +198,7 @@ class PapeletaPolicy
      * trabajador dueño o RRHH — mismo criterio que revisarSustento,
      * más el dueño.
      */
-    public function verSustento(User $user, \App\Models\Sustento $sustento): bool
+    public function verSustento(User $user, Sustento $sustento): bool
     {
         return $sustento->papeleta->trabajador_id === $user->id
             || $this->revisarSustento($user, $sustento);
@@ -209,7 +212,7 @@ class PapeletaPolicy
     {
         return $user->hasRole('rrhh')
             && ! $this->esPropia($user, $papeleta)
-            && ($papeleta->estado->equals(\App\States\Papeleta\Cerrada::class)
-                || $papeleta->estado->equals(\App\States\Papeleta\Finalizada::class));
+            && ($papeleta->estado->equals(Cerrada::class)
+                || $papeleta->estado->equals(Finalizada::class));
     }
 }

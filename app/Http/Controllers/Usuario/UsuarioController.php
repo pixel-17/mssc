@@ -12,6 +12,7 @@ use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
@@ -154,7 +155,7 @@ class UsuarioController extends Controller
      *
      * @return list<string>
      */
-    private function avisosDeUnidadesSinJefe(\Illuminate\Support\Collection $unidadIds): array
+    private function avisosDeUnidadesSinJefe(Collection $unidadIds): array
     {
         if ($unidadIds->isEmpty()) {
             return [];
@@ -176,7 +177,7 @@ class UsuarioController extends Controller
      * $user puede crear como Jefe de Área. Vacío si $user no encabeza
      * ninguna unidad (o sea, es "solo" Jefe Inmediato, o ni eso).
      */
-    private function subtreeIdsDeAreasQueEncabeza(User $user): \Illuminate\Support\Collection
+    private function subtreeIdsDeAreasQueEncabeza(User $user): Collection
     {
         $ids = collect();
 

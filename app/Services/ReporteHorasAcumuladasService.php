@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\Support\Minutos;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -168,7 +169,7 @@ class ReporteHorasAcumuladasService
     }
 
     /**
-     * @return array{0: \Carbon\Carbon, 1: \Carbon\Carbon}
+     * @return array{0: Carbon, 1: Carbon}
      */
     public function rangoDelMes(string $mes): array
     {
@@ -178,7 +179,7 @@ class ReporteHorasAcumuladasService
             $mes = now()->format('Y-m');
         }
 
-        $inicio = \Carbon\Carbon::createFromFormat('Y-m-d', "{$mes}-01")->startOfMonth();
+        $inicio = Carbon::createFromFormat('Y-m-d', "{$mes}-01")->startOfMonth();
 
         return [$inicio->copy(), $inicio->copy()->endOfMonth()];
     }

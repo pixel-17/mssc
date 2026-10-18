@@ -2,14 +2,15 @@
 
 namespace Tests\Feature\Papeletas;
 
+use App\Actions\Papeleta\AprobarRrhhAction;
 use App\Actions\Papeleta\CancelarPapeletaAction;
 use App\Actions\Papeleta\CrearPapeletaAction;
+use App\Actions\Papeleta\ObservarRrhhAction;
 use App\Exceptions\PapeletaException;
 use App\Models\HistorialPapeleta;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\UnidadOrganica;
-use App\Models\User;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
@@ -23,8 +24,8 @@ use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
@@ -241,7 +242,7 @@ class CrearPapeletaTest extends TestCase
         $tope->update(['unidad_organica_id' => $unidad->id]);
         $this->turnoDePrueba($tope);
 
-        $this->expectException(\App\Exceptions\PapeletaException::class);
+        $this->expectException(PapeletaException::class);
 
         app(CrearPapeletaAction::class)->ejecutar($tope->fresh(), $this->motivoDe('PARTICULAR'), []);
     }
@@ -304,8 +305,8 @@ class CrearPapeletaTest extends TestCase
         $this->assertStringContainsString('directo a RRHH', $historial->justificacion);
 
         // RRHH la puede aprobar, pero no observar (no hay jefe que responda).
-        $this->expectException(\App\Exceptions\PapeletaException::class);
-        app(\App\Actions\Papeleta\ObservarRrhhAction::class)->ejecutar($papeleta, $rrhh, 'falta detalle');
+        $this->expectException(PapeletaException::class);
+        app(ObservarRrhhAction::class)->ejecutar($papeleta, $rrhh, 'falta detalle');
     }
 
     public function test_rrhh_aprueba_la_papeleta_del_jefe_de_area(): void
@@ -316,7 +317,7 @@ class CrearPapeletaTest extends TestCase
         $this->turnoDePrueba($jefeArea);
 
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeArea, $this->motivoDe('PARTICULAR'), []);
-        app(\App\Actions\Papeleta\AprobarRrhhAction::class)->ejecutar($papeleta, $rrhh);
+        app(AprobarRrhhAction::class)->ejecutar($papeleta, $rrhh);
 
         $this->assertTrue($papeleta->fresh()->estado->equals(AutorizadaYCorriendo::class));
     }
@@ -326,7 +327,7 @@ class CrearPapeletaTest extends TestCase
         [$jefeArea] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '728');
         $this->turnoDePrueba($jefeArea);
 
-        $this->expectException(\App\Exceptions\PapeletaException::class);
+        $this->expectException(PapeletaException::class);
         $this->expectExceptionMessage('RR. HH. activo');
 
         app(CrearPapeletaAction::class)->ejecutar($jefeArea, $this->motivoDe('PARTICULAR'), []);
@@ -359,8 +360,8 @@ class CrearPapeletaTest extends TestCase
         // aprobarse a sí mismo una papeleta sin jefatura.
         $papeleta = $this->papeletaDePrueba($tope, PendienteRrhh::class);
 
-        $this->expectException(\App\Exceptions\PapeletaException::class);
-        app(\App\Actions\Papeleta\AprobarRrhhAction::class)->ejecutar($papeleta, $tope);
+        $this->expectException(PapeletaException::class);
+        app(AprobarRrhhAction::class)->ejecutar($papeleta, $tope);
     }
 
     public function test_rrhh_no_puede_observar_una_papeleta_sin_jefatura(): void
@@ -376,8 +377,8 @@ class CrearPapeletaTest extends TestCase
         // organigrama bloquea la creación.
         $papeleta = $this->papeletaDePrueba($tope, PendienteRrhh::class);
 
-        $this->expectException(\App\Exceptions\PapeletaException::class);
-        app(\App\Actions\Papeleta\ObservarRrhhAction::class)->ejecutar($papeleta, $rrhh, 'falta detalle');
+        $this->expectException(PapeletaException::class);
+        app(ObservarRrhhAction::class)->ejecutar($papeleta, $rrhh, 'falta detalle');
     }
 
     public function test_no_existe_el_motivo_emergencia(): void

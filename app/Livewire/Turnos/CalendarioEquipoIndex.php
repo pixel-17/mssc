@@ -11,11 +11,11 @@ use App\Services\ProgramacionTurnoService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Vista de equipo (grilla): filas = trabajadores que este Jefe

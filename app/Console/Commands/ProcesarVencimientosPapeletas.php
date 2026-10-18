@@ -7,6 +7,9 @@ use App\Models\Papeleta;
 use App\Services\DeterminadorFinDeTurno;
 use App\Services\NotificarPapeletaService;
 use App\States\Papeleta\AutorizadaYCorriendo;
+use App\States\Papeleta\ObservadaPorJefe;
+use App\States\Papeleta\ObservadaPorRrhh;
+use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Vencida;
 use Illuminate\Console\Command;
@@ -180,11 +183,10 @@ class ProcesarVencimientosPapeletas extends Command
     private function estadosNoTerminalesPreAutorizacion(): array
     {
         return [
-            \App\States\Papeleta\PendienteJefe::class,
-            \App\States\Papeleta\ObservadaPorJefe::class,
-            \App\States\Papeleta\PendienteRrhh::class,
-            \App\States\Papeleta\ObservadaPorRrhh::class,
+            PendienteJefe::class,
+            ObservadaPorJefe::class,
+            PendienteRrhh::class,
+            ObservadaPorRrhh::class,
         ];
     }
-
 }

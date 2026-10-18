@@ -115,7 +115,7 @@ class VencimientoNocturnoTest extends TestCase
         $this->assertTrue($papeleta->fresh()->estado->equals(Vencida::class), 'vence al terminar el turno');
     }
 
-    public function test_turno_finReal_calcula_el_dia_siguiente_solo_si_cruza_medianoche(): void
+    public function test_turno_fin_real_calcula_el_dia_siguiente_solo_si_cruza_medianoche(): void
     {
         $this->turno('22:00:00', '06:00:00', 'NOCHE');
         $noche = Turno::where('user_id', $this->trabajador->id)->first();

@@ -9,6 +9,7 @@ use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\Finalizada;
+use App\Support\Minutos;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -104,7 +105,7 @@ class AbandonoPorFinDeTurnoTest extends TestCase
         $this->assertTrue($papeleta->retorno->generado_por_abandono);
         $this->assertTrue($papeleta->retorno->hora_servidor->equalTo(Carbon::parse('2026-09-22 06:00:00')), 'usa la hora del fin de turno, no la del cron');
 
-        $minutos = \App\Support\Minutos::entre($papeleta->hora_salida_real, $papeleta->retorno->hora_servidor);
+        $minutos = Minutos::entre($papeleta->hora_salida_real, $papeleta->retorno->hora_servidor);
         $this->assertSame(6 * 60 + 30, $minutos, 'ahora sí se puede calcular cuánto tiempo estuvo afuera (23:30 -> 06:00 = 6h30)');
     }
 

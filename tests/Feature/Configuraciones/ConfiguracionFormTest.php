@@ -81,6 +81,7 @@ class ConfiguracionFormTest extends TestCase
             $this->editar('TOPE_OBSERVACIONES', '3', $malo)->assertHasErrors('valor');
         }
     }
+
     public function test_las_horas_de_turno_no_se_editan_desde_configuraciones(): void
     {
         // Incluye el horario ordinario: es la hora del turno Día (276).

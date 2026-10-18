@@ -2,12 +2,12 @@
 
 namespace App\Livewire\UnidadesOrganicas;
 
+use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\UnidadOrganica;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
-use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Component;
 
 /**

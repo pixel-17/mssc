@@ -10,7 +10,7 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 
 class HorasAcumuladasDetalleSheet implements FromCollection, WithHeadings, WithMapping, WithTitle
 {
-    public function __construct(protected \Illuminate\Support\Collection $detalle) {}
+    public function __construct(protected Collection $detalle) {}
 
     public function collection(): Collection
     {

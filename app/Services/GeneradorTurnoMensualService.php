@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\HorarioActualizado;
 use App\Models\CargaTurnoMensual;
 use App\Models\Configuracion;
 use App\Models\ConfiguracionTurno;
@@ -176,7 +177,7 @@ class GeneradorTurnoMensualService
             ]
         );
 
-        \App\Events\HorarioActualizado::notificar($trabajador->id);
+        HorarioActualizado::notificar($trabajador->id);
     }
 
     /**
@@ -211,7 +212,7 @@ class GeneradorTurnoMensualService
             ConfiguracionTurno::where('user_id', $trabajador->id)->delete();
         });
 
-        \App\Events\HorarioActualizado::notificar($trabajador->id);
+        HorarioActualizado::notificar($trabajador->id);
     }
 
     /**

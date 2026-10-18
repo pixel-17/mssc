@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\PapeletaActualizada;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -60,6 +61,6 @@ class HistorialPapeleta extends Model
     {
         // El historial se crea junto al cambio de estado; avisar aquí
         // garantiza que la línea de tiempo ya esté al refrescar.
-        static::created(fn (self $evento) => \App\Events\PapeletaActualizada::notificar($evento->papeleta_id));
+        static::created(fn (self $evento) => PapeletaActualizada::notificar($evento->papeleta_id));
     }
 }

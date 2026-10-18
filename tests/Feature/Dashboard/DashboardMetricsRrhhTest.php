@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\Dashboard;
 
-use App\Models\Papeleta;
 use App\Models\Retorno;
 use App\Services\DashboardMetricsService;
 use App\States\Papeleta\AutorizadaYCorriendo;

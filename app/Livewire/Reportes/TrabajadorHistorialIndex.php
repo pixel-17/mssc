@@ -2,15 +2,16 @@
 
 namespace App\Livewire\Reportes;
 
-use App\Livewire\Concerns\RestringeAReportes;
 use App\Exports\HistorialTrabajadorExport;
+use App\Livewire\Concerns\RestringeAReportes;
 use App\Models\User;
 use App\Services\HistorialTrabajadorService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Url;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -61,7 +62,7 @@ class TrabajadorHistorialIndex extends Component
 
         return Excel::download(
             new HistorialTrabajadorExport($service->historial($trabajador)),
-            'historial-papeletas-'.\Illuminate\Support\Str::slug($trabajador->nombre_completo).'.xlsx',
+            'historial-papeletas-'.Str::slug($trabajador->nombre_completo).'.xlsx',
         );
     }
 

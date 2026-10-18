@@ -3,7 +3,6 @@
 namespace Tests\Feature\Turnos;
 
 use App\Livewire\Turnos\CalendarioEquipoIndex;
-use App\Models\Turno;
 use App\Models\UnidadOrganica;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;

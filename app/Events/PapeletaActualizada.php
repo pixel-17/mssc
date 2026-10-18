@@ -4,6 +4,7 @@ namespace App\Events;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\DashboardMetricsService;
 use App\Support\PapeletaEstadoPresentacion;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -111,7 +112,7 @@ class PapeletaActualizada implements ShouldBroadcastNow
                 // Antes del broadcast: quien re-renderiza por el aviso debe leer datos frescos.
                 // Aislado: si la caché falla igual se emite el evento.
                 try {
-                    \App\Services\DashboardMetricsService::invalidar();
+                    DashboardMetricsService::invalidar();
                 } catch (Throwable $e) {
                     report($e);
                 }

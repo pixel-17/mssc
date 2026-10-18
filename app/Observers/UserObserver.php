@@ -2,6 +2,9 @@
 
 namespace App\Observers;
 
+use App\Actions\Organigrama\PapeletasAbiertasService;
+use App\Events\HorarioActualizado;
+use App\Models\Turno;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 
@@ -68,17 +71,17 @@ class UserObserver
     {
         // Cambió su jefe inmediato: sus papeletas abiertas pasan al jefe nuevo.
         if ($user->wasChanged('jefe_inmediato_id')) {
-            app(\App\Actions\Organigrama\PapeletasAbiertasService::class)->reasignarDeTrabajador($user);
+            app(PapeletasAbiertasService::class)->reasignarDeTrabajador($user);
         }
 
         if (! $user->wasChanged('sede_id')) {
             return;
         }
 
-        \App\Models\Turno::where('user_id', $user->id)
+        Turno::where('user_id', $user->id)
             ->where('fecha', '>=', now()->toDateString())
             ->update(['sede_id' => $user->sede_id]);
 
-        \App\Events\HorarioActualizado::notificar($user->id);
+        HorarioActualizado::notificar($user->id);
     }
 }

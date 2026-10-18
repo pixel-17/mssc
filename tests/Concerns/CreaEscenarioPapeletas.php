@@ -88,9 +88,9 @@ trait CreaEscenarioPapeletas
      * (User::unidadesDeArea()). Para armar ese escenario, la unidad recibe
      * una sub-unidad vacía (sin jefe, así no genera avisos de turnos).
      */
-    protected function conUnidadHija(\App\Models\UnidadOrganica $unidad): \App\Models\UnidadOrganica
+    protected function conUnidadHija(UnidadOrganica $unidad): UnidadOrganica
     {
-        return \App\Models\UnidadOrganica::create([
+        return UnidadOrganica::create([
             'nombre' => 'Sub-área de '.$unidad->nombre,
             'parent_id' => $unidad->id,
         ]);

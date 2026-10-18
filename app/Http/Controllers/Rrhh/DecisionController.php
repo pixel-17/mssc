@@ -13,7 +13,6 @@ use App\Http\Requests\Papeleta\ComentarioRequest;
 use App\Http\Requests\Papeleta\CorregirPapeletaRequest;
 use App\Models\Papeleta;
 use App\Services\BloqueoRevisionService;
-
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;

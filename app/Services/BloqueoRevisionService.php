@@ -35,7 +35,7 @@ class BloqueoRevisionService
 
         $papeleta->update([
             'en_revision_por_id' => $usuario->id,
-            'en_revision_desde'  => Carbon::now(),
+            'en_revision_desde' => Carbon::now(),
         ]);
 
         return true;
@@ -52,7 +52,7 @@ class BloqueoRevisionService
         if ($papeleta->en_revision_por_id === $usuario->id) {
             $papeleta->update([
                 'en_revision_por_id' => null,
-                'en_revision_desde'  => null,
+                'en_revision_desde' => null,
             ]);
         }
     }

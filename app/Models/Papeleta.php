@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\PapeletaActualizada;
 use App\Exceptions\PapeletaException;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\ObservadaPorJefe;
@@ -14,7 +15,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Support\Facades\DB;
 use Spatie\ModelStates\HasStates;
 
 /**
@@ -110,7 +110,7 @@ class Papeleta extends Model
     {
         // Tiempo real: cualquier cambio de la papeleta (estado, retorno,
         // observaciones...) se publica por Reverb, ver PapeletaActualizada.
-        static::saved(fn (self $papeleta) => \App\Events\PapeletaActualizada::notificar($papeleta->id));
+        static::saved(fn (self $papeleta) => PapeletaActualizada::notificar($papeleta->id));
     }
 
     /**

@@ -3,8 +3,8 @@
 namespace Tests\Feature\Usuarios;
 
 use App\Livewire\Usuarios\UsuarioAdminForm;
-use App\Support\ReglasDatosUsuario;
 use App\Models\User;
+use App\Support\ReglasDatosUsuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;

@@ -29,7 +29,7 @@ class EquipoDelJefeService
      * pueden programar (jefes inmediatos pares): las pantallas de
      * programación los excluyen de lo editable.
      *
-     * @return array{0: Collection<int, User>, 1: bool, 2: list<int>}  [personas, esJefeDeArea, idsSoloLectura]
+     * @return array{0: Collection<int, User>, 1: bool, 2: list<int>} [personas, esJefeDeArea, idsSoloLectura]
      */
     public function para(User $user): array
     {

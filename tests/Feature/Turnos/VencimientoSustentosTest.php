@@ -4,8 +4,8 @@ namespace Tests\Feature\Turnos;
 
 use App\Models\Papeleta;
 use App\Models\Sustento;
-use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;

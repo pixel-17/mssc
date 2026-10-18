@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Events\HorarioActualizado;
+use App\Support\TurnoColores;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
@@ -36,10 +38,10 @@ class Turno extends Model
         static::saved(function (self $turno) {
             $antes = $turno->wasChanged('user_id') ? (int) $turno->getOriginal('user_id') : null;
 
-            \App\Events\HorarioActualizado::notificar(...array_filter([$turno->user_id, $antes]));
+            HorarioActualizado::notificar(...array_filter([$turno->user_id, $antes]));
         });
 
-        static::deleted(fn (self $turno) => \App\Events\HorarioActualizado::notificar($turno->user_id));
+        static::deleted(fn (self $turno) => HorarioActualizado::notificar($turno->user_id));
     }
 
     protected $fillable = [
@@ -209,6 +211,6 @@ class Turno extends Model
      */
     public function claseColor(): string
     {
-        return \App\Support\TurnoColores::para($this->etiqueta());
+        return TurnoColores::para($this->etiqueta());
     }
 }

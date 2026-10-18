@@ -4,9 +4,9 @@ namespace App\Http\Requests\Usuario;
 
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Support\ReglasDatosUsuario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
-use App\Support\ReglasDatosUsuario;
 use Illuminate\Validation\Rule;
 
 /**

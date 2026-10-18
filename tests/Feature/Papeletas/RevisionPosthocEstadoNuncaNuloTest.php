@@ -4,6 +4,7 @@ namespace Tests\Feature\Papeletas;
 
 use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Models\UnidadOrganica;
+use App\Models\User;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
@@ -48,7 +49,7 @@ class RevisionPosthocEstadoNuncaNuloTest extends TestCase
      * (día de descanso 728): así la papeleta escala a RRHH o, fuera de su
      * horario, el sistema la autoriza con revisión post-hoc.
      */
-    private function topeDePrueba(): \App\Models\User
+    private function topeDePrueba(): User
     {
         $superior = $this->usuarioDePrueba();
         $unidadSuperior = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $superior->id]);

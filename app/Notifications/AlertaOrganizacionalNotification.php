@@ -2,7 +2,6 @@
 
 namespace App\Notifications;
 
-
 /**
  * Notificación para avisos del organigrama que NO están ligados a una
  * Papeleta concreta (a diferencia de PapeletaNotification) — hoy solo

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\HorarioActualizado;
 use App\Models\CargaTurnoMensual;
 use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
@@ -102,7 +103,7 @@ class ProgramacionTurnoService
             );
         });
 
-        \App\Events\HorarioActualizado::notificar($trabajador->id);
+        HorarioActualizado::notificar($trabajador->id);
     }
 
     /**

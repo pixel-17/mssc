@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 /**
  * Nodo del organigrama (Gerencia, Sub Gerencia, Oficina General, Oficina,
@@ -134,9 +135,9 @@ class UnidadOrganica extends Model
      * jefaturas de un subárbol (UnidadOrganicaObserver, jefaturas:recalcular).
      * Las unidades son oficinas, un volumen chico.
      *
-     * @return \Illuminate\Support\Collection<int, UnidadOrganica>
+     * @return Collection<int, UnidadOrganica>
      */
-    public static function arbolEnMemoria(): \Illuminate\Support\Collection
+    public static function arbolEnMemoria(): Collection
     {
         $porId = static::query()->with(['jefe'])->get()->keyBy('id');
 

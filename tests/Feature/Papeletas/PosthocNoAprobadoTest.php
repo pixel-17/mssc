@@ -6,6 +6,7 @@ use App\Actions\Papeleta\ResponderPosthocAction;
 use App\Actions\Papeleta\RevisionPosthocAction;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Notifications\PapeletaNotification;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\Finalizada;
@@ -66,7 +67,7 @@ class PosthocNoAprobadoTest extends TestCase
         $this->assertSame($this->motivoDe('COMISION')->id, $papeleta->motivo_original_id);
         $this->assertTrue($papeleta->motivo->suma_descuento);
 
-        Notification::assertSentTo($this->trabajador, \App\Notifications\PapeletaNotification::class);
+        Notification::assertSentTo($this->trabajador, PapeletaNotification::class);
     }
 
     public function test_si_el_trabajador_sigue_fuera_solo_cambia_el_motivo_y_al_volver_se_finaliza(): void

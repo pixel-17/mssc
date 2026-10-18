@@ -7,8 +7,8 @@ namespace App\Livewire\Usuarios;
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
 use App\Actions\Usuario\CrearUsuarioAction;
 use App\Actions\Usuario\EditarUsuarioAction;
+use App\Events\PapeletaActualizada;
 use App\Exceptions\UsuarioException;
-use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\ConfiguracionTurno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -254,7 +254,7 @@ class UsuarioForm extends Component
     }
 
     // ─────────────────────────────────────────────────────────────────
-    // Helpers de roles y turno 
+    // Helpers de roles y turno
     // ─────────────────────────────────────────────────────────────────
 
     protected function esSoloAdmin(): bool
@@ -712,7 +712,7 @@ class UsuarioForm extends Component
 
             if ($esAdmin) {
                 $this->usuario->syncRoles($roles);
-                \App\Events\PapeletaActualizada::olvidarDestinatariosFijos();
+                PapeletaActualizada::olvidarDestinatariosFijos();
             }
 
             if ($requiereTurno && $activo) {

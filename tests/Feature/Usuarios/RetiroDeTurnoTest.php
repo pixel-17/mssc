@@ -12,7 +12,6 @@ use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
-use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 

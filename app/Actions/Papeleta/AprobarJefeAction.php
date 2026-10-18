@@ -14,7 +14,6 @@ use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Support\Facades\DB;
 
 /**
- *
  * Si RRHH está en horario -> PENDIENTE_RRHH.
  * Si RRHH está fuera de horario -> directo a AUTORIZADA_Y_CORRIENDO,
  * marcada para revisión post-hoc obligatoria (Paso 4).

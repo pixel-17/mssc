@@ -12,8 +12,8 @@ use App\View\Composers\NavegacionComposer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\View;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Vite;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -68,6 +68,6 @@ class AppServiceProvider extends ServiceProvider
          * no hubiera ningún mapa en pantalla. Se excluye ese chunk del
          * preload: solo se pedirá cuando el mapa realmente se use.
          */
-        
+
     }
 }

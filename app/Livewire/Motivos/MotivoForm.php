@@ -2,10 +2,10 @@
 
 namespace App\Livewire\Motivos;
 
+use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\Motivo;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
-use App\Livewire\Concerns\RequiereAdmin;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Component;

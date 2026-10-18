@@ -6,14 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-     /**
-      * Informativa para todos los regímenes desde el rediseño de 276:
-      * ya no es obligatoria fila por día (276 valida contra el horario
-      * único global de HorarioOrdinarioService/Configuraciones). Para
-      * 728 sigue siendo la referencia opcional de turno/descanso, y es
-      * la que efectivamente se consulta al escalar (Paso 2) cuando el
-      * actor (Jefe Inmediato / Jefe de Área) es régimen 728.
-      */
+    /**
+     * Informativa para todos los regímenes desde el rediseño de 276:
+     * ya no es obligatoria fila por día (276 valida contra el horario
+     * único global de HorarioOrdinarioService/Configuraciones). Para
+     * 728 sigue siendo la referencia opcional de turno/descanso, y es
+     * la que efectivamente se consulta al escalar (Paso 2) cuando el
+     * actor (Jefe Inmediato / Jefe de Área) es régimen 728.
+     */
     public function up(): void
     {
         Schema::create('turnos', function (Blueprint $table) {

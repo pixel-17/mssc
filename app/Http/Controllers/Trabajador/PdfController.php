@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Trabajador;
 
 use App\Http\Controllers\Controller;
 use App\Models\Papeleta;
+use App\States\Papeleta\Cerrada;
+use App\States\Papeleta\Finalizada;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -46,8 +48,8 @@ class PdfController extends Controller
         // (sin descuento) o Finalizada (con descuento). No para las que
         // siguen en trámite ni para Rechazada/Cancelada/Vencida: ahí no hay
         // nada que certificar.
-        $puedeDescargar = $papeleta->estado->equals(\App\States\Papeleta\Cerrada::class)
-            || $papeleta->estado->equals(\App\States\Papeleta\Finalizada::class);
+        $puedeDescargar = $papeleta->estado->equals(Cerrada::class)
+            || $papeleta->estado->equals(Finalizada::class);
 
         abort_unless($puedeDescargar, 403, 'El PDF solo está disponible cuando la papeleta ya fue cerrada o finalizada.');
 

@@ -3,18 +3,18 @@
 namespace App\Services;
 
 use App\Models\Papeleta;
-use App\Support\Minutos;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\EnJustificacion;
+use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Rechazada;
-use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\Vencida;
+use App\Support\Minutos;
 use Illuminate\Support\Collection;
 
 /**

@@ -7,17 +7,17 @@ use App\Models\Retorno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
+use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\ObservadaPorRrhh;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use App\States\Papeleta\Rechazada;
-use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\Vencida;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Métricas reales para el dashboard nuevo (admin, RRHH, jefe). Cada

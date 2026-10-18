@@ -11,6 +11,7 @@ use App\States\Papeleta\PendienteRrhh;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Testing\TestResponse;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
@@ -78,7 +79,7 @@ class FlujoPapeletaPorRolesTest extends TestCase
         parent::tearDown();
     }
 
-    private function solicitar(): \Illuminate\Testing\TestResponse
+    private function solicitar(): TestResponse
     {
         return $this->actingAs($this->trabajador)->post(route('trabajador.papeletas.store'), [
             'motivo_id' => $this->motivoDe('PARTICULAR')->id,

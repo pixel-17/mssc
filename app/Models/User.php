@@ -4,9 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -85,7 +90,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function sede(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
     }
@@ -94,7 +99,7 @@ class User extends Authenticatable
      * Unidad orgánica (oficina/sub oficina/gerencia) a la que pertenece
      * este usuario dentro del organigrama.
      */
-    public function unidadOrganica(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function unidadOrganica(): BelongsTo
     {
         return $this->belongsTo(UnidadOrganica::class);
     }
@@ -106,7 +111,7 @@ class User extends Authenticatable
      * fotografían este dato y no deben cambiar si el organigrama se
      * reestructura después.
      */
-    public function jefeInmediato(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function jefeInmediato(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_inmediato_id');
     }
@@ -116,13 +121,13 @@ class User extends Authenticatable
      * unidad de este usuario). Mismo motivo que jefeInmediato(): valor
      * explícito para no romper el historial si el árbol cambia.
      */
-    public function jefeArea(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function jefeArea(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_area_id');
     }
 
     /** Unidad orgánica que este usuario encabeza, si es jefe de alguna. */
-    public function unidadesQueEncabeza(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function unidadesQueEncabeza(): HasMany
     {
         return $this->hasMany(UnidadOrganica::class, 'jefe_id');
     }
@@ -133,7 +138,7 @@ class User extends Authenticatable
      * sub-oficinas) es Jefe Inmediato "puro": su jefe_id lo pone como
      * jefe de ESA oficina, no le da mando sobre otras.
      */
-    public function unidadesDeArea(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function unidadesDeArea(): HasMany
     {
         return $this->unidadesQueEncabeza()->whereHas('hijos');
     }
@@ -194,7 +199,7 @@ class User extends Authenticatable
      * que además suma los jefes de esas sub-unidades sin exponer a
      * todo el personal de cada una.
      */
-    public function subordinadosInmediatos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function subordinadosInmediatos(): HasMany
     {
         return $this->hasMany(User::class, 'jefe_inmediato_id');
     }
@@ -219,7 +224,7 @@ class User extends Authenticatable
      * jefe inmediato de otro usuario. Misma regla que esJefeDeAlguien(), pero
      * resuelta en SQL para filtrar listas enteras sin 2 consultas por fila.
      */
-    public function scopeQueEsJefe(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeQueEsJefe(Builder $query): Builder
     {
         return $query->where(fn ($q) => $q
             ->whereHas('unidadesQueEncabeza')
@@ -233,7 +238,7 @@ class User extends Authenticatable
      * área (columnas explícitas) soy yo y todos los de las unidades que
      * encabezo (y sus sub-unidades).
      */
-    public function scopeEquipoDe(\Illuminate\Database\Eloquent\Builder $query, User $jefe): \Illuminate\Database\Eloquent\Builder
+    public function scopeEquipoDe(Builder $query, User $jefe): Builder
     {
         $unidadIds = $jefe->unidadesQueEncabeza
             ->flatMap(fn ($u) => collect([$u->id])->merge($u->descendantIds()))
@@ -251,19 +256,19 @@ class User extends Authenticatable
     }
 
     /** Equipo del jefe como colección (para selects/buscadores). */
-    public function equipo(): \Illuminate\Support\Collection
+    public function equipo(): Collection
     {
         return User::equipoDe($this)->orderBy('name')->get();
     }
 
     /** @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad. */
-    public function trabajadoresComoJefeInmediato(): \Illuminate\Support\Collection
+    public function trabajadoresComoJefeInmediato(): Collection
     {
         return $this->equipo();
     }
 
     /** @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad. */
-    public function trabajadoresParaReportes(): \Illuminate\Support\Collection
+    public function trabajadoresParaReportes(): Collection
     {
         return $this->equipo();
     }
@@ -310,16 +315,16 @@ class User extends Authenticatable
      * Colección con el jefe inmediato de este usuario (0 o 1). Se mantiene
      * como colección para las vistas que listan "mis jefes".
      *
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    public function jefesInmediatos(): \Illuminate\Support\Collection
+    public function jefesInmediatos(): Collection
     {
         return $this->jefe_inmediato_id === null
             ? collect()
             : User::whereKey($this->jefe_inmediato_id)->get();
     }
 
-    public function turnos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function turnos(): HasMany
     {
         return $this->hasMany(Turno::class);
     }
@@ -384,8 +389,8 @@ class User extends Authenticatable
         return $mias->isNotEmpty() && $otro->unidadIdsComoJefe()->intersect($mias)->isNotEmpty();
     }
 
-    /** @return \Illuminate\Support\Collection<int, int> */
-    private function unidadIdsComoJefe(): \Illuminate\Support\Collection
+    /** @return Collection<int, int> */
+    private function unidadIdsComoJefe(): Collection
     {
         return UnidadOrganica::where('jefe_id', $this->id)->pluck('id');
     }
@@ -404,15 +409,15 @@ class User extends Authenticatable
             || User::where('jefe_inmediato_id', $this->id)->exists();
     }
 
-    public function papeletas(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function papeletas(): HasMany
     {
         return $this->hasMany(Papeleta::class, 'trabajador_id');
     }
 
     /** "Nombre Apellido" listo para reportes/planillas y listados. */
-    protected function nombreCompleto(): \Illuminate\Database\Eloquent\Casts\Attribute
+    protected function nombreCompleto(): Attribute
     {
-        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+        return Attribute::make(
             get: fn () => trim("{$this->name} {$this->apellido}"),
         );
     }

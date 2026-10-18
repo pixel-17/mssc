@@ -3,7 +3,6 @@
 namespace App\Actions\Usuario;
 
 use App\Actions\Organigrama\GuardarUnidadOrganicaAction;
-use App\Actions\Organigrama\JefaturaUnidadService;
 use App\Actions\Organigrama\PapeletasAbiertasService;
 use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;

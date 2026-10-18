@@ -7,6 +7,7 @@ use App\Actions\Papeleta\RevisionPosthocAction;
 use App\Exceptions\PapeletaException;
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Notifications\PapeletaNotification;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -65,7 +66,7 @@ class PosthocRespuestaJefeTest extends TestCase
         $this->assertSame('Falta el sustento de la salida', $papeleta->posthoc_observacion);
         $this->assertTrue($papeleta->estado->equals(AutorizadaYCorriendo::class), 'el estado de la papeleta no cambia');
 
-        Notification::assertSentTo($this->jefe, \App\Notifications\PapeletaNotification::class);
+        Notification::assertSentTo($this->jefe, PapeletaNotification::class);
     }
 
     public function test_el_jefe_que_autorizo_responde_y_la_revision_vuelve_a_rrhh(): void
@@ -166,6 +167,6 @@ class PosthocRespuestaJefeTest extends TestCase
 
         app(ResponderPosthocAction::class)->ejecutar($papeleta, $this->jefe, 'Era una emergencia');
 
-        Notification::assertSentTo($this->rrhh, \App\Notifications\PapeletaNotification::class);
+        Notification::assertSentTo($this->rrhh, PapeletaNotification::class);
     }
 }

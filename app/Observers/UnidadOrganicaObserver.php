@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Actions\Organigrama\PapeletasAbiertasService;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 
@@ -42,7 +43,7 @@ class UnidadOrganicaObserver
         // consultaba por su cuenta (N+1).
         $arbol = UnidadOrganica::arbolEnMemoria();
         $observer = app(UserObserver::class);
-        $reasignar = app(\App\Actions\Organigrama\PapeletasAbiertasService::class);
+        $reasignar = app(PapeletasAbiertasService::class);
 
         User::whereIn('unidad_organica_id', $unidadIds)
             ->chunkById(500, function ($usuarios) use ($arbol, $observer, $reasignar) {

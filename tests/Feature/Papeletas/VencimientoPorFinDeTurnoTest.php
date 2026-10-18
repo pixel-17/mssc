@@ -3,6 +3,7 @@
 namespace Tests\Feature\Papeletas;
 
 use App\Actions\Papeleta\CrearPapeletaAction;
+use App\Exceptions\PapeletaException;
 use App\Models\Papeleta;
 use App\Models\User;
 use App\States\Papeleta\PendienteJefe;
@@ -78,7 +79,7 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     {
         $trabajador = $this->usuarioDePrueba();
         $this->conJefeDePrueba($trabajador);
-        $this->turno($trabajador,'2026-09-21', 'NOCHE', '22:00', '06:00');
+        $this->turno($trabajador, '2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-21 23:58:00');
         $papeleta = $this->crear($trabajador);
@@ -95,7 +96,7 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     {
         $trabajador = $this->usuarioDePrueba();
         $this->conJefeDePrueba($trabajador);
-        $this->turno($trabajador,'2026-09-21', 'NOCHE', '22:00', '06:00');
+        $this->turno($trabajador, '2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-21 23:58:00');
         $papeleta = $this->crear($trabajador);
@@ -113,7 +114,7 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     {
         $trabajador = $this->usuarioDePrueba();
         $this->conJefeDePrueba($trabajador);
-        $this->turno($trabajador,'2026-09-21', 'NOCHE', '22:00', '06:00');
+        $this->turno($trabajador, '2026-09-21', 'NOCHE', '22:00', '06:00');
 
         $this->ir('2026-09-22 01:00:00');
         $papeleta = $this->crear($trabajador);
@@ -126,7 +127,7 @@ class VencimientoPorFinDeTurnoTest extends TestCase
     {
         $trabajador = $this->usuarioDePrueba();
         $this->conJefeDePrueba($trabajador);
-        $this->turno($trabajador,'2026-09-21', 'MANANA', '06:00', '14:00');
+        $this->turno($trabajador, '2026-09-21', 'MANANA', '06:00', '14:00');
 
         $this->ir('2026-09-21 13:00:00');
         $papeleta = $this->crear($trabajador);
@@ -146,7 +147,7 @@ class VencimientoPorFinDeTurnoTest extends TestCase
 
         $this->ir('2026-09-21 23:50:00');
 
-        $this->expectException(\App\Exceptions\PapeletaException::class);
+        $this->expectException(PapeletaException::class);
         $this->crear($trabajador);
     }
 

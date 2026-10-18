@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\PapeletaActualizada;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -49,6 +50,6 @@ class Retorno extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn (self $retorno) => \App\Events\PapeletaActualizada::notificar($retorno->papeleta_id));
+        static::saved(fn (self $retorno) => PapeletaActualizada::notificar($retorno->papeleta_id));
     }
 }

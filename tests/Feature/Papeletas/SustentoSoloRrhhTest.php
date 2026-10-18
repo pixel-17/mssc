@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Papeletas;
 
+use App\Livewire\Papeletas\JefeIndex;
 use App\Models\Sustento;
 use App\States\Papeleta\EnJustificacion;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
@@ -64,8 +66,8 @@ class SustentoSoloRrhhTest extends TestCase
             'presentado_at' => now(),
         ]);
 
-        \Livewire\Livewire::actingAs($jefe)
-            ->test(\App\Livewire\Papeletas\JefeIndex::class)
+        Livewire::actingAs($jefe)
+            ->test(JefeIndex::class)
             ->assertDontSee('Sustentos por revisar');
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Papeleta;
 
 use App\Models\Motivo;
+use App\Models\Papeleta;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +17,7 @@ class StorePapeletaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('crear', \App\Models\Papeleta::class);
+        return $this->user()->can('crear', Papeleta::class);
     }
 
     public function rules(): array

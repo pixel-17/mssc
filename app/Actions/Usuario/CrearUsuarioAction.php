@@ -2,6 +2,7 @@
 
 namespace App\Actions\Usuario;
 
+use App\Events\PapeletaActualizada;
 use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -100,7 +101,7 @@ class CrearUsuarioAction
 
             if (! $nuevo->hasRole('trabajador')) {
                 $nuevo->assignRole('trabajador');
-                \App\Events\PapeletaActualizada::olvidarDestinatariosFijos();
+                PapeletaActualizada::olvidarDestinatariosFijos();
             }
 
             if ($esJefeInmediatoNuevo) {

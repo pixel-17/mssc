@@ -15,8 +15,8 @@ use App\Models\Papeleta;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Throwable;
 use Illuminate\View\View;
+use Throwable;
 
 /**
  * Bandeja del Trabajador (Paso 1 del flujo): crear, ver el estado de

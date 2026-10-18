@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\PapeletaActualizada;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -46,6 +47,6 @@ class Sustento extends Model
     {
         // El sustento cambia lo que ven trabajador, jefe y RRHH de la
         // papeleta (presentado, aprobado, observado...): avisar en vivo.
-        static::saved(fn (self $sustento) => \App\Events\PapeletaActualizada::notificar($sustento->papeleta_id));
+        static::saved(fn (self $sustento) => PapeletaActualizada::notificar($sustento->papeleta_id));
     }
 }

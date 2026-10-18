@@ -7,10 +7,12 @@ use App\Livewire\Concerns\PaginaListasDeBandeja;
 use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Models\Sede;
+use App\Models\Sustento;
+use App\States\Papeleta\EnJustificacion;
 use App\States\Papeleta\Finalizada;
 use App\States\Papeleta\PendienteRrhh;
-use App\States\Papeleta\EnJustificacion;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -111,7 +113,7 @@ class RrhhIndex extends Component
                 ->with(['trabajador', 'motivo', 'sustentos' => fn ($q) => $q->where('estado', 'presentado')])
                 // Primero los de plazo más cercano: son los que hay que atender antes.
                 ->orderBy(
-                    \App\Models\Sustento::select('fecha_limite')
+                    Sustento::select('fecha_limite')
                         ->whereColumn('sustentos.papeleta_id', 'papeletas.id')
                         ->where('estado', 'presentado')
                         ->orderBy('fecha_limite')
@@ -143,7 +145,7 @@ class RrhhIndex extends Component
             'posthocPendientes' => $posthocPendientes,
             'sustentosPorRevisar' => $sustentosPorRevisar,
             'abandonosEnRegularizacion' => $abandonosEnRegularizacion,
-            'masAntigua' => $masAntigua ? \Illuminate\Support\Carbon::parse($masAntigua) : null,
+            'masAntigua' => $masAntigua ? Carbon::parse($masAntigua) : null,
             'motivos' => Motivo::orderBy('nombre')->get(['id', 'nombre']),
             'sedes' => Sede::orderBy('nombre')->get(['id', 'nombre']),
             'hayFiltros' => $this->buscar !== '' || $this->motivoId || $this->sedeId

@@ -6,12 +6,14 @@ use App\Actions\Fortify\ResetUserPassword;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\User;
+use App\Notifications\CuentaDesactivadaNotification;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
 
@@ -43,10 +45,23 @@ class FortifyServiceProvider extends ServiceProvider
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
 
-            if ($user && Hash::check($request->password, $user->password) && $user->activo) {
+            // Credenciales correctas pero cuenta desactivada: se notifica al
+            // correo registrado del usuario y se muestra un mensaje neutro en
+            // pantalla (no confirma si las credenciales eran correctas).
+            if ($user && Hash::check($request->password, $user->password) && ! $user->activo) {
+                $user->notify(new CuentaDesactivadaNotification);
+
+                throw ValidationException::withMessages([
+                    Fortify::username() => [trans('auth.failed')],
+                ]);
+            }
+
+            // Credenciales correctas + activo: entra.
+            if ($user && Hash::check($request->password, $user->password)) {
                 return $user;
             }
 
+            // Credenciales incorrectas: Fortify muestra el mensaje genérico.
             return null;
         });
 

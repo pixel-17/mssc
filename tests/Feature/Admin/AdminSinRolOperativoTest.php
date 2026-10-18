@@ -4,6 +4,7 @@ namespace Tests\Feature\Admin;
 
 use App\Livewire\Usuarios\UsuarioAdminForm;
 use App\Models\Papeleta;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
@@ -31,7 +32,7 @@ class AdminSinRolOperativoTest extends TestCase
         $admin = $this->usuarioDePrueba([], ['admin']);
 
         $this->assertFalse($admin->esJefeDeEquipo());
-        $this->assertFalse($admin->can('crearTrabajadorPropio', \App\Models\User::class));
+        $this->assertFalse($admin->can('crearTrabajadorPropio', User::class));
     }
 
     public function test_el_admin_no_puede_crear_papeletas_ni_con_el_rol_trabajador(): void
@@ -95,7 +96,7 @@ class AdminSinRolOperativoTest extends TestCase
     {
         $admin = $this->usuarioDePrueba([], ['admin']);
 
-        $this->assertFalse($admin->can('puedeCrearAlgo', \App\Models\User::class));
+        $this->assertFalse($admin->can('puedeCrearAlgo', User::class));
 
         $this->actingAs($admin)->get(route('usuarios.crear'))->assertForbidden();
         $this->actingAs($admin)->get(route('usuarios.index'))->assertRedirect(route('usuarios-admin.index'));
