@@ -7,8 +7,6 @@ use App\Models\Papeleta;
 use App\States\Papeleta\Cerrada;
 use App\States\Papeleta\Finalizada;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -21,25 +19,6 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class PdfController extends Controller
 {
-    /** Mis papeletas (turno vigente por defecto, ?todas=1 para todas). */
-    public function lista(Request $request): Response
-    {
-        $usuario = Auth::user();
-
-        $papeletas = $usuario->papeletas()
-            ->with(['motivo', 'sede', 'retorno', 'resueltoPorJefe', 'resueltoPorRrhh'])
-            ->when(! $request->boolean('todas'), fn ($q) => $q->delTurnoVigente())
-            ->latest()
-            ->orderByDesc('papeletas.id')
-            ->get();
-
-        return Pdf::loadView('pdf.trabajador.lista', [
-            'trabajador' => $usuario,
-            'papeletas' => $papeletas,
-            'todas' => $request->boolean('todas'),
-        ])->download('mis-papeletas.pdf');
-    }
-
     public function papeleta(Papeleta $papeleta): Response
     {
         $this->authorize('view', $papeleta);

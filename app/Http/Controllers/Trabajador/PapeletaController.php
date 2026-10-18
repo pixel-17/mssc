@@ -26,16 +26,6 @@ use Throwable;
  */
 class PapeletaController extends Controller
 {
-    public function index(): View
-    {
-        $papeletas = Auth::user()->papeletas()
-            ->with(['motivo', 'sede', 'retorno'])
-            ->latest()
-            ->paginate(15);
-
-        return view('trabajador.papeletas.index', compact('papeletas'));
-    }
-
     public function create(RrhhHorarioService $horarioRrhh): View|RedirectResponse
     {
         $this->authorize('crear', Papeleta::class);
