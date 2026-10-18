@@ -269,6 +269,11 @@ class CrearPapeletaTest extends TestCase
      */
     public function test_jefe_inmediato_pide_su_propia_papeleta_de_noche_sin_jefe_de_area_ni_rrhh_disponibles(): void
     {
+        // El sistema solo autoriza por sí solo la papeleta del propio Jefe
+        // de Área (el tope, sin nadie más arriba) cuando RRHH no está
+        // disponible. La de un jefe inmediato esperando a SU Jefe de Área
+        // nunca escala por inacción de este: espera en PendienteJefe,
+        // disponible o no, mientras siga activo (ver DecisorDescansoTest).
         [$jefeArea, $jefeInmediato] = $this->armarOrganigrama(regimenJefeInmediato: '728', regimenJefeArea: '276');
         $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
         $this->ir('2026-09-21 22:00:00'); // jefe de área y RRHH (276) fuera de horario
@@ -277,14 +282,13 @@ class CrearPapeletaTest extends TestCase
         $papeleta = app(CrearPapeletaAction::class)->ejecutar($jefeInmediato, $this->motivoDe('PARTICULAR'), []);
         $papeleta = $papeleta->fresh();
 
-        $this->assertSame($jefeArea->id, $papeleta->jefe_inmediato_id); // fotografiado, aunque no decidió
-        $this->assertTrue($papeleta->estado->equals(AutorizadaYCorriendo::class));
-        $this->assertTrue($papeleta->autorizado_con_rrhh_fuera_horario);
-        $this->assertSame('pendiente', $papeleta->revision_posthoc_estado);
+        $this->assertSame($jefeArea->id, $papeleta->jefe_inmediato_id);
+        $this->assertTrue($papeleta->estado->equals(PendienteJefe::class));
+        $this->assertFalse($papeleta->autorizado_con_rrhh_fuera_horario);
 
+        // Sin historial de "sistema": nunca escaló, solo espera a su Jefe de Área.
         $historial = HistorialPapeleta::where('papeleta_id', $papeleta->id)->latest('id')->first();
-        $this->assertSame('sistema', $historial->actor_tipo);
-        $this->assertStringContainsString('Jefe inmediato fuera de su horario', $historial->justificacion);
+        $this->assertSame('trabajador', $historial->actor_tipo);
     }
 
     public function test_la_papeleta_del_jefe_de_area_va_directo_a_rrhh(): void

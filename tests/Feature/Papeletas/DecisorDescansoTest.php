@@ -7,7 +7,6 @@ use App\Actions\Papeleta\DecisorDisponibleService;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\States\Papeleta\PendienteJefe;
-use App\States\Papeleta\PendienteRrhh;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -104,8 +103,12 @@ class DecisorDescansoTest extends TestCase
 
     /**
      * Organigrama: Gerencia (gerente) > Oficina (jefeOficina). El jefe de la
-     * Oficina envía SU PROPIA papeleta, así que sube al gerente. Si el
-     * gerente descansa hoy y RRHH está en horario, escala a RRHH.
+     * Oficina envía SU PROPIA papeleta, así que sube al gerente. El
+     * gerente esté o no disponible ahora (de descanso, fuera de horario),
+     * la papeleta siempre espera en PendienteJefe: solo la papeleta del
+     * propio Jefe de Área (el tope, sin nadie más arriba) puede escalar a
+     * RRHH o autorizarse por sistema — nunca la de un jefe inmediato
+     * esperando a su Jefe de Área.
      */
     private function escenarioJefeQueEnviaSuPropiaPapeleta(bool $gerenteDescansa): string
     {
@@ -134,9 +137,9 @@ class DecisorDescansoTest extends TestCase
         return class_basename($papeleta->fresh()->estado);
     }
 
-    public function test_la_papeleta_de_un_jefe_escala_a_rrhh_si_su_superior_descansa(): void
+    public function test_la_papeleta_de_un_jefe_espera_a_su_superior_aunque_este_descanse(): void
     {
-        $this->assertSame(class_basename(PendienteRrhh::class), $this->escenarioJefeQueEnviaSuPropiaPapeleta(true));
+        $this->assertSame(class_basename(PendienteJefe::class), $this->escenarioJefeQueEnviaSuPropiaPapeleta(true));
     }
 
     public function test_la_papeleta_de_un_jefe_espera_a_su_superior_si_este_no_descansa(): void
