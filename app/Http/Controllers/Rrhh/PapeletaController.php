@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Rrhh;
 
 use App\Http\Controllers\Controller;
+use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Services\BloqueoRevisionService;
 use App\Services\ReporteHorasAcumuladasService;
@@ -31,7 +32,9 @@ class PapeletaController extends Controller
 
         $historialMes = $this->historialDelMes($request, $papeleta, $reporte);
 
-        return view('rrhh.papeletas.show', compact('papeleta', 'historialMes', 'enRevisionPor'));
+        $motivosActivos = Motivo::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']);
+
+        return view('rrhh.papeletas.show', compact('papeleta', 'historialMes', 'enRevisionPor', 'motivosActivos'));
     }
 
     /**

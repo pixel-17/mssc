@@ -168,7 +168,6 @@
 
             @can('corregirComoRrhh', $papeleta)
                 @php
-                    $motivosActivos = \App\Models\Motivo::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']);
                     $campo = 'block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white';
                 @endphp
                 <div class="glass-card p-6" x-data="{ abierto: {{ $errors->any() || old('comentario') ? 'true' : 'false' }}, enviando: false }">

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Motivo;
 use App\Models\Papeleta;
 use Illuminate\Contracts\View\View;
 
@@ -23,6 +24,7 @@ class PapeletaController extends Controller
             'papeleta' => $papeleta,
             'historialMes' => [],
             'soloLectura' => true,
+            'motivosActivos' => Motivo::where('activo', true)->orderBy('nombre')->get(['id', 'nombre']),
         ]);
     }
 }
