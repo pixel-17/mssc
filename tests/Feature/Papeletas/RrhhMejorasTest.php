@@ -236,10 +236,17 @@ class RrhhMejorasTest extends TestCase
         $rrhh = $this->usuarioDePrueba([], ['rrhh']);
         $trabajador = $this->usuarioDePrueba();
 
-        foreach (['reportes.resumen-papeletas', 'reportes.decisiones-rrhh'] as $ruta) {
-            $this->actingAs($rrhh)->get(route($ruta))->assertOk();
-            $this->actingAs($trabajador)->get(route($ruta))->assertForbidden();
-        }
+        $this->actingAs($rrhh)->get(route('reportes.decisiones-rrhh'))->assertOk();
+        $this->actingAs($trabajador)->get(route('reportes.decisiones-rrhh'))->assertForbidden();
+
+        // reportes.resumen-papeletas ya no es exclusivo de rrhh|admin: ahora
+        // fusiona la pestaña "horas" (antes HorasAcumuladasIndex), accesible
+        // también a jefes. Un trabajador sin equipo sigue sin poder entrar,
+        // pero el corte lo aplica RestringeAReportes (redirect), no el
+        // middleware de rol (403).
+        $this->actingAs($rrhh)->get(route('reportes.resumen-papeletas'))->assertOk();
+        $this->actingAs($trabajador)->get(route('reportes.resumen-papeletas'))
+            ->assertRedirect(route('trabajador.papeletas.index'));
 
         $this->actingAs($trabajador)->get(route('rrhh.abandonos.index'))->assertForbidden();
     }

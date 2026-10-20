@@ -148,7 +148,7 @@
                         <div class="glass-card p-5">
                             <div class="flex items-center justify-between mb-4">
                                 <h4 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 capitalize">Horas acumuladas — {{ \Illuminate\Support\Carbon::createFromFormat('Y-m', $rrhh['horas_acumuladas_mes'])->translatedFormat('F Y') }}</h4>
-                                <a href="{{ route('reportes.horas-acumuladas') }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Ver reporte completo →</a>
+                                <a href="{{ route('reportes.resumen-papeletas', ['tab' => 'horas']) }}" class="text-xs text-tinta-600 dark:text-tinta-300 hover:text-tinta-900 dark:hover:text-tinta-100 font-medium">Ver reporte completo →</a>
                             </div>
                             @if ($rrhh['horas_acumuladas_top']->isEmpty())
                                 <p class="text-sm text-gray-500 dark:text-tinta-100/50">Sin retornos registrados este mes.</p>

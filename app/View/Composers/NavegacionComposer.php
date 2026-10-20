@@ -127,12 +127,11 @@ class NavegacionComposer
         // "Ficha de trabajador" eliminada del menú: es accesible desde
         // Trabajadores (usuarios.index) → editar, evitando la redundancia.
         $reportes = [
-            ['label' => 'Horas acumuladas', 'route' => route('reportes.horas-acumuladas'), 'active' => request()->routeIs('reportes.horas-acumuladas'), 'icon' => 'chart'],
+            ['label' => 'Resumen de papeletas', 'route' => route('reportes.resumen-papeletas'), 'active' => request()->routeIs('reportes.resumen-papeletas'), 'icon' => 'chart'],
             ['label' => 'Sustentos', 'route' => route('reportes.sustentos'), 'active' => request()->routeIs('reportes.sustentos'), 'icon' => 'clipboard'],
         ];
 
         if ($esRrhh || $esAdmin) {
-            $reportes[] = ['label' => 'Resumen de papeletas', 'route' => route('reportes.resumen-papeletas'), 'active' => request()->routeIs('reportes.resumen-papeletas'), 'icon' => 'chart'];
             $reportes[] = ['label' => 'Decisiones de RR. HH.', 'route' => route('reportes.decisiones-rrhh'), 'active' => request()->routeIs('reportes.decisiones-rrhh'), 'icon' => 'clipboard'];
         }
 

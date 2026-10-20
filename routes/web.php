@@ -28,7 +28,6 @@ use App\Livewire\Papeletas\RrhhAbandonos;
 use App\Livewire\Papeletas\RrhhIndex;
 use App\Livewire\Papeletas\TrabajadorIndex;
 use App\Livewire\Reportes\DecisionesRrhhIndex;
-use App\Livewire\Reportes\HorasAcumuladasIndex;
 use App\Livewire\Reportes\ResumenPapeletasIndex;
 use App\Livewire\Reportes\SustentosIndex;
 use App\Livewire\Reportes\TrabajadorHistorialIndex;
@@ -180,14 +179,18 @@ Route::middleware($autenticado)->group(function () {
 
     /*
      * Reporte de cierre de mes (no confundir con el dashboard "en
-     * vivo" de arriba): admin/RRHH ven todo el personal, jefe solo su
-     * equipo — mismo criterio de acceso que el dashboard, aplicado en
-     * HorasAcumuladasIndex::mount(). Sin middleware de rol por el
-     * mismo motivo que 'jefe' en el resto del archivo: "jefe" no es un
-     * rol de Spatie.
+     * vivo" de arriba), con dos pestañas: "resumen" (conteos del
+     * proceso, solo RR. HH./admin) y "horas" (horas fuera de sede por
+     * trabajador, para descuento de planilla — admin/RRHH ven todo el
+     * personal, jefe solo su equipo). El componente mismo recorta qué
+     * pestaña puede ver cada quien (ResumenPapeletasIndex::puedeVerResumen());
+     * por eso vive fuera del grupo role:rrhh|admin, igual que antes
+     * vivía HorasAcumuladasIndex. Sin middleware de rol por el mismo
+     * motivo que 'jefe' en el resto del archivo: "jefe" no es un rol
+     * de Spatie.
      */
-    Route::get('/reportes/horas-acumuladas', HorasAcumuladasIndex::class)
-        ->name('reportes.horas-acumuladas');
+    Route::get('/reportes/resumen-papeletas', ResumenPapeletasIndex::class)
+        ->name('reportes.resumen-papeletas');
 
     Route::get('/reportes/trabajador', TrabajadorHistorialIndex::class)
         ->name('reportes.trabajador-historial');
@@ -195,14 +198,11 @@ Route::middleware($autenticado)->group(function () {
     Route::get('/reportes/sustentos', SustentosIndex::class)
         ->name('reportes.sustentos');
 
-    // Reportes y listas solo para RR. HH. (y admin): lo que RR. HH. decidió,
-    // el resumen mensual y los abandonos. A diferencia de los reportes de
-    // arriba, un jefe NO entra aquí.
+    // Reportes y listas solo para RR. HH. (y admin). A diferencia de los
+    // reportes de arriba, un jefe NO entra aquí.
     Route::middleware('role:rrhh|admin')->group(function () {
         Route::get('/reportes/decisiones-rrhh', DecisionesRrhhIndex::class)
             ->name('reportes.decisiones-rrhh');
-        Route::get('/reportes/resumen-papeletas', ResumenPapeletasIndex::class)
-            ->name('reportes.resumen-papeletas');
         // Lista de abandonos y comisiones cerradas sin retorno (solo lectura).
         Route::get('/rrhh/abandonos', RrhhAbandonos::class)->name('rrhh.abandonos.index');
     });

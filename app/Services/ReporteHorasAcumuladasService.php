@@ -117,7 +117,7 @@ class ReporteHorasAcumuladasService
      * horas que sí descuentan (motivo->suma_descuento) y cantidad de
      * papeletas, ordenado de mayor a menor tiempo acumulado.
      *
-     * Acepta el detalle ya calculado (ver HorasAcumuladasIndex::render,
+     * Acepta el detalle ya calculado (ver ResumenPapeletasIndex::render,
      * que necesita este resumen Y el diario en la misma vista) para no
      * correr la misma query pesada dos veces; si no se pasa, la calcula.
      */

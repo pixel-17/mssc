@@ -17,9 +17,10 @@ use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Buscador + ficha de un trabajador: todo su historial de papeletas
- * (sin recortar por mes) y sus totales de siempre. Complementa a
- * HorasAcumuladasIndex (todos, un mes) mirando el caso opuesto: uno
- * solo, todo el tiempo — para revisar un caso puntual a fondo.
+ * (sin recortar por mes) y sus totales de siempre. Complementa a la
+ * pestaña "horas" de ResumenPapeletasIndex (todos, un mes) mirando el
+ * caso opuesto: uno solo, todo el tiempo — para revisar un caso
+ * puntual a fondo.
  */
 #[Layout('layouts.app')]
 #[Title('Historial por trabajador')]
