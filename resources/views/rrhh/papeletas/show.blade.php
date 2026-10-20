@@ -147,16 +147,22 @@
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Revisar sustento presentado</h3>
                     <form method="POST" action="{{ route('rrhh.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3" @submit="enviando = true">
                         @csrf
-                        <div class="flex items-center gap-4 text-sm">
+                        <div class="flex items-center gap-4 text-sm flex-wrap">
                             <label class="inline-flex items-center gap-1">
                                 <input type="radio" name="resultado" value="aprobado" x-model="resultado"> Aprobar
                             </label>
                             <label class="inline-flex items-center gap-1">
                                 <input type="radio" name="resultado" value="observado" x-model="resultado"> Observar
                             </label>
+                            <label class="inline-flex items-center gap-1">
+                                <input type="radio" name="resultado" value="particular" x-model="resultado"> Cambiar a Particular (con descuento)
+                            </label>
                         </div>
-                        <textarea name="comentario" aria-label="Motivo de la observación" rows="2" maxlength="2000" x-show="resultado === 'observado'"
-                                  placeholder="Motivo de la observación (mínimo 5 caracteres)..."
+                        <p x-show="resultado === 'particular'" x-cloak class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                            El sustento no es válido y no se le dará una nueva oportunidad: la papeleta pasará a Particular y se descontarán las horas que el trabajador estuvo fuera. Esta decisión no se puede deshacer desde aquí.
+                        </p>
+                        <textarea name="comentario" aria-label="Motivo" rows="2" maxlength="2000" x-show="resultado === 'observado' || resultado === 'particular'"
+                                  placeholder="Motivo (mínimo 5 caracteres)..."
                                   class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
                         <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-tinta-600 hover:bg-tinta-700">
                             <span x-show="! enviando">Confirmar revisión</span>

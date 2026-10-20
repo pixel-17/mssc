@@ -26,7 +26,10 @@ class RevisarSustentoAction
 {
     use ExigeDecisorAjeno;
 
-    public function __construct(private NotificarPapeletaService $notificar) {}
+    public function __construct(
+        private NotificarPapeletaService $notificar,
+        private ReclasificarAParticularAction $reclasificar,
+    ) {}
 
     public function aprobar(Sustento $sustento, User $revisor): Papeleta
     {
@@ -36,6 +39,48 @@ class RevisarSustentoAction
     public function observar(Sustento $sustento, User $revisor, string $comentario): Papeleta
     {
         return $this->resolver($sustento, $revisor, 'observado', $comentario);
+    }
+
+    /**
+     * Tercera decisión: el sustento no es válido y no amerita una nueva
+     * oportunidad. Mismo destino que el vencimiento automático
+     * (ReclasificarAParticularAction -> Finalizada, con descuento), pero
+     * disparado por un humano, por lo que queda el actor en el historial.
+     */
+    public function rechazar(Sustento $sustento, User $revisor, string $comentario): Papeleta
+    {
+        $papeleta = DB::transaction(function () use ($sustento, $revisor, $comentario) {
+            /** @var Papeleta $actual */
+            $actual = Papeleta::whereKey($sustento->papeleta_id)->lockForUpdate()->firstOrFail();
+            /** @var Sustento $sustentoActual */
+            $sustentoActual = Sustento::whereKey($sustento->id)->lockForUpdate()->firstOrFail();
+
+            $this->exigirDecisorAjeno($actual, $revisor);
+
+            if (! $actual->estado->equals(EnJustificacion::class)) {
+                throw new PapeletaException('Esta papeleta ya no está en justificación.');
+            }
+
+            if ($sustentoActual->estado !== 'presentado') {
+                throw new PapeletaException('Este sustento todavía no tiene un archivo presentado para revisar.');
+            }
+
+            $sustentoActual->estado = 'rechazado';
+            $sustentoActual->revisado_por_id = $revisor->id;
+            $sustentoActual->revisado_at = now();
+            $sustentoActual->save();
+
+            $this->reclasificar->ejecutar(
+                $actual,
+                actorId: $revisor->id,
+                actorTipo: $revisor->hasRole('rrhh') ? 'rrhh' : 'jefe_inmediato',
+                justificacion: $comentario,
+            );
+
+            return $actual;
+        });
+
+        return $papeleta;
     }
 
     private function resolver(Sustento $sustento, User $revisor, string $resultado, ?string $comentario = null): Papeleta

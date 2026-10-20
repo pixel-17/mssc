@@ -125,7 +125,7 @@
                     <span>
                         Presentado {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
                         · Límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
-                        @if ($sustento->archivo_path)
+                        @if ($sustento->archivo_path && Auth::user()->can('verSustento', $sustento))
                             · <a href="{{ route('sustentos.archivo', $sustento) }}" class="text-tinta-600 dark:text-tinta-300 hover:text-tinta-700 dark:hover:text-tinta-100 underline">Ver archivo</a>
                         @endif
                     </span>

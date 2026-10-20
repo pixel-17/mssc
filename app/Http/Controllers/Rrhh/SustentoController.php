@@ -17,11 +17,11 @@ class SustentoController extends Controller
         $this->authorize('revisarSustento', $sustento);
 
         try {
-            if ($request->input('resultado') === 'aprobado') {
-                $action->aprobar($sustento, Auth::user());
-            } else {
-                $action->observar($sustento, Auth::user(), $request->input('comentario'));
-            }
+            match ($request->input('resultado')) {
+                'aprobado' => $action->aprobar($sustento, Auth::user()),
+                'particular' => $action->rechazar($sustento, Auth::user(), $request->input('comentario')),
+                default => $action->observar($sustento, Auth::user(), $request->input('comentario')),
+            };
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }

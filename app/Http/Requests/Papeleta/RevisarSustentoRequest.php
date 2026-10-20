@@ -19,8 +19,8 @@ class RevisarSustentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'resultado' => ['required', 'in:aprobado,observado'],
-            'comentario' => ['required_if:resultado,observado', 'nullable', 'string', 'min:5', 'max:2000'],
+            'resultado' => ['required', 'in:aprobado,observado,particular'],
+            'comentario' => ['required_if:resultado,observado,particular', 'nullable', 'string', 'min:5', 'max:2000'],
         ];
     }
 }

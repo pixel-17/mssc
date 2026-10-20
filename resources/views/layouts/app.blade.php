@@ -39,7 +39,14 @@
     <a href="#contenido" class="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-tinta-900 focus:shadow-glass-lg">Saltar al contenido</a>
 
     <x-banner />
-    <x-notification-toast />
+    {{--
+        Único aviso que debe aparecer en toda la app: la tarjeta centrada
+        de layouts.partials.flash (3s, verde/rojo/ámbar). El toast en vivo
+        de aquí (notification-toast, esquina, 7s) se quitó por pedido
+        explícito: duplicaba el aviso con las notificaciones de la
+        campana y además tenía un estilo distinto al crear una papeleta.
+        No se borró el componente por si se quiere retomar más adelante.
+    --}}
 
     @if ($usuario && $conSidebar)
         <div class="app-shell" x-data="{ sidebarAbierto: false }" @keydown.escape.window="sidebarAbierto = false">

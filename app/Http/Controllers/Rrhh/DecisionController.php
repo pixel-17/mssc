@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Auth;
  */
 class DecisionController extends Controller
 {
-    public function aprobar(Papeleta $papeleta, AprobarRrhhAction $action): RedirectResponse
+    public function aprobar(Papeleta $papeleta, AprobarRrhhAction $action, BloqueoRevisionService $bloqueo): RedirectResponse
     {
         $this->authorize('decidirComoRrhh', $papeleta);
 

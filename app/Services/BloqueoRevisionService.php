@@ -17,6 +17,16 @@ use Carbon\Carbon;
 class BloqueoRevisionService
 {
     /**
+     * Minutos antes de refrescar el bloqueo de un usuario que ya lo tenía.
+     * Evita escribir (y por tanto disparar PapeletaActualizada) en cada
+     * carga de la página: sin esto, el componente "en vivo" de jefe/RRHH
+     * entra en un bucle de refresco — cada GET a show() volvía a marcar(),
+     * eso guardaba la papeleta, el guardado emitía el evento, y el evento
+     * disparaba un nuevo GET.
+     */
+    private const MINUTOS_RENOVACION = 2;
+
+    /**
      * Intenta marcar la papeleta como en revisión por el usuario dado.
      *
      * Si ya está siendo revisada por otro usuario, NO sobreescribe el bloqueo
@@ -31,6 +41,18 @@ class BloqueoRevisionService
             $papeleta->en_revision_por_id !== $usuario->id
         ) {
             return false;
+        }
+
+        // Ya la tiene este mismo usuario y el bloqueo sigue fresco: no hay
+        // nada que escribir. Guardar aquí sin cambios reales en los datos
+        // igual dispara el evento "en vivo" (Papeleta::booted -> saved),
+        // así que solo se renueva pasado un rato.
+        if (
+            $papeleta->en_revision_por_id === $usuario->id
+            && $papeleta->en_revision_desde
+            && $papeleta->en_revision_desde->gt(Carbon::now()->subMinutes(self::MINUTOS_RENOVACION))
+        ) {
+            return true;
         }
 
         $papeleta->update([
