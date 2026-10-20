@@ -42,7 +42,11 @@ use Illuminate\Support\Facades\DB;
  *   organigrama — es un hueco de configuración (unidad sin jefe
  *   asignada, jefe dado de baja, o tope del organigrama sin nadie
  *   arriba), no una indisponibilidad temporal. La papeleta nunca se
- *   crea esperando a alguien que no existe.
+ *   crea esperando a alguien que no existe. El turno vigente del
+ *   decisor (jefe inmediato o jefe de área) ya NO se valida aquí: el
+ *   turno vigente se exige únicamente a quien está creando la
+ *   papeleta (trabajador, jefe inmediato o jefe de área), ver
+ *   resolverTurnoActivo().
  * - Jefe de ÁREA (encabeza una unidad con sub-unidades, ver
  *   User::esJefeDeArea): su papeleta NO sube a nadie; va SIEMPRE directo a
  *   PENDIENTE_RRHH, haya o no alguien arriba en el organigrama. RRHH solo
@@ -188,20 +192,10 @@ class CrearPapeletaAction
             );
         }
 
-        // Un decisor 728 (rotativo) sin NINGÚN turno cargado (nunca se le
-        // programó nada) es un hueco de configuración, no una
-        // indisponibilidad temporal (de descanso sí puede decidir más
-        // tarde: la papeleta simplemente espera en PendienteJefe). Sin
-        // ninguna fila de turno jamás cargada, bloqueo total, igual que
-        // ya se exige al propio trabajador 728 en resolverTurnoActivo().
-        if ($jefeInmediato && $jefeInmediato->regimen === '728' && ! Turno::where('user_id', $jefeInmediato->id)->exists()) {
-            throw new PapeletaException(
-                $esJefeInmediatoDeLaUnidad
-                    ? 'Tu Jefe de Área no tiene un turno asignado. Comunícate con Administración para regularizarlo antes de crear una papeleta.'
-                    : 'Tu jefe inmediato no tiene un turno asignado. Comunícate con Administración para regularizarlo antes de crear una papeleta.'
-            );
-        }
-
+        // El turno vigente se exige SIEMPRE a quien está creando la
+        // papeleta (ver resolverTurnoActivo), nunca a su decisor: que el
+        // jefe inmediato o el jefe de área no tengan turno cargado ya no
+        // bloquea la creación de la papeleta de otra persona.
         return [
             'directoARrhh' => $directoARrhh,
             'jefeInmediatoId' => $jefeInmediato?->id,

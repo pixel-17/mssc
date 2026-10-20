@@ -69,7 +69,10 @@ class AutoDecisionTest extends TestCase
         $this->assertSame($this->alcalde->id, $this->jefeOficina->jefe_area_id);
 
         $this->assertSame($this->alcalde->id, $this->gerente->jefe_inmediato_id);
-        $this->assertNull($this->gerente->jefe_area_id);
+        // Concejo no tiene padre: no hay un tercer nivel que resolver como
+        // Jefe de Área, así que se autocompleta con el mismo jefe inmediato
+        // (el alcalde) en vez de quedar en blanco.
+        $this->assertSame($this->alcalde->id, $this->gerente->jefe_area_id);
 
         // La unidad raíz no tiene superior: no queda apuntando a sí mismo.
         $this->assertNull($this->alcalde->jefe_inmediato_id);

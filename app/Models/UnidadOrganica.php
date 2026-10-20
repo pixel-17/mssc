@@ -105,8 +105,9 @@ class UnidadOrganica extends Model
      * también es miembro de ella, pero NO puede ser su propio jefe: su
      * superior está un nivel arriba (jefe
      * inmediato = jefe de la unidad padre; jefe de área = jefe de la
-     * unidad abuela). Si no hay unidad padre, ese nivel queda en null.
-     *
+     * unidad abuela). Si no hay unidad abuela (o no hay unidad padre, para
+     * quien encabeza su propia unidad), ya no queda en null: se autocompleta
+     * con el mismo jefe inmediato resuelto, para no mostrarlo en blanco.
      *
      * @return array{0: ?int, 1: ?int}
      */
@@ -115,16 +116,22 @@ class UnidadOrganica extends Model
         $padre = $this->padre;
 
         if ($this->esJefeDeLaUnidad($usuario)) {
-            return [
-                $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
-                $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null,
-            ];
+            $jefeInmediatoId = $padre?->jefe_id !== null ? (int) $padre->jefe_id : null;
+            $jefeAreaId = $padre?->padre?->jefe_id !== null ? (int) $padre->padre->jefe_id : null;
+
+            return [$jefeInmediatoId, $jefeAreaId ?? $jefeInmediatoId];
         }
 
-        return [
-            $this->jefe_id !== null ? (int) $this->jefe_id : null,
-            $padre?->jefe_id !== null ? (int) $padre->jefe_id : null,
-        ];
+        $jefeInmediatoId = $this->jefe_id !== null ? (int) $this->jefe_id : null;
+        $jefeAreaId = $padre?->jefe_id !== null ? (int) $padre->jefe_id : null;
+
+        // Sin unidad padre (ej. una Gerencia que cuelga directo de la
+        // Alcaldía) no hay un tercer nivel que resolver como Jefe de Área:
+        // en vez de dejarlo en blanco, se autocompleta con el mismo jefe
+        // inmediato (quien, al no tener nadie más arriba, hace también de
+        // Jefe de Área). Afecta solo a jefes inmediatos enviando su propia
+        // papeleta y a trabajadores raso que dependen directo de él.
+        return [$jefeInmediatoId, $jefeAreaId ?? $jefeInmediatoId];
     }
 
     /**

@@ -1,122 +1,14 @@
 @props(['papeleta'])
 
 {{--
-    Detalle de papeleta en tiempo real. Las bandejas (Livewire) ya se
-    refrescan solas; el detalle es una vista Blade normal, así que este
-    componente escucha PapeletaActualizada por Reverb y, si es de ESTA
-    papeleta, vuelve a pedir la misma página y reemplaza solo dos
-    zonas marcadas:
+    Desactivado: esta papeleta ya no se auto-actualiza en vivo mientras se
+    está viendo/escribiendo en ella (el refresco silencioso por Reverb +
+    el aviso "cambió de estado mientras escribías" generaban confusión).
+    Las bandejas (Livewire) siguen refrescándose solas como antes; el
+    detalle de una papeleta ahora solo se actualiza si la persona
+    recarga la página.
 
-      [data-en-vivo-estado]     la insignia del estado (con un destello)
-      [data-en-vivo-contenido]  el cuerpo: datos, acciones, historial
-
-    Si la persona está escribiendo (un comentario, un archivo elegido)
-    no se le pisa el formulario: aparece un aviso con "Actualizar".
-    Colócalo FUERA de [data-en-vivo-contenido] para que no se reemplace
-    a sí mismo.
+    Se deja el componente vacío (en vez de borrar sus usos en las vistas)
+    para no tener que tocar los `data-en-vivo-estado` / `data-en-vivo-contenido`
+    de cada show.blade.php si en el futuro se decide reactivarlo.
 --}}
-
-@auth
-    <div
-        x-data="{
-            avisar: false,
-            espera: null,
-
-            init() {
-                if (! window.Echo) {
-                    return;
-                }
-
-                window.Echo.private('App.Models.User.{{ auth()->id() }}')
-                    .listen('PapeletaActualizada', (e) => {
-                        if (Number(e.papeleta_id) !== {{ $papeleta->id }}) {
-                            return;
-                        }
-
-                        clearTimeout(this.espera);
-                        this.espera = setTimeout(() => this.actualizar(false), 400);
-                    });
-            },
-
-            escribiendo() {
-                const zona = document.querySelector('[data-en-vivo-contenido]');
-
-                if (! zona) {
-                    return false;
-                }
-
-                const activo = document.activeElement;
-
-                if (activo && zona.contains(activo) && activo.matches('input, textarea, select')) {
-                    return true;
-                }
-
-                return [...zona.querySelectorAll('textarea, input[type=text], input[type=file]')]
-                    .some((el) => el.type === 'file' ? el.files.length > 0 : el.value.trim() !== '');
-            },
-
-            async actualizar(forzar) {
-                if (! forzar && this.escribiendo()) {
-                    this.avisar = true;
-
-                    return;
-                }
-
-                try {
-                    const r = await fetch(window.location.href, {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'text/html' },
-                        credentials: 'same-origin',
-                    });
-
-                    if (! r.ok) {
-                        return;
-                    }
-
-                    const doc = new DOMParser().parseFromString(await r.text(), 'text/html');
-
-                    const contenidoNuevo = doc.querySelector('[data-en-vivo-contenido]');
-                    const contenido = document.querySelector('[data-en-vivo-contenido]');
-
-                    if (! contenidoNuevo || ! contenido) {
-                        return;
-                    }
-
-                    // Transición de opacidad vía estilo inline (no depende de
-                    // que Tailwind haya compilado ninguna clase): evita que
-                    // el cambio de historial/acciones se sienta como un
-                    // salto brusco mientras el jefe está leyendo la página.
-                    contenido.style.transition = 'opacity 150ms ease';
-                    contenido.style.opacity = '0';
-
-                    await new Promise((resolve) => setTimeout(resolve, 150));
-
-                    contenido.innerHTML = contenidoNuevo.innerHTML;
-                    contenido.style.opacity = '1';
-
-                    const estadoNuevo = doc.querySelector('[data-en-vivo-estado]');
-                    const estado = document.querySelector('[data-en-vivo-estado]');
-
-                    if (estadoNuevo && estado) {
-                        estado.innerHTML = estadoNuevo.innerHTML;
-                        estado.classList.add('animate-pulse');
-                        setTimeout(() => estado.classList.remove('animate-pulse'), 1800);
-                    }
-
-                    this.avisar = false;
-                } catch (error) {
-                    // Sin red o sesión vencida: se queda lo que ya se ve.
-                }
-            },
-        }"
-    >
-        <div
-            x-show="avisar"
-            x-cloak
-            class="mb-4 flex items-center justify-between gap-3 rounded-lg border border-azul-300 bg-azul-50 px-4 py-3 text-sm text-azul-800 dark:border-azul-400/30 dark:bg-azul-500/10 dark:text-azul-200"
-            role="status"
-        >
-            <span>Esta papeleta cambió de estado mientras escribías.</span>
-            <button type="button" class="font-semibold underline" @click="actualizar(true)">Actualizar</button>
-        </div>
-    </div>
-@endauth
