@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
 /**
@@ -14,7 +15,7 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
  * (mismo mes/filtros que se ven en pantalla) en vez de recalcular acá,
  * para que lo exportado sea exactamente lo que el usuario está viendo.
  */
-class HorasAcumuladasExport implements WithMultipleSheets
+class HorasAcumuladasExport implements Export, WithMultipleSheets
 {
     public function __construct(
         protected Collection $resumen,

@@ -7,7 +7,7 @@
             {{-- Notificaciones: activar/desactivar sigue en el botón del
                  menú (msscPushToggle); aquí solo el volumen del sonido
                  in-app. --}}
-            <x-fila-ajuste x-data="msscVolumenNotificacion(@js($volumen))"
+            <x-fila-ajuste x-data="msscVolumenNotificacion({{ \Illuminate\Support\Js::from($volumen) }})"
                            :titulo="__('Volumen de sonido de notificación')"
                            :descripcion="__('Qué tan fuerte suena el aviso dentro de la app.')">
                 <x-slot name="detalle">

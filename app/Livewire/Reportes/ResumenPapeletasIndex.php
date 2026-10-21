@@ -6,7 +6,6 @@ use App\Exports\HorasAcumuladasExport;
 use App\Livewire\Concerns\RestringeAReportes;
 use App\Models\Motivo;
 use App\Models\Sede;
-use App\Models\UnidadOrganica;
 use App\Models\User;
 use App\Services\ReporteHorasAcumuladasService;
 use App\Services\ResumenPapeletasService;
@@ -78,11 +77,10 @@ class ResumenPapeletasIndex extends Component
 
         $this->mes = now()->format('Y-m');
 
-        // Sin ?tab= en la URL: RR. HH./admin aterrizan en "resumen" (lo que
-        // da nombre a la pantalla), un jefe no tiene esa pestaña así que
-        // aterriza directo en "horas".
-        if ($this->tab === '') {
-            $this->tab = $this->puedeVerResumen() ? 'resumen' : 'horas';
+        // La pestaña "resumen" fue eliminada de la vista; siempre se aterriza
+        // en "horas" independientemente del rol.
+        if ($this->tab === '' || $this->tab === 'resumen') {
+            $this->tab = 'horas';
         }
 
         $this->normalizarTab();
@@ -183,18 +181,6 @@ class ResumenPapeletasIndex extends Component
     }
 
     #[Computed]
-    public function unidadesOrganicas(): \Illuminate\Support\Collection
-    {
-        $query = UnidadOrganica::where('activo', true);
-
-        if (! $this->puedeVerResumen()) {
-            $query->whereIn('id', $this->trabajadoresDisponibles->pluck('unidad_organica_id')->filter()->unique());
-        }
-
-        return $query->orderBy('nombre')->get();
-    }
-
-    #[Computed]
     public function motivos(): \Illuminate\Support\Collection
     {
         return Motivo::where('activo', true)->orderBy('nombre')->get();
@@ -222,9 +208,7 @@ class ResumenPapeletasIndex extends Component
             'resumenPapeletas' => $resumenPapeletas,
             'resumen' => $resumenHoras,
             'detalleDiario' => $detalleDiario,
-            'trabajadoresDisponibles' => $this->trabajadoresDisponibles,
             'sedes' => $this->sedes,
-            'unidadesOrganicas' => $this->unidadesOrganicas,
             'motivos' => $this->motivos,
         ]);
     }
