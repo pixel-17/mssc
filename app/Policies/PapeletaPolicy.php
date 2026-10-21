@@ -195,13 +195,21 @@ class PapeletaPolicy
 
     /**
      * Ver/descargar el archivo adjunto de un sustento: el propio
-     * trabajador dueño o RRHH — mismo criterio que revisarSustento,
-     * más el dueño.
+     * trabajador dueño, RR. HH., o quien ya tiene visibilidad de esta
+     * papeleta en el reporte de Sustentos — admin, jefe inmediato y
+     * jefe de área (ver ReporteSustentosService::query(), misma
+     * frontera). Antes solo dueño/RR. HH.: esos tres la veían listada
+     * pero el archivo les devolvía 403 al abrirlo.
      */
     public function verSustento(User $user, Sustento $sustento): bool
     {
-        return $sustento->papeleta->trabajador_id === $user->id
-            || $this->revisarSustento($user, $sustento);
+        $papeleta = $sustento->papeleta;
+
+        return $papeleta->trabajador_id === $user->id
+            || $this->revisarSustento($user, $sustento)
+            || $user->hasRole('admin')
+            || $papeleta->tieneComoJefeInmediatoA($user)
+            || $papeleta->jefe_area_id === $user->id;
     }
 
     /**

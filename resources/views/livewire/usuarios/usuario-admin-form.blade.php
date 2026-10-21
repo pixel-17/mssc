@@ -37,7 +37,8 @@
                     </div>
                 @endif
 
-                <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" campo="regimen" ayuda="Opcional solo si el usuario es únicamente administrador.">
+                @unless ($esAdminRol)
+                <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" campo="regimen">
                     <x-select id="usuario-admin-form-regimen" wire:model.live="regimen">
                         <option value="">— Selecciona —</option>
                         <option value="276">276 (día)</option>
@@ -54,7 +55,6 @@
                     </x-select>
                 </x-admin.campo>
 
-                @unless ($esAdminRol)
                 <x-admin.campo
                     label="Unidad orgánica"
                     for="usuario-admin-form-unidadOrganicaId" campo="unidadOrganicaId"
@@ -139,17 +139,26 @@
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <p id="usuario-admin-form-roles-titulo" class="block text-sm font-medium mb-2">Rol(es)</p>
-                <div class="flex flex-wrap gap-4" role="group" aria-labelledby="usuario-admin-form-roles-titulo">
-                    @foreach ($roles as $rol)
-                        <label wire:key="usuario-admin-form-label-{{ $rol->id }}" class="flex items-center gap-2">
-                            <x-checkbox wire:model.live="rolesSeleccionados" value="{{ $rol->id }}" />
-                            <span class="text-sm">{{ $rol->name }}</span>
-                        </label>
-                    @endforeach
-                </div>
-                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    admin y rrhh son roles globales. "trabajador" es el rol de todos los demás (incluye a quienes además son Jefe Inmediato o Jefe de Área por posición en el organigrama).
-                </p>
+
+                @if ($nuevoAdmin)
+                    <p class="text-sm text-gray-700 dark:text-gray-300">Administrador (fijo)</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Este formulario solo da de alta administradores. Para crear RR. HH. o trabajadores, usa «Nuevo usuario».
+                    </p>
+                @else
+                    <div class="flex flex-wrap gap-4" role="group" aria-labelledby="usuario-admin-form-roles-titulo">
+                        @foreach ($roles as $rol)
+                            <label wire:key="usuario-admin-form-label-{{ $rol->id }}" class="flex items-center gap-2">
+                                <x-checkbox wire:model.live="rolesSeleccionados" value="{{ $rol->id }}" />
+                                <span class="text-sm">{{ $rol->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        admin y rrhh son roles globales. "trabajador" es el rol de todos los demás (incluye a quienes además son Jefe Inmediato o Jefe de Área por posición en el organigrama).
+                    </p>
+                @endif
+
                 <x-input-error for="rolesSeleccionados" class="mt-2" />
             </div>
 

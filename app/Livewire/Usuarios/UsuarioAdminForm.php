@@ -229,6 +229,18 @@ class UsuarioAdminForm extends Component
     {
         $this->autorizarAdmin();
 
+        if ($this->nuevoAdmin) {
+            // «Nuevo administrador» tiene rol fijo y no pertenece a régimen,
+            // sede ni unidad: se recalculan aquí (no solo en mount()) para
+            // que un payload de Livewire manipulado no pueda colar otro rol
+            // u otros datos — el formulario ya no muestra esos campos.
+            $adminId = (int) Role::where('name', 'admin')->value('id');
+            $this->rolesSeleccionados = $adminId > 0 ? [(string) $adminId] : [];
+            $this->regimen = '';
+            $this->sedeId = null;
+            $this->unidadOrganicaId = null;
+        }
+
         $requiereTurno = $this->admiteConfiguracionTurno() && $this->turno !== '';
 
         $datos = $this->validate();
@@ -389,8 +401,8 @@ class UsuarioAdminForm extends Component
             'dni' => $datos['dni'],
             'email' => $datos['email'],
             'regimen' => $datos['regimen'] ?: null,
-            'sede_id' => $datos['sedeId'],
-            // Un administrador no pertenece a ninguna unidad del organigrama.
+            // Un administrador no pertenece a ninguna sede ni unidad del organigrama.
+            'sede_id' => in_array($adminId, $roles, true) ? null : $datos['sedeId'],
             'unidad_organica_id' => in_array($adminId, $roles, true) ? null : $datos['unidadOrganicaId'],
             'activo' => $datos['activo'],
         ];
@@ -470,7 +482,9 @@ class UsuarioAdminForm extends Component
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
             // En «Nuevo usuario» no se ofrece admin: los administradores se crean desde «Nuevo administrador».
+            // En «Nuevo administrador» el rol es fijo: solo se trae 'admin' (ver blade, que ni siquiera pinta el selector).
             'roles' => Role::orderBy('name')
+                ->when($this->nuevoAdmin, fn ($q) => $q->where('name', 'admin'))
                 ->when($this->usuario === null && ! $this->nuevoAdmin, fn ($q) => $q->where('name', '!=', 'admin'))
                 ->get(),
             'esAdminRol' => $this->incluyeAdmin(),

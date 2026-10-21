@@ -118,10 +118,27 @@ class CalendarioIndividualIndex extends Component
 
         $semanas = array_chunk($celdas, 7);
 
+        // Un solo objeto liviano {dia: {titulo, horario, sede}} para que
+        // Alpine muestre el detalle arriba (junto a la leyenda) sin crear
+        // un popup + x-data por celda. Solo los días con turno entran acá
+        // (máximo 31 entradas), y los datos salen de lo que el admin/jefe
+        // ya programó (turno->hora_inicio/hora_fin/sede), nunca de un
+        // horario fijo en la vista.
+        $detalleDias = $turnosPorDia->mapWithKeys(fn (Turno $turno, int $dia) => [
+            $dia => [
+                'titulo' => $turno->nombreTurno(),
+                'horario' => (! $turno->es_descanso && $turno->hora_inicio && $turno->hora_fin)
+                    ? substr($turno->hora_inicio, 0, 5).' – '.substr($turno->hora_fin, 0, 5)
+                    : null,
+                'sede' => $turno->sede?->nombre,
+            ],
+        ])->all();
+
         return view('livewire.turnos.calendario-individual-index', [
             'inicioMes' => $inicioMes,
             'semanas' => $semanas,
             'turnosPorDia' => $turnosPorDia,
+            'detalleDias' => $detalleDias,
             'hoy' => now(),
         ]);
     }

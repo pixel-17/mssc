@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -34,6 +35,18 @@ class ConfiguracionTurnoForm extends Component
     public int $diasTrabajo = 6;
 
     public int $diasDescanso = 1;
+
+    /**
+     * Selector alternativo: en vez de calcular a mano en qué posición
+     * del ciclo cae cada día, el admin/jefe marca directamente qué
+     * días de la semana son de descanso (1=lunes .. 7=domingo). Solo
+     * tiene sentido para un ciclo semanal (7 días), que es el caso
+     * normal de 276 y de muchos 728. aplicarDiasSemana() lo traduce a
+     * diasTrabajo/diasDescanso/fechaAncla.
+     *
+     * @var array<int, int>
+     */
+    public array $diasSemanaDescanso = [];
 
     public function mount(User $trabajador): void
     {
@@ -71,6 +84,66 @@ class ConfiguracionTurnoForm extends Component
         'turno.in' => 'Ese turno no existe para el régimen de este trabajador.',
     ];
 
+    /**
+     * Traduce la selección de días de la semana a diasTrabajo/diasDescanso
+     * (siempre 7 entre los dos, una semana) y a una fechaAncla concreta:
+     * el primer día de trabajo de la semana que contiene la fechaAncla
+     * actual (o la semana de hoy si todavía no hay ninguna). Usa la
+     * misma cuenta que el generador (esDescansoEnFecha) para que la
+     * vista previa de abajo sea exactamente lo que se va a guardar.
+     */
+    public function aplicarDiasSemana(): void
+    {
+        $dias = array_values(array_unique(array_map('intval', $this->diasSemanaDescanso)));
+
+        if ($dias === [] || count($dias) >= 7) {
+            throw ValidationException::withMessages([
+                'diasSemanaDescanso' => 'Elige entre 1 y 6 días de descanso.',
+            ]);
+        }
+
+        if (! self::formanArcoSemanalContiguo($dias)) {
+            throw ValidationException::withMessages([
+                'diasSemanaDescanso' => 'Los días de descanso deben ser consecutivos dentro de la semana (ej. sábado y domingo, o lunes y martes). Para descansos salteados, carga días de trabajo/descanso por número más abajo.',
+            ]);
+        }
+
+        sort($dias);
+
+        // Primer día de trabajo: el que no está en $dias y cuyo día
+        // anterior (circular, domingo->lunes) sí está.
+        $primerDiaTrabajo = collect(range(1, 7))
+            ->first(fn (int $d) => ! in_array($d, $dias, true) && in_array($d === 1 ? 7 : $d - 1, $dias, true));
+
+        $referencia = $this->fechaAncla !== '' ? Carbon::parse($this->fechaAncla) : now();
+        $ancla = $referencia->copy()->startOfWeek(Carbon::MONDAY);
+        while ($ancla->dayOfWeekIso !== $primerDiaTrabajo) {
+            $ancla->addDay();
+        }
+
+        $this->diasDescanso = count($dias);
+        $this->diasTrabajo = 7 - count($dias);
+        $this->fechaAncla = $ancla->toDateString();
+    }
+
+    /** @param  array<int, int>  $dias  1..7, sin repetir */
+    private static function formanArcoSemanalContiguo(array $dias): bool
+    {
+        for ($inicio = 1; $inicio <= 7; $inicio++) {
+            $arco = collect(range(0, count($dias) - 1))
+                ->map(fn (int $k) => (($inicio - 1 + $k) % 7) + 1)
+                ->sort()
+                ->values()
+                ->all();
+
+            if ($arco === $dias) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     public function guardar(GeneradorTurnoMensualService $generador): void
     {
         abort_unless(auth()->user()->puedeGestionarTurnoDe($this->trabajador), 403);
@@ -91,10 +164,47 @@ class ConfiguracionTurnoForm extends Component
         $this->redirectRoute('turnos.index', navigate: false);
     }
 
+    /**
+     * 14 días desde el lunes de la semana actual, marcados
+     * trabajo/descanso con la MISMA cuenta que se va a guardar
+     * (GeneradorTurnoMensualService::esDescansoEnFecha). Así el admin
+     * ve el resultado real antes de guardar, sin reimplementar la
+     * lógica del ciclo en Blade/JS.
+     *
+     * @return array<int, array{fecha: string, etiqueta: string, descanso: bool}>|null
+     */
+    private function previsualizacion(): ?array
+    {
+        if ($this->fechaAncla === '' || $this->diasTrabajo < 1 || $this->diasDescanso < 1) {
+            return null;
+        }
+
+        try {
+            $ancla = Carbon::parse($this->fechaAncla);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $inicio = now()->startOfWeek(Carbon::MONDAY);
+
+        return collect(range(0, 13))
+            ->map(function (int $i) use ($inicio, $ancla) {
+                $dia = $inicio->copy()->addDays($i);
+
+                return [
+                    'fecha' => $dia->toDateString(),
+                    'etiqueta' => ucfirst($dia->translatedFormat('D d')),
+                    'descanso' => GeneradorTurnoMensualService::esDescansoEnFecha($ancla, $dia, $this->diasTrabajo, $this->diasDescanso),
+                ];
+            })
+            ->all();
+    }
+
     public function render(): View
     {
         return view('livewire.turnos.configuracion-turno-form', [
             'opcionesTurno' => ConfiguracionTurno::turnosValidosPara($this->trabajador),
+            'previsualizacion' => $this->previsualizacion(),
         ]);
     }
 }

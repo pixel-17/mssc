@@ -126,7 +126,6 @@ class GeneradorTurnoMensualService
         }
 
         [$horaInicio, $horaFin] = $this->horasDe($config->turno);
-        $ciclo = $config->dias_trabajo + $config->dias_descanso;
 
         $dia = $mesInicio->copy()->startOfMonth();
         $finDeMes = $mesInicio->copy()->endOfMonth();
@@ -134,12 +133,7 @@ class GeneradorTurnoMensualService
         $filas = [];
 
         while ($dia->lessThanOrEqualTo($finDeMes)) {
-            // Módulo positivo: fecha_ancla puede ser posterior a $dia
-            // (trabajador nuevo) o muy anterior, diffInDays no da
-            // negativo pero se protege igual por claridad del cálculo.
-            $offset = $config->fecha_ancla->diffInDays($dia, absolute: false);
-            $posicion = (($offset % $ciclo) + $ciclo) % $ciclo;
-            $esDescanso = $posicion >= $config->dias_trabajo;
+            $esDescanso = self::esDescansoEnFecha($config->fecha_ancla, $dia, $config->dias_trabajo, $config->dias_descanso);
 
             $filas[] = [
                 'user_id' => $trabajador->id,
@@ -178,6 +172,25 @@ class GeneradorTurnoMensualService
         );
 
         HorarioActualizado::notificar($trabajador->id);
+    }
+
+    /**
+     * Misma cuenta de ciclo que usa generarMes, extraída para que el
+     * formulario de configuración (vista previa en vivo, selector de
+     * días de la semana) calcule exactamente lo mismo que se va a
+     * guardar — una sola fuente de verdad, nada duplicado en Blade/JS.
+     */
+    public static function esDescansoEnFecha(Carbon $fechaAncla, Carbon $dia, int $diasTrabajo, int $diasDescanso): bool
+    {
+        $ciclo = $diasTrabajo + $diasDescanso;
+
+        // Módulo positivo: fecha_ancla puede ser posterior a $dia
+        // (trabajador nuevo) o muy anterior, diffInDays no da
+        // negativo pero se protege igual por claridad del cálculo.
+        $offset = $fechaAncla->diffInDays($dia, absolute: false);
+        $posicion = (($offset % $ciclo) + $ciclo) % $ciclo;
+
+        return $posicion >= $diasTrabajo;
     }
 
     /**

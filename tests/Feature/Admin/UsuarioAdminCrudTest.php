@@ -158,6 +158,67 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertNull(User::where('dni', '12345678')->first());
     }
 
+    // --------------------------------------------- alta de administrador
+
+    /**
+     * «Nuevo administrador» (?tipo=admin): el formulario ya no pide régimen,
+     * sede ni unidad orgánica, y el rol queda fijo en Admin.
+     */
+    public function test_nuevo_administrador_se_crea_sin_regimen_sede_ni_unidad_y_con_rol_fijo(): void
+    {
+        $componente = Livewire::withQueryParams(['tipo' => 'admin'])
+            ->actingAs($this->admin)
+            ->test(UsuarioAdminForm::class)
+            ->assertSet('rolesSeleccionados', [(string) $this->rolId('admin')])
+            ->set('name', 'Nueva')
+            ->set('apellido', 'Administradora')
+            ->set('dni', '87654321')
+            ->set('email', 'nueva.admin@example.com')
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '87654321')->firstOrFail();
+
+        $this->assertTrue($usuario->hasRole('admin'));
+        $this->assertFalse($usuario->hasRole('rrhh'));
+        $this->assertFalse($usuario->hasRole('trabajador'));
+        $this->assertNull($usuario->regimen);
+        $this->assertNull($usuario->sede_id);
+        $this->assertNull($usuario->unidad_organica_id);
+
+        $componente->assertRedirect(route('usuarios-admin.index'));
+    }
+
+    /**
+     * Aunque el payload de Livewire llegue manipulado (otro rol, régimen,
+     * sede), guardar() lo vuelve a fijar: el rol admin es el único posible
+     * desde este flujo.
+     */
+    public function test_nuevo_administrador_ignora_un_payload_manipulado_con_otro_rol_o_regimen(): void
+    {
+        $sede = $this->sedeDePrueba();
+
+        Livewire::withQueryParams(['tipo' => 'admin'])
+            ->actingAs($this->admin)
+            ->test(UsuarioAdminForm::class)
+            ->set('name', 'Nueva')
+            ->set('apellido', 'Administradora')
+            ->set('dni', '87654322')
+            ->set('email', 'otra.admin@example.com')
+            ->set('regimen', '276')
+            ->set('sedeId', $sede->id)
+            ->set('rolesSeleccionados', [$this->rolId('admin'), $this->rolId('rrhh')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '87654322')->firstOrFail();
+
+        $this->assertTrue($usuario->hasRole('admin'));
+        $this->assertFalse($usuario->hasRole('rrhh'));
+        $this->assertNull($usuario->regimen);
+        $this->assertNull($usuario->sede_id);
+    }
+
     public function test_al_crear_se_ignora_la_contrasena_escrita_y_se_usa_el_dni(): void
     {
         $this->formularioDeAlta(['password' => 'OtraClave12345'])
