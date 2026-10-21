@@ -15,3 +15,4 @@ import './theme';
 import './sidebar';
 import './livewire-progreso';
 import './confirmar';
+import './retorno-camara';

@@ -122,7 +122,7 @@
                     <div class="flex items-baseline gap-2.5">
                         <span class="font-display text-sello-500 dark:text-sello-300 font-semibold shrink-0">3</span>
                         <div class="w-full space-y-1.5">
-                            <x-label for="hora_retorno_estimado" value="Hora de retorno estimada (opcional)" />
+                            <x-label for="hora_retorno_estimado" value="Hora de retorno estimada " />
                             {{--
                                 BUG: min/max se calculaban con now() en el
                                 servidor (config('app.timezone') = UTC), pero
@@ -154,7 +154,6 @@
                                 "
                                 class="input-glass @error('hora_retorno_estimado') !border-alarma-500 @enderror"
                             >
-                            <p class="text-xs text-gray-500 dark:text-tinta-100/60">Solo informativa, para que tu jefe sepa cuándo esperarte.</p>
                             <x-input-error for="hora_retorno_estimado" class="mt-1" />
                         </div>
                     </div>

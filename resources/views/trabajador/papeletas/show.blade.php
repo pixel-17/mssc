@@ -201,42 +201,72 @@
         @endif
 
         @if ($puedeMarcarRetorno)
-            <div class="glass-card p-5" x-data="{ lat: '', lng: '', obteniendo: false, error: '', archivoFoto: null }">
+            <div class="glass-card p-5" x-data="msscRetornoCamara()">
                 <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Marcar retorno</h3>
 
-                <form method="POST" action="{{ route('trabajador.papeletas.retorno.store', $papeleta) }}" enctype="multipart/form-data" class="space-y-4">
+                <form method="POST" action="{{ route('trabajador.papeletas.retorno.store', $papeleta) }}" enctype="multipart/form-data" class="space-y-3" @submit="prepararEnvio($event)">
                     @csrf
 
-                    <label
-                        for="foto-retorno"
-                        class="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-tinta-200 dark:border-white/15 bg-white/40 dark:bg-white/5 py-4 text-center cursor-pointer hover:border-tinta-400 dark:hover:border-tinta-400/60 transition"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 text-tinta-500">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.132.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.803-2.169a47.865 47.865 0 00-1.132-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" /><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-                        </svg>
-                        <span class="text-sm font-medium text-tinta-700 dark:text-tinta-200" x-text="archivoFoto ?? 'Tomar / adjuntar foto'"></span>
-                    </label>
-                    <input type="file" id="foto-retorno" name="foto" accept="image/*" required class="sr-only"
-                           @change="archivoFoto = $event.target.files[0]?.name ?? null">
+                    {{-- Único botón: abre cámara en vivo + ubicación/dirección a la vez. --}}
+                    <template x-if="estado === 'inicial'">
+                        <button type="button" @click="iniciar()" class="btn-primary w-full text-sm py-3">
+                            📷 Tomar foto de retorno
+                        </button>
+                    </template>
 
-                    <button type="button"
-                            @click="obteniendo = true; error = ''; navigator.geolocation.getCurrentPosition(
-                                (p) => { lat = p.coords.latitude; lng = p.coords.longitude; obteniendo = false; },
-                                (e) => { error = 'No se pudo obtener tu ubicación: ' + e.message; obteniendo = false; }
-                            )"
-                            class="btn-secondary w-full text-sm py-2.5">
-                        <span x-show="!obteniendo">📍 Usar mi ubicación actual</span>
-                        <span x-show="obteniendo">Obteniendo ubicación...</span>
-                    </button>
-                    <p class="text-xs text-red-600 dark:text-red-400" x-show="error" x-text="error"></p>
-                    <p class="text-xs text-emerald-700 dark:text-emerald-400" x-show="lat && lng">Ubicación capturada ✓</p>
+                    {{-- Cámara en vivo: no hay forma de adjuntar desde galería, solo capturar. --}}
+                    <template x-if="estado === 'abriendo' || estado === 'en-vivo'">
+                        <div class="space-y-3">
+                            <div class="relative overflow-hidden rounded-xl bg-black aspect-[3/4]">
+                                <video x-ref="video" playsinline autoplay muted class="h-full w-full object-cover"
+                                       :class="facingMode === 'user' && '-scale-x-100'"></video>
+                                <p x-show="estado === 'abriendo'" class="absolute inset-0 flex items-center justify-center text-xs text-white/80">
+                                    Abriendo cámara…
+                                </p>
+                                <button type="button" x-show="estado === 'en-vivo'" @click="cambiarCamara()"
+                                        class="absolute top-2 right-2 rounded-full bg-black/50 text-white text-xs px-3 py-1.5">
+                                    🔄 Cambiar cámara
+                                </button>
+                            </div>
 
+                            <p class="text-xs text-tinta-700 dark:text-tinta-200" x-show="!ubicacionLista && !ubicacionError">
+                                📍 Obteniendo tu ubicación…
+                            </p>
+                            <p class="text-xs text-emerald-700 dark:text-emerald-400" x-show="ubicacionLista" x-text="'📍 ' + (direccion ?? 'Ubicación capturada')"></p>
+                            <p class="text-xs text-red-600 dark:text-red-400" x-show="ubicacionError" x-text="ubicacionError"></p>
+
+                            <button type="button" @click="capturar()" :disabled="estado !== 'en-vivo' || !ubicacionLista"
+                                    class="btn-primary w-full text-sm py-3 disabled:opacity-40 disabled:pointer-events-none">
+                                <span x-show="ubicacionLista">Capturar foto</span>
+                                <span x-show="!ubicacionLista">Esperando ubicación…</span>
+                            </button>
+                        </div>
+                    </template>
+
+                    {{-- Foto ya sellada con dirección, fecha y hora; lista para confirmar. --}}
+                    <template x-if="estado === 'capturada'">
+                        <div class="space-y-3">
+                            <img :src="fotoPreviewUrl" alt="Foto de retorno" class="w-full rounded-xl">
+
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" @click="reintentar()" class="btn-secondary text-sm py-2.5">
+                                    Volver a tomar
+                                </button>
+                                <button type="submit" :disabled="enviando" class="btn-primary text-sm py-2.5 disabled:opacity-40 disabled:pointer-events-none">
+                                    <span x-show="!enviando">Confirmar retorno</span>
+                                    <span x-show="enviando">Enviando…</span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+
+                    <p class="text-xs text-red-600 dark:text-red-400" x-show="camaraError" x-text="camaraError"></p>
+
+                    <canvas x-ref="canvas" class="hidden"></canvas>
+                    {{-- Oculto y sin "required": solo se llena vía JS al capturar, nunca es clickeable. --}}
+                    <input type="file" x-ref="inputFoto" name="foto" accept="image/*" class="hidden" tabindex="-1" aria-hidden="true">
                     <input type="hidden" name="latitud" :value="lat">
                     <input type="hidden" name="longitud" :value="lng">
-
-                    <button type="submit" :disabled="!lat || !lng" class="btn-primary w-full text-sm py-3 disabled:opacity-40 disabled:pointer-events-none">
-                        Confirmar retorno
-                    </button>
                 </form>
             </div>
         @endif
