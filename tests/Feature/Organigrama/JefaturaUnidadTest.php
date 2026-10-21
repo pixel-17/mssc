@@ -72,13 +72,13 @@ class JefaturaUnidadTest extends TestCase
         ], $ubicarJefe);
     }
 
-    public function test_un_jefe_de_otro_regimen_no_puede_encabezar_una_unidad_con_personas(): void
+    public function test_un_jefe_de_otro_regimen_puede_encabezar_una_unidad_con_personas(): void
     {
         $rosa = $this->usuarioDePrueba(['name' => 'Rosa', 'regimen' => '276']);
 
-        $this->expectException(UsuarioException::class);
-
         $this->guardar($this->oficinaA, ['jefe_id' => $rosa->id]);
+
+        $this->assertSame($rosa->id, $this->oficinaA->fresh()->jefe_id);
     }
 
     public function test_un_usuario_desactivado_no_puede_encabezar_una_unidad(): void

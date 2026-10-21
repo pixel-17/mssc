@@ -62,24 +62,6 @@ class JefaturaUnidadService
             throw new UsuarioException($jefe->nombre_completo.' es administrador: un administrador no pertenece al organigrama ni puede encabezar una unidad.');
         }
 
-        if ($unidad !== null && $jefe->regimen !== null) {
-            $excluidos = array_filter([(int) $unidad->jefe_id, (int) $jefe->id]);
-
-            $personas = $unidad->miembros()
-                ->where('activo', true)
-                ->whereNotIn('id', $excluidos)
-                ->where('regimen', '!=', $jefe->regimen)
-                ->count();
-
-            if ($personas > 0) {
-                throw new UsuarioException(
-                    'El régimen de '.$jefe->nombre_completo.' ('.$jefe->regimen.') no coincide con el de '
-                    .$personas.' '.($personas === 1 ? 'persona' : 'personas').' de la unidad. '
-                    .'Todos en una unidad comparten el régimen de su jefe: muévelas primero a otra unidad.'
-                );
-            }
-        }
-
         if ($ubicarJefe) {
             $otraUnidad = $jefe->unidadesQueEncabeza()
                 ->when($unidad, fn ($q) => $q->whereKeyNot($unidad->id))

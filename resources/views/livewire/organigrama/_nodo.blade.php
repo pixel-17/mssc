@@ -59,7 +59,7 @@
             :class="sobre === {{ $unidad->id }} && 'ring-2 ring-amber-400 bg-amber-50/60 dark:bg-amber-500/10'"
             @dragover.prevent="if (arrastrando) { $event.dataTransfer.dropEffect = 'move'; sobre = {{ $unidad->id }} }"
             @dragleave="if (! $event.currentTarget.contains($event.relatedTarget)) sobre = null"
-            @drop.prevent="if (arrastrando) { $wire.proponerMovimiento(arrastrando, {{ $unidad->id }}) } arrastrando = null; sobre = null"
+            @drop.prevent="if (arrastrando) { $wire.proponerMovimiento(arrastrando, {{ $unidad->id }}) } bandeja = bandeja.filter(p => p.id !== arrastrando); arrastrando = null; sobre = null"
         @endif
     >
         {{-- Cabecera de la unidad --}}
@@ -142,7 +142,7 @@
                              @if ($puedeArrastrarJefe)
                                  draggable="true"
                                  title="Arrástralo sobre otra unidad para moverlo (se pide confirmación)"
-                                 @dragstart="arrastrando = {{ $jefe->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $jefe->id }}')"
+                                 @dragstart="arrastrando = {{ $jefe->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $jefe->id }}'); window.orgNombres = window.orgNombres || {}; window.orgNombres[{{ $jefe->id }}] = @js($jefe->nombre_completo)"
                                  @dragend="arrastrando = null; sobre = null"
                              @endif
                         >
@@ -171,7 +171,7 @@
                         <div wire:key="org-m-{{ $m->id }}" @if ($loop->index >= $maxVisibles) x-show="verTodos" x-cloak @endif class="org-persona flex flex-wrap items-center gap-2 rounded-lg bg-gray-50 px-2.5 py-1.5 text-sm dark:bg-white/5 {{ $m->activo ? '' : 'opacity-50' }} {{ $modoEdicion ? 'cursor-grab active:cursor-grabbing' : '' }}"
                              @if ($modoEdicion)
                                  draggable="true"
-                                 @dragstart="arrastrando = {{ $m->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $m->id }}')"
+                                 @dragstart="arrastrando = {{ $m->id }}; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', '{{ $m->id }}'); window.orgNombres = window.orgNombres || {}; window.orgNombres[{{ $m->id }}] = @js($m->nombre_completo)"
                                  @dragend="arrastrando = null; sobre = null"
                              @endif
                         >

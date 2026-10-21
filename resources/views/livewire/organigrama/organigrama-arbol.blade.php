@@ -1,5 +1,5 @@
 <div
-    x-data="{ todos: null, arrastrando: null, sobre: null, leyenda: false, ayuda: false, pendientes: false }"
+    x-data="{ todos: null, arrastrando: null, sobre: null, leyenda: false, ayuda: false, pendientes: false, bandeja: [] }"
     class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6"
 >
     {{-- Conectores del árbol. Van aquí (no en app.css) para que funcionen sin recompilar. --}}
@@ -130,6 +130,49 @@
                 @endif
             </div>
         </x-admin.encabezado>
+
+        @if ($modoEdicion)
+            {{-- Bandeja: un punto intermedio para mover de lejos sin tener ambos extremos
+                 a la vista a la vez. Se arrastra a alguien hasta aquí (queda "apartado",
+                 nada se guarda todavía) y luego, ya con el destino a la vista, se le
+                 arrastra OTRA VEZ desde aquí hasta la unidad: eso dispara exactamente el
+                 mismo proponerMovimiento() de siempre (como trabajador o ascender a jefe),
+                 sin ninguna acción nueva en el servidor. Si recargas con alguien apartado,
+                 como nunca se guardó nada, simplemente no sale movido: no hay nada que
+                 deshacer. El nombre de cada quien se guarda en window.orgNombres al
+                 agarrarlo (ver _nodo.blade.php), porque el dataTransfer solo lleva el id. --}}
+            <div class="mt-2 flex flex-wrap items-center gap-2 rounded-xl border border-dashed px-3 py-2 transition"
+                 :class="bandeja.length > 0
+                    ? 'border-amber-400/70 bg-amber-50/60 dark:border-amber-400/40 dark:bg-amber-500/10'
+                    : 'border-gray-300 dark:border-white/15'"
+                 @dragover.prevent="$event.dataTransfer.dropEffect = 'move'"
+                 @drop.prevent="
+                    if (arrastrando && ! bandeja.some(p => p.id === arrastrando)) {
+                        bandeja.push({ id: arrastrando, nombre: (window.orgNombres && window.orgNombres[arrastrando]) || ('#' + arrastrando) });
+                    }
+                    arrastrando = null; sobre = null;
+                 "
+                 role="group" aria-label="Bandeja: arrastra aquí a quien quieras apartar antes de moverlo">
+                <x-icon name="users" class="size-4 shrink-0 text-gray-400" />
+                <span x-show="bandeja.length === 0" class="text-xs text-gray-400 dark:text-tinta-50/50">
+                    Arrástralos aquí para apartarlos mientras buscas dónde ponerlos; luego arrástralos desde aquí hasta la unidad.
+                </span>
+                <template x-for="p in bandeja" :key="p.id">
+                    <span class="org-persona inline-flex cursor-grab items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs shadow-sm active:cursor-grabbing dark:bg-gray-800"
+                          draggable="true"
+                          title="Arrástralo sobre la unidad de destino"
+                          @dragstart="arrastrando = p.id; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', String(p.id))"
+                          @dragend="arrastrando = null; sobre = null">
+                        <svg class="org-asa size-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                        <span x-text="p.nombre"></span>
+                        <button type="button" class="text-gray-400 hover:text-red-600" @click="bandeja = bandeja.filter(x => x.id !== p.id)"
+                                title="Quitar de la bandeja (no mueve nada)" aria-label="Quitar de la bandeja">
+                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
+                        </button>
+                    </span>
+                </template>
+            </div>
+        @endif
     </div>
 
     @if ($modoEdicion)
