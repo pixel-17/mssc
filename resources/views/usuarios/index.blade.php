@@ -62,11 +62,18 @@
                                         <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $usuario->unidadOrganica?->nombre ?? '—' }}</td>
                                         <td class="px-4 py-3"><x-admin.estado :activo="$usuario->activo" etiquetaNo="Desactivado" /></td>
                                         <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
-                                            <a href="{{ route('reportes.trabajador-historial', ['trabajadorId' => $usuario->id]) }}" class="text-tinta-600 hover:text-tinta-800 font-medium" title="Ver su historial de papeletas">Ficha</a>
+                                            <a href="{{ route('reportes.trabajador-historial', ['trabajadorId' => $usuario->id]) }}"
+                                               title="Ver su historial de papeletas"
+                                               class="inline-flex items-center gap-1 rounded-md border border-tinta-200 px-2.5 py-1 text-xs font-semibold text-tinta-700 hover:bg-tinta-50 dark:border-white/10 dark:text-tinta-300 dark:hover:bg-white/5">
+                                                Ficha
+                                            </a>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-right whitespace-nowrap">
                                             @can('editar', $usuario)
-                                                <a href="{{ route('usuarios.editar', $usuario) }}" class="text-tinta-600 hover:text-tinta-800 font-medium">Editar</a>
+                                                <a href="{{ route('usuarios.editar', $usuario) }}"
+                                                   class="inline-flex items-center gap-1 rounded-md bg-tinta-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-tinta-700">
+                                                    Editar
+                                                </a>
                                             @endcan
                                         </td>
                                     </tr>

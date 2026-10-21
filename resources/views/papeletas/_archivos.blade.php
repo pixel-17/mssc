@@ -1,9 +1,11 @@
 {{--
     Archivos que la papeleta guarda en el disco privado y que hasta ahora
     nadie podía abrir: adjunto inicial y foto del retorno. Los sirve
-    PapeletaArchivoController con la
-    misma PapeletaPolicy::view que el detalle (dueño, jefe, jefe de área,
-    RR. HH.). El archivo de un sustento sigue en su propio enlace.
+    PapeletaArchivoController con
+    PapeletaPolicy::verArchivos (dueño, jefe inmediato, jefe de área o
+    RR. HH. — el admin NO, aunque vea el detalle en solo lectura: por
+    eso el @can de abajo, o le quedaría un enlace que tira 403). El
+    archivo de un sustento sigue en su propio enlace.
 --}}
 @php
     $archivosPapeleta = array_filter([
@@ -13,7 +15,7 @@
     ]);
 @endphp
 
-@if ($archivosPapeleta)
+@if ($archivosPapeleta && Auth::user()->can('verArchivos', $papeleta))
     <div class="glass-card p-6">
         <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Archivos adjuntos</h3>
         <ul class="text-sm text-gray-700 dark:text-tinta-100/70 space-y-1">

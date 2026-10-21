@@ -24,16 +24,6 @@
                 </div>
 
                 <div class="max-w-xs">
-                    <label for="sustentos-index-trabajadorId" class="block text-sm font-medium mb-1">Trabajador</label>
-                    <select id="sustentos-index-trabajadorId" wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                        <option value="">Todos</option>
-                        @foreach ($trabajadoresDisponibles as $trabajador)
-                            <option value="{{ $trabajador->id }}">{{ trim($trabajador->name.' '.$trabajador->apellido) }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="max-w-xs">
                     <label for="sustentos-index-estado" class="block text-sm font-medium mb-1">Estado</label>
                     <select id="sustentos-index-estado" wire:model.live="estado" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
                         <option value="">Todos</option>
@@ -101,7 +91,10 @@
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->revisadoPor?->nombre_completo ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm print:hidden">
                                     @if ($sustento->archivo_path)
-                                        <a href="{{ route('sustentos.archivo', $sustento) }}" class="text-tinta-600 hover:text-tinta-900 underline">Ver</a>
+                                        <a href="{{ route('sustentos.archivo', $sustento) }}"
+                                           class="inline-flex items-center gap-1 rounded-md border border-tinta-200 px-2.5 py-1 text-xs font-semibold text-tinta-700 hover:bg-tinta-50 dark:border-white/10 dark:text-tinta-300 dark:hover:bg-white/5">
+                                            Ver
+                                        </a>
                                     @else
                                         —
                                     @endif

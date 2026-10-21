@@ -84,6 +84,18 @@
                 @if ($historial->isEmpty())
                     <p class="p-4 text-sm text-gray-500">Este trabajador no tiene papeletas registradas.</p>
                 @else
+                    @php
+                        // A qué bandeja pertenece quien mira esta ficha: decide a qué
+                        // ruta de detalle (solo lectura via PapeletaPolicy::view)
+                        // apunta el "Ver" de cada fila. admin/RRHH ven cualquier
+                        // papeleta; jefe solo las de su propio equipo (la Policy
+                        // igual lo filtra si el caso no le corresponde).
+                        $rutaDetalle = match (true) {
+                            auth()->user()->hasRole('admin') => 'admin.papeletas.show',
+                            auth()->user()->hasRole('rrhh') => 'rrhh.papeletas.show',
+                            default => 'jefe.papeletas.show',
+                        };
+                    @endphp
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-tinta-50/70 dark:bg-gray-800">
                             <tr class="text-left text-xs font-medium text-gray-500 uppercase">
@@ -93,6 +105,7 @@
                                 <th scope="col" class="px-4 py-2">Estado</th>
                                 <th scope="col" class="px-4 py-2 text-right">Horas</th>
                                 <th scope="col" class="px-4 py-2">Sustento</th>
+                                <th scope="col" class="px-4 py-2 print:hidden">Detalle</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-transparent divide-y divide-gray-200 dark:divide-gray-800">
@@ -118,6 +131,12 @@
                                         @else
                                             —
                                         @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-sm print:hidden">
+                                        <a href="{{ route($rutaDetalle, $fila['id']) }}"
+                                           class="inline-flex items-center gap-1 rounded-md border border-tinta-200 px-2.5 py-1 text-xs font-semibold text-tinta-700 hover:bg-tinta-50 dark:border-white/10 dark:text-tinta-300 dark:hover:bg-white/5">
+                                            Ver →
+                                        </a>
                                     </td>
                                 </tr>
                             @endforeach
