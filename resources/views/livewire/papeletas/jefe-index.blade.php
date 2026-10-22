@@ -39,6 +39,16 @@
                         </thead>
                         <tbody class="bg-white dark:bg-transparent">
                             @foreach ($porDecidir as $papeleta)
+                                @php
+                                    // Se calcula aparte (en vez de un ternario con comillas
+                                    // escapadas dentro del atributo :aviso) porque esas
+                                    // comillas anidadas rompían el parseo del atributo del
+                                    // componente: el texto se colaba como contenido crudo
+                                    // de la fila en vez de ir al tooltip del modal.
+                                    $avisoObservar = $papeleta->contador_observaciones_jefe >= $topeObservaciones - 1
+                                        ? "Esta papeleta ya tiene {$papeleta->contador_observaciones_jefe}/{$topeObservaciones} observaciones. Si la observas, alcanzará el tope y el sistema la rechazará automáticamente en vez de esperar respuesta del trabajador."
+                                        : null;
+                                @endphp
                                 <tr wire:key="por-decidir-{{ $papeleta->id }}" class="shadow-[0_0_0_1px_rgb(229,231,235)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.15)] hover:shadow-[0_0_0_1px_rgb(99,102,241)] dark:hover:shadow-[0_0_0_1px_rgb(129,140,248)] transition-shadow rounded-lg">
                                     <td class="px-4 py-3 text-sm text-gray-900 dark:text-white">{{ $papeleta->trabajador->nombre_completo }}</td>
                                     <td class="px-4 py-3 text-sm text-gray-500 dark:text-tinta-100/60">{{ $papeleta->motivo->nombre }}</td>
@@ -51,7 +61,7 @@
                                                 label="Aprobar"
                                                 color="green"
                                             />
-                                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" :aviso="$papeleta->contador_observaciones_jefe >= $topeObservaciones - 1 ? \"Esta papeleta ya tiene {$papeleta->contador_observaciones_jefe}/{$topeObservaciones} observaciones. Si la observas, alcanzará el tope y el sistema la rechazará automáticamente en vez de esperar respuesta del trabajador.\" : null" />
+                                            <x-accion-comentario :action="route('jefe.papeletas.observar', $papeleta)" label="Observar" color="orange" opcion="requiere_adjunto" opcionLabel="Además de responder por escrito, debe adjuntar un archivo" :opcionMarcada="false" :aviso="$avisoObservar" />
                                             <x-accion-comentario :action="route('jefe.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" />
                                         </div>
                                     </td>

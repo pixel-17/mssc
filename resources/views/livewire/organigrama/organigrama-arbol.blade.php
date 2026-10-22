@@ -1,5 +1,5 @@
 <div
-    x-data="{ todos: null, arrastrando: null, sobre: null, leyenda: false, ayuda: false, pendientes: false, bandeja: [] }"
+    x-data="{ todos: null, arrastrando: null, sobre: null, leyenda: false, ayuda: false, pendientes: false, bandeja: [], panelAbierto: true }"
     class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6"
 >
     {{-- Conectores del árbol. Van aquí (no en app.css) para que funcionen sin recompilar. --}}
@@ -42,15 +42,13 @@
         .org-encabezado-fija {
             padding-block: .5rem;
         }
-        /* Panel de edición: vive en la misma fila que "Por atender", a su
-           altura -- ese es su sitio de origen y no se mueve de ahí.
-           Agrupa lo que cambia según el modo (entrar/salir de edición,
-           Agregar, la bandeja) para que el título y "Solo áreas/Todo
-           abierto/Todo cerrado" de arriba se queden quietos.
-           Es sticky: arranca en su posición de origen de siempre y ahí
-           se queda mientras haya scroll de sobra; solo cuando el scroll
-           baja mucho (y top ya no alcanza) se despega y sube pegándose
-           al borde superior, acompañando el resto del scroll. */
+        /* Panel de edición: ahora es flotante (fixed), anclado a la
+           esquina inferior derecha del viewport. Ya no vive en el flujo
+           de la fila junto a "Por atender" -- al salir del flujo, esa
+           caja simplemente ocupa el ancho libre. Agrupa lo que cambia
+           según el modo (entrar/salir de edición, Agregar, la bandeja)
+           y se queda siempre a la vista, sin importar cuánto se baje en
+           el árbol. */
         .org-panel-lateral {
             display: flex;
             flex-direction: column;
@@ -58,8 +56,17 @@
             gap: .5rem;
             width: 16rem;
             max-width: calc(100vw - 2rem);
-            position: sticky;
-            top: 1rem;
+            position: fixed;
+            right: 1.25rem;
+            bottom: 1.25rem;
+            z-index: 30;
+        }
+        /* Botón de edición flotante (fuera de modo edición): círculo
+           compacto, no la barra entera -- solo el FAB. */
+        .org-boton-edicion-flotante {
+            align-self: flex-end;
+            border-radius: 9999px;
+            box-shadow: 0 12px 28px -10px rgb(0 0 0 / .35);
         }
         /* Tarjeta del panel: solo aparece como tal (fondo, borde, sombra)
            cuando hay algo que agrupar dentro -- en modo edición. Fuera de
@@ -214,24 +221,27 @@
              servidor igual lo sigue autorizando, ver autorizar() en
              alternarEdicion). --}}
         @if ($esAdmin || $esJefeDeArea)
-            <div class="org-panel-lateral ms-auto">
-                {{-- Fuera de edición: solo el botón, sin chrome de tarjeta.
-                     Al entrar, se vuelve el encabezado de la tarjeta de abajo. --}}
+            <div class="org-panel-lateral">
+                {{-- Fuera de edición: solo el botón flotante, sin chrome de
+                     tarjeta. Al entrar, se vuelve el encabezado de la
+                     tarjeta flotante de abajo. --}}
                 @unless ($modoEdicion)
                     <button type="button"
                             wire:click="alternarEdicion"
                             aria-pressed="false"
-                            class="btn-secondary inline-flex items-center justify-center gap-1.5 self-end rounded-full px-4 py-2 text-xs shadow-sm">
+                            class="btn-secondary org-boton-edicion-flotante inline-flex items-center justify-center gap-1.5 px-4 py-3 text-xs">
                         <x-icon name="pencil" class="size-4" />
                         Modo edición
                     </button>
                 @else
                     <div class="org-panel-tarjeta">
                         <div class="flex items-center justify-between gap-2">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                            <button type="button" class="flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400"
+                                    @click="panelAbierto = ! panelAbierto" :aria-expanded="panelAbierto" aria-label="Mostrar u ocultar el panel">
                                 <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
                                 Edición activa
-                            </span>
+                                <svg class="size-3.5 transition-transform" :class="! panelAbierto && '-rotate-180'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 15.75 7.5-7.5 7.5 7.5" /></svg>
+                            </button>
                             <button type="button"
                                     wire:click="alternarEdicion"
                                     aria-pressed="true"
@@ -240,6 +250,8 @@
                                 Salir
                             </button>
                         </div>
+
+                        <div x-show="panelAbierto" x-collapse x-cloak>
 
                         <div class="org-panel-separador"></div>
 
@@ -323,6 +335,7 @@
                         </template>
                     </div>
                 @endif
+                        </div>
                         </div>
                     </div>
                 @endunless
