@@ -209,9 +209,11 @@
 
         {{-- Panel de edición: junta el botón de entrar/salir de modo edición,
              "Agregar" y la bandeja porque los tres cambian juntos según el
-             modo. Para quien puede editar: admin, Jefe de Área o Jefe
-             Inmediato (su propia unidad). --}}
-        @if ($puedeEditar)
+             modo. Solo para admin y Jefe de Área: el Jefe Inmediato tiene
+             una rama demasiado pequeña como para necesitarlo (aunque el
+             servidor igual lo sigue autorizando, ver autorizar() en
+             alternarEdicion). --}}
+        @if ($esAdmin || $esJefeDeArea)
             <div class="org-panel-lateral ms-auto">
                 {{-- Fuera de edición: solo el botón, sin chrome de tarjeta.
                      Al entrar, se vuelve el encabezado de la tarjeta de abajo. --}}
