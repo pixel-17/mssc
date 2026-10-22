@@ -43,11 +43,14 @@
             padding-block: .5rem;
         }
         /* Panel de edición: vive en la misma fila que "Por atender", a su
-           altura, y ya no flota ni se pega al hacer scroll -- se desplaza
-           con la página como cualquier otro bloque. Agrupa lo que cambia
-           según el modo (entrar/salir de edición, Agregar, la bandeja)
-           para que el título y "Solo áreas/Todo abierto/Todo cerrado" de
-           arriba se queden quietos. */
+           altura -- ese es su sitio de origen y no se mueve de ahí.
+           Agrupa lo que cambia según el modo (entrar/salir de edición,
+           Agregar, la bandeja) para que el título y "Solo áreas/Todo
+           abierto/Todo cerrado" de arriba se queden quietos.
+           Es sticky: arranca en su posición de origen de siempre y ahí
+           se queda mientras haya scroll de sobra; solo cuando el scroll
+           baja mucho (y top ya no alcanza) se despega y sube pegándose
+           al borde superior, acompañando el resto del scroll. */
         .org-panel-lateral {
             display: flex;
             flex-direction: column;
@@ -55,6 +58,8 @@
             gap: .5rem;
             width: 16rem;
             max-width: calc(100vw - 2rem);
+            position: sticky;
+            top: 1rem;
         }
         /* Tarjeta del panel: solo aparece como tal (fondo, borde, sombra)
            cuando hay algo que agrupar dentro -- en modo edición. Fuera de

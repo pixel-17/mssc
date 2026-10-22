@@ -46,10 +46,6 @@
                 <button type="button" wire:click="limpiarFiltros" class="text-xs text-tinta-600 hover:text-tinta-900 underline pb-2">
                     Limpiar filtros
                 </button>
-
-                <button type="button" onclick="window.print()" class="btn-secondary text-xs ml-auto">
-                    Imprimir
-                </button>
             </div>
         </div>
 
@@ -91,7 +87,7 @@
                                 <td class="px-4 py-3 text-sm text-gray-500">{{ $sustento->revisadoPor?->nombre_completo ?? '—' }}</td>
                                 <td class="px-4 py-3 text-sm print:hidden">
                                     @if ($sustento->archivo_path)
-                                        <a href="{{ route('sustentos.archivo', $sustento) }}"
+                                        <a href="{{ route('sustentos.archivo', $sustento) }}" data-visor-solo
                                            class="inline-flex items-center gap-1 rounded-md border border-tinta-200 px-2.5 py-1 text-xs font-semibold text-tinta-700 hover:bg-tinta-50 dark:border-white/10 dark:text-tinta-300 dark:hover:bg-white/5">
                                             Ver
                                         </a>

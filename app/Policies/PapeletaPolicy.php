@@ -26,8 +26,15 @@ use App\States\Papeleta\PendienteRrhh;
  *
  * Cada trabajador tiene un solo jefe inmediato: el de su unidad
  * orgánica (users.jefe_inmediato_id, ver User::esJefeInmediatoDe()).
- * Los checks de abajo comparan contra el jefe fotografiado en la
- * papeleta, quien la resolvió y el jefe de área.
+ *
+ * Dos fuentes de verdad distintas a propósito:
+ * - VISIBILIDAD (view/verArchivos/verSustento): EN VIVO, contra el
+ *   organigrama actual del trabajador (ver esJefeVigenteDe()). Si
+ *   cambia de jefe, el jefe anterior deja de ver sus papeletas
+ *   (aunque las haya resuelto él) y el jefe nuevo las ve todas.
+ * - DECISIÓN/ACCIÓN (decidirComoJefe, responderPosthoc, etc.): contra
+ *   lo FOTOGRAFIADO en la papeleta (jefe_inmediato_id, jefe_area_id,
+ *   resuelto_por_jefe_id), que es historial y no se toca.
  */
 class PapeletaPolicy
 {
@@ -45,6 +52,29 @@ class PapeletaPolicy
         return (int) $papeleta->trabajador_id === (int) $user->id;
     }
 
+    /**
+     * ¿$user es, AHORA MISMO, el jefe inmediato o de área del trabajador
+     * de esta papeleta (o uno de los jefes inmediatos de su área)? A
+     * diferencia de tieneComoJefeInmediatoA() / jefe_area_id (que comparan
+     * contra lo FOTOGRAFIADO en la papeleta al crearla o reasignarla),
+     * esto consulta el organigrama VIGENTE con User::equipoDe() — la
+     * misma fuente única que usan los reportes/dashboards.
+     *
+     * Esto es solo para VISIBILIDAD (ver papeleta, archivos, sustento):
+     * nunca para decidir ni modificar nada, por eso no se usa en
+     * decidirComoJefe(), responderPosthoc(), etc. — esas acciones deben
+     * seguir dependiendo de lo fotografiado, porque son historial y no se
+     * puede alterar quién decidió qué.
+     *
+     * Efecto práctico: si un trabajador cambia de jefe, el jefe anterior
+     * deja de ver sus papeletas (abiertas o ya cerradas, las haya resuelto
+     * él o no) y el jefe nuevo pasa a verlas todas de inmediato.
+     */
+    private function esJefeVigenteDe(User $user, Papeleta $papeleta): bool
+    {
+        return User::equipoDe($user)->whereKey($papeleta->trabajador_id)->exists();
+    }
+
     public function view(User $user, Papeleta $papeleta): bool
     {
         // El admin ve todas, en cualquier estado. Solo lectura: las acciones
@@ -52,9 +82,7 @@ class PapeletaPolicy
         return $user->hasRole('admin')
             || $user->hasRole('rrhh')
             || $papeleta->trabajador_id === $user->id
-            || $papeleta->tieneComoJefeInmediatoA($user)
-            || $papeleta->resuelto_por_jefe_id === $user->id
-            || $papeleta->jefe_area_id === $user->id;
+            || $this->esJefeVigenteDe($user, $papeleta);
     }
 
     /**
@@ -67,9 +95,7 @@ class PapeletaPolicy
     {
         return $user->hasRole('rrhh')
             || $papeleta->trabajador_id === $user->id
-            || $papeleta->tieneComoJefeInmediatoA($user)
-            || $papeleta->resuelto_por_jefe_id === $user->id
-            || $papeleta->jefe_area_id === $user->id;
+            || $this->esJefeVigenteDe($user, $papeleta);
     }
 
     public function crear(User $user): bool
@@ -208,8 +234,7 @@ class PapeletaPolicy
         return $papeleta->trabajador_id === $user->id
             || $this->revisarSustento($user, $sustento)
             || $user->hasRole('admin')
-            || $papeleta->tieneComoJefeInmediatoA($user)
-            || $papeleta->jefe_area_id === $user->id;
+            || $this->esJefeVigenteDe($user, $papeleta);
     }
 
     /**

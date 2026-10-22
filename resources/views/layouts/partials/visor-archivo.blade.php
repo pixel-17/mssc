@@ -7,7 +7,9 @@
       barra chica o cerrar. No hay fondo oscuro que bloquee la pantalla.
     Se cierra con "Cerrar", con la X o con Esc.
     Sin Alpine: JS puro. Si el navegador no ejecuta JS, el enlace sigue funcionando.
-    Los adjuntos que aparecen como pestañas son todos los enlaces ".../archivo" de la página.
+    Los adjuntos que aparecen como pestañas son todos los enlaces ".../archivo" de la página,
+    salvo los marcados con data-visor-solo (listados/reportes): esos se previsualizan igual,
+    pero solos, sin pestañas (ver recolectar() / abrir()).
 --}}
 <style>
     #visor-archivo { --va-ancho: clamp(22rem, 32vw, 30rem); --va-asa: 1.25rem; }
@@ -117,7 +119,14 @@
         let archivos = [];
         let actual = -1;
 
-        const esArchivo = (a) => /\/archivo(\/|\?|$)/.test(a.getAttribute('href') || '');
+        // data-visor-solo: enlaces a .../archivo que se previsualizan en el visor
+        // de siempre, pero SOLOS — sin juntarse con los demás enlaces de la
+        // página. Para listados/reportes con muchas filas, cada una de una
+        // papeleta distinta: agruparlas todas en una sola tanda de pestañas no
+        // tiene sentido y con decenas de filas se vuelve inusable.
+        const patronArchivo = (a) => /\/archivo(\/|\?|$)/.test(a.getAttribute('href') || '');
+        const esSolo = (a) => a.hasAttribute('data-visor-solo');
+        const esArchivo = (a) => patronArchivo(a);
 
         const etiqueta = (a) => {
             const texto = a.textContent.trim();
@@ -128,11 +137,13 @@
             return 'Archivo';
         };
 
+        // Nunca mete en el conteo un enlace data-visor-solo, aunque sea el que
+        // dispara la apertura: así el de al lado no se arrastra tampoco.
         const recolectar = () => {
             const vistos = new Set();
             archivos = [];
             document.querySelectorAll('a[href]').forEach((a) => {
-                if (a.closest('#visor-archivo') || !esArchivo(a) || vistos.has(a.href)) return;
+                if (a.closest('#visor-archivo') || !esArchivo(a) || esSolo(a) || vistos.has(a.href)) return;
                 vistos.add(a.href);
                 archivos.push({ href: a.href, texto: etiqueta(a) });
             });
@@ -229,10 +240,18 @@
 
         const estadoInicial = () => (escritorio.matches ? 'abierto' : 'medio');
 
-        const abrir = (href) => {
-            recolectar();
-            let i = archivos.findIndex((a) => a.href === href);
-            if (i < 0) { archivos.push({ href, texto: 'Archivo' }); i = archivos.length - 1; }
+        // Un enlace data-visor-solo no agrupa: se abre siempre como único archivo,
+        // así que las pestañas no aparecen (pintarTabs() ya las oculta si hay < 2).
+        const abrir = (href, textoSolo) => {
+            let i;
+            if (textoSolo !== undefined) {
+                archivos = [{ href, texto: textoSolo }];
+                i = 0;
+            } else {
+                recolectar();
+                i = archivos.findIndex((a) => a.href === href);
+                if (i < 0) { archivos.push({ href, texto: 'Archivo' }); i = archivos.length - 1; }
+            }
             cargar(i);
             const estado = visor.dataset.estado;
             if (estado === 'cerrado' || estado === 'minimizado' || estado === 'plegado') poner(estadoInicial());
@@ -269,7 +288,7 @@
             const enlace = e.target.closest('a[href]');
             if (!enlace || enlace.closest('#visor-archivo') || !esArchivo(enlace)) return;
             e.preventDefault();
-            abrir(enlace.href);
+            abrir(enlace.href, esSolo(enlace) ? etiqueta(enlace) : undefined);
         });
     })();
 </script>
