@@ -23,8 +23,8 @@
                     <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                         <x-admin.accion-editar :href="route('unidades-organicas.editar', $unidad)" />
                         <x-admin.accion-eliminar
-                            wire:click="eliminar({{ $unidad->id }})"
-                            wire:confirm="¿Eliminar la unidad orgánica &quot;{{ $unidad->nombre }}&quot;?"
+                            mensaje='¿Eliminar la unidad orgánica "{{ $unidad->nombre }}"?'
+                            accion="eliminar({{ $unidad->id }})"
                         />
                     </td>
                 </tr>

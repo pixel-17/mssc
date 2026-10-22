@@ -121,12 +121,17 @@
         <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Sustentos</h3>
         <ul class="text-sm text-gray-700 dark:text-tinta-100/70 space-y-1">
             @foreach ($papeleta->sustentos as $sustento)
-                <li class="flex items-center justify-between">
-                    <span>
-                        Presentado {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
-                        · Límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
+                <li class="flex items-center justify-between gap-3">
+                    <span class="flex items-center flex-wrap gap-x-1 gap-y-2">
+                        <span>
+                            Presentado {{ $sustento->presentado_at?->format('d/m/Y H:i') ?? '—' }}
+                            · Límite {{ $sustento->fecha_limite?->format('d/m/Y H:i') }}
+                        </span>
                         @if ($sustento->archivo_path && Auth::user()->can('verSustento', $sustento))
-                            · <a href="{{ route('sustentos.archivo', $sustento) }}" class="text-tinta-600 dark:text-tinta-300 hover:text-tinta-700 dark:hover:text-tinta-100 underline">Ver archivo</a>
+                            <a href="{{ route('sustentos.archivo', $sustento) }}" class="btn-row">
+                                <x-icon name="document" class="size-3.5" />
+                                Ver archivo
+                            </a>
                         @endif
                     </span>
                     @php [$etiquetaSustento, $clasesSustento] = \App\Support\SustentoEstadoPresentacion::para($sustento->estado); @endphp

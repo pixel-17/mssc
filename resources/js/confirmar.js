@@ -6,18 +6,12 @@
  * devuelve una Promise<boolean>. El modal lo pinta
  * layouts/partials/confirmar.blade.php; si una página no lo incluye, se cae
  * al confirm() nativo para no romper nada.
+ *
+ * Nota: wire:confirm de Livewire 3 NO pasa por aquí ni es personalizable
+ * (siempre dispara el confirm() nativo, sin hook documentado para
+ * reemplazarlo), así que no se usa en ninguna vista. Las acciones que
+ * necesitan confirmación llaman a mssConfirmar() desde x-on:click y, si se
+ * acepta, invocan la acción directamente por $wire (ver
+ * components/admin/accion-eliminar.blade.php).
  */
 window.mssConfirmar = (mensaje) => Promise.resolve(window.confirm(mensaje));
-
-// wire:confirm de Livewire 3 llama a confirm() de forma síncrona; se
-// reemplaza su comportamiento para que use el modal.
-document.addEventListener('livewire:init', () => {
-    window.Livewire.directive('confirm', ({ el, directive }) => {
-        const mensaje = (directive.expression || '').replaceAll('\\n', '\n') || '¿Estás seguro?';
-        const peligro = /eliminar|quitar|deshacer|desactivar|cancelar/i.test(mensaje);
-
-        el.__livewire_confirm = (accion, en_su_lugar = () => {}) => {
-            window.mssConfirmar(mensaje, { peligro }).then((ok) => (ok ? accion() : en_su_lugar()));
-        };
-    });
-});

@@ -73,7 +73,10 @@
             </div>
             @if ($hayFiltros)
                 <div class="sm:col-span-2 lg:col-span-6">
-                    <button type="button" wire:click="limpiarFiltros" class="text-xs underline text-gray-500 dark:text-tinta-100/60">Limpiar filtros</button>
+                    <button type="button" wire:click="limpiarFiltros" class="btn-row">
+                        <x-icon name="x-mark" class="size-3.5" />
+                        Limpiar filtros
+                    </button>
                 </div>
             @endif
         </div>

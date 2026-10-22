@@ -48,16 +48,15 @@
                         <x-admin.accion-editar :href="route('usuarios-admin.editar', $usuario)" />
                         @if ($usuario->activo)
                             <x-admin.accion-eliminar
-                                wire:click="desactivar({{ $usuario->id }})"
-                                wire:confirm="¿Desactivar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})? No podrá iniciar sesión hasta que lo reactives."
+                                mensaje="¿Desactivar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})? No podrá iniciar sesión hasta que lo reactives."
+                                accion="desactivar({{ $usuario->id }})"
                             >
                                 Desactivar
                             </x-admin.accion-eliminar>
                         @else
                             <button
                                 type="button"
-                                wire:click="reactivar({{ $usuario->id }})"
-                                wire:confirm="¿Reactivar a {{ $usuario->name }} {{ $usuario->apellido }} (DNI {{ $usuario->dni }})?"
+                                x-on:click="mssConfirmar(@js('¿Reactivar a '.$usuario->name.' '.$usuario->apellido.' (DNI '.$usuario->dni.')?')).then((ok) => ok && $wire.reactivar({{ $usuario->id }}))"
                                 class="btn-row"
                             >
                                 <x-icon name="shield" class="size-3.5" />

@@ -9,24 +9,23 @@
 --}}
 @php
     $archivosPapeleta = array_filter([
-        'adjunto-inicial' => $papeleta->adjunto_inicial_path ? 'Adjunto inicial' : null,
-        'retorno-foto' => $papeleta->retorno?->foto_path ? 'Foto del retorno' : null,
-        'justificacion-observacion' => $papeleta->observacion_adjunto_path ? 'Adjunto de la respuesta a la observación' : null,
+        'adjunto-inicial' => $papeleta->adjunto_inicial_path ? ['Adjunto inicial', 'paper-clip'] : null,
+        'retorno-foto' => $papeleta->retorno?->foto_path ? ['Foto del retorno', 'photo'] : null,
+        'justificacion-observacion' => $papeleta->observacion_adjunto_path ? ['Adjunto de la respuesta a la observación', 'document'] : null,
     ]);
 @endphp
 
 @if ($archivosPapeleta && Auth::user()->can('verArchivos', $papeleta))
     <div class="glass-card p-6">
         <h3 class="text-sm font-semibold text-gray-700 dark:text-tinta-50/80 mb-3">Archivos adjuntos</h3>
-        <ul class="text-sm text-gray-700 dark:text-tinta-100/70 space-y-1">
-            @foreach ($archivosPapeleta as $tipoArchivo => $etiquetaArchivo)
-                <li>
-                    <a href="{{ route('papeletas.archivo', ['papeleta' => $papeleta, 'tipo' => $tipoArchivo]) }}"
-                       class="text-tinta-600 dark:text-tinta-300 hover:text-tinta-700 dark:hover:text-tinta-100 underline">
-                        {{ $etiquetaArchivo }}
-                    </a>
-                </li>
+        <div class="flex flex-wrap gap-2">
+            @foreach ($archivosPapeleta as $tipoArchivo => [$etiquetaArchivo, $iconoArchivo])
+                <a href="{{ route('papeletas.archivo', ['papeleta' => $papeleta, 'tipo' => $tipoArchivo]) }}"
+                   class="btn-row">
+                    <x-icon name="{{ $iconoArchivo }}" class="size-3.5" />
+                    {{ $etiquetaArchivo }}
+                </a>
             @endforeach
-        </ul>
+        </div>
     </div>
 @endif

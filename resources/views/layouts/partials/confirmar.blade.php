@@ -1,7 +1,9 @@
 {{--
     Modal de confirmación global. Reemplaza al confirm() nativo del navegador.
     Uso desde Alpine/JS: mssConfirmar('¿Seguro?', { aceptar: 'Sí', peligro: true }).then(ok => ...)
-    Los wire:confirm de Livewire también pasan por aquí (resources/js/confirmar.js).
+    Las acciones de fila (x-admin.accion-eliminar y similares) llaman a
+    mssConfirmar() y, si se acepta, invocan la acción de Livewire por $wire
+    (ver resources/js/confirmar.js).
 --}}
 <div
     x-data="{

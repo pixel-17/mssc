@@ -176,7 +176,8 @@
                         <label for="soloConDescuento" class="text-sm">Solo motivos con descuento</label>
                     </div>
 
-                    <button type="button" wire:click="limpiarFiltros" class="text-xs text-tinta-600 hover:text-tinta-900 underline pb-2">
+                    <button type="button" wire:click="limpiarFiltros" class="btn-row mb-2">
+                        <x-icon name="x-mark" class="size-3.5" />
                         Limpiar filtros
                     </button>
                 </div>

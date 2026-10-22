@@ -421,7 +421,11 @@
                         @endif
                         <span class="ms-auto text-xs text-gray-500 dark:text-tinta-50/60">{{ $h->actor?->nombre_completo ?? 'Sistema' }} · {{ $h->created_at->format('d/m/Y H:i') }}</span>
                         @if ($fila['puede_deshacer'])
-                            <button type="button" wire:click="deshacerMovimiento({{ $h->id }})" wire:confirm="¿Deshacer este movimiento?" class="btn-secondary text-xs">Deshacer</button>
+                            <button
+                                type="button"
+                                x-on:click="mssConfirmar(@js('¿Deshacer este movimiento?'), { peligro: true }).then((ok) => ok && $wire.deshacerMovimiento({{ $h->id }}))"
+                                class="btn-secondary text-xs"
+                            >Deshacer</button>
                         @endif
                     </li>
                 @endforeach

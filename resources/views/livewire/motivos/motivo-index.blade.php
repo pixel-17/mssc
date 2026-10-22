@@ -23,8 +23,8 @@
                     <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                         <x-admin.accion-editar :href="route('motivos.editar', $motivo)" />
                         <x-admin.accion-eliminar
-                            wire:click="eliminar({{ $motivo->id }})"
-                            wire:confirm="¿Eliminar el motivo &quot;{{ $motivo->nombre }}&quot;?"
+                            mensaje='¿Eliminar el motivo "{{ $motivo->nombre }}"?'
+                            accion="eliminar({{ $motivo->id }})"
                         />
                     </td>
                 </tr>

@@ -23,8 +23,8 @@
                     <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
                         <x-admin.accion-editar :href="route('sedes.editar', $sede)" />
                         <x-admin.accion-eliminar
-                            wire:click="eliminar({{ $sede->id }})"
-                            wire:confirm="¿Eliminar la sede &quot;{{ $sede->nombre }}&quot;?"
+                            mensaje='¿Eliminar la sede "{{ $sede->nombre }}"?'
+                            accion="eliminar({{ $sede->id }})"
                         />
                     </td>
                 </tr>

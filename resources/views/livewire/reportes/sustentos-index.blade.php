@@ -43,7 +43,8 @@
                     <input id="sustentos-index-hasta" type="date" wire:model.live="hasta" class="rounded-md border-gray-300 dark:bg-gray-800">
                 </div>
 
-                <button type="button" wire:click="limpiarFiltros" class="text-xs text-tinta-600 hover:text-tinta-900 underline pb-2">
+                <button type="button" wire:click="limpiarFiltros" class="btn-row mb-2">
+                    <x-icon name="x-mark" class="size-3.5" />
                     Limpiar filtros
                 </button>
             </div>
