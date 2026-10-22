@@ -633,6 +633,22 @@ class UsuarioForm extends Component
             }
         }
 
+        // ── Guardia de unidad (admin y jefe de área) ────────────────
+        // Igual que MoverTrabajadorAction::validar(): quien encabeza una
+        // unidad (jefe_id) no se mueve de unidad_organica_id por este
+        // camino sin reasignar antes esa jefatura, o queda «duplicado»
+        // en el organigrama: sigue de jefe en la unidad vieja (jefe_id
+        // no se tocó) y aparece también como miembro en la nueva.
+        if ($this->usuario
+            && $this->usuario->unidad_organica_id !== null
+            && (int) $datos['unidadOrganicaId'] !== (int) $this->usuario->unidad_organica_id
+            && $this->usuario->unidadesQueEncabeza()->exists()
+        ) {
+            $this->addError('unidadOrganicaId', 'Encabeza una unidad: reasigna primero esa jefatura antes de moverlo a otra unidad.');
+
+            return;
+        }
+
         // ── Guardia de desactivación (admin y jefe de área) ─────────
 
         if ($this->usuario?->activo && ! $activo) {

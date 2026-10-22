@@ -253,6 +253,10 @@ class UsuarioAdminForm extends Component
             return;
         }
 
+        if (! $this->validarUnidad($datos, $adminId, $roles)) {
+            return;
+        }
+
         if (! $this->validarUnicoRrhhActivo($datos)) {
             return;
         }
@@ -301,6 +305,35 @@ class UsuarioAdminForm extends Component
 
         if (in_array($adminId, $roles, true) && $this->usuario?->unidadesQueEncabeza()->exists()) {
             $this->addError('rolesSeleccionados', 'Encabeza una unidad: reasigna primero esa jefatura antes de darle el rol de administrador.');
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Igual que MoverTrabajadorAction::validar(): quien encabeza una unidad
+     * (jefe_id) no se mueve de unidad_organica_id por este formulario sin
+     * reasignar antes esa jefatura, o queda «duplicado» en el organigrama:
+     * sigue de jefe en la unidad vieja (jefe_id no se tocó) y aparece
+     * también como miembro en la nueva. El caso «se le da el rol admin»
+     * ya lo bloquea validarRoles() antes de llegar aquí.
+     *
+     * @param  list<int>  $roles
+     */
+    private function validarUnidad(array $datos, int $adminId, array $roles): bool
+    {
+        if (in_array($adminId, $roles, true)) {
+            return true;
+        }
+
+        if ($this->usuario
+            && $this->usuario->unidad_organica_id !== null
+            && (int) $datos['unidadOrganicaId'] !== (int) $this->usuario->unidad_organica_id
+            && $this->usuario->unidadesQueEncabeza()->exists()
+        ) {
+            $this->addError('unidadOrganicaId', 'Encabeza una unidad: reasigna primero esa jefatura antes de moverlo a otra unidad.');
 
             return false;
         }

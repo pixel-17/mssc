@@ -457,6 +457,30 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertSame($jefe->id, $usuario->fresh()->jefe_inmediato_id);
     }
 
+    /**
+     * Antes de este guard, cambiar la unidad de alguien que encabeza otra
+     * unidad dejaba a esa persona «duplicada» en el organigrama: seguía de
+     * jefe en la unidad vieja (jefe_id no se toca desde aquí) y aparecía
+     * también como miembro en la nueva.
+     */
+    public function test_no_se_puede_cambiar_de_unidad_a_quien_encabeza_otra_sin_reasignar_antes(): void
+    {
+        $jefe = $this->usuarioDePrueba(['regimen' => '276']);
+        $unidadQueEncabeza = UnidadOrganica::create(['nombre' => 'Oficina A', 'jefe_id' => $jefe->id]);
+        $otraUnidad = UnidadOrganica::create(['nombre' => 'Oficina B', 'jefe_id' => $this->usuarioDePrueba(['regimen' => '276'])->id]);
+        $jefe->update(['unidad_organica_id' => $unidadQueEncabeza->id]);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $jefe->fresh()])
+            ->set('unidadOrganicaId', $otraUnidad->id)
+            ->call('guardar')
+            ->assertHasErrors(['unidadOrganicaId']);
+
+        $jefe = $jefe->fresh();
+        $this->assertSame($unidadQueEncabeza->id, $jefe->unidad_organica_id);
+        $this->assertSame($jefe->id, $unidadQueEncabeza->fresh()->jefe_id);
+    }
+
     public function test_editar_un_728_sin_configuracion_de_turno_no_la_exige(): void
     {
         $usuario = $this->usuarioDePrueba(['regimen' => '728']);
