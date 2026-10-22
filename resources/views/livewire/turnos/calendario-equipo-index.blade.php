@@ -188,8 +188,9 @@
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
                             <th scope="col" class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900">Trabajador</th>
                             @foreach ($fechas as $fecha)
-                                <th wire:key="calendario-equipo-th-{{ $loop->index }}" scope="col" class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy->toDateString() ? 'text-tinta-700 dark:text-tinta-300 font-bold' : '' }}">
+                                <th wire:key="calendario-equipo-th-{{ $loop->index }}" scope="col" class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy->toDateString() ? 'text-tinta-700 dark:text-tinta-300 font-bold' : ($fecha->isWeekend() ? 'text-rose-500' : '') }}">
                                     <div>{{ $fecha->day }}</div>
+                                    <div class="text-[10px] normal-case opacity-70">{{ mb_substr($fecha->translatedFormat('D'), 0, 1) }}</div>
                                 </th>
                             @endforeach
                             <th scope="col" class="px-3 py-2"></th>
@@ -221,6 +222,10 @@
                                         <div class="mt-0.5 flex items-center gap-1.5 text-[11px] {{ $cfg276 ? 'text-gray-600 dark:text-gray-300' : 'text-amber-700 dark:text-amber-300' }}">
                                             @if ($cfg276)
                                                 <span>{{ $cfg276->dias_trabajo }}×{{ $cfg276->dias_descanso }} · desde {{ $cfg276->fecha_ancla->format('d/m') }}</span>
+                                                @if ($proximoDescanso276 = ($proximosDescansos276[$trabajador->id] ?? null))
+                                                    <span class="text-gray-300 dark:text-gray-600">·</span>
+                                                    <span>próx. descanso {{ ucfirst(mb_substr($proximoDescanso276->translatedFormat('D'), 0, 3)) }} {{ $proximoDescanso276->day }}</span>
+                                                @endif
                                             @else
                                                 <span>Sin ciclo</span>
                                             @endif
@@ -242,7 +247,7 @@
                                                 data-u="{{ $trabajador->id }}"
                                                 data-f="{{ $f }}"
                                                 :class="clase(dias['{{ $trabajador->id }}']['{{ $f }}'])"
-                                                class="w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold select-none cursor-pointer transition-colors {{ $f === $hoy->toDateString() ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : '' }}"
+                                                class="w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold select-none cursor-pointer transition-colors {{ $f === $hoy->toDateString() ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : ($fecha->isWeekend() ? 'ring-1 ring-rose-300 dark:ring-rose-800' : '') }}"
                                                 aria-label="{{ $trabajador->nombre_completo }}, {{ $fecha->translatedFormat('l j') }}"
                                             ><span x-text="sigla(dias['{{ $trabajador->id }}']['{{ $f }}'])"></span></button>
                                         </td>
@@ -250,15 +255,17 @@
                                 @else
                                     @foreach ($dias as $dia)
                                         @php($turno = $turnosPorUsuario->get($trabajador->id)?->get($dia))
-                                        @php($esHoyCol = $inicioMes->copy()->day($dia)->isSameDay($hoy))
+                                        @php($fechaCelda = $inicioMes->copy()->day($dia))
+                                        @php($esHoyCol = $fechaCelda->isSameDay($hoy))
                                         <td class="p-0">
                                             <div
                                                 x-data="{ abierto: false }"
                                                 @if ($turno) @click="abierto = !abierto" @click.outside="abierto = false" @endif
+                                                title="{{ $trabajador->nombre_completo }}, {{ ucfirst($fechaCelda->translatedFormat('l j')) }}"
                                                 class="relative w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold transition-all
                                                     {{ $turno ? $turno->claseColor() : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-300' }}
                                                     {{ $turno ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : '' }}
-                                                    {{ $esHoyCol ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : '' }}"
+                                                    {{ $esHoyCol ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : ($fechaCelda->isWeekend() ? 'ring-1 ring-rose-300 dark:ring-rose-800' : '') }}"
                                             >
                                                 {{ $turno?->etiqueta() ?? '—' }}
 

@@ -577,7 +577,7 @@
                 @if (in_array($modoJefe, ['trabajador', 'jefe'], true) && ($modoJefe === 'trabajador' ? $mt : $mj))
                     @php($mp = $modoJefe === 'trabajador' ? $mt : $mj)
 
-                    {{-- Reemplazo obligatorio por cada unidad que deja --}}
+                    {{-- Reemplazo OPCIONAL por cada unidad que deja: si no se elige a nadie, queda sin jefe --}}
                     @foreach ($mp['unidades'] as $fila)
                         <div class="mt-4 rounded-lg border border-gray-200 p-3 text-sm dark:border-white/10" wire:key="reemplazo-{{ $fila['unidad']->id }}">
                             <p class="text-tinta-950 dark:text-white">
@@ -587,17 +587,16 @@
 
                             @if ($fila['requiere_reemplazo'])
                                 <label class="mt-2 block text-xs font-semibold text-gray-600 dark:text-tinta-50/70" for="reemplazo-{{ $fila['unidad']->id }}">
-                                    {{ $fila['es_area'] ? 'Nuevo jefe de área (obligatorio)' : 'Nuevo jefe inmediato (obligatorio)' }}
+                                    {{ $fila['es_area'] ? 'Nuevo jefe de área (opcional)' : 'Nuevo jefe inmediato (opcional)' }}
                                 </label>
                                 <select id="reemplazo-{{ $fila['unidad']->id }}" wire:model="reemplazos.{{ $fila['unidad']->id }}" class="mt-1 w-full rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
-                                    <option value="">Elige a su reemplazo…</option>
+                                    <option value="">Sin reemplazo: la unidad queda sin jefe</option>
                                     @foreach ($fila['candidatos'] as $c)
                                         <option value="{{ $c->id }}">{{ $c->nombre_completo }}</option>
                                     @endforeach
                                 </select>
-                                @if ($fila['candidatos']->isEmpty())
-                                    <p class="mt-1 text-xs text-amber-700 dark:text-amber-400">Nadie de la unidad puede relevarlo ahora (ya encabeza otra unidad). Cámbialo desde la ficha de la unidad.</p>
-                                @endif
+                            @else
+                                <p class="mt-2 text-xs text-amber-700 dark:text-amber-400">Nadie puede asumir la jefatura ahora: la unidad quedará sin jefe.</p>
                             @endif
                         </div>
                     @endforeach

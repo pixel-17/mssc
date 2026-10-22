@@ -24,10 +24,10 @@ use Illuminate\Support\Facades\DB;
  *
  * Reglas (todas validadas en el servidor):
  * - Solo admin.
- * - Por cada unidad que encabeza, si quedan trabajadores activos o
- *   sub-unidades, es OBLIGATORIO designar un reemplazo (para un jefe de área,
- *   otro jefe de área). Sin reemplazo no se mueve a nadie. Si la unidad tiene
- *   gente ni sub-unidades puede quedar sin jefe (se avisa).
+ * - Por cada unidad que encabeza, si hay alguien elegible (para un jefe de
+ *   área, otro jefe de área) se OFRECE elegir un reemplazo, pero es opcional:
+ *   si no se elige a nadie —haya o no candidatos— la unidad simplemente
+ *   queda sin jefe (se avisa).
  * - El reemplazo pasa las mismas reglas que cambiar el jefe desde la unidad
  *   (JefaturaUnidadService::validar: activo, no encabeza ya otra unidad) y pasa a pertenecer a esa unidad.
  * - Al entrar al destino se comporta como un trabajador más, igual que uno
@@ -82,13 +82,18 @@ class MoverJefeComoTrabajadorAction
         $filas = $unidades->map(function (UnidadOrganica $unidad) use ($jefe, &$avisos) {
             $subunidades = $unidad->hijos()->count();
             $personas = $this->reemplazoDeJefe->miembrosActivos($unidad, $jefe)->count();
-            // Misma regla que ReemplazoDeJefeService::requiereReemplazo(), derivada de
-            // los conteos que ya tenemos: se evitan 2 consultas por unidad (y otras 2
-            // dentro de candidatos()).
-            $requiere = (int) $unidad->jefe_id === (int) $jefe->id && ($personas > 0 || $subunidades > 0);
 
-            if (! $requiere && (int) $unidad->jefe_id === (int) $jefe->id) {
-                $avisos[] = '«'.$unidad->nombre.'» no tiene más personas: quedará sin jefe.';
+            // Hay candidatos a quien OFRECER como reemplazo (dejarlo es siempre
+            // opcional, nunca obligatorio: si no se elige a nadie, la unidad
+            // queda sin jefe). Hay que pasar por el servicio y no solo contar
+            // gente/sub-unidades: esa gente además tiene que poder ser jefe
+            // (JefaturaUnidadService::validar()).
+            $candidatos = $this->reemplazoDeJefe->candidatos($unidad, $jefe);
+
+            if ($candidatos->isEmpty()) {
+                $avisos[] = '«'.$unidad->nombre.'» '.($personas > 0 || $subunidades > 0
+                    ? 'no tiene a quién dejarle el puesto'
+                    : 'no tiene más personas').': quedará sin jefe.';
             }
 
             return [
@@ -96,8 +101,8 @@ class MoverJefeComoTrabajadorAction
                 'es_area' => $subunidades > 0,
                 'personas' => $personas,
                 'subunidades' => $subunidades,
-                'requiere_reemplazo' => $requiere,
-                'candidatos' => $this->reemplazoDeJefe->candidatos($unidad, $jefe, $requiere),
+                'requiere_reemplazo' => $candidatos->isNotEmpty(),
+                'candidatos' => $candidatos,
             ];
         })->values();
 

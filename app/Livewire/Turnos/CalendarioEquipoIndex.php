@@ -238,6 +238,37 @@ class CalendarioEquipoIndex extends Component
     }
 
     /**
+     * Próximo día de descanso (hoy incluido) de cada trabajador 276 con
+     * ciclo cargado, para mostrarlo en texto junto a su fila sin obligar
+     * al jefe a leer la grilla para encontrarlo. Busca como máximo el
+     * largo del propio ciclo (dias_trabajo + dias_descanso) desde hoy,
+     * así siempre encuentra uno; usa la misma esDescansoEnFecha que
+     * pinta las celdas, para que coincida con lo que se ve abajo.
+     *
+     * @param  Collection<int, ConfiguracionTurno>  $configs276
+     * @return array<int, Carbon|null> user_id => fecha
+     */
+    private function proximosDescansos276(Collection $configs276): array
+    {
+        $hoy = now()->startOfDay();
+
+        return $configs276->mapWithKeys(function (ConfiguracionTurno $config) use ($hoy) {
+            $ciclo = $config->dias_trabajo + $config->dias_descanso;
+            $dia = $hoy->copy();
+
+            for ($i = 0; $i <= $ciclo; $i++) {
+                if (GeneradorTurnoMensualService::esDescansoEnFecha($config->fecha_ancla, $dia, $config->dias_trabajo, $config->dias_descanso)) {
+                    return [$config->user_id => $dia->copy()];
+                }
+
+                $dia->addDay();
+            }
+
+            return [$config->user_id => null];
+        })->all();
+    }
+
+    /**
      * Guarda el ciclo del 276. Usa el mismo servicio que la pantalla
      * «Crear/editar horario», así que la regla y el mes generado son los mismos.
      */
@@ -320,6 +351,7 @@ class CalendarioEquipoIndex extends Component
         $configs276 = ConfiguracionTurno::whereIn('user_id', $equipo276->keys())->get()->keyBy('user_id');
 
         return view('livewire.turnos.calendario-equipo-index', [
+            'proximosDescansos276' => $this->proximosDescansos276($configs276),
             'jefe' => $jefe,
             'vistaAdmin' => $this->jefeId !== null,
             'trabajadores' => $trabajadores,

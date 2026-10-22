@@ -30,16 +30,24 @@ class ReemplazoDeJefeService
         return $unidad->miembros()->where('activo', true)->whereKeyNot($jefe->id);
     }
 
-    /** ¿Hay que elegir un reemplazo? Sí si quedan personas o sub-unidades. */
+    /**
+     * ¿Hay a quién ofrecer como reemplazo? Sí solo si, de los que quedan
+     * (miembros de la unidad y jefes de sus sub-unidades), hay al menos uno
+     * elegible como nuevo jefe (pasa JefaturaUnidadService::validar()). No
+     * basta con que quede gente: esa gente tiene que poder ser jefe.
+     *
+     * Pese al nombre (se conserva para no tocar todas las llamadas), dejar
+     * reemplazo NUNCA es obligatorio: esto solo decide si tiene sentido
+     * mostrar el selector. Elegir a nadie siempre es válido (reemplazoPara()
+     * lo permite); la unidad se queda sin jefe.
+     */
     public function requiereReemplazo(UnidadOrganica $unidad, User $jefe): bool
     {
         if ((int) $unidad->jefe_id !== (int) $jefe->id) {
             return false;
         }
 
-        $quedaGente = $this->miembrosActivos($unidad, $jefe)->exists() || $unidad->hijos()->exists();
-
-        return $quedaGente;
+        return $this->candidatosElegibles($unidad, $jefe)->isNotEmpty();
     }
 
     /**
@@ -52,10 +60,26 @@ class ReemplazoDeJefeService
     public function candidatos(UnidadOrganica $unidad, User $jefe, ?bool $requiere = null): Collection
     {
         // $requiere permite a quien ya lo calculó (previsualizar) no repetir las consultas.
-        if (! ($requiere ?? $this->requiereReemplazo($unidad, $jefe))) {
+        if ($requiere === false) {
             return collect();
         }
 
+        if ((int) $unidad->jefe_id !== (int) $jefe->id) {
+            return collect();
+        }
+
+        return $this->candidatosElegibles($unidad, $jefe);
+    }
+
+    /**
+     * Cómputo real de candidatos elegibles, sin pasar por requiereReemplazo()
+     * (que a su vez usa este método): lo usan tanto requiereReemplazo() como
+     * candidatos() para no duplicar la consulta ni recursionar.
+     *
+     * @return Collection<int, User>
+     */
+    private function candidatosElegibles(UnidadOrganica $unidad, User $jefe): Collection
+    {
         $jefesDeHijos = $unidad->hijos()->whereNotNull('jefe_id')->pluck('jefe_id');
 
         return User::query()
@@ -84,8 +108,9 @@ class ReemplazoDeJefeService
     }
 
     /**
-     * Quién releva a $jefe en $unidad: el elegido, o null si la unidad
-     * puede quedar sin jefe.
+     * Quién releva a $jefe en $unidad: el elegido, o null si no se elige a
+     * nadie. Dejar reemplazo es SIEMPRE opcional (haya o no candidatos): si
+     * no se elige a nadie, la unidad simplemente se queda sin jefe.
      *
      * @param  array<int|string, int|string|null>  $reemplazos
      *
@@ -99,34 +124,27 @@ class ReemplazoDeJefeService
 
         $elegido = (int) ($reemplazos[$unidad->id] ?? 0);
 
-        if ($elegido > 0) {
-            if ($elegido === (int) $jefe->id) {
-                throw new UsuarioException('El reemplazo de «'.$unidad->nombre.'» no puede ser la misma persona.');
-            }
-
-            // Mismas reglas que cambiar el jefe desde la unidad (activo, no encabeza otra).
-            $candidato = User::find($elegido)
-                ?? throw new UsuarioException('El reemplazo elegido para «'.$unidad->nombre.'» ya no existe.');
-
-            app(JefaturaUnidadService::class)->validar(
-                $unidad,
-                $elegido,
-                null,
-                (int) $candidato->unidad_organica_id !== (int) $unidad->id,
-            );
-
-            return $elegido;
+        if ($elegido === 0) {
+            // No se eligió a nadie: opción válida, la unidad queda sin jefe.
+            return null;
         }
 
-        if ($this->requiereReemplazo($unidad, $jefe)) {
-            throw new UsuarioException(
-                $jefe->nombre_completo.' encabeza «'.$unidad->nombre.'» y tiene '
-                .($unidad->hijos()->exists() ? 'sub-unidades a su cargo' : 'trabajadores a su cargo')
-                .': designa a su reemplazo antes de moverlo.'
-            );
+        if ($elegido === (int) $jefe->id) {
+            throw new UsuarioException('El reemplazo de «'.$unidad->nombre.'» no puede ser la misma persona.');
         }
 
-        return null;
+        // Mismas reglas que cambiar el jefe desde la unidad (activo, no encabeza otra).
+        $candidato = User::find($elegido)
+            ?? throw new UsuarioException('El reemplazo elegido para «'.$unidad->nombre.'» ya no existe.');
+
+        app(JefaturaUnidadService::class)->validar(
+            $unidad,
+            $elegido,
+            null,
+            (int) $candidato->unidad_organica_id !== (int) $unidad->id,
+        );
+
+        return $elegido;
     }
 
     /**
