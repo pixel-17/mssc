@@ -36,22 +36,11 @@
         .org-tree > ul { margin-left: 0; }
         .org-tree > ul > li { padding-left: 0; }
         .org-tree > ul > li::before, .org-tree > ul > li::after { display: none; }
-        /* Barra del encabezado (título + Modo edición): pegada debajo de
-           la barra del sistema (.app-topbar en app.css), no encima ni
-           detrás. Va en CSS plano, no como clase de Tailwind
-           (top-[73px]), porque un valor arbitrario nuevo solo existe en
-           el CSS compilado después de un build (npm run build / dev);
-           si no se recompila, el navegador no tiene ese "top" y el
-           sticky no se pega a nada — se ve como si el botón
-           "desapareciera" al bajar el scroll. Así funciona siempre,
-           se haya recompilado Tailwind o no. */
+        /* Barra del encabezado (título + Modo edición): ya NO se queda
+           pegada al hacer scroll, se desplaza con la página como
+           cualquier otro bloque. */
         .org-encabezado-fija {
-            position: sticky;
-            top: 73px; /* alto real de .app-topbar: padding 14px+14px + icon-btn 44px + borde 1px */
-            z-index: 20;
             padding-block: .5rem;
-            background: var(--surface);
-            backdrop-filter: blur(6px);
         }
         /* Panel lateral de edición: flotante y vertical, siempre clavado al
            borde derecho de la pantalla (no se reacomoda con el encabezado).
@@ -67,18 +56,30 @@
             flex-direction: column;
             align-items: stretch;
             gap: .5rem;
-            width: 15rem;
+            width: 16rem;
             max-width: calc(100vw - 2rem);
             max-height: calc(100vh - 130px);
             overflow-y: auto;
         }
+        /* Tarjeta del panel: solo aparece como tal (fondo, borde, sombra)
+           cuando hay algo que agrupar dentro -- en modo edición. Fuera de
+           edición es nada más el botón flotante, sin chrome de tarjeta. */
+        .org-panel-tarjeta {
+            border-radius: 1rem;
+            border: 1px solid rgb(0 0 0 / .08);
+            background: color-mix(in srgb, var(--surface) 92%, transparent);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 12px 28px -12px rgb(0 0 0 / .22);
+            padding: .75rem;
+        }
+        .dark .org-panel-tarjeta { border-color: rgb(255 255 255 / .1); }
+        .org-panel-separador { border-top: 1px solid rgb(0 0 0 / .08); margin-block: .5rem; }
+        .dark .org-panel-separador { border-color: rgb(255 255 255 / .1); }
     </style>
 
-    {{-- La barra entera (título + acciones) se desplaza con la página
-         como cualquier otro bloque, pero al llegar arriba del viewport
-         se queda pegada ahí en vez de seguir subiendo — así el botón de
-         modo edición sigue a mano sin volver a quedar "fixed" flotando
-         sobre el árbol como antes. Ver .org-encabezado-fija arriba. --}}
+    {{-- La barra entera (título + "Solo áreas/Todo abierto/Todo cerrado")
+         se desplaza con la página como cualquier otro bloque; ya no se
+         queda fija/pegada al hacer scroll. --}}
     <div class="org-encabezado-fija">
         <x-admin.encabezado titulo="Organigrama del área">
             {{-- Esto es lo único que queda en el encabezado fijo: no se
@@ -108,18 +109,35 @@
          Jefe de Área o Jefe Inmediato (su propia unidad). --}}
     @if ($puedeEditar)
         <div class="org-panel-lateral">
-            <button type="button"
-                    wire:click="alternarEdicion"
-                    aria-pressed="{{ $modoEdicion ? 'true' : 'false' }}"
-                    @class([
-                        'inline-flex items-center justify-center gap-1.5 rounded-full px-4 py-2 text-xs transition-shadow',
-                        'btn-primary ring-2 ring-amber-400/80 ring-offset-2 ring-offset-white dark:ring-offset-tinta-950' => $modoEdicion,
-                        'btn-secondary' => ! $modoEdicion,
-                    ])>
-                <x-icon name="pencil" class="size-4" />
-                {{ $modoEdicion ? 'Salir del modo edición' : 'Modo edición' }}
-            </button>
+            {{-- Fuera de edición: solo el botón flotante, sin chrome de tarjeta.
+                 Al entrar, se vuelve el encabezado de la tarjeta de abajo. --}}
+            @unless ($modoEdicion)
+                <button type="button"
+                        wire:click="alternarEdicion"
+                        aria-pressed="false"
+                        class="btn-secondary inline-flex items-center justify-center gap-1.5 self-end rounded-full px-4 py-2 text-xs shadow-sm">
+                    <x-icon name="pencil" class="size-4" />
+                    Modo edición
+                </button>
+            @else
+                <div class="org-panel-tarjeta">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                            <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
+                            Edición activa
+                        </span>
+                        <button type="button"
+                                wire:click="alternarEdicion"
+                                aria-pressed="true"
+                                class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 ring-1 ring-gray-300 hover:bg-gray-100 dark:text-tinta-50/80 dark:ring-white/20 dark:hover:bg-white/10">
+                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
+                            Salir
+                        </button>
+                    </div>
 
+                    <div class="org-panel-separador"></div>
+
+                    <div class="flex flex-col gap-2">
             @if ($modoEdicion && $esAdmin)
                 <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
                     <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">
@@ -199,6 +217,9 @@
                     </template>
                 </div>
             @endif
+                    </div>
+                </div>
+            @endunless
         </div>
     @endif
 
