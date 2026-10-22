@@ -42,24 +42,19 @@
         .org-encabezado-fija {
             padding-block: .5rem;
         }
-        /* Panel lateral de edición: flotante y vertical, siempre clavado al
-           borde derecho de la pantalla (no se reacomoda con el encabezado).
-           Agrupa lo que cambia según el modo (entrar/salir de edición,
-           Agregar, la bandeja) para que el título y "Solo áreas/Todo
-           abierto/Todo cerrado" de arriba se queden quietos siempre. */
+        /* Panel de edición: vive en la misma fila que "Por atender", a su
+           altura, y ya no flota ni se pega al hacer scroll -- se desplaza
+           con la página como cualquier otro bloque. Agrupa lo que cambia
+           según el modo (entrar/salir de edición, Agregar, la bandeja)
+           para que el título y "Solo áreas/Todo abierto/Todo cerrado" de
+           arriba se queden quietos. */
         .org-panel-lateral {
-            position: fixed;
-            top: 110px;
-            right: 1rem;
-            z-index: 25;
             display: flex;
             flex-direction: column;
             align-items: stretch;
             gap: .5rem;
             width: 16rem;
             max-width: calc(100vw - 2rem);
-            max-height: calc(100vh - 130px);
-            overflow-y: auto;
         }
         /* Tarjeta del panel: solo aparece como tal (fondo, borde, sombra)
            cuando hay algo que agrupar dentro -- en modo edición. Fuera de
@@ -99,129 +94,6 @@
             </div>
         </x-admin.encabezado>
     </div>
-
-    {{-- Panel lateral de edición: flotante, vertical, clavado siempre al
-         borde derecho de la pantalla (position: fixed, ver .org-panel-lateral).
-         Junta el botón de entrar/salir de modo edición, "Agregar" y la
-         bandeja porque los tres cambian juntos según el modo; así el
-         encabezado de arriba (título + Solo áreas/Todo abierto/Todo
-         cerrado) se queda siempre quieto. Para quien puede editar: admin,
-         Jefe de Área o Jefe Inmediato (su propia unidad). --}}
-    @if ($puedeEditar)
-        <div class="org-panel-lateral">
-            {{-- Fuera de edición: solo el botón flotante, sin chrome de tarjeta.
-                 Al entrar, se vuelve el encabezado de la tarjeta de abajo. --}}
-            @unless ($modoEdicion)
-                <button type="button"
-                        wire:click="alternarEdicion"
-                        aria-pressed="false"
-                        class="btn-secondary inline-flex items-center justify-center gap-1.5 self-end rounded-full px-4 py-2 text-xs shadow-sm">
-                    <x-icon name="pencil" class="size-4" />
-                    Modo edición
-                </button>
-            @else
-                <div class="org-panel-tarjeta">
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
-                            <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
-                            Edición activa
-                        </span>
-                        <button type="button"
-                                wire:click="alternarEdicion"
-                                aria-pressed="true"
-                                class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 ring-1 ring-gray-300 hover:bg-gray-100 dark:text-tinta-50/80 dark:ring-white/20 dark:hover:bg-white/10">
-                            <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
-                            Salir
-                        </button>
-                    </div>
-
-                    <div class="org-panel-separador"></div>
-
-                    <div class="flex flex-col gap-2">
-            @if ($modoEdicion && $esAdmin)
-                <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
-                    <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">
-                        <x-icon name="plus-circle" class="size-4" /> Agregar
-                    </button>
-                    <div x-show="m" x-cloak x-transition.opacity.duration.120ms class="absolute right-0 z-30 mt-1 w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-gray-800">
-                        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
-                                @click="m = false; $dispatch('org-unidad-abrir', { id: null, parentId: null })">
-                            <x-icon name="building" class="size-4" /> Unidad orgánica
-                        </button>
-                        <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
-                                @click="m = false; $dispatch('org-persona-abrir', {})">
-                            <x-icon name="users" class="size-4" /> Trabajador
-                        </button>
-                        <a href="{{ route('sedes.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
-                            <x-icon name="map-pin" class="size-4" /> Sede
-                        </a>
-                    </div>
-                </div>
-            @elseif ($modoEdicion && $esJefeDeArea)
-                {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
-                <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs"
-                        @click="$dispatch('org-persona-abrir', {})">
-                    <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
-                </button>
-            @elseif ($modoEdicion)
-                {{-- Jefe Inmediato "puro": solo da de alta trabajadores en su propia unidad. --}}
-                <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs"
-                        @click="$dispatch('org-persona-abrir', {})">
-                    <x-icon name="plus-circle" class="size-4" /> Agregar trabajador
-                </button>
-            @endif
-
-            @if ($modoEdicion)
-                {{-- Bandeja: un punto intermedio para mover de lejos sin tener ambos extremos
-                     a la vista a la vez. Se arrastra a alguien hasta aquí (queda "apartado",
-                     nada se guarda todavía) y luego, ya con el destino a la vista, se le
-                     arrastra OTRA VEZ desde aquí hasta la unidad: eso dispara exactamente el
-                     mismo proponerMovimiento() de siempre (como trabajador o ascender a jefe),
-                     sin ninguna acción nueva en el servidor. Si recargas con alguien apartado,
-                     como nunca se guardó nada, simplemente no sale movido: no hay nada que
-                     deshacer. El nombre de cada quien se guarda en window.orgNombres al
-                     agarrarlo (ver _nodo.blade.php), porque el dataTransfer solo lleva el id.
-                     Antes era una fila horizontal; ahora es vertical, como el resto de este
-                     panel. --}}
-                <div class="flex flex-col items-stretch gap-2 rounded-xl border border-dashed px-3 py-2 transition"
-                     :class="bandeja.length > 0
-                        ? 'border-amber-400/70 bg-amber-50/60 dark:border-amber-400/40 dark:bg-amber-500/10'
-                        : 'border-gray-300 dark:border-white/15'"
-                     @dragover.prevent="$event.dataTransfer.dropEffect = 'move'"
-                     @drop.prevent="
-                        if (arrastrando && ! bandeja.some(p => p.id === arrastrando)) {
-                            bandeja.push({ id: arrastrando, nombre: (window.orgNombres && window.orgNombres[arrastrando]) || ('#' + arrastrando) });
-                        }
-                        arrastrando = null; sobre = null;
-                     "
-                     role="group" aria-label="Bandeja: arrastra aquí a quien quieras apartar antes de moverlo">
-                    <div class="flex items-center gap-2">
-                        <x-icon name="users" class="size-4 shrink-0 text-gray-400" />
-                        <span x-show="bandeja.length === 0" class="text-xs text-gray-400 dark:text-tinta-50/50">
-                            Arrástralos aquí para apartarlos mientras buscas dónde ponerlos; luego arrástralos desde aquí hasta la unidad.
-                        </span>
-                    </div>
-                    <template x-for="p in bandeja" :key="p.id">
-                        <span class="org-persona inline-flex w-full cursor-grab items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs shadow-sm active:cursor-grabbing dark:bg-gray-800"
-                              draggable="true"
-                              title="Arrástralo sobre la unidad de destino"
-                              @dragstart="arrastrando = p.id; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', String(p.id))"
-                              @dragend="arrastrando = null; sobre = null">
-                            <svg class="org-asa size-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
-                            <span class="min-w-0 flex-1 truncate" x-text="p.nombre"></span>
-                            <button type="button" class="shrink-0 text-gray-400 hover:text-red-600" @click="bandeja = bandeja.filter(x => x.id !== p.id)"
-                                    title="Quitar de la bandeja (no mueve nada)" aria-label="Quitar de la bandeja">
-                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
-                            </button>
-                        </span>
-                    </template>
-                </div>
-            @endif
-                    </div>
-                </div>
-            @endunless
-        </div>
-    @endif
 
     @if ($modoEdicion)
         <div class="rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-200" role="status">
@@ -293,38 +165,163 @@
         $sinJefe = $recolectarSinJefe($raices);
     @endphp
 
-    @if (count($sinJefe) > 0 || $stats['sin_sede'] > 0)
-        <div class="rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
-            <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
-                <strong class="text-amber-900 dark:text-amber-200">Por atender</strong>
+    {{-- "Por atender" y el panel de edición van en la misma fila, a la misma
+         altura: el panel se queda a la derecha (ms-auto) sin flotar ni
+         pegarse al hacer scroll, se desplaza con la página normal. --}}
+    <div class="flex flex-wrap items-start gap-3">
+        @if (count($sinJefe) > 0 || $stats['sin_sede'] > 0)
+            <div class="flex-1 min-w-[16rem] rounded-xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-sm dark:border-amber-500/30 dark:bg-amber-500/10">
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+                    <strong class="text-amber-900 dark:text-amber-200">Por atender</strong>
+                    @if (count($sinJefe) > 0)
+                        <button type="button" class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-amber-900 shadow-sm ring-1 ring-amber-200 hover:bg-amber-100 dark:bg-white/10 dark:text-amber-100 dark:ring-amber-500/30"
+                                @click="pendientes = ! pendientes" :aria-expanded="pendientes">
+                            {{ count($sinJefe) }} {{ count($sinJefe) === 1 ? 'unidad sin jefe' : 'unidades sin jefe' }}
+                            <svg class="size-3.5 transition-transform" :class="pendientes && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+                        </button>
+                    @endif
+                    @if ($stats['sin_sede'] > 0 && $sede !== 'sin')
+                        <button type="button" wire:click="$set('sede', 'sin')"
+                                class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-red-800 shadow-sm ring-1 ring-red-200 hover:bg-red-50 dark:bg-white/10 dark:text-red-200 dark:ring-red-500/30">
+                            {{ $stats['sin_sede'] }} {{ $stats['sin_sede'] === 1 ? 'persona sin sede' : 'personas sin sede' }} · ver solo ellas
+                        </button>
+                    @endif
+                </div>
                 @if (count($sinJefe) > 0)
-                    <button type="button" class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-amber-900 shadow-sm ring-1 ring-amber-200 hover:bg-amber-100 dark:bg-white/10 dark:text-amber-100 dark:ring-amber-500/30"
-                            @click="pendientes = ! pendientes" :aria-expanded="pendientes">
-                        {{ count($sinJefe) }} {{ count($sinJefe) === 1 ? 'unidad sin jefe' : 'unidades sin jefe' }}
-                        <svg class="size-3.5 transition-transform" :class="pendientes && 'rotate-90'" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
-                    </button>
-                @endif
-                @if ($stats['sin_sede'] > 0 && $sede !== 'sin')
-                    <button type="button" wire:click="$set('sede', 'sin')"
-                            class="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-xs font-medium text-red-800 shadow-sm ring-1 ring-red-200 hover:bg-red-50 dark:bg-white/10 dark:text-red-200 dark:ring-red-500/30">
-                        {{ $stats['sin_sede'] }} {{ $stats['sin_sede'] === 1 ? 'persona sin sede' : 'personas sin sede' }} · ver solo ellas
-                    </button>
+                    <ul x-show="pendientes" x-cloak x-collapse class="mt-2 flex flex-wrap gap-2">
+                        @foreach ($sinJefe as $fila)
+                            <li wire:key="sin-jefe-{{ $fila['unidad']->id }}">
+                                <button type="button" class="rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs text-tinta-950 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-gray-900 dark:text-white dark:hover:bg-white/10"
+                                        @click="$dispatch('org-ir', { id: {{ $fila['unidad']->id }}, ruta: @js($fila['ruta']) })">
+                                    {{ $fila['unidad']->nombre }}
+                                </button>
+                            </li>
+                        @endforeach
+                    </ul>
                 @endif
             </div>
-            @if (count($sinJefe) > 0)
-                <ul x-show="pendientes" x-cloak x-collapse class="mt-2 flex flex-wrap gap-2">
-                    @foreach ($sinJefe as $fila)
-                        <li wire:key="sin-jefe-{{ $fila['unidad']->id }}">
-                            <button type="button" class="rounded-lg border border-amber-300 bg-white px-2.5 py-1 text-xs text-tinta-950 hover:bg-amber-100 dark:border-amber-500/40 dark:bg-gray-900 dark:text-white dark:hover:bg-white/10"
-                                    @click="$dispatch('org-ir', { id: {{ $fila['unidad']->id }}, ruta: @js($fila['ruta']) })">
-                                {{ $fila['unidad']->nombre }}
+        @endif
+
+        {{-- Panel de edición: junta el botón de entrar/salir de modo edición,
+             "Agregar" y la bandeja porque los tres cambian juntos según el
+             modo. Para quien puede editar: admin, Jefe de Área o Jefe
+             Inmediato (su propia unidad). --}}
+        @if ($puedeEditar)
+            <div class="org-panel-lateral ms-auto">
+                {{-- Fuera de edición: solo el botón, sin chrome de tarjeta.
+                     Al entrar, se vuelve el encabezado de la tarjeta de abajo. --}}
+                @unless ($modoEdicion)
+                    <button type="button"
+                            wire:click="alternarEdicion"
+                            aria-pressed="false"
+                            class="btn-secondary inline-flex items-center justify-center gap-1.5 self-end rounded-full px-4 py-2 text-xs shadow-sm">
+                        <x-icon name="pencil" class="size-4" />
+                        Modo edición
+                    </button>
+                @else
+                    <div class="org-panel-tarjeta">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 dark:text-amber-400">
+                                <span class="inline-block size-2 animate-pulse rounded-full bg-amber-500"></span>
+                                Edición activa
+                            </span>
+                            <button type="button"
+                                    wire:click="alternarEdicion"
+                                    aria-pressed="true"
+                                    class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-gray-600 ring-1 ring-gray-300 hover:bg-gray-100 dark:text-tinta-50/80 dark:ring-white/20 dark:hover:bg-white/10">
+                                <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
+                                Salir
                             </button>
-                        </li>
-                    @endforeach
-                </ul>
-            @endif
-        </div>
-    @endif
+                        </div>
+
+                        <div class="org-panel-separador"></div>
+
+                        <div class="flex flex-col gap-2">
+                @if ($modoEdicion && $esAdmin)
+                    <div x-data="{ m: false }" class="relative" @click.outside="m = false" @keydown.escape="m = false">
+                        <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs" @click="m = ! m" :aria-expanded="m">
+                            <x-icon name="plus-circle" class="size-4" /> Agregar
+                        </button>
+                        <div x-show="m" x-cloak x-transition.opacity.duration.120ms class="absolute right-0 z-30 mt-1 w-52 rounded-xl border border-gray-200 bg-white p-1 shadow-lg dark:border-white/15 dark:bg-gray-800">
+                            <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                                    @click="m = false; $dispatch('org-unidad-abrir', { id: null, parentId: null })">
+                                <x-icon name="building" class="size-4" /> Unidad orgánica
+                            </button>
+                            <button type="button" class="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10"
+                                    @click="m = false; $dispatch('org-persona-abrir', {})">
+                                <x-icon name="users" class="size-4" /> Trabajador
+                            </button>
+                            <a href="{{ route('sedes.crear') }}" class="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-tinta-950 hover:bg-tinta-50 dark:text-white dark:hover:bg-white/10">
+                                <x-icon name="map-pin" class="size-4" /> Sede
+                            </a>
+                        </div>
+                    </div>
+                @elseif ($modoEdicion && $esJefeDeArea)
+                    {{-- Jefe de área: puede dar de alta trabajadores y jefes inmediatos dentro de su área (UserPolicy). --}}
+                    <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs"
+                            @click="$dispatch('org-persona-abrir', {})">
+                        <x-icon name="plus-circle" class="size-4" /> Agregar trabajador o jefe inmediato
+                    </button>
+                @elseif ($modoEdicion)
+                    {{-- Jefe Inmediato "puro": solo da de alta trabajadores en su propia unidad. --}}
+                    <button type="button" class="btn-primary flex w-full items-center justify-center gap-1 text-xs"
+                            @click="$dispatch('org-persona-abrir', {})">
+                        <x-icon name="plus-circle" class="size-4" /> Agregar trabajador
+                    </button>
+                @endif
+
+                @if ($modoEdicion)
+                    {{-- Bandeja: un punto intermedio para mover de lejos sin tener ambos extremos
+                         a la vista a la vez. Se arrastra a alguien hasta aquí (queda "apartado",
+                         nada se guarda todavía) y luego, ya con el destino a la vista, se le
+                         arrastra OTRA VEZ desde aquí hasta la unidad: eso dispara exactamente el
+                         mismo proponerMovimiento() de siempre (como trabajador o ascender a jefe),
+                         sin ninguna acción nueva en el servidor. Si recargas con alguien apartado,
+                         como nunca se guardó nada, simplemente no sale movido: no hay nada que
+                         deshacer. El nombre de cada quien se guarda en window.orgNombres al
+                         agarrarlo (ver _nodo.blade.php), porque el dataTransfer solo lleva el id.
+                         Antes era una fila horizontal; ahora es vertical, como el resto de este
+                         panel. --}}
+                    <div class="flex flex-col items-stretch gap-2 rounded-xl border border-dashed px-3 py-2 transition"
+                         :class="bandeja.length > 0
+                            ? 'border-amber-400/70 bg-amber-50/60 dark:border-amber-400/40 dark:bg-amber-500/10'
+                            : 'border-gray-300 dark:border-white/15'"
+                         @dragover.prevent="$event.dataTransfer.dropEffect = 'move'"
+                         @drop.prevent="
+                            if (arrastrando && ! bandeja.some(p => p.id === arrastrando)) {
+                                bandeja.push({ id: arrastrando, nombre: (window.orgNombres && window.orgNombres[arrastrando]) || ('#' + arrastrando) });
+                            }
+                            arrastrando = null; sobre = null;
+                         "
+                         role="group" aria-label="Bandeja: arrastra aquí a quien quieras apartar antes de moverlo">
+                        <div class="flex items-center gap-2">
+                            <x-icon name="users" class="size-4 shrink-0 text-gray-400" />
+                            <span x-show="bandeja.length === 0" class="text-xs text-gray-400 dark:text-tinta-50/50">
+                                Arrástralos aquí para apartarlos mientras buscas dónde ponerlos; luego arrástralos desde aquí hasta la unidad.
+                            </span>
+                        </div>
+                        <template x-for="p in bandeja" :key="p.id">
+                            <span class="org-persona inline-flex w-full cursor-grab items-center gap-1.5 rounded-full bg-white px-2.5 py-1 text-xs shadow-sm active:cursor-grabbing dark:bg-gray-800"
+                                  draggable="true"
+                                  title="Arrástralo sobre la unidad de destino"
+                                  @dragstart="arrastrando = p.id; $event.dataTransfer.effectAllowed = 'move'; $event.dataTransfer.setData('text/plain', String(p.id))"
+                                  @dragend="arrastrando = null; sobre = null">
+                                <svg class="org-asa size-3.5 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>
+                                <span class="min-w-0 flex-1 truncate" x-text="p.nombre"></span>
+                                <button type="button" class="shrink-0 text-gray-400 hover:text-red-600" @click="bandeja = bandeja.filter(x => x.id !== p.id)"
+                                        title="Quitar de la bandeja (no mueve nada)" aria-label="Quitar de la bandeja">
+                                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18" /></svg>
+                                </button>
+                            </span>
+                        </template>
+                    </div>
+                @endif
+                        </div>
+                    </div>
+                @endunless
+            </div>
+        @endif
+    </div>
 
     <div class="flex flex-wrap items-end gap-4">
         <x-admin.filtro-campo label="Buscar" for="organigrama-buscar">

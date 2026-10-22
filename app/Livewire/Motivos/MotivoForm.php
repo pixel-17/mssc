@@ -5,6 +5,7 @@ namespace App\Livewire\Motivos;
 use App\Livewire\Concerns\RequiereAdmin;
 use App\Models\Motivo;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -34,8 +35,6 @@ class MotivoForm extends Component
     #[Locked]
     public ?Motivo $motivo = null;
 
-    public string $codigo = '';
-
     public string $nombre = '';
 
     public bool $activo = true;
@@ -50,7 +49,6 @@ class MotivoForm extends Component
     {
         if ($motivo?->exists) {
             $this->motivo = $motivo;
-            $this->codigo = $motivo->codigo;
             $this->nombre = $motivo->nombre;
             $this->activo = $motivo->activo;
             $this->requiereJustificacion = $motivo->consecuenciaAlTerminar() === 'justificar';
@@ -62,18 +60,36 @@ class MotivoForm extends Component
     protected function rules(): array
     {
         return [
-            'codigo' => [
-                'required', 'string', 'max:255',
-                $this->motivo
-                    ? 'unique:motivos,codigo,'.$this->motivo->id
-                    : 'unique:motivos,codigo',
-            ],
             'nombre' => ['required', 'string', 'max:255'],
             'activo' => ['boolean'],
             'requiereJustificacion' => ['boolean'],
             'aplicaDescuento' => ['boolean'],
             'plazoJustificacionHorasHabiles' => ['nullable', 'integer', 'min:1', 'max:720'],
         ];
+    }
+
+    /**
+     * Genera un código único a partir del nombre (p. ej. "Cita médica" ->
+     * "CITA_MEDICA"), para que el admin ya no tenga que escribirlo a mano.
+     * Si ya existe, le añade un sufijo numérico hasta que sea único.
+     */
+    private function generarCodigoDesde(string $nombre): string
+    {
+        $base = Str::of($nombre)->ascii()->upper()->replaceMatches('/[^A-Z0-9]+/', '_')->trim('_');
+        $base = $base->isEmpty() ? 'MOTIVO' : (string) $base;
+
+        $codigo = $base;
+        $sufijo = 1;
+
+        while (
+            Motivo::where('codigo', $codigo)
+                ->when($this->motivo, fn ($query) => $query->whereKeyNot($this->motivo->id))
+                ->exists()
+        ) {
+            $codigo = $base.'_'.(++$sufijo);
+        }
+
+        return $codigo;
     }
 
     public function guardar(): void
@@ -84,10 +100,11 @@ class MotivoForm extends Component
 
         $requiere = $datos['requiereJustificacion'];
 
-        // Solo se tocan las columnas de estas dos reglas: el resto (p. ej. cuál
-        // es el motivo Particular) se conserva tal como está.
+        // Solo se tocan las columnas de estas dos reglas (y el código, si es
+        // nuevo): el resto (p. ej. cuál es el motivo Particular) se conserva
+        // tal como está.
         $atributos = [
-            'codigo' => $datos['codigo'],
+            'codigo' => $this->motivo ? $this->motivo->codigo : $this->generarCodigoDesde($datos['nombre']),
             'nombre' => $datos['nombre'],
             'activo' => $datos['activo'],
             'requiere_sustento_en_retorno' => $requiere,

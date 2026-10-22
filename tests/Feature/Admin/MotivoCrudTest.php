@@ -47,14 +47,14 @@ class MotivoCrudTest extends TestCase
     {
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class)
-            ->set('codigo', 'SIMPLE')
             ->set('nombre', 'Simple')
             ->call('guardar')
             ->assertHasNoErrors()
             ->assertRedirect(route('motivos.index'));
 
-        $motivo = Motivo::where('codigo', 'SIMPLE')->firstOrFail();
+        $motivo = Motivo::where('nombre', 'Simple')->firstOrFail();
 
+        $this->assertSame('SIMPLE', $motivo->codigo);
         $this->assertTrue($motivo->activo);
         $this->assertFalse($motivo->suma_descuento);
         $this->assertFalse($motivo->requiere_sustento_en_retorno);
@@ -76,14 +76,13 @@ class MotivoCrudTest extends TestCase
         foreach ($casos as $codigo => [$requiere, $descuento, $suma, $sustento, $consecuencia]) {
             Livewire::actingAs($this->admin)
                 ->test(MotivoForm::class)
-                ->set('codigo', 'REGLA_'.strtoupper($codigo))
                 ->set('nombre', 'Regla '.$codigo)
                 ->set('requiereJustificacion', $requiere)
                 ->set('aplicaDescuento', $descuento)
                 ->call('guardar')
                 ->assertHasNoErrors();
 
-            $motivo = Motivo::where('codigo', 'REGLA_'.strtoupper($codigo))->firstOrFail();
+            $motivo = Motivo::where('nombre', 'Regla '.$codigo)->firstOrFail();
             $this->assertSame($suma, $motivo->suma_descuento, $codigo);
             $this->assertSame($sustento, $motivo->requiere_sustento_en_retorno, $codigo);
             $this->assertSame($consecuencia, $motivo->consecuenciaAlTerminar(), $codigo);
@@ -94,7 +93,6 @@ class MotivoCrudTest extends TestCase
     {
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class)
-            ->set('codigo', 'CON_PLAZO')
             ->set('nombre', 'Con plazo')
             ->set('requiereJustificacion', true)
             ->set('plazoJustificacionHorasHabiles', 24)
@@ -103,24 +101,22 @@ class MotivoCrudTest extends TestCase
 
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class)
-            ->set('codigo', 'SIN_PLAZO')
             ->set('nombre', 'Sin plazo')
             ->set('aplicaDescuento', true)
             ->set('plazoJustificacionHorasHabiles', 24)
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $this->assertSame(24, Motivo::where('codigo', 'CON_PLAZO')->firstOrFail()->plazo_justificacion_horas_habiles);
-        $this->assertNull(Motivo::where('codigo', 'SIN_PLAZO')->firstOrFail()->plazo_justificacion_horas_habiles);
+        $this->assertSame(24, Motivo::where('nombre', 'Con plazo')->firstOrFail()->plazo_justificacion_horas_habiles);
+        $this->assertNull(Motivo::where('nombre', 'Sin plazo')->firstOrFail()->plazo_justificacion_horas_habiles);
     }
 
-    public function test_editar_precarga_las_reglas_y_permite_conservar_el_propio_codigo(): void
+    public function test_editar_precarga_las_reglas_y_conserva_el_codigo_original(): void
     {
         $motivo = $this->motivoNuevo(['suma_descuento' => true]);
 
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class, ['motivo' => $motivo])
-            ->assertSet('codigo', 'MOTIVO_NUEVO')
             ->assertSet('aplicaDescuento', true)
             ->assertSet('requiereJustificacion', false)
             ->set('nombre', 'Motivo renombrado')
@@ -162,39 +158,44 @@ class MotivoCrudTest extends TestCase
         $this->assertTrue($particular->fresh()->suma_descuento);
     }
 
-    public function test_codigo_y_nombre_son_obligatorios(): void
+    public function test_nombre_es_obligatorio(): void
     {
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class)
             ->call('guardar')
-            ->assertHasErrors(['codigo' => 'required', 'nombre' => 'required']);
+            ->assertHasErrors(['nombre' => 'required']);
     }
 
-    public function test_el_codigo_no_puede_repetirse_al_crear(): void
+    public function test_el_codigo_generado_no_choca_si_dos_motivos_comparten_nombre(): void
     {
-        $existente = $this->motivoDe('PARTICULAR');
-        $antes = Motivo::count();
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class)
+            ->set('nombre', 'Capacitación')
+            ->call('guardar')
+            ->assertHasNoErrors();
 
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class)
-            ->set('codigo', $existente->codigo)
-            ->set('nombre', 'Duplicado')
+            ->set('nombre', 'Capacitación')
             ->call('guardar')
-            ->assertHasErrors(['codigo' => 'unique']);
+            ->assertHasNoErrors();
 
-        $this->assertSame($antes, Motivo::count());
+        $motivos = Motivo::where('nombre', 'Capacitación')->orderBy('id')->get();
+
+        $this->assertCount(2, $motivos);
+        $this->assertSame('CAPACITACION', $motivos[0]->codigo);
+        $this->assertSame('CAPACITACION_2', $motivos[1]->codigo);
     }
 
-    public function test_editar_no_puede_tomar_el_codigo_de_otro_motivo(): void
+    public function test_editar_no_cambia_el_codigo_aunque_cambie_el_nombre(): void
     {
         $motivo = $this->motivoNuevo();
-        $otro = $this->motivoDe('PARTICULAR');
 
         Livewire::actingAs($this->admin)
             ->test(MotivoForm::class, ['motivo' => $motivo])
-            ->set('codigo', $otro->codigo)
+            ->set('nombre', 'Motivo con otro nombre')
             ->call('guardar')
-            ->assertHasErrors(['codigo' => 'unique']);
+            ->assertHasNoErrors();
 
         $this->assertSame('MOTIVO_NUEVO', $motivo->fresh()->codigo);
     }
@@ -244,12 +245,11 @@ class MotivoCrudTest extends TestCase
 
         Livewire::actingAs($trabajador)
             ->test(MotivoForm::class)
-            ->set('codigo', 'COLADO')
             ->set('nombre', 'Colado')
             ->call('guardar')
             ->assertForbidden();
 
         $this->assertModelExists($motivo);
-        $this->assertFalse(Motivo::where('codigo', 'COLADO')->exists());
+        $this->assertFalse(Motivo::where('nombre', 'Colado')->exists());
     }
 }

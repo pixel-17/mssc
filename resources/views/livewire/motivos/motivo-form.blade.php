@@ -8,10 +8,6 @@
                     <x-input id="motivo-form-nombre" type="text" wire:model="nombre" class="w-full" placeholder="ej. Cita médica" />
                 </x-admin.campo>
 
-                <x-admin.campo label="Código (una palabra, sin espacios)" for="motivo-form-codigo" campo="codigo">
-                    <x-input id="motivo-form-codigo" type="text" wire:model="codigo" class="w-full" placeholder="ej. SALUD" />
-                </x-admin.campo>
-
                 <div class="sm:col-span-2">
                     <x-admin.campo-checkbox for="activo" campo="requiereJustificacion" wire:model="activo" label="Los trabajadores pueden elegir este motivo" />
                 </div>
