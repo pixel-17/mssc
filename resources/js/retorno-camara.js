@@ -6,8 +6,13 @@
  * elegir una imagen ya guardada en la galería). Se unifican en un
  * solo flujo "Tomar foto de retorno" al estilo Timestamp Camera:
  *
- *   1) Se abre la cámara en vivo (getUserMedia) y en paralelo se pide
- *      la ubicación + se resuelve la dirección contra Nominatim.
+ *   1) Se abre la cámara en vivo (getUserMedia, disparado por x-init en
+ *      el <video> cuando Alpine lo monta) y en paralelo se pide la
+ *      ubicación + se resuelve la dirección contra Nominatim. Mientras
+ *      está en vivo, un reloj (horaActual, cada 1 s) + textoUbicacion()
+ *      pintan una marca de agua sobre el video — estilo Timestamp
+ *      Camera — con el MISMO formato que quedará sellado al capturar,
+ *      para que no haya sorpresas entre lo que se ve y lo que se graba.
  *   2) Al capturar, se "sella" la foto con la dirección, la fecha y
  *      la hora directamente sobre el canvas, en el cliente — el
  *      servidor nunca recibe una foto sin el sello.
@@ -62,6 +67,14 @@ function formatearFechaHora(fecha) {
     };
 }
 
+/** Mismo texto que usa el sello final: la dirección si ya resolvió, si no las coordenadas. */
+function formatearUbicacion(direccion, lat, lng) {
+    if (direccion) return direccion;
+    if (lat && lng) return `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+
+    return 'Obteniendo ubicación…';
+}
+
 function partirTexto(ctx, texto, anchoMaximo) {
     const palabras = texto.split(' ');
     const lineas = [];
@@ -92,7 +105,7 @@ function sellarFoto(canvas, { direccion, lat, lng }) {
     const alto = canvas.height;
 
     const { fecha, hora } = formatearFechaHora(new Date());
-    const textoUbicacion = direccion ?? `${Number(lat).toFixed(6)}, ${Number(lng).toFixed(6)}`;
+    const textoUbicacion = formatearUbicacion(direccion, lat, lng);
 
     const paddingX = Math.round(ancho * 0.04);
     const tamanoGrande = Math.max(18, Math.round(ancho * 0.05));
@@ -145,49 +158,62 @@ window.msscRetornoCamara = function () {
         ubicacionError: '',
         camaraError: '',
 
+        // Reloj en vivo para la marca de agua sobre el video (estilo
+        // Timestamp Camera): se actualiza cada segundo mientras hay
+        // cámara abierta, independiente del sello que se graba recién
+        // al capturar.
+        relojId: null,
+        horaActual: '',
+
         fotoBlob: null,
         fotoPreviewUrl: null,
 
-        async iniciar() {
+        iniciar() {
             this.estado = 'abriendo';
             this.camaraError = '';
             this.ubicacionError = '';
 
-            // Espera a que Alpine termine de insertar el <video x-ref="video">
-            // (el x-if de arriba) antes de tocar $refs.video: si getUserMedia
-            // resuelve muy rápido (permiso ya concedido antes), se adelanta
-            // al render de Alpine y $refs.video todavía es undefined.
-            await this.$nextTick();
+            this.iniciarReloj();
 
             // En paralelo: la cámara no debe esperar a que resuelva el GPS.
+            // La apertura de la cámara en sí NO se llama desde acá: se
+            // dispara sola vía x-init="conectarCamara()" en el <video
+            // x-ref="video"> de abajo, cuando Alpine lo inserta en el DOM
+            // al activarse el x-if de "abriendo"/"en-vivo". Eso evita por
+            // completo la carrera de "getUserMedia resuelve antes de que
+            // exista el <video>" (antes se parchaba con un polling manual
+            // de hasta 200 ms que en equipos lentos igual podía agotarse).
             this.iniciarUbicacion();
-            await this.abrirCamara();
         },
 
-        async abrirCamara() {
+        iniciarReloj() {
+            this.actualizarHora();
+            this.detenerReloj(); // por si quedó uno corriendo de un intento anterior
+            this.relojId = setInterval(() => this.actualizarHora(), 1000);
+        },
+
+        actualizarHora() {
+            const { fecha, hora } = formatearFechaHora(new Date());
+            this.horaActual = `${fecha} ${hora}`;
+        },
+
+        detenerReloj() {
+            if (this.relojId) {
+                clearInterval(this.relojId);
+                this.relojId = null;
+            }
+        },
+
+        /** Texto de ubicación para la marca de agua en vivo (mismo formato que el sello final). */
+        textoUbicacion() {
+            return formatearUbicacion(this.direccion, this.lat, this.lng);
+        },
+
+        async conectarCamara() {
             if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia) {
                 this.camaraError = 'Este dispositivo no soporta cámara en vivo.';
                 this.estado = 'inicial';
-                return;
-            }
-
-            // Espera activa hasta que Alpine inserte el <video x-ref="video">
-            // en el DOM. $nextTick a veces no alcanza cuando getUserMedia ya
-            // tiene permiso concedido y resuelve antes de que x-if termine.
-            const videoListo = await new Promise((resolve) => {
-                const intentos = 20; // máx ~200 ms
-                let n = 0;
-                const check = () => {
-                    if (this.$refs.video) return resolve(true);
-                    if (++n >= intentos) return resolve(false);
-                    requestAnimationFrame(check);
-                };
-                check();
-            });
-
-            if (!videoListo) {
-                this.camaraError = 'No se pudo iniciar la cámara (elemento de video no disponible).';
-                this.estado = 'inicial';
+                this.detenerReloj();
                 return;
             }
 
@@ -203,13 +229,16 @@ window.msscRetornoCamara = function () {
             } catch (error) {
                 this.camaraError = 'No se pudo abrir la cámara: ' + (error.message || 'permiso denegado.');
                 this.estado = 'inicial';
+                this.detenerReloj();
             }
         },
 
         async cambiarCamara() {
+            // Acá $refs.video ya existe (la cámara está en vivo, el x-if
+            // nunca se desmontó), así que se puede llamar directo.
             this.facingMode = this.facingMode === 'environment' ? 'user' : 'environment';
             this.detenerStream();
-            await this.abrirCamara();
+            await this.conectarCamara();
         },
 
         iniciarUbicacion() {
@@ -252,8 +281,9 @@ window.msscRetornoCamara = function () {
                     this.fotoBlob = blob;
                     this.fotoPreviewUrl = URL.createObjectURL(blob);
                     this.estado = 'capturada';
-                    // Ya no hace falta mantener la cámara prendida mientras se revisa/envía.
+                    // Ya no hace falta mantener la cámara ni el reloj prendidos mientras se revisa/envía.
                     this.detenerStream();
+                    this.detenerReloj();
                 },
                 'image/jpeg',
                 0.85

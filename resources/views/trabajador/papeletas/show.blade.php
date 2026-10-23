@@ -218,7 +218,10 @@
                     <template x-if="estado === 'abriendo' || estado === 'en-vivo'">
                         <div class="space-y-3">
                             <div class="relative overflow-hidden rounded-xl bg-black aspect-[3/4]">
-                                <video x-ref="video" playsinline autoplay muted class="h-full w-full object-cover"
+                                {{-- x-init se dispara justo cuando Alpine inserta este <video> en el
+                                     DOM (al activarse el x-if de arriba), así que $refs.video siempre
+                                     existe para conectarCamara(): ya no hace falta adivinar el timing. --}}
+                                <video x-ref="video" x-init="conectarCamara()" playsinline autoplay muted class="h-full w-full object-cover"
                                        :class="facingMode === 'user' && '-scale-x-100'"></video>
                                 <p x-show="estado === 'abriendo'" class="absolute inset-0 flex items-center justify-center text-xs text-white/80">
                                     Abriendo cámara…
@@ -227,6 +230,16 @@
                                         class="absolute top-2 right-2 rounded-full bg-black/50 text-white text-xs px-3 py-1.5">
                                     🔄 Cambiar cámara
                                 </button>
+
+                                {{-- Marca de agua en vivo (estilo Timestamp Camera): mismo texto y
+                                     formato que sellarFoto() graba al capturar, así lo que ves acá
+                                     es exactamente lo que va a quedar en la foto. --}}
+                                <div x-show="estado === 'en-vivo'" x-cloak
+                                     class="pointer-events-none absolute inset-x-0 bottom-0 px-3 pt-8 pb-2.5 text-white"
+                                     style="background: linear-gradient(to top, rgba(0,0,0,.75), rgba(0,0,0,.35) 55%, rgba(0,0,0,0));">
+                                    <p class="text-sm font-bold leading-tight drop-shadow" x-text="'🕒 ' + horaActual"></p>
+                                    <p class="text-xs leading-snug drop-shadow line-clamp-2" x-text="'📍 ' + textoUbicacion()"></p>
+                                </div>
                             </div>
 
                             <p class="text-xs text-tinta-700 dark:text-tinta-200" x-show="!ubicacionLista && !ubicacionError">
