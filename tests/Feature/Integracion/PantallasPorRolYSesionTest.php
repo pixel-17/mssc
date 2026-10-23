@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Integracion;
 
+use App\Livewire\Auth\ActualizarPasswordInicial;
 use App\Models\UnidadOrganica;
 use App\Models\User;
 use Database\Seeders\ConfiguracionSeeder;
@@ -165,19 +166,19 @@ class PantallasPorRolYSesionTest extends TestCase
 
         $this->actingAs($nuevo);
 
-        Livewire::test(\App\Livewire\Auth\ActualizarPasswordInicial::class)
+        Livewire::test(ActualizarPasswordInicial::class)
             ->set('password', 'corta')
             ->set('password_confirmation', 'corta')
             ->call('actualizar')
             ->assertHasErrors('password');
 
-        Livewire::test(\App\Livewire\Auth\ActualizarPasswordInicial::class)
+        Livewire::test(ActualizarPasswordInicial::class)
             ->set('password', '12345678')
             ->set('password_confirmation', '12345678')
             ->call('actualizar')
             ->assertHasErrors('password');
 
-        Livewire::test(\App\Livewire\Auth\ActualizarPasswordInicial::class)
+        Livewire::test(ActualizarPasswordInicial::class)
             ->set('password', 'Clave-Segura-2026')
             ->set('password_confirmation', 'otra-distinta')
             ->call('actualizar')
@@ -185,7 +186,7 @@ class PantallasPorRolYSesionTest extends TestCase
 
         $this->assertTrue($nuevo->fresh()->debe_actualizar_password);
 
-        Livewire::test(\App\Livewire\Auth\ActualizarPasswordInicial::class)
+        Livewire::test(ActualizarPasswordInicial::class)
             ->set('password', 'Clave-Segura-2026')
             ->set('password_confirmation', 'Clave-Segura-2026')
             ->call('actualizar')

@@ -128,10 +128,10 @@ class PatronDescansoSemanalTest extends TestCase
 
         $this->assertNotNull($resultado);
 
-        $ancla       = $resultado['fecha_ancla'];
+        $ancla = $resultado['fecha_ancla'];
         $diasTrabajo = $resultado['dias_trabajo'];  // 5
         $diasDescanso = $resultado['dias_descanso']; // 2
-        $ciclo       = $diasTrabajo + $diasDescanso; // 7
+        $ciclo = $diasTrabajo + $diasDescanso; // 7
 
         // El lunes de esa misma semana debe ser día de trabajo.
         $lunes = Carbon::parse('2026-10-19');

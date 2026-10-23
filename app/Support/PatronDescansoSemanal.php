@@ -24,7 +24,7 @@ final class PatronDescansoSemanal
 {
     /**
      * @param  array<int, int>  $diasSemana  1..7, sin repetir
-     * @return array{fecha_ancla: Carbon, dias_trabajo: int, dias_descanso: int}|null  null si la selección no es válida
+     * @return array{fecha_ancla: Carbon, dias_trabajo: int, dias_descanso: int}|null null si la selección no es válida
      */
     public static function anclaYCiclo(array $diasSemana, Carbon $referencia): ?array
     {

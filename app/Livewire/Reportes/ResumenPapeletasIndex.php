@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\ReporteHorasAcumuladasService;
 use App\Services\ResumenPapeletasService;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Layout;
@@ -151,7 +152,7 @@ class ResumenPapeletasIndex extends Component
 
     /** Trabajadores disponibles para el filtro de la pestaña "horas" (memoizado: una vez por request). */
     #[Computed]
-    public function trabajadoresDisponibles(): \Illuminate\Support\Collection
+    public function trabajadoresDisponibles(): Collection
     {
         /** @var User $user */
         $user = Auth::user();
@@ -169,7 +170,7 @@ class ResumenPapeletasIndex extends Component
      * query de papeletas ya estaba protegida.
      */
     #[Computed]
-    public function sedes(): \Illuminate\Support\Collection
+    public function sedes(): Collection
     {
         $query = Sede::where('activo', true);
 
@@ -181,7 +182,7 @@ class ResumenPapeletasIndex extends Component
     }
 
     #[Computed]
-    public function motivos(): \Illuminate\Support\Collection
+    public function motivos(): Collection
     {
         return Motivo::where('activo', true)->orderBy('nombre')->get();
     }

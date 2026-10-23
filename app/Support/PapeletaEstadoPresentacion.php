@@ -55,7 +55,7 @@ class PapeletaEstadoPresentacion
         $clave = $estado instanceof State ? get_class($estado) : (string) $estado;
 
         $etiqueta = match ($clave) {
-            Cerrada::class    => 'Finalizado · abandono',
+            Cerrada::class => 'Finalizado · abandono',
             Finalizada::class => 'Finalizado · abandono',
             EnJustificacion::class => 'En justificación · abandono',
             default => null,
