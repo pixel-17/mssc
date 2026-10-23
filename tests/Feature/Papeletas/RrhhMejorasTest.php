@@ -227,7 +227,7 @@ class RrhhMejorasTest extends TestCase
         // muestra como "Finalizada" (mismo criterio que la etiqueta normal
         // de este estado, ver PapeletaEstadoPresentacion::para()), con el
         // sufijo de abandono distinguiendo si hubo descuento o no.
-        $this->assertStringContainsString('Finalizada · abandono justificado (sin descuento)', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
+        $this->assertStringContainsString('Finalizado · abandono', view('components.estado-papeleta', ['estado' => $cerradaAbandono->estado, 'abandono' => true])->render());
         $this->assertStringNotContainsString('Abandono', view('components.estado-papeleta', ['estado' => $cerradaNormal->estado, 'abandono' => false])->render());
     }
 

@@ -56,6 +56,8 @@ final class PatronDescansoSemanal
     /** @param  array<int, int>  $dias  1..7, sin repetir, ya sin duplicados */
     public static function esArcoContiguo(array $dias): bool
     {
+        sort($dias);
+
         for ($inicio = 1; $inicio <= 7; $inicio++) {
             $arco = collect(range(0, count($dias) - 1))
                 ->map(fn (int $k) => (($inicio - 1 + $k) % 7) + 1)
