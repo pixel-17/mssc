@@ -25,6 +25,12 @@
     <script>
         window.VAPID_PUBLIC_KEY = "{{ config('webpush.vapid.public_key') }}";
 
+        // Volumen del sonido de notificación in-app (0-100), elegido por
+        // el usuario en Ajustes > Preferencias del dispositivo. Única
+        // fuente de verdad para resources/js/notification-sound.js —
+        // ver users.volumen_notificacion / DeviceSettingsForm.
+        window.MSSC_VOLUMEN_NOTIFICACION = {{ auth()->check() ? (int) auth()->user()->volumen_notificacion : 80 }};
+
         // Se registra siempre (no solo al activar notificaciones): es lo que
         // hace que el navegador ofrezca "Instalar app". sw.js sigue manejando
         // el push por separado una vez que el usuario lo active.

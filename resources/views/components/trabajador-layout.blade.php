@@ -9,6 +9,12 @@
         <meta name="vapid-public-key" content="{{ config('webpush.vapid.public_key') }}">
         <link rel="manifest" href="/manifest.json">
 
+        <script>
+            // Volumen del sonido de notificación in-app (0-100). Ver el
+            // mismo bloque en layouts/app.blade.php.
+            window.MSSC_VOLUMEN_NOTIFICACION = {{ auth()->check() ? (int) auth()->user()->volumen_notificacion : 80 }};
+        </script>
+
         @include('layouts.partials.tema')
 
         @php

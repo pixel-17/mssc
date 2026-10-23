@@ -111,17 +111,12 @@ window.msscCamaraToggle = function () {
 
 /**
  * Volumen del sonido de notificación in-app. Se guarda en el
- * servidor (users.volumen_notificacion vía DeviceSettingsForm), pero
- * se reproduce localmente aquí. Reutiliza este mismo helper
- * (window.msscReproducirSonidoNotificacion) donde el proyecto termine
- * de enganchar el sonido a una notificación real recibida.
+ * servidor (users.volumen_notificacion vía DeviceSettingsForm) y se
+ * reproduce con el mismo generador de tono que usan las
+ * notificaciones reales (resources/js/notification-sound.js) — así
+ * "Probar sonido" suena exactamente igual a un aviso real, al
+ * volumen que el usuario está arrastrando en el momento.
  */
-window.msscReproducirSonidoNotificacion = function (volumenPorcentaje) {
-    const audio = new Audio('/sounds/notificacion.mp3');
-    audio.volume = Math.max(0, Math.min(100, volumenPorcentaje)) / 100;
-    audio.play().catch(() => {});
-};
-
 window.msscVolumenNotificacion = function (volumenInicial) {
     return {
         volumen: volumenInicial,
@@ -135,6 +130,12 @@ window.msscVolumenNotificacion = function (volumenInicial) {
             // pestaña/parte de la UI necesita el valor actualizado.
             this.$wire.on('mssc-volumen-actualizado', ({ volumen }) => {
                 this.volumen = volumen;
+
+                // Mantiene window.MSSC_VOLUMEN_NOTIFICACION (impreso una
+                // sola vez al cargar la página) sincronizado tras guardar,
+                // para que una notificación real que llegue justo después
+                // ya use el valor nuevo sin necesitar recargar.
+                window.MSSC_VOLUMEN_NOTIFICACION = volumen;
             });
         },
 
