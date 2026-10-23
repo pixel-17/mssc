@@ -1,0 +1,1219 @@
+﻿vendor\bin\phpstan : Note: Using configuration file 
+C:\laragon\www\papeletas-mssc\phpstan.neon.
+En línea: 1 Carácter: 1
++ vendor\bin\phpstan analyse --no-progress --error-format=table 2>&1 |
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Note: Using con...c\phpstan.neon. 
+   :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ ------ -------------------------------------------------------------------- 
+  Line   Actions\Organigrama\EliminarUnidadOrganicaAction.php                
+ ------ -------------------------------------------------------------------- 
+  :38    Dead catch - Illuminate\Database\QueryException is never thrown in  
+         the try block.                                                      
+         ­ƒ¬¬  catch.neverThrown                                               
+ ------ -------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Organigrama\JefaturaUnidadService.php                          
+ ------ ----------------------------------------------------------------------- 
+  :72    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :145   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :145   Using nullsafe property access "?->nombre_completo" on left side of    
+         ?? is unnecessary. Use -> instead.                                     
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Organigrama\MoverJefeComoTrabajadorAction.php                  
+ ------ ----------------------------------------------------------------------- 
+  :122   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede.                             
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :124   Method                                                                 
+         App\Actions\Organigrama\MoverJefeComoTrabajadorAction::previsualizar(  
+         ) should return array{jefe: App\Models\User, destino:                  
+         App\Models\UnidadOrganica, unidades:                                   
+         Illuminate\Support\Collection<int, array{unidad:                       
+         App\Models\UnidadOrganica, es_area: bool, personas: int, subunidades:  
+         int, requiere_reemplazo: bool, candidatos:                             
+         Illuminate\Support\Collection<int, App\Models\User>}>, sede: array{ac  
+         tual: App\Models\Sede|null, propuesta: App\Models\Sede|null},          
+         necesita_turno: bool, turnos_validos: list<string>, avisos: list<stri  
+         ng>} but returns array{modo: string, jefe: App\Models\User, destino:   
+         App\Models\UnidadOrganica, unidades:                                   
+         Illuminate\Support\Collection<int, array{unidad:                       
+         App\Models\UnidadOrganica, es_area: bool, personas: mixed,             
+         subunidades: int, requiere_reemplazo: bool, candidatos:                
+         Illuminate\Support\Collection<int, App\Models\User>}>, jefes_destino:  
+          Illuminate\Support\Collection<int, App\Models\User>, requiere_reempl  
+         azar_destino: bool, sede: array{actual:                                
+         Illuminate\Database\Eloquent\Model|null, propuesta: mixed},            
+         necesita_turno: bool, ...}.                                            
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Offset 'unidades' (Illuminate\Support\Collection<int,              
+         array{unidad: App\Models\UnidadOrganica, es_area: bool, personas:      
+         int, subunidades: int, requiere_reemplazo: bool, candidatos:           
+         Illuminate\Support\Collection<int, App\Models\User>}>) does not accep  
+         t type Illuminate\Support\Collection<int, array{unidad:                
+         App\Models\UnidadOrganica, es_area: bool, personas: mixed,             
+         subunidades: int, requiere_reemplazo: bool, candidatos:                
+         Illuminate\Support\Collection<int, App\Models\User>}>.                 
+  :269   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :296   Parameter #2 $unidad of method                                         
+         App\Actions\Organigrama\ReglasOrganigrama::areaDe() expects            
+         App\Models\UnidadOrganica, Illuminate\Database\Eloquent\Model given.   
+         ­ƒ¬¬  argument.type                                                      
+  :296   Parameter #2 $unidad of method                                         
+         App\Actions\Organigrama\ReglasOrganigrama::puedeGestionarJefaturasEn(  
+         ) expects App\Models\UnidadOrganica,                                   
+         Illuminate\Database\Eloquent\Model given.                              
+         ­ƒ¬¬  argument.type                                                      
+  :297   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :306   Method                                                                 
+         App\Actions\Organigrama\MoverJefeComoTrabajadorAction::validar()       
+         should return Illuminate\Support\Collection<int, App\Models\UnidadOrg  
+         anica> but returns Illuminate\Database\Eloquent\Collection<int, Illum  
+         inate\Database\Eloquent\Model>.                                        
+         ­ƒ¬¬  return.type                                                        
+  :343   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Organigrama\MoverJefeInmediatoAction.php                       
+ ------ ----------------------------------------------------------------------- 
+  :67    Method                                                                 
+         App\Actions\Organigrama\MoverJefeInmediatoAction::previsualizar()      
+         should return array{jefe: App\Models\User, unidad:                     
+         App\Models\UnidadOrganica, origen: App\Models\UnidadOrganica|null,     
+         destino: App\Models\UnidadOrganica, jefe_area: array{antes:            
+         App\Models\User|null, despues: App\Models\User|null}, personas: int,   
+         avisos: list<string>} but returns array{jefe: App\Models\User, unidad  
+         : App\Models\UnidadOrganica, origen: App\Models\UnidadOrganica|null,   
+         destino: App\Models\UnidadOrganica, jefe_area: array{antes:            
+         Illuminate\Database\Eloquent\Model|null, despues:                      
+         Illuminate\Database\Eloquent\Model|null}, personas: int<0, max>,       
+         avisos: array{}|array{0: non-falsy-string, 1?: non-falsy-string}}.     
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Offset 'jefe_area' (array{antes: App\Models\User|null, despues:    
+         App\Models\User|null}) does not accept type array{antes:               
+         Illuminate\Database\Eloquent\Model, despues:                           
+         Illuminate\Database\Eloquent\Model}: Offset 'antes'                    
+         (App\Models\User|null) does not accept type                            
+         Illuminate\Database\Eloquent\Model.                                    
+  :157   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$activo.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Organigrama\MoverTrabajadorAction.php                          
+ ------ ----------------------------------------------------------------------- 
+  :111   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :263   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$activo.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------- 
+  Line   Actions\Papeleta\CancelarPapeletaAction.php                     
+ ------ ---------------------------------------------------------------- 
+  :62    Parameter $cambios of method                                    
+         App\Models\Papeleta::transicionarConHistorial() expects         
+         (Closure(App\Models\Papeleta): void)|null,                      
+         Closure(App\Models\Papeleta): Illuminate\Support\Carbon given.  
+         ­ƒ¬¬  argument.type                                               
+ ------ ---------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Papeleta\CorregirPapeletaRrhhAction.php                        
+ ------ ----------------------------------------------------------------------- 
+  :73    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :75    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :79    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------- 
+  Line   Actions\Papeleta\CrearPapeletaAction.php                         
+ ------ ----------------------------------------------------------------- 
+  :261   Using nullsafe property access "?->fecha" on left side of ?? is  
+         unnecessary. Use -> instead.                                     
+         ­ƒ¬¬  nullsafe.neverNull                                           
+ ------ ----------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Papeleta\MarcarRetornoAction.php                               
+ ------ ----------------------------------------------------------------------- 
+  :121   Parameter #2 $horaRetorno of method                                    
+         App\Actions\Papeleta\MarcarRetornoAction::calcularDescuentoRefrigerio  
+         () expects Carbon\Carbon, string|null given.                           
+         ­ƒ¬¬  argument.type                                                      
+  :135   Parameter #2 $desde of method App\Services\AbrirJustificacion::para()  
+         expects Carbon\Carbon, string|null given.                              
+         ­ƒ¬¬  argument.type                                                      
+  :161   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$latitud.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :161   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$longitud.                         
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :161   Using nullsafe property access on non-nullable type                    
+         Illuminate\Database\Eloquent\Model. Use -> instead.                    
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :172   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$radio_metros.                     
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :203   Cannot call method copy() on string.                                   
+         ­ƒ¬¬  method.nonObject                                                   
+  :205   Cannot call method copy() on string.                                   
+         ­ƒ¬¬  method.nonObject                                                   
+  :208   Cannot call method max() on string.                                    
+         ­ƒ¬¬  method.nonObject                                                   
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------- 
+  Line   Actions\Papeleta\RevisarSustentoAction.php                            
+ ------ ---------------------------------------------------------------------- 
+  :68    Property App\Models\Sustento::$estado                                 
+         ('aprobado'|'observado'|'pendiente'|'presentado'|'vencido') does not  
+         accept 'rechazado'.                                                   
+         ­ƒ¬¬  assign.propertyType                                               
+ ------ ---------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Usuario\CambiarEstadoUsuarioAction.php                         
+ ------ ----------------------------------------------------------------------- 
+  :74    Method                                                                 
+         App\Actions\Usuario\CambiarEstadoUsuarioAction::jefaturasPorResolver(  
+         ) should return Illuminate\Support\Collection<int, array{unidad: App\  
+         Models\UnidadOrganica, es_area: bool, personas: int, subunidades:      
+         int, pendientes: int}> but returns Illuminate\Support\Collection<int,  
+          array{unidad: App\Models\UnidadOrganica, es_area: bool, personas:     
+         int<0, max>, subunidades: int<0, max>, pendientes: int}>.              
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Template type TValue on class Illuminate\Support\Collection is not  
+         covariant. Learn more: https://phpstan.org/blog/whats-up-with-templat  
+         e-covariant                                                            
+  :75    Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<int,Illuminate\Database\Eloqu  
+         ent\Model>::map() expects callable(Illuminate\Database\Eloquent\Model  
+         , int): array{unidad: App\Models\UnidadOrganica, es_area: bool,        
+         personas: int<0, max>, subunidades: int<0, max>, pendientes: int},     
+         Closure(App\Models\UnidadOrganica): array{unidad:                      
+         App\Models\UnidadOrganica, es_area: bool, personas: int<0, max>,       
+         subunidades: int<0, max>, pendientes: int} given.                      
+         ­ƒ¬¬  argument.type                                                      
+  :121   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :121   Parameter #2 $unidad of method                                         
+         App\Actions\Usuario\CambiarEstadoUsuarioAction::relevarJefatura()      
+         expects App\Models\UnidadOrganica, Illuminate\Database\Eloquent\Model  
+         given.                                                                 
+         ­ƒ¬¬  argument.type                                                      
+  :201   Parameter #2 $datos of method                                          
+         App\Actions\Usuario\CrearUsuarioAction::ejecutar() expects             
+         array{name: string, apellido: string, dni: string, email: string,      
+         regimen: string, sede_id: int|null, unidad_organica_id: int|null,      
+         tipo: string, ...}, array{name: mixed, apellido: mixed, dni: mixed,    
+         email: mixed, regimen: '276'|'728', sede_id: mixed,                    
+         unidad_organica_id: int<0, max>, tipo: 'jefe_inmediato'} given.        
+         ­ƒ¬¬  argument.type                                                      
+         ­ƒÆí  Array does not have offset 'turno'.                                
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Actions\Usuario\CrearUsuarioAction.php                                 
+ ------ ----------------------------------------------------------------------- 
+  :59    Offset 'tipo' on array{name: string, apellido: string, dni: string,    
+         email: string, regimen: string, sede_id: int|null,                     
+         unidad_organica_id: int|null, tipo: string, ...} on left side of ??    
+         always exists and is not nullable.                                     
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :193   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Console\Commands\BackfillRetornoAbandonosHistoricos.php                
+ ------ ----------------------------------------------------------------------- 
+  :51    Cannot call method toDateString() on string.                           
+         ­ƒ¬¬  method.nonObject                                                   
+  :51    Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<int,App\Models\Papeleta>::map  
+         () contains unresolvable type.                                         
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :57    Cannot call method toDateString() on string.                           
+         ­ƒ¬¬  method.nonObject                                                   
+  :57    Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<int,App\Models\Papeleta>::map  
+         () contains unresolvable type.                                         
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :80    Parameter #2 $horaRetorno of method                                    
+         App\Actions\Papeleta\MarcarRetornoAction::calcularDescuentoRefrigerio  
+         () expects Carbon\Carbon, string given.                                
+         ­ƒ¬¬  argument.type                                                      
+ ------ ----------------------------------------------------------------------- 
+
+ ------ --------------------------------------------------- 
+  Line   Console\Commands\ProcesarVencimientoSustentos.php  
+ ------ --------------------------------------------------- 
+  :74    Cannot call method isFuture() on string.           
+         ­ƒ¬¬  method.nonObject                               
+ ------ --------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Console\Commands\ProcesarVencimientosPapeletas.php                     
+ ------ ----------------------------------------------------------------------- 
+  :86    Call to an undefined method Illuminate\Database\Eloquent\Builder<Illu  
+         minate\Database\Eloquent\Model>::queEsJefe().                          
+         ­ƒ¬¬  method.notFound                                                    
+  :169   Parameter #5 $cambios of method                                        
+         App\Models\Papeleta::transicionarConHistorial() expects                
+         (Closure(App\Models\Papeleta): void)|null,                             
+         Closure(App\Models\Papeleta): Illuminate\Support\Carbon given.         
+         ­ƒ¬¬  argument.type                                                      
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http\Controllers\Papeleta\PapeletaArchivoController.php                
+ ------ ----------------------------------------------------------------------- 
+  :28    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$foto_path.                        
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------- 
+  Line   Http\Controllers\Rrhh\PapeletaController.php  
+ ------ ---------------------------------------------- 
+  :50    Cannot call method format() on string.        
+         ­ƒ¬¬  method.nonObject                          
+ ------ ---------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http\Controllers\Trabajador\SustentoController.php                     
+ ------ ----------------------------------------------------------------------- 
+  :34    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$estado.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http\Controllers\Usuario\UsuarioController.php                         
+ ------ ----------------------------------------------------------------------- 
+  :60    Parameter #1 $view of function view expects view-string|null, string   
+         given.                                                                 
+         ­ƒ¬¬  argument.type                                                      
+  :116   Parameter #1 $view of function view expects view-string|null, string   
+         given.                                                                 
+         ­ƒ¬¬  argument.type                                                      
+  :169   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$activo.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :185   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :186   Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http\Requests\Papeleta\SubirSustentoRequest.php                        
+ ------ ----------------------------------------------------------------------- 
+  :24    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$trabajador_id.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http\Requests\Usuario\CrearUsuarioRequest.php                          
+ ------ ----------------------------------------------------------------------- 
+  :128   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$regimen.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :142   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :143   Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Http\Requests\Usuario\EditarUsuarioRequest.php                         
+ ------ ----------------------------------------------------------------------- 
+  :73    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :74    Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\Concerns\MueveJefe.php                           
+ ------ ---------------------------------------------------------------------- 
+  :123   Offset 'jefe' on array{jefe: int, origen: int, destino: int} on left  
+         side of ?? always exists and is not nullable.                         
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :141   Offset 'jefe' on array{jefe: int, origen: int, destino: int} on left  
+         side of ?? always exists and is not nullable.                         
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :142   Offset 'destino' on array{jefe: int, origen: int, destino: int} on    
+         left side of ?? always exists and is not nullable.                    
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :143   Offset 'origen' on array{jefe: int, origen: int, destino: int} on     
+         left side of ?? always exists and is not nullable.                    
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :153   Using nullsafe property access "?->nombre_completo" on left side of   
+         ?? is unnecessary. Use -> instead.                                    
+         ­ƒ¬¬  nullsafe.neverNull                                                
+  :154   Using nullsafe property access "?->nombre" on left side of ?? is      
+         unnecessary. Use -> instead.                                          
+         ­ƒ¬¬  nullsafe.neverNull                                                
+  :162   Offset 'jefe' on array{jefe: int, origen: int, destino: int} on left  
+         side of ?? always exists and is not nullable.                         
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :163   Offset 'destino' on array{jefe: int, origen: int, destino: int} on    
+         left side of ?? always exists and is not nullable.                    
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :183   Using nullsafe property access "?->nombre" on left side of ?? is      
+         unnecessary. Use -> instead.                                          
+         ­ƒ¬¬  nullsafe.neverNull                                                
+  :200   Offset 'jefe' on array{jefe: int, origen: int, destino: int} on left  
+         side of ?? always exists and is not nullable.                         
+         ­ƒ¬¬  nullCoalesce.offset                                               
+  :201   Offset 'destino' on array{jefe: int, origen: int, destino: int} on    
+         left side of ?? always exists and is not nullable.                    
+         ­ƒ¬¬  nullCoalesce.offset                                               
+ ------ ---------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\Concerns\MueveJefe.php (in context of class       
+         App\Livewire\Organigrama\OrganigramaArbol)                             
+ ------ ----------------------------------------------------------------------- 
+  :153   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :154   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :181   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :183   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\Concerns\MueveTrabajador.php                      
+ ------ ----------------------------------------------------------------------- 
+  :113   Offset 'trabajador' on array{trabajador: int, origen: int, destino:    
+         int, cambiar_sede: bool} on left side of ?? always exists and is not   
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :114   Offset 'destino' on array{trabajador: int, origen: int, destino: int,  
+         cambiar_sede: bool} on left side of ?? always exists and is not        
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :143   Offset 'trabajador' on array{trabajador: int, origen: int, destino:    
+         int, cambiar_sede: bool} on left side of ?? always exists and is not   
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :144   Offset 'destino' on array{trabajador: int, origen: int, destino: int,  
+         cambiar_sede: bool} on left side of ?? always exists and is not        
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :145   Offset 'origen' on array{trabajador: int, origen: int, destino: int,   
+         cambiar_sede: bool} on left side of ?? always exists and is not        
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :147   Offset 'cambiar_sede' on array{trabajador: int, origen: int, destino:  
+         int, cambiar_sede: bool} on left side of ?? always exists and is not   
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :157   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :157   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :189   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :206   Offset 'trabajador' on array{trabajador: int, origen: int, destino:    
+         int, cambiar_sede: bool} on left side of ?? always exists and is not   
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :207   Offset 'destino' on array{trabajador: int, origen: int, destino: int,  
+         cambiar_sede: bool} on left side of ?? always exists and is not        
+         nullable.                                                              
+         ­ƒ¬¬  nullCoalesce.offset                                                
+  :250   Using nullsafe property access "?->nombre_completo" on left side of    
+         ?? is unnecessary. Use -> instead.                                     
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\Concerns\MueveTrabajador.php (in context of       
+         class App\Livewire\Organigrama\OrganigramaArbol)                       
+ ------ ----------------------------------------------------------------------- 
+  :156   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :157   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :157   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :188   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :189   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :247   Parameter #1 $callback of method Illuminate\Support\Collection<int,Ap  
+         p\Models\UnidadOrganica>::map() contains unresolvable type.            
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :250   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\PersonaDrawer.php                                 
+ ------ ----------------------------------------------------------------------- 
+  :180   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$regimen.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :367   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre_completo.                  
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :367   Parameter #1 $callback of method Illuminate\Support\Collection<int,Ap  
+         p\Models\UnidadOrganica>::map() contains unresolvable type.            
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :367   Using nullsafe property access "?->nombre_completo" on left side of    
+         ?? is unnecessary. Use -> instead.                                     
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :371   Parameter #1 $key of method Illuminate\Support\Collection<int,array<s  
+         tring, mixed>>::contains() contains unresolvable type.                 
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :372   Parameter #1 ...$values of method                                      
+         Illuminate\Support\Collection<int,array<string, mixed>>::push() conta  
+         ins unresolvable type.                                                 
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :387   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :387   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede.                             
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :387   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :387   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :397   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$regimen.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :435   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :436   Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\TrabajadorModal.php                              
+ ------ ---------------------------------------------------------------------- 
+  :152   Parameter #1 $view of function view expects view-string|null, string  
+         given.                                                                
+         ­ƒ¬¬  argument.type                                                     
+  :164   Parameter #1 $view of function view expects view-string|null, string  
+         given.                                                                
+         ­ƒ¬¬  argument.type                                                     
+ ------ ---------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Organigrama\UnidadModal.php                                   
+ ------ ----------------------------------------------------------------------- 
+  :243   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Papeletas\TrabajadorIndex.php                                 
+ ------ ----------------------------------------------------------------------- 
+  :64    Call to an undefined method Illuminate\Database\Eloquent\Builder<Illu  
+         minate\Database\Eloquent\Model>::delTurnoVigente().                    
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Reportes\ResumenPapeletasIndex.php                            
+ ------ ----------------------------------------------------------------------- 
+  :178   Access to an undefined property                                        
+         App\Livewire\Reportes\ResumenPapeletasIndex::$trabajadoresDisponibles  
+         .                                                                      
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :212   Access to an undefined property                                        
+         App\Livewire\Reportes\ResumenPapeletasIndex::$sedes.                   
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :213   Access to an undefined property                                        
+         App\Livewire\Reportes\ResumenPapeletasIndex::$motivos.                 
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------- 
+  Line   Livewire\Turnos\CalendarioEquipoIndex.php                       
+ ------ ---------------------------------------------------------------- 
+  :239   Parameter #1 $fechaAncla of static method                       
+         App\Services\GeneradorTurnoMensualService::esDescansoEnFecha()  
+         expects Illuminate\Support\Carbon, string given.                
+         ­ƒ¬¬  argument.type                                               
+  :316   Cannot access property $day on string.                          
+         ­ƒ¬¬  property.nonObject                                          
+  :327   Cannot call method toDateString() on string.                    
+         ­ƒ¬¬  method.nonObject                                            
+ ------ ---------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Turnos\CalendarioIndividualIndex.php                          
+ ------ ----------------------------------------------------------------------- 
+  :103   Cannot access property $day on string.                                 
+         ­ƒ¬¬  property.nonObject                                                 
+  :127   Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<(int|string),App\Models\Turno  
+         >::mapWithKeys() contains unresolvable type.                           
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :133   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------- 
+  Line   Livewire\Turnos\ConfiguracionTurnoForm.php    
+ ------ ---------------------------------------------- 
+  :62    Cannot call method toDateString() on string.  
+         ­ƒ¬¬  method.nonObject                          
+ ------ ---------------------------------------------- 
+
+ ------ ---------------------------------------------- 
+  Line   Livewire\Turnos\ProgramacionEquipo.php        
+ ------ ---------------------------------------------- 
+  :175   Cannot call method toDateString() on string.  
+         ­ƒ¬¬  method.nonObject                          
+ ------ ---------------------------------------------- 
+
+ ------ ---------------------------------------------- 
+  Line   Livewire\Turnos\ProgramacionMensual.php       
+ ------ ---------------------------------------------- 
+  :232   Cannot call method toDateString() on string.  
+         ­ƒ¬¬  method.nonObject                          
+  :252   Cannot call method toDateString() on string.  
+         ­ƒ¬¬  method.nonObject                          
+ ------ ---------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Usuarios\UsuarioAdminForm.php                                 
+ ------ ----------------------------------------------------------------------- 
+  :109   Cannot call method toDateString() on string.                           
+         ­ƒ¬¬  method.nonObject                                                   
+  :126   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Livewire\Usuarios\UsuarioForm.php                                      
+ ------ ----------------------------------------------------------------------- 
+  :135   Cannot call method toDateString() on string.                           
+         ­ƒ¬¬  method.nonObject                                                   
+  :170   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :249   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :250   Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+  :338   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$regimen.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :542   Parameter #2 $datos of method                                          
+         App\Actions\Usuario\EditarUsuarioAction::ejecutar() expects            
+         array{name: string, apellido: string, email: string, sede_id:          
+         int|null, unidad_organica_id: int|null}, array{name: mixed, apellido:  
+         mixed, email: mixed} given.                                            
+         ­ƒ¬¬  argument.type                                                      
+         ­ƒÆí  Array does not have offset 'sede_id'.                              
+  :581   Using nullsafe property access "?->activo" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :767   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede.                             
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :767   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :768   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :768   Using nullsafe property access "?->nombre" on left side of ?? is       
+         unnecessary. Use -> instead.                                           
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :805   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ -------------------------------------- 
+  Line   Models\Turno.php                      
+ ------ -------------------------------------- 
+  :121   Cannot call method copy() on string.  
+         ­ƒ¬¬  method.nonObject                  
+  :122   Cannot call method copy() on string.  
+         ­ƒ¬¬  method.nonObject                  
+ ------ -------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Models\UnidadOrganica.php                                              
+ ------ ----------------------------------------------------------------------- 
+  :64    Strict comparison using === between int<0, max> and null will always   
+         evaluate to false.                                                     
+         ­ƒ¬¬  identical.alwaysFalse                                              
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  :83    Method App\Models\UnidadOrganica::jefeInmediato() should return        
+         App\Models\User|null but returns                                       
+         Illuminate\Database\Eloquent\Model|null.                               
+         ­ƒ¬¬  return.type                                                        
+  :94    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$jefe.                             
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :119   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$jefe_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :120   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$padre.                            
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :126   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$jefe_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :155   Method App\Models\UnidadOrganica::arbolEnMemoria() should return       
+         Illuminate\Support\Collection<int, App\Models\UnidadOrganica> but ret  
+         urns Illuminate\Database\Eloquent\Collection<(int|string),             
+         static(App\Models\UnidadOrganica)>.                                    
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Template type TValue on class Illuminate\Support\Collection is not  
+         covariant. Learn more: https://phpstan.org/blog/whats-up-with-templat  
+         e-covariant                                                            
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Models\User.php                                                        
+ ------ ----------------------------------------------------------------------- 
+  :42    PHPDoc type array<int, string> of property App\Models\User::$fillable  
+          is not covariant with PHPDoc type list<string> of overridden propert  
+         y Illuminate\Database\Eloquent\Model::$fillable.                       
+         ­ƒ¬¬  property.phpDocType                                                
+         ­ƒÆí  You can fix 3rd party PHPDoc types with stub files:                
+         ­ƒÆí  https://phpstan.org/user-guide/stub-files                          
+  :65    PHPDoc type array<int, string> of property App\Models\User::$hidden i  
+         s not covariant with PHPDoc type list<string> of overridden property   
+         Illuminate\Database\Eloquent\Model::$hidden.                           
+         ­ƒ¬¬  property.phpDocType                                                
+         ­ƒÆí  You can fix 3rd party PHPDoc types with stub files:                
+         ­ƒÆí  https://phpstan.org/user-guide/stub-files                          
+  :77    PHPDoc type array<int, string> of property App\Models\User::$appends   
+         is not covariant with PHPDoc type list<string> of overridden property  
+          Illuminate\Database\Eloquent\Model::$appends.                         
+         ­ƒ¬¬  property.phpDocType                                                
+         ­ƒÆí  You can fix 3rd party PHPDoc types with stub files:                
+         ­ƒÆí  https://phpstan.org/user-guide/stub-files                          
+  :246   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :246   Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Policies\PapeletaPolicy.php                                            
+ ------ ----------------------------------------------------------------------- 
+  :218   Parameter #2 $papeleta of method                                       
+         App\Policies\PapeletaPolicy::esPropia() expects App\Models\Papeleta,   
+         Illuminate\Database\Eloquent\Model|null given.                         
+         ­ƒ¬¬  argument.type                                                      
+  :234   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$trabajador_id.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :237   Parameter #2 $papeleta of method                                       
+         App\Policies\PapeletaPolicy::esJefeVigenteDe() expects                 
+         App\Models\Papeleta, Illuminate\Database\Eloquent\Model|null given.    
+         ­ƒ¬¬  argument.type                                                      
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\AlertaJefaturaService.php                                     
+ ------ ----------------------------------------------------------------------- 
+  :44    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$activo.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\BloqueoRevisionService.php                                    
+ ------ ----------------------------------------------------------------------- 
+  :53    Cannot call method gt() on string.                                     
+         ­ƒ¬¬  method.nonObject                                                   
+  :87    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$name.                             
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ---------------------------------------------------------------- 
+  Line   Services\DeterminadorFinDeTurno.php                             
+ ------ ---------------------------------------------------------------- 
+  :40    Cannot call method toDateString() on string.                    
+         ­ƒ¬¬  method.nonObject                                            
+  :44    Parameter #1 $fecha of method                                   
+         App\Services\HorarioOrdinarioService::yaTerminoElDia() expects  
+         Illuminate\Support\Carbon, string given.                        
+         ­ƒ¬¬  argument.type                                               
+ ------ ---------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\EquipoDelJefeService.php                                      
+ ------ ----------------------------------------------------------------------- 
+  :51    Parameter #1 $callback of method Illuminate\Support\Collection<int,Il  
+         luminate\Database\Eloquent\Model>::reject() expects bool|(callable(Il  
+         luminate\Database\Eloquent\Model, int):                                
+         bool)|Illuminate\Database\Eloquent\Model, Closure(App\Models\User):    
+         bool given.                                                            
+         ­ƒ¬¬  argument.type                                                      
+  :79    Method App\Services\EquipoDelJefeService::para() should return         
+         array{Illuminate\Support\Collection<int, App\Models\User>, bool, list  
+         <int>} but returns array{Illuminate\Database\Eloquent\Collection<int,  
+          Illuminate\Database\Eloquent\Model>, bool, array<int, int>}.          
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Offset 0 (Illuminate\Support\Collection<int, App\Models\User>) doe  
+         s not accept type Illuminate\Database\Eloquent\Collection<int, Illumi  
+         nate\Database\Eloquent\Model>.                                         
+  :132   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$id.                               
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :133   Call to an undefined method                                            
+         Illuminate\Database\Eloquent\Model::descendantIds().                   
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------- 
+  Line   Services\GeneradorTurnoMensualService.php                        
+ ------ ----------------------------------------------------------------- 
+  :136   Parameter #1 $fechaAncla of static method                        
+         App\Services\GeneradorTurnoMensualService::esDescansoEnFecha()   
+         expects Illuminate\Support\Carbon, string given.                 
+         ­ƒ¬¬  argument.type                                                
+  :266   Parameter #1 $trabajador of method                               
+         App\Services\GeneradorTurnoMensualService::generarMes() expects  
+         App\Models\User, Illuminate\Database\Eloquent\Model given.       
+         ­ƒ¬¬  argument.type                                                
+ ------ ----------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\HistorialTrabajadorService.php                                
+ ------ ----------------------------------------------------------------------- 
+  :78    Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<int,App\Models\Papeleta>::map  
+         () contains unresolvable type.                                         
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :82    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :90    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :92    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :92    Parameter #1 $desde of static method App\Support\Minutos::entre()      
+         expects Carbon\CarbonInterface, string given.                          
+         ­ƒ¬¬  argument.type                                                      
+  :95    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$estado.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\NotificarPapeletaService.php                                  
+ ------ ----------------------------------------------------------------------- 
+  :311   Method App\Services\NotificarPapeletaService::urlTrabajador() never    
+         returns null so it can be removed from the return type.                
+         ­ƒ¬¬  return.unusedType                                                  
+  :316   Method App\Services\NotificarPapeletaService::urlJefe() never returns  
+         null so it can be removed from the return type.                        
+         ­ƒ¬¬  return.unusedType                                                  
+  :321   Method App\Services\NotificarPapeletaService::urlRrhh() never returns  
+         null so it can be removed from the return type.                        
+         ­ƒ¬¬  return.unusedType                                                  
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\Organigrama\ArmadorOrganigrama.php                            
+ ------ ----------------------------------------------------------------------- 
+  :76    Method App\Services\Organigrama\ArmadorOrganigrama::armar() should     
+         return array{raices: Illuminate\Support\Collection<int, array<string,  
+          mixed>>, stats: array<string, int>, conteoSedes: array<string, int>,  
+          unidades: Illuminate\Support\Collection<int, App\Models\UnidadOrgani  
+         ca>, enAlcance: array<int, true>} but returns array{raices: Illuminat  
+         e\Support\Collection<int, array{unidad: App\Models\UnidadOrganica,     
+         jefes: Illuminate\Support\Collection<int, App\Models\User>, jefes_en_  
+         filtro: list<int>, filtro_sede: bool, miembros: Illuminate\Support\Co  
+         llection<int, App\Models\User>, hijos: Illuminate\Support\Collection<  
+         int, array<string, mixed>>, total: int, sin_jefe: bool}>, stats: arra  
+         y, conteoSedes: array<string, int>, unidades: Illuminate\Database\Elo  
+         quent\Collection<int, App\Models\UnidadOrganica>, enAlcance: array<in  
+         t, true>}.                                                             
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Offset 'raices' (Illuminate\Support\Collection<int, array<string,   
+         mixed>>) does not accept type Illuminate\Support\Collection<int, arra  
+         y{unidad: App\Models\UnidadOrganica, jefes:                            
+         Illuminate\Support\Collection<int, App\Models\User>, jefes_en_filtro:  
+          list<int>, filtro_sede: bool, miembros: Illuminate\Support\Collectio  
+         n<int, App\Models\User>, hijos: Illuminate\Support\Collection<int, ar  
+         ray<string, mixed>>, total: int, sin_jefe: bool}>: Template type TVal  
+         ue on class Illuminate\Support\Collection is not covariant. Learn      
+         more: https://phpstan.org/blog/whats-up-with-template-covariant        
+  :92    Call to an undefined method                                            
+         Illuminate\Support\Collection<(int|string), mixed>::loadMissing().     
+         ­ƒ¬¬  method.notFound                                                    
+  :260   Method App\Services\Organigrama\ArmadorOrganigrama::construirNodo()    
+         never returns array{unidad: App\Models\UnidadOrganica, jefes:          
+         Illuminate\Support\Collection<int, App\Models\User>, jefes_en_filtro:  
+          list<int>, filtro_sede: bool, miembros: Illuminate\Support\Collectio  
+         n<int, App\Models\User>, hijos: Illuminate\Support\Collection<int, ar  
+         ray<string, mixed>>, total: int, sin_jefe: bool} so it can be removed  
+          from the return type.                                                 
+         ­ƒ¬¬  return.unusedType                                                  
+  :282   Parameter #1 $key of method Illuminate\Support\Collection<int,Illumin  
+         ate\Database\Eloquent\Model>::contains() expects (callable(Illuminate  
+         \Database\Eloquent\Model, int):                                        
+         bool)|Illuminate\Database\Eloquent\Model|string,                       
+         Closure(App\Models\User): bool given.                                  
+         ­ƒ¬¬  argument.type                                                      
+  :287   Parameter #1 $callback of method Illuminate\Support\Collection<int,Il  
+         luminate\Database\Eloquent\Model>::reject() expects bool|(callable(Il  
+         luminate\Database\Eloquent\Model, int):                                
+         bool)|Illuminate\Database\Eloquent\Model, Closure(App\Models\User):    
+         bool given.                                                            
+         ­ƒ¬¬  argument.type                                                      
+  :290   Parameter #1 $callback of method Illuminate\Support\Collection<int,Il  
+         luminate\Database\Eloquent\Model>::filter() expects (callable(Illumin  
+         ate\Database\Eloquent\Model, int): bool)|null,                         
+         Closure(App\Models\User): bool given.                                  
+         ­ƒ¬¬  argument.type                                                      
+  :296   Parameter #1 $callback of method Illuminate\Support\Collection<int,Il  
+         luminate\Database\Eloquent\Model>::filter() expects (callable(Illumin  
+         ate\Database\Eloquent\Model, int): bool)|null,                         
+         Closure(App\Models\User): bool given.                                  
+         ­ƒ¬¬  argument.type                                                      
+  :299   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$sede_id.                          
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :303   Parameter #1 $callback of method Illuminate\Support\Collection<int,Il  
+         luminate\Database\Eloquent\Model>::filter() expects (callable(Illumin  
+         ate\Database\Eloquent\Model, int): bool)|null,                         
+         Closure(App\Models\User): bool given.                                  
+         ­ƒ¬¬  argument.type                                                      
+  :304   Parameter #1 $callback of method Illuminate\Support\Collection<int,Il  
+         luminate\Database\Eloquent\Model>::filter() expects (callable(Illumin  
+         ate\Database\Eloquent\Model, int): bool)|null,                         
+         Closure(App\Models\User): bool given.                                  
+         ­ƒ¬¬  argument.type                                                      
+  :323   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$activo.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :330   Method App\Services\Organigrama\ArmadorOrganigrama::construirNodo()    
+         should return array{unidad: App\Models\UnidadOrganica, jefes:          
+         Illuminate\Support\Collection<int, App\Models\User>, jefes_en_filtro:  
+          list<int>, filtro_sede: bool, miembros: Illuminate\Support\Collectio  
+         n<int, App\Models\User>, hijos: Illuminate\Support\Collection<int, ar  
+         ray<string, mixed>>, total: int, sin_jefe: bool}|null but returns arr  
+         ay{unidad: App\Models\UnidadOrganica, jefes:                           
+         Illuminate\Support\Collection<int, Illuminate\Database\Eloquent\Model  
+         >, jefes_en_filtro: array<mixed>, filtro_sede: bool, miembros: Illumi  
+         nate\Database\Eloquent\Collection<int, Illuminate\Database\Eloquent\M  
+         odel>, hijos: mixed, total: (float|int), sin_jefe: bool}.              
+         ­ƒ¬¬  return.type                                                        
+         ­ƒÆí  Type #1 from the union: Offset 'jefes'                             
+         (Illuminate\Support\Collection<int, App\Models\User>) does not accept  
+          type Illuminate\Support\Collection<int, Illuminate\Database\Eloquent  
+         \Model>.                                                               
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\ProgramacionTurnoService.php                                  
+ ------ ----------------------------------------------------------------------- 
+  :139   Cannot call method toDateString() on string.                           
+         ­ƒ¬¬  method.nonObject                                                   
+  :161   Call to function is_string() with string will always evaluate to       
+         true.                                                                  
+         ­ƒ¬¬  function.alreadyNarrowedType                                       
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  :192   Call to function is_array() with array<string, string> will always ev  
+         aluate to true.                                                        
+         ­ƒ¬¬  function.alreadyNarrowedType                                       
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  :234   Call to function is_array() with array<string, string> will always ev  
+         aluate to true.                                                        
+         ­ƒ¬¬  function.alreadyNarrowedType                                       
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+  :263   Using nullsafe property access "?->nombre_completo" on left side of    
+         ?? is unnecessary. Use -> instead.                                     
+         ­ƒ¬¬  nullsafe.neverNull                                                 
+  :400   Call to function is_string() with string will always evaluate to       
+         true.                                                                  
+         ­ƒ¬¬  function.alreadyNarrowedType                                       
+         ­ƒÆí  Because the type is coming from a PHPDoc, you can turn off this    
+         check by setting treatPhpDocTypesAsCertain: false in your phpstan.neo  
+         n.                                                                     
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\ReporteHorasAcumuladasService.php                             
+ ------ ----------------------------------------------------------------------- 
+  :92    Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<int,Illuminate\Database\Eloqu  
+         ent\Model>::map() contains unresolvable type.                          
+         ­ƒ¬¬  argument.unresolvableType                                          
+  :92    Parameter #1 $callback of method                                       
+         Illuminate\Database\Eloquent\Collection<int,Illuminate\Database\Eloqu  
+         ent\Model>::map() expects callable(Illuminate\Database\Eloquent\Model  
+         , int): array{papeleta_id: int<0, max>, trabajador_id: int<0, max>,    
+         trabajador: string, dni: string, sede: mixed, unidad_organica:         
+         string|null, dia: mixed, motivo: string, suma_descuento: bool,         
+         salida: string|null, retorno: mixed, minutos_brutos: int,              
+         minutos_refrigerio: int<0, max>, minutos: int<0, max>},                
+         Closure(App\Models\Papeleta): array{papeleta_id: int<0, max>,          
+         trabajador_id: int<0, max>, trabajador: string, dni: string, sede:     
+         mixed, unidad_organica: string|null, dia: mixed, motivo: string,       
+         suma_descuento: bool, salida: string|null, retorno: mixed,             
+         minutos_brutos: int, minutos_refrigerio: int<0, max>, minutos: int<0,  
+         max>} given.                                                           
+         ­ƒ¬¬  argument.type                                                      
+  :97    Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$nombre.                           
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :99    Cannot call method format() on string.                                 
+         ­ƒ¬¬  method.nonObject                                                   
+  :103   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :104   Access to an undefined property                                        
+         Illuminate\Database\Eloquent\Model::$hora_servidor.                    
+         ­ƒ¬¬  property.notFound                                                  
+         ­ƒÆí  Learn more: https://phpstan.org/blog/solving-phpstan-access-to-und  
+         efined-property                                                        
+  :105   Parameter #1 $desde of static method App\Support\Minutos::entre()      
+         expects Carbon\CarbonInterface, string given.                          
+         ­ƒ¬¬  argument.type                                                      
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ----------------------------------------------------------------------- 
+  Line   Services\ReporteSustentosService.php                                   
+ ------ ----------------------------------------------------------------------- 
+  :27    Call to an undefined method Illuminate\Database\Eloquent\Builder<Illu  
+         minate\Database\Eloquent\Model>::deEquipoDe().                         
+         ­ƒ¬¬  method.notFound                                                    
+ ------ ----------------------------------------------------------------------- 
+
+ ------ ------------------------------------------------------------------ 
+  Line   Services\ResumenPapeletasService.php                              
+ ------ ------------------------------------------------------------------ 
+  :79    Using nullsafe property access "?->nombre" on left side of ?? is  
+         unnecessary. Use -> instead.                                      
+         ­ƒ¬¬  nullsafe.neverNull                                            
+  :103   Undefined variable: $grupo                                        
+         ­ƒ¬¬  variable.undefined                                            
+  :104   Undefined variable: $estados                                      
+         ­ƒ¬¬  variable.undefined                                            
+ ------ ------------------------------------------------------------------ 
+
+ [ERROR] Found 204 errors                                                      
+

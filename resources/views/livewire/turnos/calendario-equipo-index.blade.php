@@ -128,11 +128,11 @@
                 <div class="glass-card p-4 space-y-3">
                     <div class="flex items-center gap-2">
                         <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full {{ \App\Support\TurnoColores::para('DIA') }} text-xs font-bold">{{ $equipo276->count() }}</span>
-                        <span class="text-sm font-semibold">— días de descanso</span>
+                        <span class="text-sm font-semibold">PROGRAMA A TUS TRABAJADORES QUE TRABAJAN SOLO DE DIA </span>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-3">
-                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Descansa:</span>
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Que dia Descansa:</span>
                         @foreach ([1 => 'L', 2 => 'M', 3 => 'M', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D'] as $iso => $letra)
                             <label class="inline-flex items-center gap-1 text-sm">
                                 <input type="checkbox" wire:model="diasSemanaDescanso276" value="{{ $iso }}" class="rounded border-gray-300">
@@ -156,7 +156,7 @@
                 <div class="glass-card p-4 space-y-3">
                     <div class="flex items-center gap-2">
                         <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-tinta-100 dark:bg-tinta-900 text-tinta-800 dark:text-tinta-200 text-xs font-bold">{{ count($uids728) }}</span>
-                        <span class="text-sm font-semibold">— turno a pintar</span>
+                        <span class="text-sm font-semibold">PROGRAMA A TUS TRABAJADORES QUE TRABAJAN EN TURNOS ROTATIVOS _pintar_</span>
                     </div>
                     <div class="flex flex-wrap items-center gap-2">
                         @foreach ([

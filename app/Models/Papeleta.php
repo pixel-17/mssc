@@ -18,18 +18,13 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\ModelStates\HasStates;
 
 /**
- * Núcleo del flujo. Sede/régimen/día operativo son la "fotografía
- * inmutable" tomada al crear (Paso 1) — no se actualizan si el
- * trabajador cambia de sede o de régimen después.
- *
- * La máquina de estados (transiciones válidas, ver PapeletaState::config())
- * vive conectada aquí vía HasStates; el vencimiento por fin de turno/día,
- * etc. viven en Actions/Console\Commands, no en el modelo.
- *
- * Decidir sobre una papeleta como jefe es SIEMPRE responsabilidad del
- * Jefe Inmediato (jefe_inmediato_id): no escala a nadie más por
- * inacción, ni siquiera al Jefe de Área. jefe_area_id se mantiene solo
- * para reportes/dashboards (scopeDeEquipoDe).
+ * @property PapeletaState $estado
+ * @property \Carbon\CarbonInterface|null $created_at
+ * @property \Carbon\CarbonInterface|null $jefe_resuelto_at
+ * @property \Carbon\CarbonInterface|null $rrhh_resuelto_at
+ * @property-read Motivo|null $motivo
+ * @property-read User|null $trabajador
+ * @property-read User|null $resueltoPorJefe
  */
 class Papeleta extends Model
 {

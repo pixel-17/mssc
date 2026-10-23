@@ -18,6 +18,9 @@ use Laravel\Sanctum\HasApiTokens;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ * @property-read string $nombre_completo
+ */
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -34,7 +37,7 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     *  @var list<string> 
      */
     protected $fillable = [
         'name',
@@ -57,7 +60,7 @@ class User extends Authenticatable
     /**
      * The attributes that should be hidden for serialization.
      *
-     * @var array<int, string>
+     *  @var list<string> 
      */
     protected $hidden = [
         'password',
@@ -69,7 +72,7 @@ class User extends Authenticatable
     /**
      * The accessors to append to the model's array form.
      *
-     * @var array<int, string>
+     *  @var list<string> 
      */
     protected $appends = [
         'profile_photo_url',
@@ -96,8 +99,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Unidad orgánica (oficina/sub oficina/gerencia) a la que pertenece
-     * este usuario dentro del organigrama.
+     * @return BelongsTo<UnidadOrganica, $this>
      */
     public function unidadOrganica(): BelongsTo
     {

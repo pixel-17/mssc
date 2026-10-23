@@ -8,15 +8,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 /**
- * Nodo del organigrama (Gerencia, Sub Gerencia, Oficina General, Oficina,
- * oficina de apoyo/asesoramiento/control, etc). Árbol auto-referenciado
- * sin límite de niveles ni de cantidad de nodos: cualquier unidad puede
- * tener sub-oficinas creadas en cualquier momento.
- *
- * `tipo` es solo para pintar el organigrama con los colores de la leyenda
- * original — la lógica de escalamiento de papeletas NUNCA depende de él,
- * solo de la posición relativa en el árbol (ver jefeInmediatoDe() /
- * jefeAreaDe() más abajo).
+ * @property int $id
+ * @property string $nombre
+ * @property string|null $tipo
+ * @property int|null $parent_id
+ * @property int|null $jefe_id
+ * @property bool $activo
+ * @property-read UnidadOrganica|null $padre
+ * @property-read User|null $jefe
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $miembros
  */
 class UnidadOrganica extends Model
 {

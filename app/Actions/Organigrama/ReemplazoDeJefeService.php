@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Actions\Organigrama;
-
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Exceptions\UsuarioException;
 use App\Models\UnidadOrganica;
 use App\Models\User;
@@ -25,10 +25,14 @@ use Illuminate\Support\Collection;
 class ReemplazoDeJefeService
 {
     /** Trabajadores activos de la unidad, sin contar a $jefe. */
-    public function miembrosActivos(UnidadOrganica $unidad, User $jefe)
-    {
-        return $unidad->miembros()->where('activo', true)->whereKeyNot($jefe->id);
-    }
+    public function miembrosActivos(
+    UnidadOrganica $unidad,
+    User $jefe
+): HasMany {
+    return $unidad->miembros()
+        ->where('activo', true)
+        ->whereKeyNot($jefe->id);
+}
 
     /**
      * ¿Hay a quién ofrecer como reemplazo? Sí solo si, de los que quedan
@@ -152,13 +156,31 @@ class ReemplazoDeJefeService
      *
      * @return Collection<int, User>
      */
-    public function jefesDelDestino(UnidadOrganica $destino, User $excepto): Collection
-    {
-        return collect([$destino->jefe_id ? User::find($destino->jefe_id) : null])
-            ->filter()
-            ->reject(fn (User $u) => (int) $u->id === (int) $excepto->id)
-            ->values();
+   /**
+ * Jefe actual del destino, distinto de $excepto.
+ *
+ * @return Collection<int, User>
+ */
+public function jefesDelDestino(
+    UnidadOrganica $destino,
+    User $excepto
+): Collection {
+    if ($destino->jefe_id === null) {
+        return collect();
     }
+
+    $jefe = User::find($destino->jefe_id);
+
+    if ($jefe === null) {
+        return collect();
+    }
+
+    if ((int) $jefe->id === (int) $excepto->id) {
+        return collect();
+    }
+
+    return collect([$jefe]);
+}
 
     /** ¿El destino ya tiene jefe? Entonces $jefe lo releva. */
     public function requiereReemplazarDestino(UnidadOrganica $destino, User $jefe): bool
