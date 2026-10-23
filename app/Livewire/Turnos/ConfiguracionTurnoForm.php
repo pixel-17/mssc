@@ -5,6 +5,7 @@ namespace App\Livewire\Turnos;
 use App\Models\ConfiguracionTurno;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
+use App\Support\PatronDescansoSemanal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
@@ -94,54 +95,20 @@ class ConfiguracionTurnoForm extends Component
      */
     public function aplicarDiasSemana(): void
     {
-        $dias = array_values(array_unique(array_map('intval', $this->diasSemanaDescanso)));
-
-        if ($dias === [] || count($dias) >= 7) {
-            throw ValidationException::withMessages([
-                'diasSemanaDescanso' => 'Elige entre 1 y 6 días de descanso.',
-            ]);
-        }
-
-        if (! self::formanArcoSemanalContiguo($dias)) {
-            throw ValidationException::withMessages([
-                'diasSemanaDescanso' => 'Los días de descanso deben ser consecutivos dentro de la semana (ej. sábado y domingo, o lunes y martes). Para descansos salteados, carga días de trabajo/descanso por número más abajo.',
-            ]);
-        }
-
-        sort($dias);
-
-        // Primer día de trabajo: el que no está en $dias y cuyo día
-        // anterior (circular, domingo->lunes) sí está.
-        $primerDiaTrabajo = collect(range(1, 7))
-            ->first(fn (int $d) => ! in_array($d, $dias, true) && in_array($d === 1 ? 7 : $d - 1, $dias, true));
-
         $referencia = $this->fechaAncla !== '' ? Carbon::parse($this->fechaAncla) : now();
-        $ancla = $referencia->copy()->startOfWeek(Carbon::MONDAY);
-        while ($ancla->dayOfWeekIso !== $primerDiaTrabajo) {
-            $ancla->addDay();
+        $resultado = PatronDescansoSemanal::anclaYCiclo($this->diasSemanaDescanso, $referencia);
+
+        if ($resultado === null) {
+            throw ValidationException::withMessages([
+                'diasSemanaDescanso' => count($this->diasSemanaDescanso) >= 7 || $this->diasSemanaDescanso === []
+                    ? 'Elige entre 1 y 6 días de descanso.'
+                    : 'Los días de descanso deben ser consecutivos dentro de la semana (ej. sábado y domingo, o lunes y martes). Para descansos salteados, carga días de trabajo/descanso por número más abajo.',
+            ]);
         }
 
-        $this->diasDescanso = count($dias);
-        $this->diasTrabajo = 7 - count($dias);
-        $this->fechaAncla = $ancla->toDateString();
-    }
-
-    /** @param  array<int, int>  $dias  1..7, sin repetir */
-    private static function formanArcoSemanalContiguo(array $dias): bool
-    {
-        for ($inicio = 1; $inicio <= 7; $inicio++) {
-            $arco = collect(range(0, count($dias) - 1))
-                ->map(fn (int $k) => (($inicio - 1 + $k) % 7) + 1)
-                ->sort()
-                ->values()
-                ->all();
-
-            if ($arco === $dias) {
-                return true;
-            }
-        }
-
-        return false;
+        $this->diasTrabajo = $resultado['dias_trabajo'];
+        $this->diasDescanso = $resultado['dias_descanso'];
+        $this->fechaAncla = $resultado['fecha_ancla']->toDateString();
     }
 
     public function guardar(GeneradorTurnoMensualService $generador): void

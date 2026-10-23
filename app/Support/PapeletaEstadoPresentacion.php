@@ -43,7 +43,7 @@ class PapeletaEstadoPresentacion
     /**
      * Presentación de una papeleta con causa de abandono. El estado dice si
      * hay descuento y cómo terminó la justificación:
-     *  - Cerrada       -> abandono justificado (sin descuento)
+     *  - Finalizada    -> abandono justificado (sin descuento)
      *  - Finalizada    -> abandono sin justificar (con descuento)
      *  - EnJustificacion -> todavía puede presentar su justificación
      * Para cualquier otro estado devuelve null (se usa la etiqueta normal).
@@ -55,8 +55,8 @@ class PapeletaEstadoPresentacion
         $clave = $estado instanceof State ? get_class($estado) : (string) $estado;
 
         $etiqueta = match ($clave) {
-            Cerrada::class => 'Finalizada · abandono justificado (sin descuento)',
-            Finalizada::class => 'Finalizada · abandono sin justificar (con descuento)',
+            Cerrada::class    => 'Finalizado · abandono',
+            Finalizada::class => 'Finalizado · abandono',
             EnJustificacion::class => 'En justificación · abandono',
             default => null,
         };

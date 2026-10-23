@@ -30,10 +30,8 @@
             </x-fila-ajuste>
 
             <x-fila-ajuste x-data="msscGpsToggle()"
-                           :titulo="__('Acceso a ubicación (GPS)')"
-                           :descripcion="__('Permitir que la app use mi ubicación cuando la necesite')">
-                <x-interruptor :etiqueta="__('Acceso a ubicación (GPS)')" wire:model="permiteGps" id="permite_gps" />
-
+                        :titulo="__('Acceso a ubicación (GPS)')"
+                        :descripcion="__('Permitir que la app use mi ubicación cuando la necesite')">
                 <x-slot name="detalle">
                     <p class="text-xs text-tinta-600 dark:text-zinc-400" x-text="estado"></p>
                     <button type="button" x-on:click="pedirPermiso()" x-show="estado !== 'Permiso concedido'"
@@ -44,10 +42,8 @@
             </x-fila-ajuste>
 
             <x-fila-ajuste x-data="msscCamaraToggle()"
-                           :titulo="__('Acceso a la cámara')"
-                           :descripcion="__('Permitir que la app use mi cámara cuando la necesite')">
-                <x-interruptor :etiqueta="__('Acceso a la cámara')" wire:model="permiteCamara" id="permite_camara" />
-
+                        :titulo="__('Acceso a la cámara')"
+                        :descripcion="__('Permitir que la app use mi cámara cuando la necesite')">
                 <x-slot name="detalle">
                     <p class="text-xs text-tinta-600 dark:text-zinc-400" x-text="estado"></p>
                     <button type="button" x-on:click="pedirPermiso()" x-show="estado !== 'Permiso concedido'"

@@ -1,15 +1,5 @@
 <div>
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <div class="flex items-center justify-between flex-wrap gap-3">
-            <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
-                @if ($vistaAdmin)
-                    Calendario de turnos — equipo de {{ $jefe->nombre_completo }}
-                @else
-                    Calendario de turnos — mi equipo
-                @endif
-            </h2>
-        </div>
-
         <p class="text-sm text-gray-500">
             @if ($vistaAdmin)
                 Lo que ve {{ $jefe->nombre_completo }} como {{ $esJefeDeArea ? 'jefe de área' : 'jefe inmediato' }}. Lo que guardes aquí queda registrado a tu nombre.
@@ -18,8 +8,8 @@
             @else
                 Solo los trabajadores de los que eres jefe inmediato.
             @endif
-            Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) se configuran con
-            el botón "Configurar ciclo" de su fila.
+            Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) se descansan por
+            día de semana con el panel "Días de descanso" de abajo.
         </p>
 
         {{-- Leyenda: mismo color que las celdas, coherente con "Mi calendario" del Trabajador (Turno::claseColor()). --}}
@@ -113,24 +103,62 @@
             }"
             class="space-y-6"
         >
-            {{-- Navegación de mes --}}
+            {{-- Título + navegación de mes, en la misma fila (como en Programar equipo). --}}
             <div class="flex items-center justify-between flex-wrap gap-3">
+                <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
+                    @if ($vistaAdmin)
+                        Calendario de turnos — equipo de {{ $jefe->nombre_completo }}
+                    @else
+                        Calendario de turnos — mi equipo
+                    @endif
+                </h2>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="navegar('mesAnterior')" class="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" aria-label="Mes anterior">&larr; Anterior</button>
-                    <button type="button" @click="navegar('irAHoy')" class="px-3 py-1.5 rounded-md border text-sm font-semibold text-tinta-700 dark:text-tinta-300 hover:bg-tinta-50 dark:hover:bg-tinta-500/10 transition-colors">Hoy</button>
                     <span class="text-sm font-semibold w-32 text-center capitalize">{{ $inicioMes->translatedFormat('F Y') }}</span>
                     <button type="button" @click="navegar('mesSiguiente')" class="px-3 py-1.5 rounded-md border text-sm hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors" aria-label="Mes siguiente">Siguiente &rarr;</button>
+                    <button type="button" @click="navegar('irAHoy')" class="px-3 py-1.5 rounded-md border text-sm font-semibold text-tinta-700 dark:text-tinta-300 hover:bg-tinta-50 dark:hover:bg-tinta-500/10 transition-colors">Hoy</button>
                 </div>
-                <span x-show="hayCambios" x-cloak class="text-xs font-medium text-amber-700 dark:text-amber-300">
-                    Cambios sin guardar en <span x-text="Object.keys(cambios).length"></span> trabajador(es) 728
-                </span>
             </div>
+            <span x-show="hayCambios" x-cloak class="block text-xs font-medium text-amber-700 dark:text-amber-300">
+                Cambios sin guardar en <span x-text="Object.keys(cambios).length"></span> trabajador(es) 728
+            </span>
+
+            @if ($equipo276->isNotEmpty())
+                {{-- Días de descanso: régimen 276 (ciclo semanal, ver aplicarDescansoSemana276). --}}
+                <div class="glass-card p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full {{ \App\Support\TurnoColores::para('DIA') }} text-xs font-bold">{{ $equipo276->count() }}</span>
+                        <span class="text-sm font-semibold">— días de descanso</span>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Descansa:</span>
+                        @foreach ([1 => 'L', 2 => 'M', 3 => 'M', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D'] as $iso => $letra)
+                            <label class="inline-flex items-center gap-1 text-sm">
+                                <input type="checkbox" wire:model="diasSemanaDescanso276" value="{{ $iso }}" class="rounded border-gray-300">
+                                {{ $letra }}
+                            </label>
+                        @endforeach
+                        <button type="button" wire:click="aplicarDescansoSemana276" wire:loading.attr="disabled" class="px-3 py-2 rounded-md bg-tinta-700 text-white text-sm font-semibold hover:bg-tinta-800 disabled:opacity-50">
+                            Aplicar a todos los {{ $equipo276->count() }}
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500">
+                        Marca los días de la semana en que descansa el régimen 276 (ej. sábado y domingo) y aplícalo a todo tu equipo 276 de una vez.
+                        Deben ser días consecutivos dentro de la semana; para descansos salteados de un solo trabajador, usa su configuración de turno individual.
+                    </p>
+                    @error('diasSemanaDescanso276') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                </div>
+            @endif
 
             @if (count($uids728) > 0)
                 {{-- Pincel y patrón: solo aplica a las filas 728 de la grilla de abajo. --}}
                 <div class="glass-card p-4 space-y-3">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full bg-tinta-100 dark:bg-tinta-900 text-tinta-800 dark:text-tinta-200 text-xs font-bold">{{ count($uids728) }}</span>
+                        <span class="text-sm font-semibold">— turno a pintar</span>
+                    </div>
                     <div class="flex flex-wrap items-center gap-2">
-                        <span class="text-sm font-medium mr-1">Turno a pintar (728):</span>
                         @foreach ([
                             'MANANA' => ['M', 'Mañana'],
                             'TARDE' => ['T', 'Tarde'],
@@ -219,19 +247,16 @@
                                     <span class="text-xs text-gray-500">({{ $trabajador->regimen }})</span>
                                     @if ($trabajador->regimen === '276' && ! in_array($trabajador->id, $soloLectura, true))
                                         @php($cfg276 = $configs276->get($trabajador->id))
-                                        <div class="mt-0.5 flex items-center gap-1.5 text-[11px] {{ $cfg276 ? 'text-gray-600 dark:text-gray-300' : 'text-amber-700 dark:text-amber-300' }}">
+                                        <div class="mt-0.5 text-[11px] {{ $cfg276 ? 'text-gray-500 dark:text-gray-400' : 'text-amber-700 dark:text-amber-300' }}">
                                             @if ($cfg276)
-                                                <span>{{ $cfg276->dias_trabajo }}×{{ $cfg276->dias_descanso }} · desde {{ $cfg276->fecha_ancla->format('d/m') }}</span>
+                                                <span>descansa {{ $cfg276->dias_descanso }} día(s) por semana</span>
                                                 @if ($proximoDescanso276 = ($proximosDescansos276[$trabajador->id] ?? null))
                                                     <span class="text-gray-300 dark:text-gray-600">·</span>
                                                     <span>próx. descanso {{ ucfirst(mb_substr($proximoDescanso276->translatedFormat('D'), 0, 3)) }} {{ $proximoDescanso276->day }}</span>
                                                 @endif
                                             @else
-                                                <span>Sin ciclo</span>
+                                                <span>Sin días de descanso aplicados todavía</span>
                                             @endif
-                                            <button type="button" wire:click="abrirCiclo({{ $trabajador->id }})" title="{{ $cfg276 ? 'Editar ciclo' : 'Configurar ciclo' }}" aria-label="{{ $cfg276 ? 'Editar ciclo' : 'Configurar ciclo' }} de {{ $trabajador->nombre_completo }}" class="inline-flex items-center justify-center w-6 h-6 rounded-md border border-tinta-600/40 text-tinta-700 dark:text-tinta-300 hover:bg-tinta-50 dark:hover:bg-tinta-500/10 transition-colors">
-                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-3.5 h-3.5" aria-hidden="true"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/></svg>
-                                            </button>
                                         </div>
                                     @endif
                                     @if (in_array($trabajador->id, $idsJefes, true))
@@ -312,43 +337,6 @@
                 </table>
             </div>
 
-            {{-- Modal: ciclo de trabajo para trabajadores 276 --}}
-            @if ($cicloUserId !== null)
-                <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" wire:key="ciclo-modal-{{ $cicloUserId }}">
-                    <div class="glass-card w-full max-w-md p-6 space-y-4" role="dialog" aria-modal="true" aria-labelledby="ciclo-modal-titulo">
-                        <h3 id="ciclo-modal-titulo" class="font-semibold text-lg text-tinta-950 dark:text-tinta-100">Ciclo de trabajo — {{ $cicloNombre }}</h3>
-                        <p class="text-xs text-gray-500">
-                            Régimen 276: horario ordinario Día. Aquí defines el ciclo de trabajo y descanso. Al guardar se regenera el mes de la fecha de inicio.
-                        </p>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div class="sm:col-span-3">
-                                <label for="ciclo-fecha" class="block text-xs font-medium mb-1">Fecha de inicio del próximo bloque</label>
-                                <input id="ciclo-fecha" type="date" wire:model="cicloFechaAncla" class="w-full rounded-md border-gray-300 dark:bg-gray-800 text-sm">
-                                @error('cicloFechaAncla') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label for="ciclo-trabajo" class="block text-xs font-medium mb-1">Días de trabajo</label>
-                                <input id="ciclo-trabajo" type="number" min="1" max="30" wire:model="cicloDiasTrabajo" class="w-full rounded-md border-gray-300 dark:bg-gray-800 text-sm">
-                                @error('cicloDiasTrabajo') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-                            <div>
-                                <label for="ciclo-descanso" class="block text-xs font-medium mb-1">Días de descanso</label>
-                                <input id="ciclo-descanso" type="number" min="1" max="30" wire:model="cicloDiasDescanso" class="w-full rounded-md border-gray-300 dark:bg-gray-800 text-sm">
-                                @error('cicloDiasDescanso') <p class="text-xs text-red-600 mt-1">{{ $message }}</p> @enderror
-                            </div>
-                        </div>
-
-                        <div class="flex items-center justify-end gap-3 pt-2">
-                            <button type="button" wire:click="cerrarCiclo" class="text-sm text-gray-600 dark:text-gray-300">Cancelar</button>
-                            <button type="button" wire:click="guardarCiclo" wire:loading.attr="disabled" class="inline-flex items-center px-4 py-2 bg-tinta-700 text-white rounded-md text-sm font-semibold hover:bg-tinta-800">
-                                Guardar ciclo
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            @endif
-
             @error('dias') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             {{-- Advertencias no bloqueantes: hay que confirmar para guardar --}}
@@ -369,6 +357,9 @@
 
             @if (count($uids728) > 0)
                 <div class="flex items-center justify-end gap-3">
+                    <button type="button" @click="limpiar()" class="px-3 py-2 rounded-md border text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800">
+                        Limpiar mes (728)
+                    </button>
                     <button
                         type="button"
                         @click="$wire.guardar(cambios)"

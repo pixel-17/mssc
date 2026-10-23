@@ -8,10 +8,10 @@ use App\Models\User;
 use App\Services\EquipoDelJefeService;
 use App\Services\GeneradorTurnoMensualService;
 use App\Services\ProgramacionTurnoService;
+use App\Support\PatronDescansoSemanal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -26,10 +26,17 @@ use Livewire\Component;
  * en "Programar equipo" (ver ProgramacionEquipo/ProgramacionTurnoService),
  * para no mantener dos motores de programación distintos.
  *
- * Régimen 276 (horario ordinario, ciclo fijo): la celda sigue siendo
- * de solo lectura — no tiene sentido "pintar" M/T/N/D día por día en
- * un ciclo de trabajo/descanso fijo — y el jefe sigue yendo a
- * turnos.configuracion para cargarlo o cambiarlo.
+ * Régimen 276 (horario ordinario): la celda sigue siendo de solo
+ * lectura en la grilla, pero ya no se edita una fila a la vez en un
+ * modal con un ciclo en días — el panel "Días de descanso" de arriba
+ * marca los días de la semana (ej. sábado y domingo) y
+ * aplicarDescansoSemana276() lo aplica de una vez a todo el régimen
+ * 276 del equipo. Por debajo sigue siendo el mismo ciclo anclado que
+ * ya entendía GeneradorTurnoMensualService (ver PatronDescansoSemanal):
+ * no hay un motor de generación nuevo, solo una forma más rápida de
+ * cargarlo para varios trabajadores a la vez. Un ciclo con descansos
+ * salteados (no un arco contiguo de la semana) sigue cargándose desde
+ * turnos.configuracion, trabajador por trabajador.
  *
  * Trabajador NO usa esta pantalla — ve la vista individual
  * (CalendarioIndividualIndex). El Admin tampoco la abre por su cuenta
@@ -65,19 +72,14 @@ class CalendarioEquipoIndex extends Component
     #[Locked]
     public ?string $mensaje = null;
 
-    /*
-     * Modal «Ciclo» para trabajadores de 276 (ver abrirCiclo / guardarCiclo).
-     * cicloUserId null = modal cerrado.
+    /**
+     * Días de la semana marcados en el panel "Días de descanso" (1=lunes
+     * .. 7=domingo), para aplicarDescansoSemana276(). Por defecto
+     * sábado y domingo, el caso más común.
+     *
+     * @var array<int, int>
      */
-    public ?int $cicloUserId = null;
-
-    public string $cicloNombre = '';
-
-    public string $cicloFechaAncla = '';
-
-    public int $cicloDiasTrabajo = 6;
-
-    public int $cicloDiasDescanso = 1;
+    public array $diasSemanaDescanso276 = [6, 7];
 
     public function mount(?int $jefeId = null): void
     {
@@ -214,29 +216,6 @@ class CalendarioEquipoIndex extends Component
             ->keyBy('id');
     }
 
-    /** Abre el modal de ciclo de un trabajador 276 del equipo. */
-    public function abrirCiclo(int $userId): void
-    {
-        $trabajador = $this->equipo276()->get($userId);
-        abort_unless($trabajador !== null, 403);
-        abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
-
-        $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
-
-        $this->cicloUserId = $trabajador->id;
-        $this->cicloNombre = $trabajador->nombre_completo;
-        $this->cicloFechaAncla = $config?->fecha_ancla->toDateString() ?? now()->toDateString();
-        $this->cicloDiasTrabajo = $config?->dias_trabajo ?? 6;
-        $this->cicloDiasDescanso = $config?->dias_descanso ?? 1;
-        $this->resetErrorBag();
-    }
-
-    public function cerrarCiclo(): void
-    {
-        $this->cicloUserId = null;
-        $this->resetErrorBag();
-    }
-
     /**
      * Próximo día de descanso (hoy incluido) de cada trabajador 276 con
      * ciclo cargado, para mostrarlo en texto junto a su fila sin obligar
@@ -269,40 +248,52 @@ class CalendarioEquipoIndex extends Component
     }
 
     /**
-     * Guarda el ciclo del 276. Usa el mismo servicio que la pantalla
-     * «Crear/editar horario», así que la regla y el mes generado son los mismos.
+     * Botón "Aplicar a todos los 276" del panel "Días de descanso":
+     * traduce los días de semana marcados a un ciclo (ver
+     * PatronDescansoSemanal) y lo carga para TODO el régimen 276 del
+     * equipo de una vez, con cargarConfiguracion (mismo servicio que
+     * usa ConfiguracionTurnoForm, un trabajador a la vez). Si algún
+     * trabajador no tiene ciclo cargado, esto se lo crea; si ya tenía
+     * uno, lo reemplaza.
      */
-    public function guardarCiclo(GeneradorTurnoMensualService $generador): void
+    public function aplicarDescansoSemana276(GeneradorTurnoMensualService $generador): void
     {
-        abort_unless($this->cicloUserId !== null, 422);
+        $this->resetErrorBag('diasSemanaDescanso276');
 
-        $trabajador = $this->equipo276()->get($this->cicloUserId);
-        abort_unless($trabajador !== null, 403);
-        abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
+        $equipo276 = $this->equipo276();
 
-        $datos = $this->validate([
-            'cicloFechaAncla' => ['required', 'date'],
-            'cicloDiasTrabajo' => ['required', 'integer', 'min:1', 'max:30'],
-            'cicloDiasDescanso' => ['required', 'integer', 'min:1', 'max:30'],
-        ]);
+        if ($equipo276->isEmpty()) {
+            return;
+        }
 
-        try {
-            $generador->cargarConfiguracion(
-                trabajador: $trabajador,
-                turno: ConfiguracionTurno::TURNO_276,
-                fechaAncla: Carbon::parse($datos['cicloFechaAncla']),
-                actor: auth()->user(),
-                diasTrabajo: $datos['cicloDiasTrabajo'],
-                diasDescanso: $datos['cicloDiasDescanso'],
+        $resultado = PatronDescansoSemanal::anclaYCiclo($this->diasSemanaDescanso276, now());
+
+        if ($resultado === null) {
+            $this->addError(
+                'diasSemanaDescanso276',
+                'Elige entre 1 y 6 días de descanso consecutivos dentro de la semana (ej. sábado y domingo).'
             );
-        } catch (ValidationException $e) {
-            $this->addError('cicloFechaAncla', $e->validator->errors()->first());
 
             return;
         }
 
-        $this->mensaje = 'Ciclo guardado para '.$trabajador->nombre_completo.'.';
-        $this->cicloUserId = null;
+        foreach ($equipo276 as $trabajador) {
+            if (! auth()->user()->puedeGestionarTurnoDe($trabajador)) {
+                continue;
+            }
+
+            $generador->cargarConfiguracion(
+                trabajador: $trabajador,
+                turno: ConfiguracionTurno::TURNO_276,
+                fechaAncla: $resultado['fecha_ancla'],
+                actor: auth()->user(),
+                diasTrabajo: $resultado['dias_trabajo'],
+                diasDescanso: $resultado['dias_descanso'],
+            );
+        }
+
+        $this->mensaje = 'Días de descanso aplicados a '.$equipo276->count().' '
+            .($equipo276->count() === 1 ? 'trabajador de régimen 276.' : 'trabajadores de régimen 276.');
         $this->version++;
     }
 

@@ -1,17 +1,23 @@
 <div>
-    <div class="max-w-7xl mx-auto pt-10 sm:px-6 lg:px-8 space-y-6">
-        <x-admin.encabezado titulo="Programar horarios" />
+    <div class="max-w-7xl mx-auto pt-10 sm:px-6 lg:px-8 space-y-4">
+        {{-- Título + descripción en bloque compacto --}}
+        <div class="space-y-1">
+            <x-admin.encabezado titulo="Programar horarios" />
+            <p class="text-sm text-gray-500">
+                Busca a la persona. Si es trabajador, programas su horario; si es jefe, se abre la grilla de su equipo
+                y lo programas como lo haría él. Lo que guardes queda registrado a tu nombre.
+            </p>
+        </div>
 
         <x-admin.mensajes />
 
-        <p class="text-sm text-gray-500">
-            Busca a la persona. Si es trabajador, programas su horario; si es jefe, se abre la grilla de su equipo
-            y lo programas como lo haría él. Lo que guardes queda registrado a tu nombre.
-        </p>
-
-        <x-admin.filtro-campo label="Buscar usuario" for="programacion-admin-buscar">
-            <x-input id="programacion-admin-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Nombre, apellido, DNI o correo" autocomplete="off" />
-        </x-admin.filtro-campo>
+        {{-- Buscar usuario pegado al título --}}
+        <div class="flex items-end gap-3">
+            <div class="flex-1 max-w-sm">
+                <label for="programacion-admin-buscar" class="block text-sm font-medium mb-1">Buscar usuario</label>
+                <x-input id="programacion-admin-buscar" type="text" wire:model.live.debounce.400ms="buscar" placeholder="Nombre, apellido, DNI o correo" autocomplete="off" class="w-full" />
+            </div>
+        </div>
 
         @if (mb_strlen(trim($buscar)) >= 2)
             <x-admin.tabla :columnas="['Nombre', 'DNI', 'Tipo', 'Régimen', 'Unidad', '']">
@@ -79,6 +85,8 @@
     </div>
 
     @if ($jefe)
-        <livewire:turnos.calendario-equipo-index :jefe-id="$jefe->id" :key="'equipo-admin-'.$jefe->id" />
+        <div id="programacion-admin-calendario" x-init="$nextTick(() => $el.scrollIntoView({ behavior: 'smooth', block: 'start' }))">
+            <livewire:turnos.calendario-equipo-index :jefe-id="$jefe->id" :key="'equipo-admin-'.$jefe->id" />
+        </div>
     @endif
 </div>

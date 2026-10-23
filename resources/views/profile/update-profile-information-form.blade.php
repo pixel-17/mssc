@@ -8,6 +8,7 @@
                 <input type="file" id="photo" class="hidden"
                        wire:model.live="photo"
                        x-ref="photo"
+                       accept="image/*"
                        x-on:change="
                            photoName = $refs.photo.files[0].name;
                            const reader = new FileReader();
