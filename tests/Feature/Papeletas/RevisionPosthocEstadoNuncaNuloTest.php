@@ -43,27 +43,21 @@ class RevisionPosthocEstadoNuncaNuloTest extends TestCase
     }
 
     /**
-     * Un jefe de unidad que envía SU PROPIA papeleta. Desde que la jefatura
-     * superior es obligatoria (sin ella la papeleta ni se crea), el jefe
-     * necesita una unidad padre cuyo jefe exista pero NO pueda decidir hoy
-     * (día de descanso 728): así la papeleta escala a RRHH o, fuera de su
-     * horario, el sistema la autoriza con revisión post-hoc.
+     * Un Jefe de Área (encabeza una unidad con sub-unidades, ver
+     * User::esJefeDeArea): su papeleta NO sube a nadie, va SIEMPRE directo
+     * a RRHH sin importar quién esté o no disponible arriba en el
+     * organigrama (ver CrearPapeletaAction::determinarEstadoInicial).
      */
     private function topeDePrueba(): User
     {
-        $superior = $this->usuarioDePrueba();
-        $unidadSuperior = UnidadOrganica::create(['nombre' => 'Concejo', 'jefe_id' => $superior->id]);
-        $superior->update(['unidad_organica_id' => $unidadSuperior->id]);
-        $this->turnoDePrueba($superior, ['es_descanso' => true]);
-
         $tope = $this->usuarioDePrueba();
-        $unidad = UnidadOrganica::create([
-            'nombre' => 'Gerencia',
-            'parent_id' => $unidadSuperior->id,
-            'jefe_id' => $tope->id,
-        ]);
+        $unidad = UnidadOrganica::create(['nombre' => 'Gerencia', 'jefe_id' => $tope->id]);
         $tope->update(['unidad_organica_id' => $unidad->id]);
         $this->turnoDePrueba($tope);
+
+        // Sin una sub-unidad, $tope no sería Jefe de Área (esJefeDeArea
+        // exige al menos una unidad con hijos); ver conUnidadHija().
+        $this->conUnidadHija($unidad);
 
         return $tope->fresh();
     }

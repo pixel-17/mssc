@@ -86,17 +86,26 @@ class FlujoPapeletaPorRolesTest extends TestCase
         ]);
     }
 
-    public function test_sin_turno_en_el_jefe_la_papeleta_no_se_crea_y_ningun_rol_la_ve(): void
+    /**
+     * El turno del DECISOR (jefe inmediato o de área) ya no se valida al
+     * crear la papeleta (ver CrearPapeletaAction::resolverJefatura): solo
+     * se exige turno vigente a quien la está creando. Sin turno cargado
+     * en el jefe, la papeleta igual se crea y queda esperando su decisión.
+     */
+    public function test_sin_turno_en_el_jefe_la_papeleta_igual_se_crea_y_le_llega(): void
     {
-        $this->solicitar()->assertSessionHas('error');
+        $this->solicitar()->assertSessionDoesntHaveErrors();
 
-        $this->assertSame(0, Papeleta::count());
+        $papeleta = Papeleta::where('trabajador_id', $this->trabajador->id)->firstOrFail();
+        $this->assertTrue($papeleta->estado->equals(PendienteJefe::class));
+        $this->assertSame($this->jefeInmediato->id, $papeleta->jefe_inmediato_id);
 
-        foreach ([$this->jefeInmediato, $this->jefeArea, $this->rrhh] as $usuario) {
-            $this->assertSame(0, Papeleta::deJefeInmediato($usuario)->count());
-        }
+        $this->actingAs($this->jefeInmediato)->get(route('jefe.papeletas.index'))->assertOk()
+            ->assertSee($this->trabajador->name);
+        $this->assertSame(1, Papeleta::deJefeInmediato($this->jefeInmediato)->count());
+        $this->assertSame(0, Papeleta::deJefeInmediato($this->jefeArea)->count());
+        $this->assertSame(0, Papeleta::deJefeInmediato($this->rrhh)->count());
 
-        $this->actingAs($this->jefeInmediato)->get(route('jefe.papeletas.index'))->assertOk();
         $this->actingAs($this->rrhh)->get(route('rrhh.papeletas.index'))->assertOk();
         $this->actingAs($this->admin)->get(route('admin.papeletas.index'))->assertOk();
     }

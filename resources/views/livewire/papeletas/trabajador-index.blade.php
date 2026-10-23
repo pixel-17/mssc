@@ -30,6 +30,9 @@
         <div class="glass-card p-8 text-center space-y-3">
             <p class="font-semibold text-tinta-950 dark:text-white">No tienes papeletas en tu turno actual</p>
             <p class="text-sm text-gray-500 dark:text-tinta-100/60">Las papeletas de turnos anteriores siguen disponibles en tu historial.</p>
+            <button type="button" wire:click="$set('verTodas', true)" class="btn-secondary inline-flex mt-2">
+                Ver todas mis papeletas
+            </button>
         </div>
     @elseif ($papeletas->isEmpty())
         <div class="glass-card p-8 text-center space-y-3">
