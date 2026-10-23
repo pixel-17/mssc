@@ -153,6 +153,12 @@ window.msscRetornoCamara = function () {
             this.camaraError = '';
             this.ubicacionError = '';
 
+            // Espera a que Alpine termine de insertar el <video x-ref="video">
+            // (el x-if de arriba) antes de tocar $refs.video: si getUserMedia
+            // resuelve muy rápido (permiso ya concedido antes), se adelanta
+            // al render de Alpine y $refs.video todavía es undefined.
+            await this.$nextTick();
+
             // En paralelo: la cámara no debe esperar a que resuelva el GPS.
             this.iniciarUbicacion();
             await this.abrirCamara();
@@ -161,6 +167,26 @@ window.msscRetornoCamara = function () {
         async abrirCamara() {
             if (!('mediaDevices' in navigator) || !navigator.mediaDevices.getUserMedia) {
                 this.camaraError = 'Este dispositivo no soporta cámara en vivo.';
+                this.estado = 'inicial';
+                return;
+            }
+
+            // Espera activa hasta que Alpine inserte el <video x-ref="video">
+            // en el DOM. $nextTick a veces no alcanza cuando getUserMedia ya
+            // tiene permiso concedido y resuelve antes de que x-if termine.
+            const videoListo = await new Promise((resolve) => {
+                const intentos = 20; // máx ~200 ms
+                let n = 0;
+                const check = () => {
+                    if (this.$refs.video) return resolve(true);
+                    if (++n >= intentos) return resolve(false);
+                    requestAnimationFrame(check);
+                };
+                check();
+            });
+
+            if (!videoListo) {
+                this.camaraError = 'No se pudo iniciar la cámara (elemento de video no disponible).';
                 this.estado = 'inicial';
                 return;
             }
