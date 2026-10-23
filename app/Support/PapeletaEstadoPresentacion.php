@@ -54,18 +54,24 @@ class PapeletaEstadoPresentacion
     {
         $clave = $estado instanceof State ? get_class($estado) : (string) $estado;
 
-        $etiqueta = match ($clave) {
-            Cerrada::class => 'Finalizado · abandono',
-            Finalizada::class => 'Finalizado · abandono',
-            EnJustificacion::class => 'En justificación · abandono',
+        return match ($clave) {
+            Cerrada::class => [
+                'Finalizado · abandono',
+                'bg-verde-100 text-verde-800 ring-verde-400 dark:bg-verde-500/20 dark:text-verde-200 dark:ring-verde-400/40',
+                'bg-verde-500',
+            ],
+            Finalizada::class => [
+                'Finalizado · abandono',
+                'bg-indigo-100 text-indigo-800 ring-indigo-400 dark:bg-indigo-500/20 dark:text-indigo-200 dark:ring-indigo-400/40',
+                'bg-indigo-500',
+            ],
+            EnJustificacion::class => [
+                'En justificación · abandono',
+                'bg-ambar-100 text-ambar-800 ring-ambar-400 dark:bg-ambar-500/20 dark:text-ambar-200 dark:ring-ambar-400/40',
+                'bg-ambar-500',
+            ],
             default => null,
         };
-
-        return $etiqueta === null ? null : [
-            $etiqueta,
-            'bg-fuchsia-100 text-fuchsia-800 ring-fuchsia-400 dark:bg-fuchsia-500/20 dark:text-fuchsia-200 dark:ring-fuchsia-400/40',
-            'bg-fuchsia-500',
-        ];
     }
 
     /** @return array<class-string, array{0:string,1:string,2:string}> */
