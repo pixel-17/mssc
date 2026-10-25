@@ -59,7 +59,9 @@ class CancelarPapeletaAction
                 Cancelada::class,
                 $trabajador->id,
                 'trabajador',
-                cambios: fn (Papeleta $p) => $p->cancelada_at = now(),
+                cambios: function (Papeleta $p): void {
+                    $p->cancelada_at = now();
+                },
             );
 
             return $actual;

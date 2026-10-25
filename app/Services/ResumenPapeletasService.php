@@ -76,7 +76,7 @@ public function resumen(string $mes): array
         ),
         'por_unidad' => $this->agrupar(
             $papeletas,
-            fn (Papeleta $p) => $p->trabajador?->unidadOrganica?->nombre ?? 'Sin unidad',
+            fn (Papeleta $p) => $p->trabajador->unidadOrganica?->nombre ?? 'Sin unidad',
         ),
         'total' => $papeletas->count(),
         'minutos_rrhh' => $this->promedio(
@@ -190,7 +190,7 @@ private function promedio(
                     ->filter(fn (?int $minutos): bool => $minutos !== null);
 
                 return [
-                    'nombre' => (string) $primera->resueltoPorJefe->nombre_completo,
+                    'nombre' => (string) $primera->resueltoPorJefe?->nombre_completo,
                     'papeletas' => $filas->count(),
                     'minutos' => $minutos->isEmpty()
                         ? 0

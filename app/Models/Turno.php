@@ -21,6 +21,17 @@ use Illuminate\Support\Carbon;
  * (que no sea es_descanso) para hoy. Se quitó el interruptor
  * MODO_ESTRICTO_728 que antes permitía desactivar esa exigencia: ahora
  * es la única regla, fija (ver CrearPapeletaAction).
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property int|null $sede_id
+ * @property \Illuminate\Support\Carbon $fecha
+ * @property string|null $hora_inicio
+ * @property string|null $hora_fin
+ * @property bool $es_descanso
+ * @property string|null $turno
+ * @property-read User $usuario
+ * @property-read Sede|null $sede
  */
 class Turno extends Model
 {
@@ -62,11 +73,17 @@ class Turno extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);

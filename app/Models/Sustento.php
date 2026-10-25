@@ -11,6 +11,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * 48h hábiles para justificar. Vence sin nada -> reclasifica a Particular.
  * Si hay adjunto pendiente de revisión, el sistema no cierra solo, espera
  * confirmación humana (por eso 'presentado' está separado de 'aprobado').
+ *
+ * @property int $id
+ * @property int $papeleta_id
+ * @property string|null $archivo_path
+ * @property \Illuminate\Support\Carbon $fecha_limite
+ * @property 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado' $estado
+ * @property \Illuminate\Support\Carbon|null $presentado_at
+ * @property int|null $revisado_por_id
+ * @property \Illuminate\Support\Carbon|null $revisado_at
+ * @property-read Papeleta $papeleta
+ * @property-read User|null $revisadoPor
  */
 class Sustento extends Model
 {
@@ -33,11 +44,17 @@ class Sustento extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Papeleta, $this>
+     */
     public function papeleta(): BelongsTo
     {
         return $this->belongsTo(Papeleta::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function revisadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revisado_por_id');

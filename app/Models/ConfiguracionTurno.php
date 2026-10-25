@@ -15,6 +15,16 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * horas de cada uno):
  * - 728 (rotativo): MANANA, TARDE o NOCHE — el Admin/Jefe elige cuál.
  * - 276 (ordinario): solo DIA — no hay Tarde/Noche para este régimen.
+ *
+ * @property int $id
+ * @property int $user_id
+ * @property string $turno
+ * @property \Illuminate\Support\Carbon $fecha_ancla
+ * @property int $dias_trabajo
+ * @property int $dias_descanso
+ * @property int|null $actualizado_por_id
+ * @property-read User $usuario
+ * @property-read User|null $actualizadoPor
  */
 class ConfiguracionTurno extends Model
 {
@@ -40,11 +50,17 @@ class ConfiguracionTurno extends Model
 
     public const TURNO_276 = 'DIA';
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function usuario(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function actualizadoPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'actualizado_por_id');

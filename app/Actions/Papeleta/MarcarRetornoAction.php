@@ -116,9 +116,12 @@ class MarcarRetornoAction
 
             $estadoAnterior = class_basename($actual->estado);
 
+            /** @var Carbon $horaServidor */
+            $horaServidor = $datosRetorno['hora_servidor'];
+
             $retorno = Retorno::create(array_merge(['papeleta_id' => $actual->id], $datosRetorno));
 
-            $actual->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($actual, $retorno->hora_servidor);
+            $actual->descuento_refrigerio_minutos = $this->calcularDescuentoRefrigerio($actual, $horaServidor);
 
             // justificar -> la justificación queda abierta con el plazo del
             // motivo y el descuento se define al revisarla o vencer;
@@ -132,7 +135,7 @@ class MarcarRetornoAction
             });
 
             if ($consecuencia === 'justificar') {
-                app(AbrirJustificacion::class)->para($actual, $retorno->hora_servidor);
+                app(AbrirJustificacion::class)->para($actual, $horaServidor);
             }
 
             $actual->save();
@@ -158,7 +161,7 @@ class MarcarRetornoAction
 
         $sede = $papeleta->sede;
 
-        if (! $sede?->latitud || ! $sede?->longitud) {
+        if (! $sede->latitud || ! $sede->longitud) {
             return null;
         }
 

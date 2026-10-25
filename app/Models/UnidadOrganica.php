@@ -40,16 +40,25 @@ class UnidadOrganica extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<UnidadOrganica, $this>
+     */
     public function padre(): BelongsTo
     {
         return $this->belongsTo(UnidadOrganica::class, 'parent_id');
     }
 
+    /**
+     * @return HasMany<UnidadOrganica, $this>
+     */
     public function hijos(): HasMany
     {
         return $this->hasMany(UnidadOrganica::class, 'parent_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function jefe(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_id');
@@ -69,6 +78,9 @@ class UnidadOrganica extends Model
     }
 
     /** Trabajadores que pertenecen a esta unidad. */
+    /**
+     * @return HasMany<User, $this>
+     */
     public function miembros(): HasMany
     {
         return $this->hasMany(User::class, 'unidad_organica_id');

@@ -19,7 +19,32 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
+ * @property int $id
+ * @property string $name
+ * @property string $apellido
+ * @property string $dni
+ * @property string $email
+ * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property string $password
+ * @property '276'|'728'|null $regimen
+ * @property bool $activo
+ * @property int|null $sede_id
+ * @property int|null $jefe_inmediato_id
+ * @property int|null $jefe_area_id
+ * @property int|null $unidad_organica_id
+ * @property bool $debe_actualizar_password
+ * @property int $volumen_notificacion
+ * @property bool $permite_gps
+ * @property bool $permite_camara
  * @property-read string $nombre_completo
+ * @property-read Sede|null $sede
+ * @property-read UnidadOrganica|null $unidadOrganica
+ * @property-read User|null $jefeInmediato
+ * @property-read User|null $jefeArea
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica> $unidadesQueEncabeza
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $subordinadosInmediatos
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Turno> $turnos
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Papeleta> $papeletas
  */
 class User extends Authenticatable
 {
@@ -93,6 +118,9 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
@@ -113,6 +141,9 @@ class User extends Authenticatable
      * fotografían este dato y no deben cambiar si el organigrama se
      * reestructura después.
      */
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function jefeInmediato(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_inmediato_id');
@@ -123,12 +154,18 @@ class User extends Authenticatable
      * unidad de este usuario). Mismo motivo que jefeInmediato(): valor
      * explícito para no romper el historial si el árbol cambia.
      */
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function jefeArea(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_area_id');
     }
 
     /** Unidad orgánica que este usuario encabeza, si es jefe de alguna. */
+    /**
+     * @return HasMany<UnidadOrganica, $this>
+     */
     public function unidadesQueEncabeza(): HasMany
     {
         return $this->hasMany(UnidadOrganica::class, 'jefe_id');
@@ -139,6 +176,8 @@ class User extends Authenticatable
      * esas lo hacen Jefe de Área. Quien encabeza una unidad hoja (sin
      * sub-oficinas) es Jefe Inmediato "puro": su jefe_id lo pone como
      * jefe de ESA oficina, no le da mando sobre otras.
+     *
+     * @return HasMany<UnidadOrganica, $this>
      */
     public function unidadesDeArea(): HasMany
     {
@@ -200,6 +239,9 @@ class User extends Authenticatable
      * a otro jefe_inmediato_id): para eso ver EquipoDelJefeService,
      * que además suma los jefes de esas sub-unidades sin exponer a
      * todo el personal de cada una.
+     */
+    /**
+     * @return HasMany<User, $this>
      */
     public function subordinadosInmediatos(): HasMany
     {
@@ -326,6 +368,9 @@ class User extends Authenticatable
             : User::whereKey($this->jefe_inmediato_id)->get();
     }
 
+    /**
+     * @return HasMany<Turno, $this>
+     */
     public function turnos(): HasMany
     {
         return $this->hasMany(Turno::class);
@@ -411,6 +456,9 @@ class User extends Authenticatable
             || User::where('jefe_inmediato_id', $this->id)->exists();
     }
 
+    /**
+     * @return HasMany<Papeleta, $this>
+     */
     public function papeletas(): HasMany
     {
         return $this->hasMany(Papeleta::class, 'trabajador_id');

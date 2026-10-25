@@ -166,7 +166,9 @@ class ProcesarVencimientosPapeletas extends Command
                 null,
                 'sistema',
                 'Vencida automáticamente: fin de turno/día sin decisión.',
-                fn (Papeleta $p) => $p->vencida_at = now(),
+                function (Papeleta $p): void {
+                    $p->vencida_at = now();
+                },
             );
 
             return $actual;

@@ -11,6 +11,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * sin retorno) viven como banderas en la fila, no
  * hardcodeadas por código -> nunca comparar $motivo->codigo === 'SALUD'
  * para decidir lógica, siempre usar las banderas.
+ *
+ * @property int $id
+ * @property string $codigo
+ * @property string $nombre
+ * @property 'no'|'opcional'|'flexible'|'obligatorio' $adjunto
+ * @property bool $suma_descuento
+ * @property bool $requiere_sustento_en_retorno
+ * @property int|null $plazo_justificacion_horas_habiles
+ * @property bool $es_destino_reclasificacion
+ * @property bool $activo
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Papeleta> $papeletas
  */
 class Motivo extends Model
 {
@@ -63,6 +74,9 @@ class Motivo extends Model
             ?? (int) Configuracion::valorDe('SUSTENTO_HORAS_HABILES', 48);
     }
 
+    /**
+     * @return HasMany<Papeleta, $this>
+     */
     public function papeletas(): HasMany
     {
         return $this->hasMany(Papeleta::class);

@@ -89,26 +89,31 @@ class ReporteHorasAcumuladasService
      */
     public function detalle(User $usuario, string $mes, array $filtros = []): Collection
     {
-        return $this->query($usuario, $mes, $filtros)->get()->map(fn (Papeleta $p) => [
-            'papeleta_id' => $p->id,
-            'trabajador_id' => $p->trabajador_id,
-            'trabajador' => $p->trabajador->nombre_completo,
-            'dni' => $p->trabajador->dni,
-            'sede' => $p->trabajador->sede?->nombre,
-            'unidad_organica' => $p->trabajador->unidadOrganica?->nombre,
-            'dia' => $p->dia_operativo->format('Y-m-d'),
-            'motivo' => $p->motivo->nombre,
-            'suma_descuento' => (bool) $p->motivo->suma_descuento,
-            'salida' => $p->hora_salida_real,
-            'retorno' => $p->retorno->hora_servidor,
-            'minutos_brutos' => $minutosBrutos = $p->hora_salida_real && $p->retorno->hora_servidor
-                ? Minutos::entre($p->hora_salida_real, $p->retorno->hora_servidor)
-                : 0,
-            'minutos_refrigerio' => (int) $p->descuento_refrigerio_minutos,
-            // Lo que va a planilla: el bloque de almuerzo dentro de la
-            // ausencia no es tiempo laborable, se resta (ver MarcarRetornoAction).
-            'minutos' => max(0, $minutosBrutos - (int) $p->descuento_refrigerio_minutos),
-        ]);
+        return $this->query($usuario, $mes, $filtros)->get()->map(function (Papeleta $p) {
+            $horaRetorno = $p->retorno?->hora_servidor;
+            $minutosBrutos = ($p->hora_salida_real && $horaRetorno)
+                ? Minutos::entre($p->hora_salida_real, $horaRetorno)
+                : 0;
+
+            return [
+                'papeleta_id' => $p->id,
+                'trabajador_id' => $p->trabajador_id,
+                'trabajador' => $p->trabajador->nombre_completo,
+                'dni' => $p->trabajador->dni,
+                'sede' => $p->trabajador->sede?->nombre,
+                'unidad_organica' => $p->trabajador->unidadOrganica?->nombre,
+                'dia' => $p->dia_operativo->format('Y-m-d'),
+                'motivo' => $p->motivo->nombre,
+                'suma_descuento' => (bool) $p->motivo->suma_descuento,
+                'salida' => $p->hora_salida_real,
+                'retorno' => $horaRetorno,
+                'minutos_brutos' => $minutosBrutos,
+                'minutos_refrigerio' => (int) $p->descuento_refrigerio_minutos,
+                // Lo que va a planilla: el bloque de almuerzo dentro de la
+                // ausencia no es tiempo laborable, se resta (ver MarcarRetornoAction).
+                'minutos' => max(0, $minutosBrutos - (int) $p->descuento_refrigerio_minutos),
+            ];
+        });
     }
 
     /**

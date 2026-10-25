@@ -18,13 +18,67 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\ModelStates\HasStates;
 
 /**
+ * @property int $id
+ * @property int|null $en_revision_por_id
+ * @property \Illuminate\Support\Carbon|null $en_revision_desde
+ * @property int $trabajador_id
+ * @property int $motivo_id
+ * @property int $sede_id
+ * @property '276'|'728' $regimen
+ * @property \Illuminate\Support\Carbon $dia_operativo
+ * @property \Illuminate\Support\Carbon|null $fin_turno_at
  * @property PapeletaState $estado
- * @property \Carbon\CarbonInterface|null $created_at
- * @property \Carbon\CarbonInterface|null $jefe_resuelto_at
- * @property \Carbon\CarbonInterface|null $rrhh_resuelto_at
- * @property-read Motivo|null $motivo
- * @property-read User|null $trabajador
+ * @property int|null $jefe_inmediato_id
+ * @property int|null $resuelto_por_jefe_id
+ * @property \Illuminate\Support\Carbon|null $jefe_resuelto_at
+ * @property int $contador_observaciones_jefe
+ * @property bool $observacion_requiere_adjunto
+ * @property string|null $observacion_adjunto_path
+ * @property \Illuminate\Support\Carbon|null $observacion_subsanada_at
+ * @property string|null $observacion_respuesta
+ * @property \Illuminate\Support\Carbon|null $reloj_jefe_at
+ * @property int|null $jefe_area_id
+ * @property int|null $resuelto_por_rrhh_id
+ * @property \Illuminate\Support\Carbon|null $rrhh_resuelto_at
+ * @property int $contador_observaciones_rrhh
+ * @property bool $autorizado_con_rrhh_fuera_horario
+ * @property 'no_aplica'|'pendiente'|'observada'|'respondida'|'aprobada'|'observada_firme'|'no_aprobada' $revision_posthoc_estado
+ * @property int|null $revision_posthoc_por_id
+ * @property \Illuminate\Support\Carbon|null $revision_posthoc_at
+ * @property int $contador_observaciones_posthoc
+ * @property string|null $posthoc_observacion
+ * @property string|null $posthoc_respuesta
+ * @property string|null $posthoc_adjunto_path
+ * @property \Illuminate\Support\Carbon|null $posthoc_respondida_at
+ * @property \Illuminate\Support\Carbon|null $hora_salida_real
+ * @property int $descuento_refrigerio_minutos
+ * @property int|null $rechazada_por_id
+ * @property string|null $motivo_rechazo
+ * @property \Illuminate\Support\Carbon|null $cancelada_at
+ * @property \Illuminate\Support\Carbon|null $vencida_at
+ * @property string|null $causa_finalizacion_sin_retorno
+ * @property bool $requiere_visto_bueno
+ * @property \Illuminate\Support\Carbon|null $regularizacion_fecha_limite
+ * @property int|null $motivo_original_id
+ * @property string|null $justificacion
+ * @property \Illuminate\Support\Carbon|null $hora_retorno_estimado
+ * @property string|null $adjunto_inicial_path
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read User $trabajador
+ * @property-read Motivo $motivo
+ * @property-read Motivo|null $motivoOriginal
+ * @property-read Sede $sede
+ * @property-read User|null $jefeInmediato
  * @property-read User|null $resueltoPorJefe
+ * @property-read User|null $jefeArea
+ * @property-read User|null $resueltoPorRrhh
+ * @property-read User|null $revisionPosthocPor
+ * @property-read User|null $rechazadaPor
+ * @property-read User|null $enRevisionPor
+ * @property-read Retorno|null $retorno
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, Sustento> $sustentos
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, HistorialPapeleta> $historial
  */
 class Papeleta extends Model
 {
@@ -330,71 +384,113 @@ class Papeleta extends Model
         };
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function trabajador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trabajador_id');
     }
 
+    /**
+     * @return BelongsTo<Motivo, $this>
+     */
     public function motivo(): BelongsTo
     {
         return $this->belongsTo(Motivo::class);
     }
 
+    /**
+     * @return BelongsTo<Motivo, $this>
+     */
     public function motivoOriginal(): BelongsTo
     {
         return $this->belongsTo(Motivo::class, 'motivo_original_id');
     }
 
+    /**
+     * @return BelongsTo<Sede, $this>
+     */
     public function sede(): BelongsTo
     {
         return $this->belongsTo(Sede::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function jefeInmediato(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_inmediato_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function resueltoPorJefe(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resuelto_por_jefe_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function jefeArea(): BelongsTo
     {
         return $this->belongsTo(User::class, 'jefe_area_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function resueltoPorRrhh(): BelongsTo
     {
         return $this->belongsTo(User::class, 'resuelto_por_rrhh_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function revisionPosthocPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'revision_posthoc_por_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function rechazadaPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'rechazada_por_id');
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function enRevisionPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'en_revision_por_id');
     }
 
+    /**
+     * @return HasOne<Retorno, $this>
+     */
     public function retorno(): HasOne
     {
         return $this->hasOne(Retorno::class);
     }
 
+    /**
+     * @return HasMany<Sustento, $this>
+     */
     public function sustentos(): HasMany
     {
         return $this->hasMany(Sustento::class);
     }
 
+    /**
+     * @return HasMany<HistorialPapeleta, $this>
+     */
     public function historial(): HasMany
     {
         return $this->hasMany(HistorialPapeleta::class);

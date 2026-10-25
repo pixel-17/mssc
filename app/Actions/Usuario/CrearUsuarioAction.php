@@ -52,11 +52,11 @@ class CrearUsuarioAction
     ) {}
 
     /**
-     * @param  array{name:string,apellido:string,dni:string,email:string,regimen:string,sede_id:?int,unidad_organica_id:?int,tipo:string,turno:?string,fecha_ancla:?string,dias_trabajo:?int,dias_descanso:?int}  $datos
+     * @param  array{name:string,apellido:string,dni:string,email:string,regimen:string,sede_id:?int,unidad_organica_id:?int,tipo:string,turno?:?string,fecha_ancla?:?string,dias_trabajo?:?int,dias_descanso?:?int}  $datos
      */
     public function ejecutar(User $creador, array $datos, bool $esJefeDeArea): User
     {
-        $esJefeInmediatoNuevo = $esJefeDeArea && ($datos['tipo'] ?? 'trabajador') === 'jefe_inmediato';
+        $esJefeInmediatoNuevo = $esJefeDeArea && $datos['tipo'] === 'jefe_inmediato';
 
         $nuevo = DB::transaction(function () use ($creador, $datos, $esJefeDeArea, $esJefeInmediatoNuevo) {
             // Reingreso: si el DNI corresponde a alguien ya desactivado

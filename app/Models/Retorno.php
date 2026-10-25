@@ -10,6 +10,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Paso 5: evidencia normal es foto + GPS + hora del servidor simultáneos.
  * Única excepción: falla de conectividad -> jefe marca manual, sin
  * foto/GPS, con justificación obligatoria y alerta posterior a RRHH.
+ *
+ * @property int $id
+ * @property int $papeleta_id
+ * @property string|null $foto_path
+ * @property string|null $latitud
+ * @property string|null $longitud
+ * @property bool|null $dentro_de_radio
+ * @property \Illuminate\Support\Carbon|null $hora_servidor
+ * @property bool $marcado_manual
+ * @property bool $generado_por_abandono
+ * @property int|null $marcado_manual_por_id
+ * @property string|null $justificacion_manual
+ * @property-read Papeleta $papeleta
+ * @property-read User|null $marcadoManualPor
  */
 class Retorno extends Model
 {
@@ -38,11 +52,17 @@ class Retorno extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Papeleta, $this>
+     */
     public function papeleta(): BelongsTo
     {
         return $this->belongsTo(Papeleta::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function marcadoManualPor(): BelongsTo
     {
         return $this->belongsTo(User::class, 'marcado_manual_por_id');

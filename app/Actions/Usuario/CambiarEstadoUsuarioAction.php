@@ -65,14 +65,14 @@ class CambiarEstadoUsuarioAction
      * Unidades que encabeza $usuario y que todavía tienen personas activas o
      * sub-unidades: para cada una hay que decidir qué pasa con la jefatura.
      *
-     * @return Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int, subunidades: int, pendientes: int}>
+     * @return Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int<0, max>, subunidades: int<0, max>, pendientes: int}>
      */
     public function jefaturasPorResolver(User $usuario): Collection
     {
         $pendientes = app(PapeletasAbiertasService::class)->contarPendientesDeJefe($usuario);
 
         return $usuario->unidadesQueEncabeza()->get()
-            ->map(fn (UnidadOrganica $unidad) => [
+            ->map(fn (UnidadOrganica $unidad): array => [
                 'unidad' => $unidad,
                 'es_area' => $unidad->hijos()->where('activo', true)->exists(),
                 'personas' => $unidad->miembros()->where('activo', true)->whereKeyNot($usuario->getKey())->count(),

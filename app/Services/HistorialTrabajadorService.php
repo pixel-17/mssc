@@ -79,7 +79,7 @@ class HistorialTrabajadorService
                 'id' => $p->id,
                 'dia' => $p->dia_operativo,
                 'motivo' => $p->motivo->nombre,
-                'sede' => $p->sede?->nombre,
+                'sede' => $p->sede->nombre,
                 'estado' => class_basename($p->estado),
                 // FQCN completo para <x-estado-papeleta>: evita que la vista
                 // tenga que rearmar 'App\States\Papeleta\'.$fila['estado'],

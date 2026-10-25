@@ -35,7 +35,7 @@ class EliminarUnidadOrganicaAction
 
         try {
             $unidad->delete();
-        } catch (QueryException $e) {
+        } catch (QueryException $e) { // @phpstan-ignore catch.neverThrown (el stub de delete() no declara el throw, pero el driver de BD sí puede lanzarlo)
             // Violación de FK (23xxx): sub-unidades o personas que aparecieron
             // después del chequeo, o referencias que se conservan (p. ej. papeletas).
             if (! str_starts_with((string) $e->getCode(), '23')) {

@@ -38,6 +38,10 @@ use Maatwebsite\Excel\Facades\Excel;
  * SOLO sus propios datos (nada de correr las dos consultas pesadas en
  * cada render) y los catálogos de filtros de la pestaña "horas" están
  * memoizados con #[Computed] para no repetirlos en cada wire:model.live.
+ *
+ * @property-read Collection<int, User> $trabajadoresDisponibles
+ * @property-read Collection<int, Sede> $sedes
+ * @property-read Collection<int, Motivo> $motivos
  */
 #[Layout('layouts.app')]
 #[Title('Resumen de papeletas')]
