@@ -39,7 +39,7 @@ class ArmadorOrganigrama
      * Arma todo lo que pinta el árbol para quien mira: nodos raíz ya
      * filtrados por búsqueda/sede, estadísticas y conteo por sede.
      *
-     * @return array{raices: Collection<int, array<string, mixed>>, stats: array<string, int>, conteoSedes: array<string, int>, unidades: Collection<int, UnidadOrganica>, enAlcance: array<int, true>}
+     * @return array{raices: Collection<int, array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, sin_jefe: bool}>, stats: array<string, int>, conteoSedes: array<int|string, int>, unidades: \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>, enAlcance: array<int, true>}
      */
     public function armar(User $usuario): array
     {
@@ -83,6 +83,7 @@ class ArmadorOrganigrama
      * rama. Las relaciones quedan en las mismas instancias que usa
      * $porPadre, así que construirNodo() las ve sin más queries.
      *
+     * @param  \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>  $unidades
      * @param  array<int, true>  $enAlcance
      */
     public function cargarRama(Collection $unidades, array $enAlcance): void
@@ -254,7 +255,7 @@ class ArmadorOrganigrama
      * filtrado por la búsqueda y por la sede. null = ese nodo y todo lo
      * de abajo quedan fuera del resultado.
      *
-     * @param  array<string, int>  $conteoSedes
+     * @param  array<int|string, int>  $conteoSedes
      * @return array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, sin_jefe: bool}|null
      */
     private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?array

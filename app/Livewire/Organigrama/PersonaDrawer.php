@@ -369,7 +369,7 @@ class PersonaDrawer extends Component
 
         // La unidad actual de la persona se muestra siempre, aunque ya no esté entre las elegibles (p. ej. desactivada).
         if ($persona?->unidadOrganica && ! $unidades->contains('id', (int) $persona->unidad_organica_id)) {
-            $unidades->push(['id' => (int) $persona->unidad_organica_id, 'label' => $persona->unidadOrganica->nombre, 'hint' => null]);
+            $unidades->push(['id' => (int) $persona->unidad_organica_id, 'label' => $persona->unidadOrganica->nombre, 'hint' => $persona->unidadOrganica->jefe?->nombre_completo ?? 'sin jefe']);
         }
 
         return view('livewire.organigrama.persona-drawer', [

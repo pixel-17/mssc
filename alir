@@ -1,0 +1,7 @@
+[35mapp/Services/AlertaPosthocService.php[m[36m:[m[32m126[m[36m:[m                new AlertaOrganizacionalNotification('posthoc_acumulado', $titulo, $mensaje, route('[1;31mrrhh.papeletas.index[m'))
+[35mapp/View/Composers/NavegacionComposer.php[m[36m:[m[32m86[m[36m:[m            $bandejas[] = ['label' => 'Papeletas de RR. HH.', 'route' => route('[1;31mrrhh.papeletas.index[m'), 'active' => request()->routeIs('rrhh.papeletas.*'), 'icon' => 'clipboard', 'bandeja' => 'rrhh'];
+[35mapp/View/Composers/NavegacionComposer.php[m[36m:[m[32m90[m[36m:[m            $bandejas[] = ['label' => 'Todas las papeletas', 'route' => route('[1;31madmin.papeletas.index[m'), 'active' => request()->routeIs('admin.papeletas.*'), 'icon' => 'document'];
+[35mresources/views/livewire/dashboard.blade.php[m[36m:[m[32m65[m[36m:[m                        <a href="{{ route('[1;31mrrhh.papeletas.index[m') }}" class="btn-primary text-xs">
+[35mresources/views/livewire/dashboard.blade.php[m[36m:[m[32m74[m[36m:[m                            href="{{ route('[1;31mrrhh.papeletas.index[m') }}"
+[35mresources/views/livewire/dashboard.blade.php[m[36m:[m[32m84[m[36m:[m                            href="{{ route('[1;31mrrhh.papeletas.index[m') }}"
+[35mresources/views/livewire/dashboard.blade.php[m[36m:[m[32m90[m[36m:[m                            href="{{ route('[1;31mrrhh.papeletas.index[m') }}"

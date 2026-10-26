@@ -261,15 +261,13 @@ class GeneradorTurnoMensualService
         $configs
             ->reject(fn (ConfiguracionTurno $config) => in_array($config->user_id, $userIdsConCarga, true))
             ->each(function (ConfiguracionTurno $config) use ($proximoMes) {
-                if ($config->usuario) {
-                    $this->generarMes(
-                        $config->usuario,
-                        $proximoMes->copy(),
-                        actor: null,
-                        origen: 'automatico',
-                        config: $config,
-                    );
-                }
+                $this->generarMes(
+                    $config->usuario,
+                    $proximoMes->copy(),
+                    actor: null,
+                    origen: 'automatico',
+                    config: $config,
+                );
             });
     }
 

@@ -543,6 +543,11 @@ class UsuarioForm extends Component
                 'name' => $datos['name'],
                 'apellido' => $datos['apellido'],
                 'email' => $datos['email'],
+                // Jefe Inmediato "puro" ($esJefeDeArea = false): la acción ignora
+                // estos dos y deja al trabajador en su sede/unidad actual. Se
+                // envían igual porque el array shape de ejecutar() los exige.
+                'sede_id' => $this->usuario->sede_id,
+                'unidad_organica_id' => $this->usuario->unidad_organica_id,
             ], false);
 
             $this->usuario->update(['activo' => $activo]);

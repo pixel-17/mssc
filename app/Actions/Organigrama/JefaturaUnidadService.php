@@ -142,7 +142,7 @@ class JefaturaUnidadService
             $suJefe = ($cambiaPadre ? $padreDespues : $padreAntes)?->jefe;
             $avisos[] = $ubicarJefe
                 ? $jefeDespues->nombre_completo.' pasará a esta unidad y dependerá de '
-                    .($suJefe?->nombre_completo ?? 'nadie (la unidad no tiene unidad padre con jefe)').'.'
+                    .($suJefe->nombre_completo ?? 'nadie (la unidad no tiene unidad padre con jefe)').'.'
                 : $jefeDespues->nombre_completo.' seguirá en su unidad actual: su propio jefe no cambia. '
                     .'Marca «Pasarlo a esta unidad» para que dependa del jefe de la unidad padre.';
         }

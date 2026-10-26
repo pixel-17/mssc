@@ -30,6 +30,7 @@ class ReporteHorasAcumuladasService
 {
     /**
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
+     * @return Builder<Papeleta>
      */
     public function query(User $usuario, string $mes, array $filtros = []): Builder
     {

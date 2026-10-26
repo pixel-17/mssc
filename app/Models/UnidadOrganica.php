@@ -70,10 +70,6 @@ class UnidadOrganica extends Model
      */
     public function esJefeDeLaUnidad(User $usuario): bool
     {
-        if ($usuario->id === null) {
-            return false;
-        }
-
         return $this->jefe_id !== null && (int) $this->jefe_id === (int) $usuario->id;
     }
 
@@ -158,6 +154,7 @@ class UnidadOrganica extends Model
      */
     public static function arbolEnMemoria(): Collection
     {
+        /** @var Collection<int, UnidadOrganica> $porId */
         $porId = static::query()->with(['jefe'])->get()->keyBy('id');
 
         foreach ($porId as $unidad) {

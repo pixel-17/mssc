@@ -158,7 +158,7 @@ class ProgramacionTurnoService
         $claveInicial = $inicio->format('Y-m');
         $anteriores = array_filter(
             $diasActuales,
-            fn ($codigo, $fecha) => is_string($fecha) && str_starts_with($fecha, $claveInicial) && $fecha < $desde,
+            fn ($codigo, $fecha) => str_starts_with($fecha, $claveInicial) && $fecha < $desde,
             ARRAY_FILTER_USE_BOTH
         );
         $plan[$claveInicial] = array_merge($anteriores, $plan[$claveInicial]);

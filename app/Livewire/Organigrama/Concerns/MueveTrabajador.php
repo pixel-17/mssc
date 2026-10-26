@@ -110,8 +110,8 @@ trait MueveTrabajador
             return;
         }
 
-        $trabajador = User::find((int) ($propuesta['trabajador'] ?? 0));
-        $destino = UnidadOrganica::find((int) ($propuesta['destino'] ?? 0));
+        $trabajador = User::find((int) $propuesta['trabajador']);
+        $destino = UnidadOrganica::find((int) $propuesta['destino']);
 
         if (! $trabajador || ! $destino) {
             return;
@@ -140,11 +140,11 @@ trait MueveTrabajador
         try {
             $movimiento = app(MoverTrabajadorAction::class)->ejecutar(
                 $usuario,
-                (int) ($propuesta['trabajador'] ?? 0),
-                (int) ($propuesta['destino'] ?? 0),
-                (int) ($propuesta['origen'] ?? 0),
+                (int) $propuesta['trabajador'],
+                (int) $propuesta['destino'],
+                (int) $propuesta['origen'],
                 true,
-                (bool) ($propuesta['cambiar_sede'] ?? false),
+                (bool) $propuesta['cambiar_sede'],
             );
         } catch (UsuarioException $e) {
             $this->mensajeError = $e->getMessage();
@@ -203,8 +203,8 @@ trait MueveTrabajador
             return null;
         }
 
-        $trabajador = User::find((int) ($this->propuesta['trabajador'] ?? 0));
-        $destino = UnidadOrganica::find((int) ($this->propuesta['destino'] ?? 0));
+        $trabajador = User::find((int) $this->propuesta['trabajador']);
+        $destino = UnidadOrganica::find((int) $this->propuesta['destino']);
 
         if (! $trabajador || ! $destino) {
             return null;

@@ -299,7 +299,7 @@ class NotificarPapeletaService
         }
     }
 
-    private function urlSegunRol(Papeleta $papeleta, User $usuario): ?string
+    private function urlSegunRol(Papeleta $papeleta, User $usuario): string
     {
         if ($usuario->hasRole('rrhh')) {
             return $this->urlRrhh($papeleta);
@@ -308,17 +308,17 @@ class NotificarPapeletaService
         return $this->urlJefe($papeleta);
     }
 
-    private function urlTrabajador(Papeleta $papeleta): ?string
+    private function urlTrabajador(Papeleta $papeleta): string
     {
         return route('trabajador.papeletas.show', $papeleta);
     }
 
-    private function urlJefe(Papeleta $papeleta): ?string
+    private function urlJefe(Papeleta $papeleta): string
     {
         return route('jefe.papeletas.show', $papeleta);
     }
 
-    private function urlRrhh(Papeleta $papeleta): ?string
+    private function urlRrhh(Papeleta $papeleta): string
     {
         return route('rrhh.papeletas.show', $papeleta);
     }

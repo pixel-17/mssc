@@ -120,7 +120,7 @@ trait MueveJefe
             return;
         }
 
-        $persona = User::find((int) ($propuesta['jefe'] ?? 0));
+        $persona = User::find((int) $propuesta['jefe']);
         $eraJefe = $persona && ($persona->unidadesQueEncabeza()->exists());
 
         $this->mensajeOk = $this->mensajeError = null;
@@ -138,9 +138,9 @@ trait MueveJefe
             try {
                 $unidad = app(MoverJefeInmediatoAction::class)->ejecutar(
                     $usuario,
-                    (int) ($propuesta['jefe'] ?? 0),
-                    (int) ($propuesta['destino'] ?? 0),
-                    (int) ($propuesta['origen'] ?? 0),
+                    (int) $propuesta['jefe'],
+                    (int) $propuesta['destino'],
+                    (int) $propuesta['origen'],
                     true,
                 );
             } catch (UsuarioException $e) {
@@ -159,8 +159,8 @@ trait MueveJefe
         try {
             $movimiento = app(MoverJefeComoTrabajadorAction::class)->ejecutar(
                 $usuario,
-                (int) ($propuesta['jefe'] ?? 0),
-                (int) ($propuesta['destino'] ?? 0),
+                (int) $propuesta['jefe'],
+                (int) $propuesta['destino'],
                 $reemplazos,
                 $turno,
                 true,
@@ -197,8 +197,8 @@ trait MueveJefe
             return null;
         }
 
-        $jefe = User::find((int) ($this->propuestaJefe['jefe'] ?? 0));
-        $destino = UnidadOrganica::find((int) ($this->propuestaJefe['destino'] ?? 0));
+        $jefe = User::find((int) $this->propuestaJefe['jefe']);
+        $destino = UnidadOrganica::find((int) $this->propuestaJefe['destino']);
 
         if (! $jefe || ! $destino) {
             return null;
