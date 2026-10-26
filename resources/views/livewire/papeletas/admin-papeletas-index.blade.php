@@ -2,7 +2,7 @@
     <div class="max-w-6xl mx-auto py-10 sm:px-6 lg:px-8 space-y-5">
         <x-admin.encabezado titulo="Papeletas" />
 
-        {{-- Barra única: buscar, fecha y estado en un solo lugar --}}
+        {{-- Barra única: buscar, día/mes y estado en un solo lugar --}}
         <div class="glass-card p-4 grid gap-4 md:grid-cols-12 items-end">
             <div class="md:col-span-5 relative">
                 <label for="admin-papeletas-buscar" class="block text-xs font-medium mb-1 text-gray-600 dark:text-tinta-50/70">Buscar trabajador</label>
@@ -19,11 +19,30 @@
 
             @unless ($trabajador)
                 <div class="md:col-span-3">
-                    <label for="admin-papeletas-fecha" class="block text-xs font-medium mb-1 text-gray-600 dark:text-tinta-50/70">Día</label>
+                    <label class="block text-xs font-medium mb-1 text-gray-600 dark:text-tinta-50/70">
+                        {{ $vista === 'mes' ? 'Mes' : 'Día' }}
+                    </label>
                     <div class="flex gap-2">
-                        <input id="admin-papeletas-fecha" type="date" wire:model.live="fecha"
-                               class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
-                        <button type="button" wire:click="volverAlDia" class="px-3 text-xs font-medium rounded-md border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/5">Hoy</button>
+                        {{-- Selector Día / Mes --}}
+                        <div class="inline-flex rounded-md border border-gray-300 dark:border-white/15 overflow-hidden shrink-0">
+                            <button type="button" wire:click="cambiarVista('dia')"
+                                    class="px-3 text-xs font-medium {{ $vista === 'dia' ? 'bg-tinta-600 text-white' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-tinta-50/70 hover:bg-gray-50 dark:hover:bg-white/10' }}">
+                                Día
+                            </button>
+                            <button type="button" wire:click="cambiarVista('mes')"
+                                    class="px-3 text-xs font-medium border-l border-gray-300 dark:border-white/15 {{ $vista === 'mes' ? 'bg-tinta-600 text-white' : 'bg-white dark:bg-white/5 text-gray-600 dark:text-tinta-50/70 hover:bg-gray-50 dark:hover:bg-white/10' }}">
+                                Mes
+                            </button>
+                        </div>
+
+                        @if ($vista === 'mes')
+                            <input id="admin-papeletas-mes" type="month" wire:model.live="mes"
+                                   class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
+                        @else
+                            <input id="admin-papeletas-fecha" type="date" wire:model.live="fecha"
+                                   class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
+                            <button type="button" wire:click="volverAlDia" class="px-3 text-xs font-medium rounded-md border border-gray-300 dark:border-white/15 hover:bg-gray-50 dark:hover:bg-white/5">Hoy</button>
+                        @endif
                     </div>
                 </div>
             @endunless
@@ -68,6 +87,11 @@
                     <p class="text-xs text-gray-500">DNI {{ $trabajador->dni }} · {{ $papeletas->total() }} {{ \Illuminate\Support\Str::plural('papeleta', $papeletas->total()) }} en total</p>
                 </div>
                 <button type="button" wire:click="volverAlDia" class="text-xs font-medium text-tinta-600 dark:text-tinta-300 underline">Volver a las papeletas del día</button>
+            @elseif ($vista === 'mes')
+                <p class="text-sm text-gray-700 dark:text-tinta-50/80">
+                    {{ $papeletas->total() }} {{ \Illuminate\Support\Str::plural('papeleta', $papeletas->total()) }}
+                    en {{ $inicioMes->translatedFormat('F \d\e Y') }}
+                </p>
             @else
                 <p class="text-sm text-gray-700 dark:text-tinta-50/80">
                     {{ $papeletas->total() }} {{ \Illuminate\Support\Str::plural('papeleta', $papeletas->total()) }}
@@ -92,6 +116,12 @@
                     <td colspan="5" class="px-4 py-10 text-center">
                         @if ($trabajador)
                             <p class="text-sm text-gray-500">Este trabajador no tiene papeletas con ese estado.</p>
+                        @elseif ($vista === 'mes')
+                            @if ($buscar !== '')
+                                <p class="text-sm text-gray-500">No hay papeletas de esa búsqueda en {{ $inicioMes->translatedFormat('F \d\e Y') }}. Prueba otro mes o busca el historial de la persona.</p>
+                            @else
+                                <p class="text-sm text-gray-500">No hay papeletas en {{ $inicioMes->translatedFormat('F \d\e Y') }}.</p>
+                            @endif
                         @elseif ($buscar !== '')
                             <p class="text-sm text-gray-500">No hay papeletas de esa búsqueda el {{ \Carbon\Carbon::parse($fecha)->format('d/m/Y') }}. Prueba otro día o busca el historial de la persona.</p>
                         @else

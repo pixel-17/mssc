@@ -4,10 +4,12 @@ namespace App\Livewire\Papeletas;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\Services\ReporteHorasAcumuladasService;
 use App\States\Papeleta\PapeletaState;
 use App\Support\PapeletaEstadoPresentacion;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -15,10 +17,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 /**
- * Listado de papeletas para el admin, SOLO LECTURA.
+ * Listado de papeletas para el admin y RR. HH., SOLO LECTURA.
  *
- * Dos modos, para no cargar nunca el histórico completo:
- * - Por defecto: las papeletas de UN día (hoy o el que se elija).
+ * Tres modos, para no cargar nunca el histórico completo:
+ * - Por día (por defecto): las papeletas de UN día (hoy o el que se elija).
+ * - Por mes: todas las papeletas de un mes completo (Y-m).
  * - Por trabajador: todas sus papeletas, de todas las fechas y estados.
  *   Se elige el trabajador buscándolo por nombre, apellido o DNI.
  */
@@ -33,7 +36,13 @@ class AdminPapeletasIndex extends Component
 
     public string $estado = '';
 
+    /** 'dia' | 'mes'. Solo aplica cuando no se está viendo el historial de un trabajador. */
+    public string $vista = 'dia';
+
     public string $fecha = '';
+
+    /** Formato Y-m, usado cuando $vista === 'mes'. */
+    public string $mes = '';
 
     /** Si está definido, se muestra el historial completo de ese trabajador. */
     #[Url(as: 'trabajador')]
@@ -42,6 +51,7 @@ class AdminPapeletasIndex extends Component
     public function mount(): void
     {
         $this->fecha = now()->toDateString();
+        $this->mes = now()->format('Y-m');
     }
 
     public function updatedBuscar(): void
@@ -56,6 +66,22 @@ class AdminPapeletasIndex extends Component
 
     public function updatedFecha(): void
     {
+        $this->resetPage();
+    }
+
+    public function updatedMes(): void
+    {
+        $this->resetPage();
+    }
+
+    /** Cambia entre ver por día y ver por mes (no afecta el historial de un trabajador). */
+    public function cambiarVista(string $vista): void
+    {
+        if (! in_array($vista, ['dia', 'mes'], true)) {
+            return;
+        }
+
+        $this->vista = $vista;
         $this->resetPage();
     }
 
@@ -78,6 +104,7 @@ class AdminPapeletasIndex extends Component
         $this->trabajadorId = null;
         $this->estado = '';
         $this->buscar = '';
+        $this->vista = 'dia';
         $this->fecha = now()->toDateString();
         $this->resetPage();
     }
@@ -93,7 +120,7 @@ class AdminPapeletasIndex extends Component
             ->all();
     }
 
-    public function render(): View
+    public function render(ReporteHorasAcumuladasService $reportes): View
     {
         $estados = self::estados();
         $termino = trim($this->buscar);
@@ -101,6 +128,8 @@ class AdminPapeletasIndex extends Component
 
         $papeletas = null;
         $coincidencias = collect();
+        $inicioMes = null;
+        $finMes = null;
 
         if ($trabajador) {
             // Historial completo de UNA persona: todas las fechas y estados.
@@ -111,6 +140,24 @@ class AdminPapeletasIndex extends Component
                 ->latest('dia_operativo')
                 ->orderByDesc('papeletas.id')
                 ->paginate(20);
+        } elseif ($this->vista === 'mes') {
+            // Mismo cálculo de rango que el reporte de horas acumuladas:
+            // un mes mal formado (Y-m) se degrada al mes actual.
+            [$inicioMes, $finMes] = $reportes->rangoDelMes($this->mes);
+
+            $papeletas = Papeleta::query()
+                ->whereBetween('dia_operativo', [$inicioMes->toDateString(), $finMes->toDateString()])
+                ->when(array_key_exists($this->estado, $estados), fn ($q) => $q->whereState('estado', $this->estado))
+                ->when($termino !== '', fn ($q) => $q->whereHas('trabajador', fn ($t) => $t
+                    ->where('name', 'like', "%{$termino}%")
+                    ->orWhere('apellido', 'like', "%{$termino}%")
+                    ->orWhere('dni', 'like', "%{$termino}%")))
+                ->with(['trabajador', 'motivo'])
+                ->latest('dia_operativo')
+                ->orderByDesc('papeletas.id')
+                ->paginate(20);
+
+            $coincidencias = $this->coincidencias($termino);
         } else {
             $fecha = $this->fecha;
             try {
@@ -131,17 +178,7 @@ class AdminPapeletasIndex extends Component
                 ->orderByDesc('papeletas.id')
                 ->paginate(20);
 
-            // Para encontrar a alguien y abrir su historial completo.
-            if ($termino !== '') {
-                $coincidencias = User::query()
-                    ->where(fn ($q) => $q
-                        ->where('name', 'like', "%{$termino}%")
-                        ->orWhere('apellido', 'like', "%{$termino}%")
-                        ->orWhere('dni', 'like', "%{$termino}%"))
-                    ->orderBy('name')
-                    ->limit(10)
-                    ->get(['id', 'name', 'apellido', 'dni']);
-            }
+            $coincidencias = $this->coincidencias($termino);
         }
 
         return view('livewire.papeletas.admin-papeletas-index', [
@@ -149,6 +186,25 @@ class AdminPapeletasIndex extends Component
             'estados' => $estados,
             'trabajador' => $trabajador,
             'coincidencias' => $coincidencias,
+            'inicioMes' => $inicioMes,
+            'finMes' => $finMes,
         ]);
+    }
+
+    /** Para encontrar a alguien (por día o por mes) y abrir su historial completo. */
+    private function coincidencias(string $termino): Collection
+    {
+        if ($termino === '') {
+            return collect();
+        }
+
+        return User::query()
+            ->where(fn ($q) => $q
+                ->where('name', 'like', "%{$termino}%")
+                ->orWhere('apellido', 'like', "%{$termino}%")
+                ->orWhere('dni', 'like', "%{$termino}%"))
+            ->orderBy('name')
+            ->limit(10)
+            ->get(['id', 'name', 'apellido', 'dni']);
     }
 }

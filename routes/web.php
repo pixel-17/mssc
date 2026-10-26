@@ -164,10 +164,14 @@ Route::middleware($soloAdmin)->get('/usuarios-admin/crear', UsuarioAdminForm::cl
 Route::middleware($soloAdmin)->get('/usuarios-admin/{usuario}/editar', UsuarioAdminForm::class)->name('usuarios-admin.editar');
 
 /*
- * Papeletas para el admin: TODAS, de cualquier estado, SOLO LECTURA.
- * El admin no decide ni aprueba (eso es de jefe y RRHH).
+ * Papeletas para el admin y RR. HH.: TODAS, de cualquier estado, SOLO
+ * LECTURA (ni admin ni RRHH deciden ni aprueban desde aquí: la
+ * decisión sigue siendo de jefe y de la bandeja de RRHH). Mantiene el
+ * prefijo/nombre 'admin.*' por compatibilidad con lo ya existente
+ * (NavegacionComposer, tests); RRHH entra con el mismo componente,
+ * mismo criterio que 'rrhh.abandonos.index' (ver más abajo).
  */
-Route::middleware($soloAdmin)->prefix('admin')->name('admin.')->group(function () {
+Route::middleware([...$autenticado, 'role:admin|rrhh'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/papeletas', AdminPapeletasIndex::class)->name('papeletas.index');
     Route::get('/papeletas/{papeleta}', [PapeletaController::class, 'show'])->name('papeletas.show');
 });

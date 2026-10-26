@@ -66,4 +66,34 @@ class AdminVeTodasLasPapeletasTest extends TestCase
 
         $this->actingAs($trabajador)->get(route('admin.papeletas.index'))->assertForbidden();
     }
+
+    public function test_rrhh_tambien_puede_abrir_el_listado_por_dia_y_por_mes(): void
+    {
+        $rrhh = $this->usuarioDePrueba([], ['rrhh']);
+
+        $this->actingAs($rrhh)->get(route('admin.papeletas.index'))->assertOk();
+
+        Livewire::actingAs($rrhh)
+            ->test(AdminPapeletasIndex::class)
+            ->assertSet('vista', 'dia')
+            ->call('cambiarVista', 'mes')
+            ->assertSet('vista', 'mes');
+    }
+
+    public function test_ver_por_mes_muestra_las_papeletas_de_todo_el_mes_elegido(): void
+    {
+        $admin = $this->usuarioDePrueba([], ['admin']);
+        $esteMes = now()->startOfMonth()->addDays(5)->toDateString();
+        $mesPasado = now()->subMonthNoOverflow()->toDateString();
+
+        $this->papeletaDePrueba($this->usuarioDePrueba(['name' => 'EsteMes', 'apellido' => 'Visible']), PendienteJefe::class, ['dia_operativo' => $esteMes]);
+        $this->papeletaDePrueba($this->usuarioDePrueba(['name' => 'MesPasado', 'apellido' => 'Oculto']), Cerrada::class, ['dia_operativo' => $mesPasado]);
+
+        Livewire::actingAs($admin)
+            ->test(AdminPapeletasIndex::class)
+            ->call('cambiarVista', 'mes')
+            ->assertSet('mes', now()->format('Y-m'))
+            ->assertSee('Visible')
+            ->assertDontSee('Oculto');
+    }
 }
