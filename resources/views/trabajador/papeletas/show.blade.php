@@ -51,8 +51,6 @@
 @endphp
 
 <x-trabajador-layout titulo="Detalle de papeleta" :volver-a="route('trabajador.papeletas.index')">
-    <x-papeleta-en-vivo :papeleta="$papeleta" />
-
     <div class="space-y-5" data-en-vivo-contenido>
         {{-- Ticket grande --}}
         <div class="glass-card">
@@ -61,7 +59,7 @@
                     <p class="font-mono text-xs text-tinta-400 dark:text-tinta-300/60">N.° {{ str_pad($papeleta->id, 4, '0', STR_PAD_LEFT) }}</p>
                     <p class="font-display font-semibold text-lg text-tinta-950 dark:text-white leading-snug mt-0.5">{{ $papeleta->motivo->nombre }}</p>
                 </div>
-                <span data-en-vivo-estado class="shrink-0"><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="whitespace-nowrap" /></span>
+                <x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="shrink-0 whitespace-nowrap" />
             </div>
 
             @if ($puedeDescargarPdf)

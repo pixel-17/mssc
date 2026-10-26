@@ -43,15 +43,11 @@
             <h2 class="font-bold text-2xl text-tinta-950 dark:text-white leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
-            <span data-en-vivo-estado><x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="text-sm" /></span>
+            <x-estado-papeleta :estado="$papeleta->estado" :abandono="$papeleta->esAbandono()" class="text-sm" />
         </div>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <x-papeleta-en-vivo :papeleta="$papeleta" />
-        </div>
-
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6" data-en-vivo-contenido>
             @include('papeletas._info', ['papeleta' => $papeleta])
 
