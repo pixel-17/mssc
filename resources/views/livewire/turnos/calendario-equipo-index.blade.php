@@ -8,8 +8,9 @@
             @else
                 Solo los trabajadores de los que eres jefe inmediato.
             @endif
-            Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) se descansan por
-            día de semana con el panel "Días de descanso" de abajo.
+            Los de régimen 728 se pintan directo en la grilla (M/T/N/D); los de horario ordinario (276) trabajan los
+            días que configuró el Admin (ver panel de abajo). Para crear o cambiar el horario de un 276 en
+            particular, usa su "Crear/editar horario" individual.
         </p>
 
         {{-- Leyenda: mismo color que las celdas, coherente con "Mi calendario" del Trabajador (Turno::claseColor()). --}}
@@ -124,30 +125,27 @@
             </span>
 
             @if ($equipo276->isNotEmpty())
-                {{-- Días de descanso: régimen 276 (ciclo semanal, ver aplicarDescansoSemana276). --}}
-                <div class="glass-card p-4 space-y-3">
+                {{-- Régimen 276: puramente informativo, refleja lo que configuró el Admin
+                (HORARIO_ORDINARIO_DIAS_LABORABLES). El Jefe no elige días desde aquí. --}}
+                <div class="glass-card p-4 space-y-2">
                     <div class="flex items-center gap-2">
                         <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-full {{ \App\Support\TurnoColores::para('DIA') }} text-xs font-bold">{{ $equipo276->count() }}</span>
-                        <span class="text-sm font-semibold">PROGRAMA A TUS TRABAJADORES QUE TRABAJAN SOLO DE DIA </span>
+                        <span class="text-sm font-semibold">TRABAJADORES DE HORARIO ORDINARIO (DÍA)</span>
                     </div>
 
-                    <div class="flex flex-wrap items-center gap-3">
-                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Que dia Descansa:</span>
-                        @foreach ([1 => 'L', 2 => 'M', 3 => 'M', 4 => 'J', 5 => 'V', 6 => 'S', 7 => 'D'] as $iso => $letra)
-                            <label class="inline-flex items-center gap-1 text-sm">
-                                <input type="checkbox" wire:model="diasSemanaDescanso276" value="{{ $iso }}" class="rounded border-gray-300">
-                                {{ $letra }}
-                            </label>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="text-xs font-medium text-gray-500 dark:text-gray-400">Trabajan:</span>
+                        @foreach ([1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'] as $iso => $nombre)
+                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium
+                                {{ in_array($iso, $diasLaborables276, true) ? \App\Support\TurnoColores::para('DIA') : 'bg-gray-50 text-gray-400 border-gray-200 dark:bg-gray-900 dark:border-gray-800' }}">
+                                {{ $nombre }}
+                            </span>
                         @endforeach
-                        <button type="button" wire:click="aplicarDescansoSemana276" wire:loading.attr="disabled" class="px-3 py-2 rounded-md bg-tinta-700 text-white text-sm font-semibold hover:bg-tinta-800 disabled:opacity-50">
-                            Aplicar a todos los {{ $equipo276->count() }}
-                        </button>
                     </div>
                     <p class="text-xs text-gray-500">
-                        Marca los días de la semana en que descansa el régimen 276 (ej. sábado y domingo) y aplícalo a todo tu equipo 276 de una vez.
-                        Deben ser días consecutivos dentro de la semana; para descansos salteados de un solo trabajador, usa su configuración de turno individual.
+                        Lo configura el Admin en Configuraciones y aplica por igual a todo el régimen 276. Para crear o
+                        cambiar el horario de un trabajador en particular, usa su "Crear/editar horario" individual.
                     </p>
-                    @error('diasSemanaDescanso276') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
             @endif
 
@@ -249,13 +247,9 @@
                                         @php($cfg276 = $configs276->get($trabajador->id))
                                         <div class="mt-0.5 text-[11px] {{ $cfg276 ? 'text-gray-500 dark:text-gray-400' : 'text-amber-700 dark:text-amber-300' }}">
                                             @if ($cfg276)
-                                                <span>descansa {{ $cfg276->dias_descanso }} día(s) por semana</span>
-                                                @if ($proximoDescanso276 = ($proximosDescansos276[$trabajador->id] ?? null))
-                                                    <span class="text-gray-300 dark:text-gray-600">·</span>
-                                                    <span>próx. descanso {{ ucfirst(mb_substr($proximoDescanso276->translatedFormat('D'), 0, 3)) }} {{ $proximoDescanso276->day }}</span>
-                                                @endif
+                                                <span>horario cargado — ver días laborables arriba</span>
                                             @else
-                                                <span>Sin días de descanso aplicados todavía</span>
+                                                <span>Sin horario cargado todavía — usa "Crear/editar horario"</span>
                                             @endif
                                         </div>
                                     @endif

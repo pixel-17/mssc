@@ -2,13 +2,13 @@
 
 namespace App\Livewire\Turnos;
 
+use App\Models\Configuracion;
 use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
 use App\Services\EquipoDelJefeService;
 use App\Services\GeneradorTurnoMensualService;
 use App\Services\ProgramacionTurnoService;
-use App\Support\PatronDescansoSemanal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -26,17 +26,14 @@ use Livewire\Component;
  * en "Programar equipo" (ver ProgramacionEquipo/ProgramacionTurnoService),
  * para no mantener dos motores de programación distintos.
  *
- * Régimen 276 (horario ordinario): la celda sigue siendo de solo
- * lectura en la grilla, pero ya no se edita una fila a la vez en un
- * modal con un ciclo en días — el panel "Días de descanso" de arriba
- * marca los días de la semana (ej. sábado y domingo) y
- * aplicarDescansoSemana276() lo aplica de una vez a todo el régimen
- * 276 del equipo. Por debajo sigue siendo el mismo ciclo anclado que
- * ya entendía GeneradorTurnoMensualService (ver PatronDescansoSemanal):
- * no hay un motor de generación nuevo, solo una forma más rápida de
- * cargarlo para varios trabajadores a la vez. Un ciclo con descansos
- * salteados (no un arco contiguo de la semana) sigue cargándose desde
- * turnos.configuracion, trabajador por trabajador.
+ * Régimen 276 (horario ordinario): la celda es de solo lectura, sin
+ * ningún control para que el Jefe elija días de descanso desde aquí
+ * — el panel de arriba solo refleja, informativamente, los días
+ * laborables que el Admin dejó en Configuraciones
+ * (HORARIO_ORDINARIO_DIAS_LABORABLES). Crear o editar el horario de
+ * un 276 en particular sigue siendo trabajador por trabajador, desde
+ * turnos.configuracion (ConfiguracionTurnoForm) — esta pantalla no lo
+ * hace por lotes.
  *
  * Trabajador NO usa esta pantalla — ve la vista individual
  * (CalendarioIndividualIndex). El Admin tampoco la abre por su cuenta
@@ -71,15 +68,6 @@ class CalendarioEquipoIndex extends Component
 
     #[Locked]
     public ?string $mensaje = null;
-
-    /**
-     * Días de la semana marcados en el panel "Días de descanso" (1=lunes
-     * .. 7=domingo), para aplicarDescansoSemana276(). Por defecto
-     * sábado y domingo, el caso más común.
-     *
-     * @var array<int, int>
-     */
-    public array $diasSemanaDescanso276 = [6, 7];
 
     public function mount(?int $jefeId = null): void
     {
@@ -216,87 +204,6 @@ class CalendarioEquipoIndex extends Component
             ->keyBy('id');
     }
 
-    /**
-     * Próximo día de descanso (hoy incluido) de cada trabajador 276 con
-     * ciclo cargado, para mostrarlo en texto junto a su fila sin obligar
-     * al jefe a leer la grilla para encontrarlo. Busca como máximo el
-     * largo del propio ciclo (dias_trabajo + dias_descanso) desde hoy,
-     * así siempre encuentra uno; usa la misma esDescansoEnFecha que
-     * pinta las celdas, para que coincida con lo que se ve abajo.
-     *
-     * @param  Collection<int, ConfiguracionTurno>  $configs276
-     * @return array<int, Carbon|null> user_id => fecha
-     */
-    private function proximosDescansos276(Collection $configs276): array
-    {
-        $hoy = now()->startOfDay();
-
-        return $configs276->mapWithKeys(function (ConfiguracionTurno $config) use ($hoy) {
-            $ciclo = $config->dias_trabajo + $config->dias_descanso;
-            $dia = $hoy->copy();
-
-            for ($i = 0; $i <= $ciclo; $i++) {
-                if (GeneradorTurnoMensualService::esDescansoEnFecha($config->fecha_ancla, $dia, $config->dias_trabajo, $config->dias_descanso)) {
-                    return [$config->user_id => $dia->copy()];
-                }
-
-                $dia->addDay();
-            }
-
-            return [$config->user_id => null];
-        })->all();
-    }
-
-    /**
-     * Botón "Aplicar a todos los 276" del panel "Días de descanso":
-     * traduce los días de semana marcados a un ciclo (ver
-     * PatronDescansoSemanal) y lo carga para TODO el régimen 276 del
-     * equipo de una vez, con cargarConfiguracion (mismo servicio que
-     * usa ConfiguracionTurnoForm, un trabajador a la vez). Si algún
-     * trabajador no tiene ciclo cargado, esto se lo crea; si ya tenía
-     * uno, lo reemplaza.
-     */
-    public function aplicarDescansoSemana276(GeneradorTurnoMensualService $generador): void
-    {
-        $this->resetErrorBag('diasSemanaDescanso276');
-
-        $equipo276 = $this->equipo276();
-
-        if ($equipo276->isEmpty()) {
-            return;
-        }
-
-        $resultado = PatronDescansoSemanal::anclaYCiclo($this->diasSemanaDescanso276, now());
-
-        if ($resultado === null) {
-            $this->addError(
-                'diasSemanaDescanso276',
-                'Elige entre 1 y 6 días de descanso consecutivos dentro de la semana (ej. sábado y domingo).'
-            );
-
-            return;
-        }
-
-        foreach ($equipo276 as $trabajador) {
-            if (! auth()->user()->puedeGestionarTurnoDe($trabajador)) {
-                continue;
-            }
-
-            $generador->cargarConfiguracion(
-                trabajador: $trabajador,
-                turno: ConfiguracionTurno::TURNO_276,
-                fechaAncla: $resultado['fecha_ancla'],
-                actor: auth()->user(),
-                diasTrabajo: $resultado['dias_trabajo'],
-                diasDescanso: $resultado['dias_descanso'],
-            );
-        }
-
-        $this->mensaje = 'Días de descanso aplicados a '.$equipo276->count().' '
-            .($equipo276->count() === 1 ? 'trabajador de régimen 276.' : 'trabajadores de régimen 276.');
-        $this->version++;
-    }
-
     public function render(): View
     {
         $jefe = $this->jefeVista();
@@ -342,7 +249,6 @@ class CalendarioEquipoIndex extends Component
         $configs276 = ConfiguracionTurno::whereIn('user_id', $equipo276->keys())->get()->keyBy('user_id');
 
         return view('livewire.turnos.calendario-equipo-index', [
-            'proximosDescansos276' => $this->proximosDescansos276($configs276),
             'jefe' => $jefe,
             'vistaAdmin' => $this->jefeId !== null,
             'trabajadores' => $trabajadores,
@@ -360,6 +266,27 @@ class CalendarioEquipoIndex extends Component
             'horas' => $horas,
             'equipo276' => $equipo276,
             'configs276' => $configs276,
+            'diasLaborables276' => $this->diasLaborables276(),
         ]);
+    }
+
+    /**
+     * Días hábiles del horario ordinario (1=lunes .. 7=domingo), tal
+     * como los dejó el Admin en Configuraciones
+     * (HORARIO_ORDINARIO_DIAS_LABORABLES) — puramente informativo,
+     * para que el Jefe vea de un vistazo qué días se trabaja sin tener
+     * que ir a Configuraciones. El Jefe no puede editarlos desde aquí.
+     *
+     * @return array<int, int>
+     */
+    private function diasLaborables276(): array
+    {
+        return array_map(
+            'intval',
+            array_filter(array_map('trim', explode(
+                ',',
+                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+            )))
+        );
     }
 }
