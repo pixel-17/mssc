@@ -214,7 +214,7 @@
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
                             <th scope="col" class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900">Trabajador</th>
                             @foreach ($fechas as $fecha)
-                                <th wire:key="calendario-equipo-th-{{ $loop->index }}" scope="col" class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy->toDateString() ? 'text-tinta-700 dark:text-tinta-300 font-bold' : ($fecha->isWeekend() ? 'text-rose-500' : '') }}">
+                                <th wire:key="calendario-equipo-th-{{ $loop->index }}" scope="col" class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy->toDateString() ? 'text-tinta-700 dark:text-tinta-300 font-bold' : (in_array($fecha->toDateString(), $noLaborables) ? 'text-rose-500' : '') }}">
                                     <div>{{ $fecha->day }}</div>
                                     <div class="text-[10px] normal-case opacity-70">{{ mb_substr($fecha->translatedFormat('D'), 0, 1) }}</div>
                                 </th>
@@ -245,11 +245,20 @@
                                     <span class="text-xs text-gray-500">({{ $trabajador->regimen }})</span>
                                     @if ($trabajador->regimen === '276' && ! in_array($trabajador->id, $soloLectura, true))
                                         @php($cfg276 = $configs276->get($trabajador->id))
-                                        <div class="mt-0.5 text-[11px] {{ $cfg276 ? 'text-gray-500 dark:text-gray-400' : 'text-amber-700 dark:text-amber-300' }}">
+                                        <div class="mt-0.5 text-[11px]">
                                             @if ($cfg276)
-                                                <span>horario cargado — ver días laborables arriba</span>
+                                                <span class="text-gray-500 dark:text-gray-400">horario cargado — ver días laborables arriba</span>
                                             @else
-                                                <span>Sin horario cargado todavía — usa "Crear/editar horario"</span>
+                                                <button
+                                                    type="button"
+                                                    wire:click="cargarHorario276({{ $trabajador->id }})"
+                                                    wire:loading.attr="disabled"
+                                                    class="inline-flex items-center gap-1 rounded px-2 py-0.5 bg-tinta-700 text-white text-[11px] font-medium hover:bg-tinta-800 disabled:opacity-50 transition"
+                                                    title="Asigna automáticamente el horario ordinario configurado por el Admin"
+                                                >
+                                                    <span wire:loading wire:target="cargarHorario276({{ $trabajador->id }})">Cargando…</span>
+                                                    <span wire:loading.remove wire:target="cargarHorario276({{ $trabajador->id }})">⚡ Cargar horario ordinario</span>
+                                                </button>
                                             @endif
                                         </div>
                                     @endif
@@ -266,7 +275,7 @@
                                                 data-u="{{ $trabajador->id }}"
                                                 data-f="{{ $f }}"
                                                 :class="clase(dias['{{ $trabajador->id }}']['{{ $f }}'])"
-                                                class="w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold select-none cursor-pointer transition-colors {{ $f === $hoy->toDateString() ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : ($fecha->isWeekend() ? 'ring-1 ring-rose-300 dark:ring-rose-800' : '') }}"
+                                                class="w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold select-none cursor-pointer transition-colors {{ $f === $hoy->toDateString() ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : (in_array($f, $noLaborables) ? 'ring-1 ring-rose-300 dark:ring-rose-800' : '') }}"
                                                 aria-label="{{ $trabajador->nombre_completo }}, {{ $fecha->translatedFormat('l j') }}"
                                             ><span x-text="sigla(dias['{{ $trabajador->id }}']['{{ $f }}'])"></span></button>
                                         </td>
@@ -284,7 +293,7 @@
                                                 class="relative w-9 h-9 flex items-center justify-center rounded-md border text-xs font-semibold transition-all
                                                     {{ $turno ? $turno->claseColor() : 'bg-white dark:bg-gray-900 border-gray-100 dark:border-gray-800 text-gray-300' }}
                                                     {{ $turno ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : '' }}
-                                                    {{ $esHoyCol ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : ($fechaCelda->isWeekend() ? 'ring-1 ring-rose-300 dark:ring-rose-800' : '') }}"
+                                                    {{ $esHoyCol ? 'ring-2 ring-tinta-500 dark:ring-tinta-400' : (in_array($fechaCelda->toDateString(), $noLaborables) ? 'ring-1 ring-rose-300 dark:ring-rose-800' : '') }}"
                                             >
                                                 {{ $turno?->etiqueta() ?? '—' }}
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Turnos;
 
+use App\Models\Configuracion;
 use App\Models\ConfiguracionTurno;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
@@ -57,14 +58,19 @@ class ConfiguracionTurnoForm extends Component
 
         $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
 
-        if ($config) {
+        if ($trabajador->regimen === '276') {
+            // Para 276 los días los define el admin globalmente.
+            // Se calculan aquí y se guardan directamente; el formulario
+            // manual no aplica a este régimen.
+            $this->turno = ConfiguracionTurno::TURNO_276;
+            $this->fechaAncla = now()->startOfWeek()->toDateString();
+            [$this->diasTrabajo, $this->diasDescanso] = $this->ciclo276();
+        } elseif ($config) {
             $this->turno = $config->turno;
             $this->fechaAncla = $config->fecha_ancla->toDateString();
             $this->diasTrabajo = $config->dias_trabajo;
             $this->diasDescanso = $config->dias_descanso;
         } else {
-            // 276 solo tiene un turno válido (Día): se preselecciona
-            // para no obligar a elegir algo que no tiene opciones.
             $opciones = ConfiguracionTurno::turnosValidosPara($trabajador);
             $this->turno = count($opciones) === 1 ? $opciones[0] : '';
             $this->fechaAncla = now()->toDateString();
@@ -167,11 +173,41 @@ class ConfiguracionTurnoForm extends Component
             ->all();
     }
 
+    /**
+     * Calcula dias_trabajo y dias_descanso leyendo HORARIO_ORDINARIO_DIAS_LABORABLES.
+     *
+     * @return array{0: int, 1: int} [dias_trabajo, dias_descanso]
+     */
+    private function ciclo276(): array
+    {
+        $laborables = array_filter(array_map('intval', array_map('trim', explode(
+            ',',
+            (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+        ))));
+
+        $trabajo = count($laborables);
+
+        return [$trabajo, 7 - $trabajo];
+    }
+
     public function render(): View
     {
+        $diasLaborables276 = null;
+
+        if ($this->trabajador->regimen === '276') {
+            $laborables = array_filter(array_map('intval', array_map('trim', explode(
+                ',',
+                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+            ))));
+
+            $nombres = [1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'];
+            $diasLaborables276 = array_map(fn (int $d) => $nombres[$d] ?? $d, array_values($laborables));
+        }
+
         return view('livewire.turnos.configuracion-turno-form', [
             'opcionesTurno' => ConfiguracionTurno::turnosValidosPara($this->trabajador),
             'previsualizacion' => $this->previsualizacion(),
+            'diasLaborables276' => $diasLaborables276,
         ]);
     }
 }

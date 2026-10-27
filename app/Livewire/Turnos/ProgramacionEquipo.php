@@ -5,6 +5,7 @@ namespace App\Livewire\Turnos;
 use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
+use App\Services\CalculadorDiasHabiles;
 use App\Services\EquipoDelJefeService;
 use App\Services\GeneradorTurnoMensualService;
 use App\Services\ProgramacionTurnoService;
@@ -181,6 +182,13 @@ class ProgramacionEquipo extends Component
 
         $fechas = collect(range(1, $finMes->day))->map(fn (int $d) => $inicioMes->copy()->day($d));
 
+        $diasHabiles = app(CalculadorDiasHabiles::class);
+        $noLaborables = $fechas
+            ->filter(fn (Carbon $f) => ! $diasHabiles->esDiaLaborable($f))
+            ->map(fn (Carbon $f) => $f->toDateString())
+            ->values()
+            ->all();
+
         $generador = app(GeneradorTurnoMensualService::class);
         $horas = [];
         foreach (ConfiguracionTurno::TURNOS_728 as $codigo) {
@@ -199,6 +207,7 @@ class ProgramacionEquipo extends Component
             'diasIniciales' => (object) $diasIniciales,
             'horas' => $horas,
             'hoy' => now()->toDateString(),
+            'noLaborables' => $noLaborables,
         ]);
     }
 }

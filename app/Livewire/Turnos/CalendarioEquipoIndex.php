@@ -6,9 +6,11 @@ use App\Models\Configuracion;
 use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
+use App\Services\CalculadorDiasHabiles;
 use App\Services\EquipoDelJefeService;
 use App\Services\GeneradorTurnoMensualService;
 use App\Services\ProgramacionTurnoService;
+use App\Support\PatronDescansoSemanal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -204,6 +206,57 @@ class CalendarioEquipoIndex extends Component
             ->keyBy('id');
     }
 
+    /**
+     * Asigna al trabajador 276 el horario ordinario global configurado por
+     * el Admin (HORARIO_ORDINARIO_DIAS_LABORABLES) con un solo clic, sin
+     * necesitar el formulario individual. Calcula automáticamente dias_trabajo
+     * y dias_descanso a partir de los días laborables y ancla al lunes de la
+     * semana actual.
+     */
+    public function cargarHorario276(GeneradorTurnoMensualService $generador, int $userId): void
+    {
+        $equipo276 = $this->equipo276();
+        $trabajador = $equipo276->get($userId);
+
+        abort_if($trabajador === null, 403);
+
+        $diasLaborables = array_map(
+            'intval',
+            array_filter(array_map('trim', explode(
+                ',',
+                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+            )))
+        );
+
+        // Calcula dias_descanso a partir de los días NO laborables de la semana.
+        // PatronDescansoSemanal espera los días de DESCANSO (ISO 1–7).
+        $todosLosDias = [1, 2, 3, 4, 5, 6, 7];
+        $diasDescansoIso = array_values(array_diff($todosLosDias, $diasLaborables));
+
+        // Ancla: lunes de la semana actual (o hoy si no hay días de descanso consecutivos simples).
+        $referencia = now()->startOfWeek();
+
+        $resultado = $diasDescansoIso !== []
+            ? PatronDescansoSemanal::anclaYCiclo($diasDescansoIso, $referencia)
+            : null;
+
+        $diasTrabajo = $resultado['dias_trabajo'] ?? count($diasLaborables);
+        $diasDescanso = $resultado['dias_descanso'] ?? (7 - count($diasLaborables));
+        $fechaAncla = $resultado ? $resultado['fecha_ancla'] : $referencia;
+
+        $generador->cargarConfiguracion(
+            trabajador: $trabajador,
+            turno: ConfiguracionTurno::TURNO_276,
+            fechaAncla: $fechaAncla,
+            actor: auth()->user(),
+            diasTrabajo: $diasTrabajo,
+            diasDescanso: $diasDescanso,
+        );
+
+        $this->mensaje = 'Horario ordinario cargado para '.$trabajador->nombre_completo.'.';
+        $this->version++;
+    }
+
     public function render(): View
     {
         $jefe = $this->jefeVista();
@@ -214,6 +267,13 @@ class CalendarioEquipoIndex extends Component
         $finMes = $inicioMes->copy()->endOfMonth();
         $dias = collect(range(1, $finMes->day));
         $fechas = collect(range(1, $finMes->day))->map(fn (int $d) => $inicioMes->copy()->day($d));
+
+        $diasHabiles = app(CalculadorDiasHabiles::class);
+        $noLaborables = $fechas
+            ->filter(fn (Carbon $f) => ! $diasHabiles->esDiaLaborable($f))
+            ->map(fn (Carbon $f) => $f->toDateString())
+            ->values()
+            ->all();
 
         $turnosPorUsuario = Turno::whereIn('user_id', $trabajadores->pluck('id'))
             ->whereBetween('fecha', [$inicioMes->toDateString(), $finMes->toDateString()])
@@ -267,6 +327,7 @@ class CalendarioEquipoIndex extends Component
             'equipo276' => $equipo276,
             'configs276' => $configs276,
             'diasLaborables276' => $this->diasLaborables276(),
+            'noLaborables' => $noLaborables,
         ]);
     }
 
