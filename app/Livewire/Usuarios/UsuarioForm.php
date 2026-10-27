@@ -583,7 +583,7 @@ class UsuarioForm extends Component
             : $this->usuario->roles->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $activo = ($esAdmin || $this->esArea())
-            ? (bool) ($datos['activo'] ?? $this->usuario?->activo ?? true)
+            ? (bool) ($datos['activo'] ?? $this->usuario->activo ?? true)
             : true;
 
         // ── Guardias de negocio (solo admin) ────────────────────────
@@ -769,8 +769,8 @@ class UsuarioForm extends Component
             return null;
         }
 
-        return UnidadOrganica::with('jefe.sede')->find($this->unidadOrganicaId)?->jefe?->sede?->nombre
-            ?? Auth::user()->sede?->nombre
+        return UnidadOrganica::with('jefe.sede')->find($this->unidadOrganicaId)?->jefe?->sede->nombre
+            ?? Auth::user()->sede->nombre
             ?? 'Sin sede';
     }
 

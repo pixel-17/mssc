@@ -258,7 +258,7 @@ class CrearPapeletaAction
             'motivo_id' => $motivo->id,
             'sede_id' => $trabajador->sede_id,
             'regimen' => $trabajador->regimen,
-            'dia_operativo' => $turno?->fecha ?? now()->toDateString(),
+            'dia_operativo' => $turno->fecha ?? now()->toDateString(),
             'fin_turno_at' => $finTurno,
             'estado' => $estadoInicial,
             'jefe_inmediato_id' => $jefatura['jefeInmediatoId'],

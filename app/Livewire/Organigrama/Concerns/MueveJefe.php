@@ -150,8 +150,8 @@ trait MueveJefe
             }
 
             $unidad->load(['jefe', 'padre']);
-            $this->mensajeOk = '«'.$unidad->nombre.'» ('.($unidad->jefe?->nombre_completo ?? 'sin jefe').') ahora depende de '
-                .($unidad->padre?->nombre ?? '—').'.';
+            $this->mensajeOk = '«'.$unidad->nombre.'» ('.($unidad->jefe->nombre_completo ?? 'sin jefe').') ahora depende de '
+                .($unidad->padre->nombre ?? '—').'.';
 
             return;
         }
@@ -180,7 +180,7 @@ trait MueveJefe
         $movimiento->load(['trabajador', 'unidadAnterior', 'unidadNueva']);
         $this->mensajeOk = $movimiento->trabajador?->nombre_completo
             .($modo === 'jefe' ? ' pasó a ser jefe inmediato de ' : ' pasó a ser trabajador de ')
-            .($movimiento->unidadNueva?->nombre ?? '—')
+            .($movimiento->unidadNueva->nombre ?? '—')
             .($eraJefe ? '; su unidad anterior conserva a su gente.' : '.');
     }
 

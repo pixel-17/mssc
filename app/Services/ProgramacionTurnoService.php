@@ -189,7 +189,7 @@ class ProgramacionTurnoService
     public function guardarPlan(User $trabajador, array $plan, User $actor): void
     {
         foreach ($plan as $clave => $dias) {
-            if (preg_match('/^(\d{4})-(\d{2})$/', (string) $clave, $m) !== 1 || ! is_array($dias)) {
+            if (preg_match('/^(\d{4})-(\d{2})$/', (string) $clave, $m) !== 1) {
                 throw ValidationException::withMessages(['dias' => 'La programación contiene un mes inválido.']);
             }
 
@@ -231,7 +231,7 @@ class ProgramacionTurnoService
         foreach ($porUsuario as $userId => $dias) {
             $trabajador = $equipo->get((int) $userId);
 
-            if (! $trabajador || ! is_array($dias)) {
+            if (! $trabajador) {
                 throw ValidationException::withMessages([
                     'dias' => 'La programación incluye a un trabajador que no está en tu equipo.',
                 ]);
@@ -260,7 +260,7 @@ class ProgramacionTurnoService
         $salida = [];
 
         foreach ($porUsuario as $userId => $dias) {
-            $nombre = $equipo->get((int) $userId)?->nombre_completo ?? '#'.$userId;
+            $nombre = $equipo->get((int) $userId)->nombre_completo ?? '#'.$userId;
 
             foreach (self::calcularAdvertencias($dias, $horas) as $advertencia) {
                 $salida[] = $nombre.': '.$advertencia;
@@ -397,8 +397,7 @@ class ProgramacionTurnoService
         $prefijo = sprintf('%04d-%02d-', $anio, $mes);
 
         foreach ($dias as $fecha => $codigo) {
-            $fechaOk = is_string($fecha)
-                && str_starts_with($fecha, $prefijo)
+            $fechaOk = str_starts_with($fecha, $prefijo)
                 && preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha) === 1
                 && checkdate($mes, (int) substr($fecha, 8, 2), $anio);
 

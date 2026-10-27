@@ -364,12 +364,12 @@ class PersonaDrawer extends Component
         $destino = $this->unidadId ? UnidadOrganica::with('jefe.sede')->find($this->unidadId) : null;
 
         $unidades = $permitidas
-            ->map(fn (UnidadOrganica $u) => ['id' => (int) $u->id, 'label' => $u->nombre, 'hint' => $u->jefe?->nombre_completo ?? 'sin jefe'])
+            ->map(fn (UnidadOrganica $u) => ['id' => (int) $u->id, 'label' => $u->nombre, 'hint' => $u->jefe->nombre_completo ?? 'sin jefe'])
             ->values();
 
         // La unidad actual de la persona se muestra siempre, aunque ya no esté entre las elegibles (p. ej. desactivada).
         if ($persona?->unidadOrganica && ! $unidades->contains('id', (int) $persona->unidad_organica_id)) {
-            $unidades->push(['id' => (int) $persona->unidad_organica_id, 'label' => $persona->unidadOrganica->nombre, 'hint' => $persona->unidadOrganica->jefe?->nombre_completo ?? 'sin jefe']);
+            $unidades->push(['id' => (int) $persona->unidad_organica_id, 'label' => $persona->unidadOrganica->nombre, 'hint' => $persona->unidadOrganica->jefe->nombre_completo ?? 'sin jefe']);
         }
 
         return view('livewire.organigrama.persona-drawer', [
@@ -384,7 +384,7 @@ class PersonaDrawer extends Component
                 ->map(fn ($s) => ['id' => (int) $s->id, 'label' => $s->nombre, 'hint' => null])->all(),
             'encabeza' => $persona ? $persona->unidadesQueEncabeza()->orderBy('nombre')->pluck('nombre') : collect(),
             // Sede que heredará un trabajador nuevo (ver CrearUsuarioAction::resolverSede): la del jefe de la unidad; si no, la del creador.
-            'sedeHeredada' => $destino ? ($destino->jefe?->sede?->nombre ?? $actor->sede?->nombre ?? 'Sin sede') : null,
+            'sedeHeredada' => $destino ? ($destino->jefe?->sede->nombre ?? $actor->sede->nombre ?? 'Sin sede') : null,
         ]);
     }
 

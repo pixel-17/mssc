@@ -76,7 +76,7 @@ public function resumen(string $mes): array
         ),
         'por_unidad' => $this->agrupar(
             $papeletas,
-            fn (Papeleta $p) => $p->trabajador->unidadOrganica?->nombre ?? 'Sin unidad',
+            fn (Papeleta $p) => $p->trabajador->unidadOrganica->nombre ?? 'Sin unidad',
         ),
         'total' => $papeletas->count(),
         'minutos_rrhh' => $this->promedio(

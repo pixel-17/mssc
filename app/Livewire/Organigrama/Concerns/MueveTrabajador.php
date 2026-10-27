@@ -154,7 +154,7 @@ trait MueveTrabajador
 
         $movimiento->load(['trabajador', 'unidadAnterior', 'unidadNueva']);
         $this->mensajeOk = $movimiento->trabajador?->nombre_completo.' pasó de '
-            .($movimiento->unidadAnterior?->nombre ?? '—').' a '.($movimiento->unidadNueva?->nombre ?? '—').'.';
+            .($movimiento->unidadAnterior->nombre ?? '—').' a '.($movimiento->unidadNueva->nombre ?? '—').'.';
     }
 
     public function deshacerMovimiento(int $movimientoId): void
@@ -186,7 +186,7 @@ trait MueveTrabajador
 
         $reversion->load(['trabajador', 'unidadNueva']);
         $this->mensajeOk = 'Se deshizo el movimiento: '.$reversion->trabajador?->nombre_completo
-            .' volvió a '.($reversion->unidadNueva?->nombre ?? '—').'.';
+            .' volvió a '.($reversion->unidadNueva->nombre ?? '—').'.';
     }
 
     /**
@@ -247,7 +247,7 @@ trait MueveTrabajador
             ->map(fn (UnidadOrganica $u) => [
                 'id' => (int) $u->id,
                 'label' => $u->nombre,
-                'hint' => $u->jefe?->nombre_completo ?? 'sin jefe',
+                'hint' => $u->jefe->nombre_completo ?? 'sin jefe',
             ])
             ->values()
             ->all();
