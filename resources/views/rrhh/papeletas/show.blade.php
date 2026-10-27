@@ -21,7 +21,7 @@
 
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center justify-between">
+        <div class="flex items-center justify-between" data-en-vivo-contenido data-papeleta-id="{{ $papeleta->id }}">
             <h2 class="font-bold text-2xl text-tinta-950 leading-tight tracking-tight">
                 Papeleta #{{ $papeleta->id }} · {{ $papeleta->trabajador->nombre_completo }}
             </h2>
@@ -45,7 +45,9 @@
     @endisset
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6" data-en-vivo-contenido>
+        <x-papeleta-en-vivo :papeleta-id="$papeleta->id" />
+
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6" data-en-vivo-contenido data-papeleta-id="{{ $papeleta->id }}">
             @include('papeletas._info', ['papeleta' => $papeleta])
 
             @if ($puedeDecidir || $puedePosthoc)

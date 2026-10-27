@@ -51,7 +51,9 @@
 @endphp
 
 <x-trabajador-layout titulo="Detalle de papeleta" :volver-a="route('trabajador.papeletas.index')">
-    <div class="space-y-5" data-en-vivo-contenido>
+    <x-papeleta-en-vivo :papeleta-id="$papeleta->id" />
+
+    <div class="space-y-5" data-en-vivo-contenido data-papeleta-id="{{ $papeleta->id }}">
         {{-- Ticket grande --}}
         <div class="glass-card">
             <div class="p-5 flex items-start justify-between gap-3">
