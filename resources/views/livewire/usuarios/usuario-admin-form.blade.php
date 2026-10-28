@@ -1,4 +1,3 @@
-
 <div>
     <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : ($nuevoAdmin ? 'Nuevo administrador' : 'Nuevo RR. HH.')" />
@@ -113,8 +112,8 @@
                         orgánica; esos tres campos se guardarán como NULL.
                     </p>
                     <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                        Si la persona también será trabajador y marcará papeletas, selecciona los roles
-                        RRHH y trabajador.
+                        Si la persona también es trabajador y marcará papeletas, dála de alta
+                        desde el organigrama y asígnale el rol RR. HH. desde allí.
                     </p>
                 </div>
             @endif
@@ -232,8 +231,8 @@
                         al organigrama y pueden tener papeletas.
 
                         @unless ($usuario)
-                            Desde aquí puedes crear RRHH puro o RRHH junto con trabajador.
-                            Un trabajador puro se da de alta desde el organigrama.
+                            Desde aquí solo se crea RR. HH. puro. Si la persona también es
+                            trabajador, dála de alta desde el organigrama.
                         @endunless
                     </p>
                 @endif

@@ -45,6 +45,15 @@ window.msscMapaSede = function (config) {
                 fillOpacity: 0.15,
             }).addTo(this.mapa);
 
+            // Sede nueva: el marcador ya aparece puesto sobre el mapa, pero
+            // $wire.latitud/longitud siguen en null hasta que el admin
+            // interactúa con él. Si no se sincroniza aquí, "Crear sede" falla
+            // la validación sin que el admin entienda por qué (parece que no
+            // hizo nada mal: el pin ya estaba ahí).
+            if (! config.tieneUbicacion) {
+                this.moverA(this.marcador.getLatLng());
+            }
+
             this.marcador.on('dragend', () => this.moverA(this.marcador.getLatLng()));
 
             this.mapa.on('click', (evento) => {

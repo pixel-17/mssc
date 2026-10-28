@@ -159,52 +159,52 @@ class PersonaDrawer extends Component
     }
 
     private function crear(User $actor): void
-    {
-        $permitidas = $this->unidadesPermitidas($actor);
-        $existenteInactivo = User::where('dni', $this->dni)->where('activo', false)->first();
+{
+    $permitidas = $this->unidadesPermitidas($actor);
+    $existenteInactivo = User::where('dni', $this->dni)
+        ->where('activo', false)
+        ->first();
 
-        $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'apellido' => ['required', 'string', 'max:255'],
-            'dni' => ReglasDatosUsuario::dni(soloActivos: true),
-            'email' => ReglasDatosUsuario::email($existenteInactivo?->id),
-            'regimen' => ['required', Rule::in(['276', '728'])],
-            'tipo' => ['required', Rule::in($this->puedeCrearJefeInmediato($actor) ? ['trabajador', 'jefe_inmediato'] : ['trabajador'])],
-            'unidadId' => ['required', Rule::in($permitidas->pluck('id')->all())],
-            'sedeId' => $this->tipo === 'jefe_inmediato' ? ['required', 'exists:sedes,id'] : ['nullable'],
-        ]);
+    $this->validate([
+        'name' => ['required', 'string', 'max:255'],
+        'apellido' => ['required', 'string', 'max:255'],
+        'dni' => ReglasDatosUsuario::dni(soloActivos: true),
+        'email' => ReglasDatosUsuario::email($existenteInactivo?->id),
+        'regimen' => ['required', Rule::in(['276', '728'])],
+        'tipo' => ['required', Rule::in(
+            $this->puedeCrearJefeInmediato($actor)
+                ? ['trabajador', 'jefe_inmediato']
+                : ['trabajador']
+        )],
+        'unidadId' => ['required', Rule::in($permitidas->pluck('id')->all())],
+        'sedeId' => $this->tipo === 'jefe_inmediato'
+            ? ['required', 'exists:sedes,id']
+            : ['nullable'],
+    ]);
 
-        $this->authorize('crearEnUnidad', [User::class, (int) $this->unidadId]);
+    $this->authorize('crearEnUnidad', [User::class, (int) $this->unidadId]);
 
-        $destino = UnidadOrganica::with('jefe')->find($this->unidadId);
-        $regimenDelJefe = $destino?->jefe?->regimen;
+    $nuevo = null;
 
-        if ($this->tipo === 'trabajador' && $regimenDelJefe && $regimenDelJefe !== $this->regimen) {
-            $this->addError('regimen', "El régimen debe coincidir con el de su jefe inmediato (régimen {$regimenDelJefe}).");
+    if (! $this->intentar(function () use ($actor, &$nuevo) {
+        $nuevo = app(CrearUsuarioAction::class)->ejecutar($actor, [
+            'name' => $this->name,
+            'apellido' => $this->apellido,
+            'dni' => $this->dni,
+            'email' => $this->email,
+            'regimen' => $this->regimen,
+            'sede_id' => $this->tipo === 'jefe_inmediato' ? $this->sedeId : null,
+            'unidad_organica_id' => $this->unidadId,
+            'tipo' => $this->tipo,
+            'turno' => null,
+            'fecha_ancla' => null,
+            'dias_trabajo' => null,
+            'dias_descanso' => null,
+        ], true);
+    }, fn ($e) => $this->error = $e->getMessage())) {
+        return;
+    }
 
-            return;
-        }
-
-        $nuevo = null;
-
-        if (! $this->intentar(function () use ($actor, &$nuevo) {
-            $nuevo = app(CrearUsuarioAction::class)->ejecutar($actor, [
-                'name' => $this->name,
-                'apellido' => $this->apellido,
-                'dni' => $this->dni,
-                'email' => $this->email,
-                'regimen' => $this->regimen,
-                'sede_id' => $this->tipo === 'jefe_inmediato' ? $this->sedeId : null,
-                'unidad_organica_id' => $this->unidadId,
-                'tipo' => $this->tipo,
-                'turno' => null,
-                'fecha_ancla' => null,
-                'dias_trabajo' => null,
-                'dias_descanso' => null,
-            ], true);
-        }, fn ($e) => $this->error = $e->getMessage())) {
-            return;
-        }
 
         $mensaje = $this->tipo === 'jefe_inmediato'
             ? "Se creó a {$nuevo->nombre_completo} como jefe inmediato de {$destino->nombre}."

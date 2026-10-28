@@ -57,8 +57,7 @@
                         <x-admin.campo label="DNI" for="persona-dni" campo="dni">
                             <x-input id="persona-dni" type="text" wire:model="dni" maxlength="8" inputmode="numeric" autocomplete="off" />
                         </x-admin.campo>
-                        <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen"
-                                       :ayuda="$tipo === 'trabajador' && $destino?->jefe?->regimen ? 'Debe coincidir con el de su jefe inmediato ('.$destino->jefe->regimen.').' : null">
+                        <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen">
                             <x-select id="persona-regimen" wire:model="regimen">
                                 <option value="">— Selecciona —</option>
                                 <option value="276">276 (día)</option>

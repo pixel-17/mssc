@@ -25,6 +25,7 @@
                         lng: {{ $lng }},
                         radio: {{ $radioMetros }},
                         zoom: {{ $latitud ? 16 : 14 }},
+                        tieneUbicacion: {{ $latitud ? 'true' : 'false' }},
                     })" x-init="init()">
                     <x-label value="Ubicación (haz clic en el mapa o arrastra el marcador)" />
                     {{-- isolation: isolate confina el stacking context de Leaflet dentro
