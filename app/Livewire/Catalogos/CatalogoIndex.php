@@ -10,11 +10,13 @@ use Livewire\Component;
 /**
  * Punto de entrada único a los catálogos de administración.
  *
- * Los 6 catálogos ya viven en Blade + Livewire puro, uno por uno,
+ * Los catálogos ya viven en Blade + Livewire puro, uno por uno,
  * cada uno con su propio par Index/Form (ver App\Livewire\Sedes,
- * Motivos, Turnos, UnidadesOrganicas, Configuraciones y
- * Usuarios). El horario de RRHH ya no es un catálogo: se deriva del
- * horario ordinario de Configuraciones (ver RrhhHorarioService).
+ * Motivos, Turnos, Configuraciones y Usuarios). El horario de RRHH
+ * ya no es un catálogo: se deriva del horario ordinario de
+ * Configuraciones (ver RrhhHorarioService). Unidades orgánicas
+ * tampoco es un catálogo aparte: su CRUD vive dentro de Organigrama
+ * (ver App\Livewire\Organigrama\UnidadModal).
  *
  * Es solo un acceso rápido con ícono + descripción de una línea, mismo
  * criterio que el sidebar (ver NavegacionComposer).
@@ -28,7 +30,6 @@ class CatalogoIndex extends Component
         return view('livewire.catalogos.catalogo-index', [
             'catalogos' => [
                 ['nombre' => 'Sedes', 'descripcion' => 'Locales con geocerca para marcar el retorno.', 'icono' => 'map-pin', 'ruta' => route('sedes.index')],
-                ['nombre' => 'Unidades orgánicas', 'descripcion' => 'Áreas, sus jefes y la jerarquía entre ellas.', 'icono' => 'building', 'ruta' => route('unidades-organicas.index')],
                 ['nombre' => 'Motivos', 'descripcion' => 'Motivos de papeleta y sus reglas de sustento.', 'icono' => 'tag', 'ruta' => route('motivos.index')],
                 ['nombre' => 'Turnos', 'descripcion' => 'Hora de inicio y fin de cada turno (Mañana, Tarde, Noche y Día).', 'icono' => 'clock', 'ruta' => route('turnos.index')],
                 ['nombre' => 'Usuarios', 'descripcion' => 'Cuentas, roles y activación/desactivación.', 'icono' => 'user-circle', 'ruta' => route('usuarios-admin.index')],

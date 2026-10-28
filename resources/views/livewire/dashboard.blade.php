@@ -47,7 +47,7 @@
 
                         <x-stat-card label="Papeletas nuevas (30 días)" :value="$admin['papeletas_periodo']" />
                         <x-stat-card label="Sedes activas" :value="$admin['sedes_activas']" href="{{ route('sedes.index') }}" />
-                        <x-stat-card label="Unidades orgánicas activas" :value="$admin['unidades_organicas']" href="{{ route('unidades-organicas.index') }}" />
+                        <x-stat-card label="Unidades orgánicas activas" :value="$admin['unidades_organicas']" href="{{ route('organigrama.index') }}" />
                     </div>
 
                     <div class="glass-card p-5">

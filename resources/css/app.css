@@ -27,7 +27,7 @@
     --surface-muted: #f2f3f1;
     --border-soft: #e2e5e2;
     --ink-900: #101c22;
-    --sidebar-bg: linear-gradient(180deg, #293f43 0%, #1b2b34 100%);
+    --sidebar-bg: linear-gradient(180deg, #2a2a2a 0%, #171717 100%);
     --sidebar-bg-active: rgba(255, 255, 255, 0.14);
     accent-color: #b8792f;
 }

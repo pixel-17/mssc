@@ -20,7 +20,15 @@ return new class extends Migration
 
             $table->string('archivo_path')->nullable();
             $table->timestamp('fecha_limite');
-            $table->enum('estado', ['pendiente', 'presentado', 'vencido', 'aprobado', 'observado'])
+            // RRHH tiene tres decisiones posibles al revisar un sustento
+            // presentado: 'aprobado' (cierra la papeleta sin descuento),
+            // 'observado' (reabre para que el trabajador vuelva a
+            // presentar) o 'rechazado' (el sustento no es válido y no
+            // amerita una nueva oportunidad, la papeleta se reclasifica a
+            // Particular con descuento, mismo camino que
+            // ReclasificarAParticularAction usa para los vencimientos
+            // automáticos, pero disparado por un humano).
+            $table->enum('estado', ['pendiente', 'presentado', 'vencido', 'aprobado', 'observado', 'rechazado'])
                 ->default('pendiente');
 
             $table->timestamp('presentado_at')->nullable();

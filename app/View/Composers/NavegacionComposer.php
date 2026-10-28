@@ -160,7 +160,6 @@ class NavegacionComposer
         if ($esAdmin) {
             $secciones[] = ['label' => 'Catálogos', 'items' => [
                 ['label' => 'Sedes', 'route' => route('sedes.index'), 'active' => request()->routeIs('sedes.*'), 'icon' => 'map-pin'],
-                ['label' => 'Unidades orgánicas', 'route' => route('unidades-organicas.index'), 'active' => request()->routeIs('unidades-organicas.*'), 'icon' => 'building'],
                 ['label' => 'Motivos', 'route' => route('motivos.index'), 'active' => request()->routeIs('motivos.*'), 'icon' => 'tag'],
                 ['label' => 'Turnos', 'route' => route('turnos.index'), 'active' => request()->routeIs('turnos.index', 'turnos.crear', 'turnos.editar'), 'icon' => 'clock'],
             ]];

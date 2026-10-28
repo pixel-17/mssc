@@ -66,17 +66,19 @@ class AccesoAdminTest extends TestCase
         }
     }
 
-    public function test_el_indice_de_catalogos_enlaza_a_los_seis_catalogos(): void
+    public function test_el_indice_de_catalogos_enlaza_a_los_catalogos(): void
     {
         $admin = $this->usuarioDePrueba([], ['admin']);
 
+        // Unidades orgánicas ya no es un catálogo aparte: su CRUD vive
+        // dentro de Organigrama (ver App\Livewire\Organigrama\UnidadModal).
         $this->actingAs($admin)->get(route('catalogos.index'))
             ->assertOk()
             ->assertSee('Sedes')
             ->assertSee('Motivos')
             ->assertSee('Turnos')
-            ->assertSee('Unidades orgánicas')
             ->assertSee('Configuraciones')
-            ->assertSee('Usuarios');
+            ->assertSee('Usuarios')
+            ->assertDontSee('Unidades orgánicas');
     }
 }

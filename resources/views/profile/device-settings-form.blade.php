@@ -55,7 +55,7 @@
 
             <x-fila-ajuste x-data="msscInstalarApp()" x-show="instalable"
                            :titulo="__('Instalar la app')"
-                           :descripcion="__('Agrega MSSC a la pantalla de inicio de este dispositivo.')">
+                           :descripcion="__('Agrega MDS a la pantalla de inicio de este dispositivo.')">
                 <x-secondary-button type="button" x-on:click="instalar()">{{ __('Instalar app') }}</x-secondary-button>
             </x-fila-ajuste>
         </div>

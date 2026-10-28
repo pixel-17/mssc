@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'MSSC - Sistema de Papeletas'),
+    'name' => env('APP_NAME', 'MDS - Sistema de Papeletas'),
 
     /*
     |--------------------------------------------------------------------------

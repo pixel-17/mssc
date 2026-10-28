@@ -23,7 +23,7 @@ self.addEventListener('push', (event) => {
         payload = { title: 'Notificación', body: event.data.text() };
     }
 
-    const titulo = payload.title || 'MSSC — Papeletas de salida';
+    const titulo = payload.title || 'MDS — Papeletas de salida';
     const opciones = {
         body: payload.body,
         icon: payload.icon || '/favicon.ico',
