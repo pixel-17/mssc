@@ -1,6 +1,6 @@
 <div>
     <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : ($nuevoAdmin ? 'Nuevo administrador' : 'Nuevo usuario')" />
+        <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : ($nuevoAdmin ? 'Nuevo administrador' : 'Nuevo RR. HH.')" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -37,7 +37,7 @@
                     </div>
                 @endif
 
-                @unless ($esAdminRol)
+                @unless ($esAdminRol || $esSoloRrhhRol)
                 <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" campo="regimen">
                     <x-select id="usuario-admin-form-regimen" wire:model.live="regimen">
                         <option value="">— Selecciona —</option>
@@ -91,6 +91,12 @@
                 <p class="text-xs text-gray-500 dark:text-gray-400">
                     Un administrador gestiona cuentas y catálogos: no pertenece a ninguna unidad del organigrama ni tiene equipo.
                 </p>
+            @elseif ($esSoloRrhhRol)
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Un RR. HH. puro no pertenece al organigrama ni marca papeletas: su régimen queda fijo en 276 y no
+                    necesita sede ni unidad orgánica. Si además es trabajador (tiene equipo, turno o papeletas),
+                    marca también el rol «trabajador».
+                </p>
             @endif
 
             @if ($requiereTurno)
@@ -143,7 +149,8 @@
                 @if ($nuevoAdmin)
                     <p class="text-sm text-gray-700 dark:text-gray-300">Administrador (fijo)</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Este formulario solo da de alta administradores. Para crear RR. HH. o trabajadores, usa «Nuevo usuario».
+                        Este formulario solo da de alta administradores. Para crear RR. HH., usa «Nuevo RR. HH.».
+                        Los trabajadores se dan de alta desde el organigrama.
                     </p>
                 @else
                     <div class="flex flex-wrap gap-4" role="group" aria-labelledby="usuario-admin-form-roles-titulo">
@@ -155,7 +162,12 @@
                         @endforeach
                     </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        admin y rrhh son roles globales. "trabajador" es el rol de todos los demás (incluye a quienes además son Jefe Inmediato o Jefe de Área por posición en el organigrama).
+                        admin y rrhh son roles globales. "trabajador" es el rol de todos los demás (incluye a quienes
+                        además son Jefe Inmediato o Jefe de Área por posición en el organigrama).
+                        @unless ($usuario)
+                            Desde aquí solo se crean cuentas de RR. HH. (opcionalmente también trabajador, si esa
+                            persona además marca papeletas). Un trabajador puro se da de alta desde el organigrama.
+                        @endunless
                     </p>
                 @endif
 

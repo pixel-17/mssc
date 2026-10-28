@@ -59,7 +59,7 @@ class UsuarioAdminCrudTest extends TestCase
             'dni' => '12345678',
             'email' => 'lucia@example.com',
             'regimen' => '276',
-            'rolesSeleccionados' => [$this->rolId('trabajador')],
+            'rolesSeleccionados' => [$this->rolId('rrhh'), $this->rolId('trabajador')],
             ...$datos,
         ];
 
@@ -80,7 +80,7 @@ class UsuarioAdminCrudTest extends TestCase
 
         $this->formularioDeAlta([
             'sedeId' => $sede->id,
-            'rolesSeleccionados' => [$this->rolId('trabajador')],
+            'rolesSeleccionados' => [$this->rolId('rrhh'), $this->rolId('trabajador')],
         ])
             ->call('guardar')
             ->assertHasNoErrors()
@@ -95,6 +95,7 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertSame($sede->id, $usuario->sede_id);
         $this->assertTrue($usuario->activo);
         $this->assertTrue($usuario->hasRole('trabajador'));
+        $this->assertTrue($usuario->hasRole('rrhh'));
         $this->assertTrue(Hash::check('12345678', $usuario->password), 'la contraseña inicial es el DNI');
         $this->assertTrue((bool) $usuario->debe_actualizar_password);
     }
@@ -154,6 +155,76 @@ class UsuarioAdminCrudTest extends TestCase
         $this->formularioDeAlta(['regimen' => '', 'rolesSeleccionados' => [$this->rolId('trabajador')]])
             ->call('guardar')
             ->assertHasErrors(['regimen']);
+
+        $this->assertNull(User::where('dni', '12345678')->first());
+    }
+
+    // ------------------------------------------- alta de RR. HH. / trabajador
+
+    /**
+     * Un RR. HH. puro (sin el rol trabajador) no pertenece al organigrama:
+     * el formulario ni siquiera exige régimen, sede o unidad — quedan en
+     * null/276 aunque el payload traiga otra cosa.
+     */
+    public function test_un_rrhh_puro_se_crea_sin_sede_ni_unidad_y_con_regimen_fijo_en_276(): void
+    {
+        $sede = $this->sedeDePrueba();
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina de prueba', 'jefe_id' => $this->usuarioDePrueba(['regimen' => '276'])->id]);
+
+        $this->formularioDeAlta([
+            'regimen' => '728',
+            'sedeId' => $sede->id,
+            'unidadOrganicaId' => $unidad->id,
+            'rolesSeleccionados' => [$this->rolId('rrhh')],
+        ])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '12345678')->firstOrFail();
+
+        $this->assertTrue($usuario->hasRole('rrhh'));
+        $this->assertFalse($usuario->hasRole('trabajador'));
+        $this->assertSame('276', $usuario->regimen);
+        $this->assertNull($usuario->sede_id);
+        $this->assertNull($usuario->unidad_organica_id);
+    }
+
+    /**
+     * Si además de RR. HH. se marca el rol trabajador, sí aplican régimen,
+     * sede y unidad orgánica, igual que a cualquier trabajador.
+     */
+    public function test_un_rrhh_mas_trabajador_si_necesita_sede_y_unidad(): void
+    {
+        $sede = $this->sedeDePrueba();
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina de prueba', 'jefe_id' => $this->usuarioDePrueba(['regimen' => '276'])->id]);
+
+        $this->formularioDeAlta([
+            'regimen' => '728',
+            'sedeId' => $sede->id,
+            'unidadOrganicaId' => $unidad->id,
+            'rolesSeleccionados' => [$this->rolId('rrhh'), $this->rolId('trabajador')],
+        ])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '12345678')->firstOrFail();
+
+        $this->assertTrue($usuario->hasRole('rrhh'));
+        $this->assertTrue($usuario->hasRole('trabajador'));
+        $this->assertSame('728', $usuario->regimen);
+        $this->assertSame($sede->id, $usuario->sede_id);
+        $this->assertSame($unidad->id, $usuario->unidad_organica_id);
+    }
+
+    /**
+     * Desde «Cuentas de usuario» ya no se puede dar de alta a un trabajador
+     * puro (sin admin ni RR. HH.): esa alta es exclusiva del organigrama.
+     */
+    public function test_no_se_puede_crear_un_trabajador_puro_desde_cuentas_de_usuario(): void
+    {
+        $this->formularioDeAlta(['rolesSeleccionados' => [$this->rolId('trabajador')]])
+            ->call('guardar')
+            ->assertHasErrors(['rolesSeleccionados']);
 
         $this->assertNull(User::where('dni', '12345678')->first());
     }
@@ -320,7 +391,7 @@ class UsuarioAdminCrudTest extends TestCase
             'fechaAncla' => '2026-09-21',
             'diasTrabajo' => 6,
             'diasDescanso' => 1,
-            'rolesSeleccionados' => [$this->rolId('trabajador')],
+            'rolesSeleccionados' => [$this->rolId('rrhh'), $this->rolId('trabajador')],
         ])
             ->call('guardar')
             ->assertHasNoErrors()

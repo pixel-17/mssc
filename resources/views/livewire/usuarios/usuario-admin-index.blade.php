@@ -2,7 +2,7 @@
     <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
         <x-admin.encabezado titulo="Usuarios">
             <x-admin.boton-nuevo :href="route('usuarios-admin.crear', ['tipo' => 'admin'])">Nuevo administrador</x-admin.boton-nuevo>
-            <x-admin.boton-nuevo :href="route('usuarios-admin.crear')">Nuevo usuario</x-admin.boton-nuevo>
+            <x-admin.boton-nuevo :href="route('usuarios-admin.crear')">Nuevo RR. HH.</x-admin.boton-nuevo>
         </x-admin.encabezado>
 
         <x-admin.mensajes />

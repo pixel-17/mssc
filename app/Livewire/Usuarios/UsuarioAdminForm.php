@@ -26,11 +26,18 @@ use Spatie\Permission\Models\Role;
 
 /**
  * Formulario de Usuarios. Gestión SOLO para
- * admin — es el fin de la pirámide (ver UserPolicy), puede crear
+ * admin — es el fin de la pirámide (ver UserPolicy), puede editar
  * cualquier usuario en cualquier unidad y con cualquier rol, sin las
  * restricciones de área que sí aplican a Jefe de Área / Jefe
  * Inmediato (ver Usuario\UsuarioController, la vía que ellos usan,
  * nunca este formulario).
+ *
+ * Alta nueva (fuera de «Nuevo administrador»): aquí solo se crean
+ * cuentas de administrador o RR. HH. (este último, opcionalmente,
+ * también trabajador, ver validarRoles()). Un trabajador puro se da
+ * de alta desde el organigrama, no desde este formulario. Un RR. HH.
+ * puro no pertenece al organigrama: régimen queda fijo en 276 y
+ * sede/unidad orgánica no aplican (ver esSoloRrhh()).
  *
  * jefe_inmediato_id / jefe_area_id NO se editan aquí: se recalculan
  * solos vía UserObserver en cuanto se guarda unidad_organica_id. Para
@@ -149,6 +156,20 @@ class UsuarioAdminForm extends Component
     }
 
     /**
+     * ¿Los roles elegidos son únicamente el de RR. HH. (sin el de trabajador)? Un
+     * RR. HH. puro no marca papeletas ni tiene turno: no pertenece al organigrama,
+     * así que régimen, sede y unidad orgánica no le corresponden (régimen queda
+     * fijo en 276, ver guardar()).
+     */
+    protected function esSoloRrhh(): bool
+    {
+        $rrhhId = (int) Role::where('name', 'rrhh')->value('id');
+        $roles = array_map('intval', $this->rolesSeleccionados);
+
+        return $rrhhId > 0 && $roles !== [] && array_diff($roles, [$rrhhId]) === [];
+    }
+
+    /**
      * ¿Se puede cargar el turno inicial desde este formulario? Es OPCIONAL: al crear no se
      * pide (lo programan después); si llega, se valida y se carga. Un 728 sin turno no puede
      * crear papeletas (ver CrearPapeletaAction) hasta que se lo carguen.
@@ -239,6 +260,13 @@ class UsuarioAdminForm extends Component
             $this->regimen = '';
             $this->sedeId = null;
             $this->unidadOrganicaId = null;
+        } elseif ($this->esSoloRrhh()) {
+            // RR. HH. puro: no pertenece al organigrama. Se recalcula aquí (no
+            // solo al pintar la vista) para que un payload manipulado no pueda
+            // colar sede, unidad u otro régimen.
+            $this->regimen = '276';
+            $this->sedeId = null;
+            $this->unidadOrganicaId = null;
         }
 
         $requiereTurno = $this->admiteConfiguracionTurno() && $this->turno !== '';
@@ -307,6 +335,20 @@ class UsuarioAdminForm extends Component
             $this->addError('rolesSeleccionados', 'Encabeza una unidad: reasigna primero esa jefatura antes de darle el rol de administrador.');
 
             return false;
+        }
+
+        // Alta nueva desde «Cuentas de usuario» (no «Nuevo administrador»): solo se
+        // crean administradores o RR. HH. aquí (este último, opcionalmente, también
+        // trabajador). Un trabajador puro (sin admin ni RR. HH.) se da de alta desde
+        // el organigrama, nunca desde este formulario.
+        if ($this->usuario === null && ! $this->nuevoAdmin) {
+            $rrhhId = (int) Role::where('name', 'rrhh')->value('id');
+
+            if (! in_array($adminId, $roles, true) && ! in_array($rrhhId, $roles, true)) {
+                $this->addError('rolesSeleccionados', 'Desde Cuentas de usuario solo se crean administradores o RR. HH. (opcionalmente también trabajador, junto con RR. HH.). Para dar de alta solo trabajadores, hazlo desde el organigrama.');
+
+                return false;
+            }
         }
 
         return true;
@@ -514,13 +556,16 @@ class UsuarioAdminForm extends Component
             'cuentaExistente' => $this->buscarCuentaExistente(),
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
-            // En «Nuevo usuario» no se ofrece admin: los administradores se crean desde «Nuevo administrador».
+            // En «Nuevo RR. HH.» no se ofrece admin: los administradores se crean desde «Nuevo administrador».
+            // Ahí solo se puede elegir rrhh (y, si además es trabajador, también ese rol);
+            // un trabajador puro no es una opción en este formulario (ver validarRoles()).
             // En «Nuevo administrador» el rol es fijo: solo se trae 'admin' (ver blade, que ni siquiera pinta el selector).
             'roles' => Role::orderBy('name')
                 ->when($this->nuevoAdmin, fn ($q) => $q->where('name', 'admin'))
                 ->when($this->usuario === null && ! $this->nuevoAdmin, fn ($q) => $q->where('name', '!=', 'admin'))
                 ->get(),
             'esAdminRol' => $this->incluyeAdmin(),
+            'esSoloRrhhRol' => $this->esSoloRrhh(),
             'requiereTurno' => $this->usuario !== null && $this->admiteConfiguracionTurno(),
             'opcionesTurno' => $this->regimen
                 ? ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen]))

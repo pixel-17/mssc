@@ -64,7 +64,7 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('email', 'rosa@example.com')
             ->set('regimen', '728')
             ->set('sedeId', $this->sedeDePrueba()->id)
-            ->set('rolesSeleccionados', [$this->rolId('trabajador')])
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -103,7 +103,7 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('unidadOrganicaId', $unidad->id)
             ->set('turno', 'MANANA')
             ->set('fechaAncla', now()->toDateString())
-            ->set('rolesSeleccionados', [$this->rolId('trabajador')])
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -127,7 +127,7 @@ class TurnoInicialAlCrearTest extends TestCase
             ->set('email', 'rosa@example.com')
             ->set('regimen', '276')
             ->set('sedeId', $this->sedeDePrueba()->id)
-            ->set('rolesSeleccionados', [$this->rolId('trabajador')])
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
             ->call('guardar')
             ->assertHasNoErrors();
 
