@@ -32,10 +32,10 @@ use Spatie\Permission\Models\Role;
  * Inmediato (ver Usuario\UsuarioController, la vía que ellos usan,
  * nunca este formulario).
  *
- * Alta nueva (fuera de «Nuevo administrador»): aquí solo se crean
- * cuentas de administrador o RR. HH. puros (ver validarRoles()).
- * Un trabajador puro, o un RR. HH. que también sea trabajador, se da
- * de alta desde el organigrama, no desde este formulario. Un RR. HH.
+ * Alta nueva: un único formulario para crear administrador o RR. HH.
+ * puro (se elige el rol con el checkbox, ver validarRoles()). Un
+ * trabajador puro, o un RR. HH. que también sea trabajador, se da de
+ * alta desde el organigrama, no desde este formulario. Un RR. HH.
  * puro no pertenece al organigrama: régimen queda fijo en 276 y
  * sede/unidad orgánica no aplican (ver esSoloRrhh()).
  *
@@ -78,11 +78,10 @@ class UsuarioAdminForm extends Component
 
     public array $rolesSeleccionados = [];
 
-    public bool $activo = true;
+    /** Solo en alta nueva: id del rol elegido (radio). Se convierte a rolesSeleccionados al guardar. */
+    public string $rolNuevo = '';
 
-    /** Modo «Nuevo administrador» (?tipo=admin). Se fija en mount(): en las peticiones de Livewire ya no existe el query string. */
-    #[Locked]
-    public bool $nuevoAdmin = false;
+    public bool $activo = true;
 
     public string $turno = '';
 
@@ -117,11 +116,6 @@ class UsuarioAdminForm extends Component
                 $this->diasTrabajo = $config->dias_trabajo;
                 $this->diasDescanso = $config->dias_descanso;
             }
-        } elseif (request()->query('tipo') === 'admin') {
-            $this->nuevoAdmin = true;
-            // «Nuevo administrador»: rol admin ya marcado y sin unidad (el admin no pertenece al organigrama).
-            $adminId = (int) Role::where('name', 'admin')->value('id');
-            $this->rolesSeleccionados = $adminId > 0 ? [(string) $adminId] : [];
         } else {
             // Alta desde el organigrama: ?unidad=ID preselecciona la unidad
             // y, si su jefe tiene sede, la propone como sede.
@@ -250,13 +244,15 @@ class UsuarioAdminForm extends Component
     {
         $this->autorizarAdmin();
 
-        if ($this->nuevoAdmin) {
-            // «Nuevo administrador» tiene rol fijo y no pertenece a régimen,
-            // sede ni unidad: se recalculan aquí (no solo en mount()) para
-            // que un payload de Livewire manipulado no pueda colar otro rol
-            // u otros datos — el formulario ya no muestra esos campos.
-            $adminId = (int) Role::where('name', 'admin')->value('id');
-            $this->rolesSeleccionados = $adminId > 0 ? [(string) $adminId] : [];
+        // En alta nueva el rol viene del radio ($rolNuevo); lo convertimos a array.
+        if ($this->usuario === null && $this->rolNuevo !== '') {
+            $this->rolesSeleccionados = [$this->rolNuevo];
+        }
+
+        if ($this->esSoloAdmin()) {
+            // Administrador puro: no pertenece a régimen, sede ni unidad.
+            // Se recalcula aquí (no solo al pintar la vista) para que un
+            // payload de Livewire manipulado no pueda colar otros datos.
             $this->regimen = '';
             $this->sedeId = null;
             $this->unidadOrganicaId = null;
@@ -337,16 +333,23 @@ class UsuarioAdminForm extends Component
             return false;
         }
 
-        // Alta nueva desde «Cuentas de usuario» (no «Nuevo administrador»): solo se
-        // crean administradores o RR. HH. puros aquí. Un trabajador puro (sin admin
-        // ni RR. HH.) se da de alta desde el organigrama, nunca desde este formulario.
+        // Alta nueva desde «Cuentas de usuario»: solo se crean administradores
+        // o RR. HH. puros aquí. Un trabajador puro (sin admin ni RR. HH.) se
+        // da de alta desde el organigrama, nunca desde este formulario.
         // Un RR. HH. con rol trabajador también se da de alta desde el organigrama.
-        if ($this->usuario === null && ! $this->nuevoAdmin) {
+        if ($this->usuario === null) {
             $rrhhId = (int) Role::where('name', 'rrhh')->value('id');
             $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
 
             if (! in_array($adminId, $roles, true) && ! in_array($rrhhId, $roles, true)) {
                 $this->addError('rolesSeleccionados', 'Desde Cuentas de usuario solo se crean administradores o RR. HH. puros. Para dar de alta trabajadores, hazlo desde el organigrama.');
+
+                return false;
+            }
+
+            // Se elige UN rol a la vez: administrador o RR. HH. puro, no ambos.
+            if (in_array($adminId, $roles, true) && in_array($rrhhId, $roles, true)) {
+                $this->addError('rolesSeleccionados', 'Elige un solo rol: administrador o RR. HH.');
 
                 return false;
             }
@@ -565,14 +568,13 @@ class UsuarioAdminForm extends Component
             'cuentaExistente' => $this->buscarCuentaExistente(),
             'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
             'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
-            // En «Nuevo RR. HH.» solo se ofrece el rol rrhh: trabajador no aplica en alta nueva
-            // desde este formulario (debe darse de alta desde el organigrama si también es trabajador).
-            // En «Nuevo administrador» el rol es fijo: solo se trae 'admin' (ver blade).
+            // Al crear se ofrecen admin y rrhh: se elige uno solo (ver validarRoles()).
+            // Trabajador no aplica en alta nueva desde este formulario (debe darse de
+            // alta desde el organigrama si también es trabajador).
             // En edición se muestran todos los roles salvo admin (para no mezclar perfiles).
             'roles' => Role::orderBy('name')
-                ->when($this->nuevoAdmin, fn ($q) => $q->where('name', 'admin'))
-                ->when($this->usuario === null && ! $this->nuevoAdmin, fn ($q) => $q->where('name', 'rrhh'))
-                ->when($this->usuario !== null && ! $this->nuevoAdmin, fn ($q) => $q->where('name', '!=', 'admin'))
+                ->when($this->usuario === null, fn ($q) => $q->whereIn('name', ['admin', 'rrhh']))
+                ->when($this->usuario !== null, fn ($q) => $q->where('name', '!=', 'admin'))
                 ->get(),
             'esAdminRol' => $this->incluyeAdmin(),
             'esSoloRrhhRol' => $this->esSoloRrhh(),

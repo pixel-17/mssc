@@ -1,6 +1,6 @@
 <div>
     <div class="max-w-3xl mx-auto py-10 sm:px-6 lg:px-8 space-y-6">
-        <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : ($nuevoAdmin ? 'Nuevo administrador' : 'Nuevo RR. HH.')" />
+        <x-admin.encabezado :titulo="$usuario ? 'Editar usuario' : 'Nuevo administrador / RR. HH.'" />
 
         <form wire:submit="guardar" class="glass-card p-6 space-y-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -38,8 +38,8 @@
                     </div>
                 @endif
 
-                {{-- Estos campos solo corresponden a usuarios que pertenecen al organigrama. --}}
-                @unless ($esAdminRol || $esSoloRrhhRol)
+                {{-- Régimen, sede y unidad solo aplican en edición y solo cuando el usuario pertenece al organigrama. --}}
+                @if ($usuario && !$esAdminRol && !$esSoloRrhhRol)
                     <x-admin.campo label="Régimen" for="usuario-admin-form-regimen" campo="regimen">
                         <x-select id="usuario-admin-form-regimen" wire:model.live="regimen">
                             <option value="">— Selecciona —</option>
@@ -70,7 +70,7 @@
                             @endforeach
                         </x-select>
                     </x-admin.campo>
-                @endunless
+                @endif
             </div>
 
             @if ($cuentaExistente)
@@ -102,20 +102,6 @@
                     Un administrador gestiona cuentas y catálogos. No pertenece a ninguna sede ni unidad
                     del organigrama.
                 </p>
-            @elseif ($esSoloRrhhRol)
-                <div class="rounded-md bg-blue-50 dark:bg-blue-900/20 px-4 py-3">
-                    <p class="text-sm text-blue-800 dark:text-blue-200">
-                        <strong>RR. HH. puro</strong>
-                    </p>
-                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                        Esta cuenta tendrá únicamente el rol RRHH. No tendrá régimen, sede ni unidad
-                        orgánica; esos tres campos se guardarán como NULL.
-                    </p>
-                    <p class="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                        Si la persona también es trabajador y marcará papeletas, dála de alta
-                        desde el organigrama y asígnale el rol RR. HH. desde allí.
-                    </p>
-                </div>
             @endif
 
             @if ($requiereTurno)
@@ -195,18 +181,11 @@
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                 <p id="usuario-admin-form-roles-titulo" class="block text-sm font-medium mb-2">
-                    Rol(es)
+                    Rol
                 </p>
 
-                @if ($nuevoAdmin)
-                    <p class="text-sm text-gray-700 dark:text-gray-300">
-                        Administrador (fijo)
-                    </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        Este formulario solo da de alta administradores. Para crear RR. HH., usa
-                        «Nuevo RR. HH.». Los trabajadores se dan de alta desde el organigrama.
-                    </p>
-                @else
+                @if ($usuario)
+                    {{-- Edición: checkboxes para poder combinar roles --}}
                     <div
                         class="flex flex-wrap gap-4"
                         role="group"
@@ -225,15 +204,31 @@
                             </label>
                         @endforeach
                     </div>
-
+                @else
+                    {{-- Alta nueva: radio para elegir uno solo (admin o rrhh) --}}
+                    <div
+                        class="flex flex-wrap gap-4"
+                        role="radiogroup"
+                        aria-labelledby="usuario-admin-form-roles-titulo"
+                    >
+                        @foreach ($roles as $rol)
+                            <label
+                                wire:key="usuario-admin-form-label-{{ $rol->id }}"
+                                class="flex items-center gap-2 cursor-pointer"
+                            >
+                                <input
+                                    type="radio"
+                                    name="rol_seleccionado"
+                                    value="{{ $rol->id }}"
+                                    wire:model.live="rolNuevo"
+                                    class="rounded-full border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                />
+                                <span class="text-sm">{{ $rol->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
                     <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        admin y rrhh son roles globales. «trabajador» corresponde a quienes pertenecen
-                        al organigrama y pueden tener papeletas.
-
-                        @unless ($usuario)
-                            Desde aquí solo se crea RR. HH. puro. Si la persona también es
-                            trabajador, dála de alta desde el organigrama.
-                        @endunless
+                        Elige un solo rol. Si la persona también es trabajador, dála de alta desde el organigrama.
                     </p>
                 @endif
 
