@@ -35,7 +35,7 @@ class SedeForm extends Component
 
     public ?float $longitud = null;
 
-    public int $radioMetros = 150;
+    public int $radioMetros = 100;
 
     public bool $activo = true;
 

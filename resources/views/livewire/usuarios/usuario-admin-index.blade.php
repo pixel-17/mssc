@@ -41,10 +41,12 @@
                     <td class="px-4 py-3">{{ $usuario->roles->pluck('name')->join(', ') }}</td>
                     <td class="px-4 py-3"><x-admin.estado :activo="$usuario->activo" /></td>
                     <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                        <a href="{{ $usuario->regimen === '728' ? route('turnos.programacion', $usuario) : route('turnos.calendario.individual-de', $usuario) }}" class="btn-row">
-                            <x-icon name="calendar" class="size-3.5" />
-                            Calendario
-                        </a>
+                        @unless ($usuario->hasRole('admin'))
+                            <a href="{{ $usuario->regimen === '728' ? route('turnos.programacion', $usuario) : route('turnos.calendario.individual-de', $usuario) }}" class="btn-row">
+                                <x-icon name="calendar" class="size-3.5" />
+                                Calendario
+                            </a>
+                        @endunless
                         <x-admin.accion-editar :href="route('usuarios-admin.editar', $usuario)" />
                         @if ($usuario->activo)
                             <x-admin.accion-eliminar

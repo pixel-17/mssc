@@ -1,7 +1,7 @@
 @php
-    // Santiago (Cusco) por defecto para una sede nueva (sin ubicación aún).
-    $lat = $latitud ?? -13.5415;
-    $lng = $longitud ?? -71.9840;
+    // Ubicación por defecto para una sede nueva (sin ubicación aún).
+    $lat = $latitud ?? -13.525766258464431;
+    $lng = $longitud ?? -71.98316140750522;
 @endphp
 
 <div>
@@ -27,7 +27,10 @@
                         zoom: {{ $latitud ? 16 : 14 }},
                     })" x-init="init()">
                     <x-label value="Ubicación (haz clic en el mapa o arrastra el marcador)" />
-                    <div x-ref="mapa" style="height: 320px;" class="mt-1 rounded-lg border border-gray-300 dark:border-gray-600"></div>
+                    {{-- isolation: isolate confina el stacking context de Leaflet dentro
+                         de este div, evitando que sus capas internas (z-index 200–700)
+                         compitan con el sidebar móvil (z-index: 40 en position:fixed). --}}
+                    <div x-ref="mapa" style="height: 320px; position: relative; isolation: isolate;" class="mt-1 rounded-lg border border-gray-300 dark:border-gray-600"></div>
                     <x-input-error for="latitud" class="mt-2" />
                     <x-input-error for="longitud" class="mt-2" />
                 </div>
@@ -37,7 +40,7 @@
                     for="radioMetros"
                     ayuda="Radio alrededor de la sede dentro del cual el retorno se marca como &quot;dentro de radio&quot;. El círculo del mapa se ajusta al escribir."
                 >
-                    <x-input id="radioMetros" type="number" min="10" max="1000" class="w-full" wire:model.live="radioMetros" />
+                    <x-input id="radioMetros" type="number" min="10" max="100" class="w-full" wire:model.live.debounce.400ms="radioMetros" />
                 </x-admin.campo>
 
                 <x-admin.campo-checkbox for="activo" wire:model="activo" label="Activa" />
