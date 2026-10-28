@@ -49,12 +49,7 @@
                     </x-admin.campo>
 
                     <x-admin.campo label="Sede" for="usuario-admin-form-sedeId" campo="sedeId">
-                        <x-select id="usuario-admin-form-sedeId" wire:model="sedeId">
-                            <option value="">— Selecciona —</option>
-                            @foreach ($sedes as $id => $nombre)
-                                <option value="{{ $id }}">{{ $nombre }}</option>
-                            @endforeach
-                        </x-select>
+                        <x-organigrama.combobox id="usuario-admin-form-sedeId" model="sedeId" :options="$sedes" placeholder="Buscar sede…" vacio="— Selecciona —" />
                     </x-admin.campo>
 
                     <x-admin.campo
@@ -63,12 +58,7 @@
                         campo="unidadOrganicaId"
                         ayuda="Determina automáticamente su jefe inmediato y jefe de área."
                     >
-                        <x-select id="usuario-admin-form-unidadOrganicaId" wire:model="unidadOrganicaId">
-                            <option value="">— Selecciona —</option>
-                            @foreach ($unidades as $id => $nombre)
-                                <option value="{{ $id }}">{{ $nombre }}</option>
-                            @endforeach
-                        </x-select>
+                        <x-organigrama.combobox id="usuario-admin-form-unidadOrganicaId" model="unidadOrganicaId" :options="$unidades" placeholder="Buscar unidad…" vacio="— Selecciona —" />
                     </x-admin.campo>
                 @endif
             </div>

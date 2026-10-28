@@ -24,15 +24,19 @@
         </div>
 
         {{-- Leyenda de filas: distingue de un vistazo quién es trabajador propio
-        (sombreado) de quién es jefe de otra sub-unidad mostrado como referencia. --}}
-        @if ($esJefeDeArea)
-            <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500 dark:text-gray-400">
+        (franja + fondo "sello") de quién se muestra solo de referencia, sin
+        poder programarlo (franja ámbar punteada) — esto puede pasar tanto a
+        un Jefe de Área (jefes de sus sub-unidades) como a un Jefe Inmediato
+        (otros jefes inmediatos de sus mismas unidades), así que se guía por
+        $soloLectura y no por $esJefeDeArea. --}}
+        @if ($soloLectura !== [])
+            <div class="flex flex-wrap items-center gap-3 text-xs font-medium text-gray-600 dark:text-gray-400">
                 <span class="inline-flex items-center gap-1.5">
-                    <span class="size-3 rounded-sm bg-tinta-50 border border-tinta-200 dark:bg-tinta-500/10 dark:border-tinta-500/30"></span>
+                    <span class="h-3 w-1.5 rounded-sm bg-sello-500"></span>
                     Tu equipo directo
                 </span>
                 <span class="inline-flex items-center gap-1.5">
-                    <span class="size-3 rounded-sm bg-white border border-gray-200 dark:bg-gray-900 dark:border-gray-700"></span>
+                    <span class="h-3 w-1.5 rounded-sm border border-dashed border-amber-400 bg-amber-50 dark:bg-amber-500/10"></span>
                     Jefes de otras sub-unidades (referencia)
                 </span>
             </div>
@@ -212,7 +216,7 @@
                 <table class="min-w-full border-separate border-spacing-1 text-sm">
                     <thead>
                         <tr class="text-left text-xs uppercase text-gray-500 dark:text-gray-400">
-                            <th scope="col" class="px-3 py-2 sticky left-0 bg-white dark:bg-gray-900">Trabajador</th>
+                            <th scope="col" class="px-3 py-2 sticky left-0 z-20 bg-white dark:bg-gray-900">Trabajador</th>
                             @foreach ($fechas as $fecha)
                                 <th wire:key="calendario-equipo-th-{{ $loop->index }}" scope="col" class="px-1 py-1 text-center font-medium {{ $fecha->toDateString() === $hoy->toDateString() ? 'text-tinta-700 dark:text-tinta-300 font-bold' : (in_array($fecha->toDateString(), $noLaborables) ? 'text-rose-500' : '') }}">
                                     <div>{{ $fecha->day }}</div>
@@ -228,14 +232,26 @@
                         @click.self="celda($event, false)"
                     >
                         @forelse ($trabajadores as $trabajador)
-                            @php($esOtroJefe = in_array($trabajador->id, $idsJefes, true))
-                            <tr wire:key="fila-{{ $trabajador->id }}" @class(['bg-tinta-50/70 dark:bg-tinta-500/[0.06]' => ! $esOtroJefe])>
+                            {{-- Tres grupos, no dos: $soloLectura decide quién es de verdad
+                            "solo referencia" (ámbar). De lo que queda, $idsJefes separa a los
+                            jefes (de sub-unidad, de sus propias unidades, etc.) —esos NO se
+                            pintan como "mi equipo": el color sello se reserva solo para el
+                            trabajador raso que tienes a cargo, aunque el jefe siga siendo parte
+                            de tu equipo y siga mostrando su badge "Jefe" más abajo. --}}
+                            @php($esSoloReferencia = in_array($trabajador->id, $soloLectura, true))
+                            @php($esJefe = in_array($trabajador->id, $idsJefes, true))
+                            @php($esTrabajadorPropio = ! $esSoloReferencia && ! $esJefe)
+                            <tr wire:key="fila-{{ $trabajador->id }}" @class([
+                                'bg-sello-50/50 dark:bg-sello-500/[0.07]' => $esTrabajadorPropio,
+                                'bg-amber-50/30 dark:bg-amber-500/[0.04]' => $esSoloReferencia,
+                            ])>
                                 <td @class([
-                                    'px-3 py-2 sticky left-0 whitespace-nowrap align-middle',
-                                    'bg-tinta-50 dark:bg-tinta-950' => ! $esOtroJefe,
-                                    'bg-white dark:bg-gray-900' => $esOtroJefe,
+                                    'px-3 py-2 sticky left-0 z-20 whitespace-nowrap align-middle border-l-4',
+                                    'bg-sello-50 dark:bg-sello-950 border-sello-500 dark:border-sello-400' => $esTrabajadorPropio,
+                                    'bg-amber-50 dark:bg-gray-900 border-dashed border-amber-400 dark:border-amber-500/60' => $esSoloReferencia,
+                                    'bg-white dark:bg-gray-900 border-transparent' => $esJefe && ! $esSoloReferencia,
                                 ])>
-                                    @if (in_array($trabajador->id, $soloLectura, true))
+                                    @if ($esSoloReferencia)
                                         <span class="text-tinta-800 dark:text-tinta-200">{{ $trabajador->nombre_completo }}</span>
                                     @else
                                         <a href="{{ route('turnos.calendario.individual-de', $trabajador) }}" class="text-tinta-800 dark:text-tinta-200 hover:underline" title="Ver calendario de {{ $trabajador->nombre_completo }}">
@@ -243,11 +259,11 @@
                                         </a>
                                     @endif
                                     <span class="text-xs text-gray-500">({{ $trabajador->regimen }})</span>
-                                    @if ($trabajador->regimen === '276' && ! in_array($trabajador->id, $soloLectura, true))
+                                    @if ($trabajador->regimen === '276' && ! $esSoloReferencia)
                                         @php($cfg276 = $configs276->get($trabajador->id))
                                         <div class="mt-0.5 text-[11px]">
                                             @if ($cfg276)
-                                                <span class="text-gray-500 dark:text-gray-400">horario cargado — ver días laborables arriba</span>
+                                                <span class="text-gray-500 dark:text-gray-400">horario cargado</span>
                                             @else
                                                 <button
                                                     type="button"
@@ -262,7 +278,9 @@
                                             @endif
                                         </div>
                                     @endif
-                                    @if (in_array($trabajador->id, $idsJefes, true))
+                                    @if ($esSoloReferencia)
+                                        <span class="ml-1 inline-flex items-center rounded bg-amber-100 dark:bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-800 dark:text-amber-300">Solo referencia</span>
+                                    @elseif (in_array($trabajador->id, $idsJefes, true))
                                         <span class="ml-1 inline-flex items-center rounded bg-tinta-100 dark:bg-tinta-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-tinta-800 dark:text-tinta-200">Jefe</span>
                                     @endif
                                 </td>

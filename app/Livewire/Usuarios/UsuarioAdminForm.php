@@ -566,8 +566,14 @@ class UsuarioAdminForm extends Component
     {
         return view('livewire.usuarios.usuario-admin-form', [
             'cuentaExistente' => $this->buscarCuentaExistente(),
-            'sedes' => Sede::where('activo', true)->orderBy('nombre')->pluck('nombre', 'id'),
-            'unidades' => UnidadOrganica::orderBy('nombre')->pluck('nombre', 'id'),
+            // Array ['id', 'label'] (no el pluck id => nombre de antes): lo pide
+            // x-organigrama.combobox, que reemplaza al <select> nativo aquí
+            // porque el listado desplegado de este último es pintado por el
+            // propio sistema operativo y no hereda el modo oscuro de la app.
+            'sedes' => Sede::where('activo', true)->orderBy('nombre')->get(['id', 'nombre'])
+                ->map(fn ($s) => ['id' => $s->id, 'label' => $s->nombre])->all(),
+            'unidades' => UnidadOrganica::orderBy('nombre')->get(['id', 'nombre'])
+                ->map(fn ($u) => ['id' => $u->id, 'label' => $u->nombre])->all(),
             // Al crear se ofrecen admin y rrhh: se elige uno solo (ver validarRoles()).
             // Trabajador no aplica en alta nueva desde este formulario (debe darse de
             // alta desde el organigrama si también es trabajador).
