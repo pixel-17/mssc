@@ -4,6 +4,7 @@ namespace App\Livewire\Turnos;
 
 use App\Models\Configuracion;
 use App\Models\ConfiguracionTurno;
+use App\Models\Turno;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
 use App\Support\PatronDescansoSemanal;
@@ -50,11 +51,25 @@ class ConfiguracionTurnoForm extends Component
      */
     public array $diasSemanaDescanso = [];
 
+    /**
+     * Desde que ningún régimen (276 incluido) tiene horario global de
+     * respaldo, un trabajador sin turno vigente cargado para hoy no
+     * puede crear NINGUNA papeleta (ver
+     * CrearPapeletaAction::resolverTurnoActivo). Quien programa el
+     * turno debe verlo de inmediato al entrar a esta pantalla, así
+     * que se calcula una sola vez en mount() con la misma consulta
+     * que usa esa Action (Turno::vigenteParaUsuario).
+     */
+    #[Locked]
+    public bool $sinTurnoVigenteHoy = false;
+
     public function mount(User $trabajador): void
     {
         abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
 
         $this->trabajador = $trabajador;
+
+        $this->sinTurnoVigenteHoy = Turno::vigenteParaUsuario($trabajador->id) === null;
 
         $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
 

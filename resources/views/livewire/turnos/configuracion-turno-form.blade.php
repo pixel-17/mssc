@@ -4,6 +4,15 @@
             Configurar turno — {{ $trabajador->name }} {{ $trabajador->apellido }}
         </h2>
 
+        @if ($sinTurnoVigenteHoy)
+            <div class="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 dark:bg-amber-500/10 dark:border-amber-500/30">
+                <p class="text-sm text-amber-800 dark:text-amber-300">
+                    {{ $trabajador->name }} no tiene un turno vigente cargado para hoy y no podrá crear papeletas
+                    hasta que se le asigne uno.
+                </p>
+            </div>
+        @endif
+
         @if ($trabajador->regimen === '276')
             {{-- 276: el admin ya configuró los días laborables globalmente.
                  Aquí solo se muestra qué se va a pintar y se confirma con un botón. --}}
@@ -14,7 +23,7 @@
 
             <div class="glass-card p-6 space-y-4">
                 <div>
-                    <p class="text-sm font-medium mb-2">Días laborables configurados por el Admin</p>
+                    <p class="text-sm font-medium mb-2">Semana (lunes a domingo) — días laborables configurados por el Admin</p>
                     <div class="flex flex-wrap gap-2">
                         @foreach ([1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'] as $iso => $nombre)
                             <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium

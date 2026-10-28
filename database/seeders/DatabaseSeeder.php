@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -12,39 +11,18 @@ class DatabaseSeeder extends Seeder
 
     /**
      * Seed the application's database.
+     *
+     * A propósito, mínimo: solo los roles (sin esto assignRole('admin')
+     * falla) y el usuario Admin. El resto de los seeders (organigrama,
+     * sedes, motivos, configuración, usuarios de prueba por rol, etc.)
+     * siguen existiendo como clases — se corren a mano o desde los tests
+     * cuando hagan falta — pero no se disparan solos en cada db:seed.
      */
     public function run(): void
     {
         $this->call([
             RoleSeeder::class,
-            UnidadOrganicaSeeder::class,
-            MotivoSeeder::class,
-            ConfiguracionSeeder::class,
-
-            // Un usuario de prueba por cada rol/perfil real del sistema.
-            // El orden importa: Jefe de Área y Jefe Inmediato arman el
-            // árbol de jefaturas que Trabajador necesita para escalar.
             AdminUserSeeder::class,
-            RrhhUserSeeder::class,
-            JefeAreaUserSeeder::class,
-            JefeInmediatoUserSeeder::class,
-            TrabajadorUserSeeder::class,
-
-            // Datos de prueba completos: sedes y un jefe (de área o inmediato) por cada
-            // unidad que aún no lo tenga. Va al final para no pisar a los jefes de arriba.
-            SedeSeeder::class,
-            OrganigramaPruebaSeeder::class,
         ]);
-
-        // User::factory(10)->create();
-
-        $testUser = User::factory()->create([
-            'name' => 'Test',
-            'apellido' => 'User',
-            'dni' => '00000001',
-            'email' => 'test@example.com',
-        ]);
-
-        $testUser->assignRole('admin');
     }
 }
