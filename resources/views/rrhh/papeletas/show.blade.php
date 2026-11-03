@@ -192,7 +192,7 @@
                         @endif
                         <div>
                             <label for="corregir-motivo" class="block text-xs font-medium text-gray-600 mb-1">Motivo (actual: {{ $papeleta->motivo->nombre }})</label>
-                            <select id="corregir-motivo" name="motivo_id" class="{{ $campo }}">
+                            <select id="corregir-motivo" name="motivo_id" class="{{ $campo }} dark:[color-scheme:dark]">
                                 <option value="">No cambiar</option>
                                 @foreach ($motivosActivos->where('id', '!=', $papeleta->motivo_id) as $m)
                                     <option value="{{ $m->id }}" @selected((int) old('motivo_id') === $m->id)>{{ $m->nombre }}</option>

@@ -12,7 +12,7 @@
             </div>
             <div>
                 <label for="decisiones-actor" class="block text-sm font-medium mb-1">Quién decidió</label>
-                <select id="decisiones-actor" wire:model.live="actorId" class="rounded-md border-gray-300 dark:bg-gray-800">
+                <select id="decisiones-actor" wire:model.live="actorId" class="rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                     <option value="">Todos</option>
                     @foreach ($actores as $actor)
                         <option value="{{ $actor->id }}">{{ trim($actor->name.' '.$actor->apellido) }}</option>

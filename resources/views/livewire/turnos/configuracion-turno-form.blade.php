@@ -71,7 +71,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label for="configuracion-turno-form-turno" class="block text-sm font-medium mb-1">Turno</label>
-                        <select id="configuracion-turno-form-turno" wire:model="turno" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                        <select id="configuracion-turno-form-turno" wire:model="turno" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                             @foreach ($opcionesTurno as $opcion)
                                 <option value="{{ $opcion }}">{{ $opcion }}</option>
                             @endforeach

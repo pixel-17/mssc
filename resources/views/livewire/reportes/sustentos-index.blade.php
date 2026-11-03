@@ -25,7 +25,7 @@
 
                 <div class="max-w-xs">
                     <label for="sustentos-index-estado" class="block text-sm font-medium mb-1">Estado</label>
-                    <select id="sustentos-index-estado" wire:model.live="estado" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="sustentos-index-estado" wire:model.live="estado" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="">Todos</option>
                         <option value="pendiente">Pendiente de subir</option>
                         <option value="presentado">Presentado (por revisar)</option>

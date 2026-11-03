@@ -191,6 +191,19 @@ body.app-bg {
     color-scheme: dark;
 }
 
+/* `color-scheme: dark` de arriba no basta para el listado que se abre al
+   hacer clic en un <select>: @tailwindcss/forms le pone `appearance: none`
+   a todo <select> (para poder pintar su propia flecha) y, en cuanto un
+   <select> tiene appearance personalizado, Chrome deja de respetar
+   color-scheme para ESE listado en particular y lo pinta siempre claro,
+   aunque el control ya cerrado sí se vea oscuro. Lo único que funciona
+   es colorear las <option> de forma explícita. */
+.dark select option,
+.dark select optgroup {
+    background-color: var(--surface);
+    color: #e4e4e7;
+}
+
 .dark .text-gray-800,
 .dark .text-gray-900 {
     color: #e4e4e7;

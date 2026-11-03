@@ -16,7 +16,7 @@
         <div class="w-full max-w-xs">
             <label for="abandonos-causa" class="block text-sm font-medium mb-1 text-gray-700 dark:text-tinta-50/80">Causa</label>
             <select id="abandonos-causa" wire:model.live="causa"
-                    class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
+                    class="w-full rounded-md border-gray-300 dark:border-white/15 dark:bg-white/5 dark:text-white dark:[color-scheme:dark] shadow-sm text-sm focus:border-tinta-500 focus:ring-tinta-500">
                 <option value="">Todas</option>
                 @foreach ($causas as $clave => $etiqueta)
                     <option value="{{ $clave }}">{{ $etiqueta }}</option>

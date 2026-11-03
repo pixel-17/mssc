@@ -39,7 +39,7 @@
             </div>
             <div>
                 <label for="rrhh-index-motivo" class="{{ $claseEtiqueta }}">Motivo</label>
-                <select id="rrhh-index-motivo" wire:model.live="motivoId" class="{{ $claseCampo }}">
+                <select id="rrhh-index-motivo" wire:model.live="motivoId" class="{{ $claseCampo }} dark:[color-scheme:dark]">
                     <option value="">Todos</option>
                     @foreach ($motivos as $motivo)
                         <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
@@ -48,7 +48,7 @@
             </div>
             <div>
                 <label for="rrhh-index-sede" class="{{ $claseEtiqueta }}">Sede</label>
-                <select id="rrhh-index-sede" wire:model.live="sedeId" class="{{ $claseCampo }}">
+                <select id="rrhh-index-sede" wire:model.live="sedeId" class="{{ $claseCampo }} dark:[color-scheme:dark]">
                     <option value="">Todas</option>
                     @foreach ($sedes as $sede)
                         <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
@@ -57,7 +57,7 @@
             </div>
             <div>
                 <label for="rrhh-index-regimen" class="{{ $claseEtiqueta }}">Régimen</label>
-                <select id="rrhh-index-regimen" wire:model.live="regimen" class="{{ $claseCampo }}">
+                <select id="rrhh-index-regimen" wire:model.live="regimen" class="{{ $claseCampo }} dark:[color-scheme:dark]">
                     <option value="">Todos</option>
                     <option value="276">276</option>
                     <option value="728">728</option>

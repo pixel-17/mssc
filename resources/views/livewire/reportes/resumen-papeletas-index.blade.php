@@ -144,7 +144,7 @@
 
                     <div class="max-w-xs">
                         <label for="horas-acumuladas-index-sedeId" class="block text-sm font-medium mb-1">Sede</label>
-                        <select id="horas-acumuladas-index-sedeId" wire:model.live="sedeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                        <select id="horas-acumuladas-index-sedeId" wire:model.live="sedeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                             <option value="">Todas</option>
                             @foreach ($sedes as $sede)
                                 <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
@@ -154,7 +154,7 @@
 
                     <div class="max-w-xs">
                         <label for="horas-acumuladas-index-motivoId" class="block text-sm font-medium mb-1">Motivo</label>
-                        <select id="horas-acumuladas-index-motivoId" wire:model.live="motivoId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                        <select id="horas-acumuladas-index-motivoId" wire:model.live="motivoId" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                             <option value="">Todos</option>
                             @foreach ($motivos as $motivo)
                                 <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
@@ -164,7 +164,7 @@
 
                     <div class="max-w-xs">
                         <label for="horas-acumuladas-index-regimen" class="block text-sm font-medium mb-1">Régimen</label>
-                        <select id="horas-acumuladas-index-regimen" wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                        <select id="horas-acumuladas-index-regimen" wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                             <option value="">Todos</option>
                             <option value="276">276 (día)</option>
                             <option value="728">728 (rotativo)</option>

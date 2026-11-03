@@ -42,7 +42,7 @@
 
                 <div class="max-w-xs">
                     <label for="horas-acumuladas-index-trabajadorId" class="block text-sm font-medium mb-1">Trabajador</label>
-                    <select id="horas-acumuladas-index-trabajadorId" wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="horas-acumuladas-index-trabajadorId" wire:model.live="trabajadorId" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="">Todos</option>
                         @foreach ($trabajadoresDisponibles as $trabajador)
                             <option value="{{ $trabajador->id }}">{{ trim($trabajador->name.' '.$trabajador->apellido) }}</option>
@@ -52,7 +52,7 @@
 
                 <div class="max-w-xs">
                     <label for="horas-acumuladas-index-sedeId" class="block text-sm font-medium mb-1">Sede</label>
-                    <select id="horas-acumuladas-index-sedeId" wire:model.live="sedeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="horas-acumuladas-index-sedeId" wire:model.live="sedeId" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="">Todas</option>
                         @foreach ($sedes as $sede)
                             <option value="{{ $sede->id }}">{{ $sede->nombre }}</option>
@@ -62,7 +62,7 @@
 
                 <div class="max-w-xs">
                     <label for="horas-acumuladas-index-unidadOrganicaId" class="block text-sm font-medium mb-1">Unidad orgánica</label>
-                    <select id="horas-acumuladas-index-unidadOrganicaId" wire:model.live="unidadOrganicaId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="horas-acumuladas-index-unidadOrganicaId" wire:model.live="unidadOrganicaId" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="">Todas</option>
                         @foreach ($unidadesOrganicas as $unidad)
                             <option value="{{ $unidad->id }}">{{ $unidad->nombre }}</option>
@@ -72,7 +72,7 @@
 
                 <div class="max-w-xs">
                     <label for="horas-acumuladas-index-motivoId" class="block text-sm font-medium mb-1">Motivo</label>
-                    <select id="horas-acumuladas-index-motivoId" wire:model.live="motivoId" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="horas-acumuladas-index-motivoId" wire:model.live="motivoId" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="">Todos</option>
                         @foreach ($motivos as $motivo)
                             <option value="{{ $motivo->id }}">{{ $motivo->nombre }}</option>
@@ -82,7 +82,7 @@
 
                 <div class="max-w-xs">
                     <label for="horas-acumuladas-index-regimen" class="block text-sm font-medium mb-1">Régimen</label>
-                    <select id="horas-acumuladas-index-regimen" wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="horas-acumuladas-index-regimen" wire:model.live="regimen" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="">Todos</option>
                         <option value="276">276 (día)</option>
                         <option value="728">728 (rotativo)</option>
@@ -91,7 +91,7 @@
 
                 <div>
                     <label for="horas-acumuladas-index-top" class="block text-sm font-medium mb-1">Mostrar en ranking</label>
-                    <select id="horas-acumuladas-index-top" wire:model.live="top" class="rounded-md border-gray-300 dark:bg-gray-800">
+                    <select id="horas-acumuladas-index-top" wire:model.live="top" class="rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
                         <option value="0">Todos</option>
                         <option value="5">Top 5</option>
                         <option value="10">Top 10</option>
