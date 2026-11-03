@@ -7,6 +7,7 @@ namespace App\Livewire\Usuarios;
 use App\Actions\Usuario\CambiarEstadoUsuarioAction;
 use App\Events\PapeletaActualizada;
 use App\Livewire\Concerns\RequiereAdmin;
+use App\Livewire\Usuarios\Concerns\TieneRolesDeUsuario;
 use App\Models\ConfiguracionTurno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -55,7 +56,7 @@ use Spatie\Permission\Models\Role;
 #[Title('Usuario')]
 class UsuarioAdminForm extends Component
 {
-    use RequiereAdmin;
+    use RequiereAdmin, TieneRolesDeUsuario;
 
     #[Locked]
     public ?User $usuario = null;
@@ -129,25 +130,8 @@ class UsuarioAdminForm extends Component
         }
     }
 
-    /**
-     * ¿Los roles elegidos son únicamente el de administrador? El admin no
-     * marca papeletas ni tiene turno, así que el régimen es opcional para él.
-     */
-    protected function esSoloAdmin(): bool
-    {
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-        $roles = array_map('intval', $this->rolesSeleccionados);
-
-        return $adminId > 0 && $roles !== [] && array_diff($roles, [$adminId]) === [];
-    }
-
-    /** ¿Entre los roles elegidos está el de administrador? Un admin no tiene unidad ni jefes. */
-    protected function incluyeAdmin(): bool
-    {
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-
-        return $adminId > 0 && in_array($adminId, array_map('intval', $this->rolesSeleccionados), true);
-    }
+    // esSoloAdmin() e incluyeAdmin() viven en TieneRolesDeUsuario (ver
+    // arriba): son iguales acá y en UsuarioForm.
 
     /**
      * ¿Los roles elegidos son únicamente el de RR. HH. (sin el de trabajador)? Un
@@ -187,25 +171,8 @@ class UsuarioAdminForm extends Component
         return ! ConfiguracionTurno::where('user_id', $this->usuario->id)->exists();
     }
 
-    /** ¿Se está cambiando el régimen de un usuario ya existente? */
-    protected function cambioDeRegimen(): bool
-    {
-        return $this->usuario !== null
-            && ($this->usuario->regimen ?? '') !== ''
-            && $this->regimen !== (string) $this->usuario->regimen;
-    }
-
-    /**
-     * Al elegir otro régimen, el turno cargado en el formulario (el del
-     * régimen anterior, p. ej. DIA) deja de ser válido: se limpia para
-     * que se elija uno del régimen nuevo.
-     */
-    public function updatedRegimen(): void
-    {
-        if ($this->cambioDeRegimen()) {
-            $this->turno = '';
-        }
-    }
+    // cambioDeRegimen() y updatedRegimen() también viven en
+    // TieneRolesDeUsuario.
 
     protected function rules(): array
     {

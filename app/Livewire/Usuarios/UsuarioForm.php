@@ -9,6 +9,7 @@ use App\Actions\Usuario\CrearUsuarioAction;
 use App\Actions\Usuario\EditarUsuarioAction;
 use App\Events\PapeletaActualizada;
 use App\Exceptions\UsuarioException;
+use App\Livewire\Usuarios\Concerns\TieneRolesDeUsuario;
 use App\Models\ConfiguracionTurno;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
@@ -56,6 +57,8 @@ use Spatie\Permission\Models\Role;
 #[Title('Usuario')]
 class UsuarioForm extends Component
 {
+    use TieneRolesDeUsuario;
+
     #[Locked]
     public ?User $usuario = null;
 
@@ -256,21 +259,9 @@ class UsuarioForm extends Component
     // ─────────────────────────────────────────────────────────────────
     // Helpers de roles y turno
     // ─────────────────────────────────────────────────────────────────
-
-    protected function esSoloAdmin(): bool
-    {
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-        $roles = array_map('intval', $this->rolesSeleccionados);
-
-        return $adminId > 0 && $roles !== [] && array_diff($roles, [$adminId]) === [];
-    }
-
-    protected function incluyeAdmin(): bool
-    {
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-
-        return $adminId > 0 && in_array($adminId, array_map('intval', $this->rolesSeleccionados), true);
-    }
+    // esSoloAdmin(), incluyeAdmin(), cambioDeRegimen() y updatedRegimen()
+    // viven en TieneRolesDeUsuario (ver arriba): son iguales acá y en
+    // UsuarioAdminForm.
 
     protected function admiteConfiguracionTurno(): bool
     {
@@ -297,20 +288,6 @@ class UsuarioForm extends Component
         }
 
         return ! ConfiguracionTurno::where('user_id', $this->usuario->id)->exists();
-    }
-
-    protected function cambioDeRegimen(): bool
-    {
-        return $this->usuario !== null
-            && ($this->usuario->regimen ?? '') !== ''
-            && $this->regimen !== (string) $this->usuario->regimen;
-    }
-
-    public function updatedRegimen(): void
-    {
-        if ($this->cambioDeRegimen()) {
-            $this->turno = '';
-        }
     }
 
     /**

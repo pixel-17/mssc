@@ -496,6 +496,13 @@ body.app-bg {
     border-color: #34343b;
 }
 
+/* Mismo caso que .dark select option en la sección de arriba: un <select>
+   con la clase .input-glass (ej. el de Motivo al crear una papeleta) no
+   hereda color-scheme de forma confiable en todos los navegadores. */
+.dark select.input-glass {
+    color-scheme: dark;
+}
+
 .dark .input-glass::placeholder {
     color: #71717a;
 }

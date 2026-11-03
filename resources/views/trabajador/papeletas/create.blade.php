@@ -79,7 +79,7 @@
                                 name="motivo_id"
                                 x-model="motivoId"
                                 required
-                                class="input-glass @error('motivo_id') !border-alarma-500 @enderror"
+                                class="input-glass dark:[color-scheme:dark] @error('motivo_id') !border-alarma-500 @enderror"
                             >
                                 <option value="">Selecciona un motivo</option>
                                 @foreach ($motivos as $motivo)

@@ -602,7 +602,7 @@
                                 <label class="mt-2 block text-xs font-semibold text-gray-600 dark:text-tinta-50/70" for="reemplazo-{{ $fila['unidad']->id }}">
                                     {{ $fila['es_area'] ? 'Nuevo jefe de área (opcional)' : 'Nuevo jefe inmediato (opcional)' }}
                                 </label>
-                                <select id="reemplazo-{{ $fila['unidad']->id }}" wire:model="reemplazos.{{ $fila['unidad']->id }}" class="mt-1 w-full rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
+                                <select id="reemplazo-{{ $fila['unidad']->id }}" wire:model="reemplazos.{{ $fila['unidad']->id }}" class="mt-1 w-full rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800 dark:[color-scheme:dark]">
                                     <option value="">Sin reemplazo: la unidad queda sin jefe</option>
                                     @foreach ($fila['candidatos'] as $c)
                                         <option value="{{ $c->id }}">{{ $c->nombre_completo }}</option>
@@ -643,7 +643,7 @@
                         @if ($mp['necesita_turno'])
                             <div class="mt-4 grid grid-cols-2 gap-3 text-sm">
                                 <div class="col-span-2 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-tinta-50/60">Turno como trabajador (728)</div>
-                                <select wire:model="turnoJefe.turno" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800">
+                                <select wire:model="turnoJefe.turno" class="rounded-lg border-gray-300 text-sm dark:border-white/20 dark:bg-gray-800 dark:[color-scheme:dark]">
                                     <option value="">Turno…</option>
                                     @foreach ($mp['turnos_validos'] as $codigo)
                                         <option value="{{ $codigo }}">{{ \App\Models\ConfiguracionTurno::etiquetaDeTurno($codigo) }}</option>
