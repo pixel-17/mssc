@@ -1,0 +1,2491 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$photo of method App\\Models\\User\:\:updateProfilePhoto\(\) expects Illuminate\\Http\\UploadedFile, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Fortify/UpdateUserProfileInformation.php
+
+		-
+			message: '#^Parameter \#2 \$input of method App\\Actions\\Fortify\\UpdateUserProfileInformation\:\:updateVerifiedUser\(\) expects array\<string, string\>, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Fortify/UpdateUserProfileInformation.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Actions/Organigrama/GuardarUnidadOrganicaAction.php
+
+		-
+			message: '#^Parameter \#1 \$unidad of method App\\Actions\\Organigrama\\JefaturaUnidadService\:\:ubicarJefe\(\) expects App\\Models\\UnidadOrganica, App\\Models\\UnidadOrganica\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Organigrama/GuardarUnidadOrganicaAction.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Actions/Organigrama/JefaturaUnidadService.php
+
+		-
+			message: '#^Method App\\Actions\\Organigrama\\MoverJefeComoTrabajadorAction\:\:previsualizar\(\) should return array\{modo\: string, jefe\: App\\Models\\User, destino\: App\\Models\\UnidadOrganica, unidades\: Illuminate\\Support\\Collection\<int, array\{unidad\: App\\Models\\UnidadOrganica, es_area\: bool, personas\: int, subunidades\: int, requiere_reemplazo\: bool, candidatos\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>\}\>, jefes_destino\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>, requiere_reemplazar_destino\: bool, sede\: array\{actual\: App\\Models\\Sede\|null, propuesta\: App\\Models\\Sede\|null\}, necesita_turno\: bool, \.\.\.\} but returns array\{modo\: string, jefe\: App\\Models\\User, destino\: App\\Models\\UnidadOrganica, unidades\: Illuminate\\Support\\Collection\<int, array\{unidad\: App\\Models\\UnidadOrganica, es_area\: bool, personas\: int, subunidades\: int, requiere_reemplazo\: bool, candidatos\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>\}\>, jefes_destino\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>, requiere_reemplazar_destino\: bool, sede\: array\{actual\: App\\Models\\Sede\|null, propuesta\: App\\Models\\Sede\|null\}, necesita_turno\: bool, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Organigrama/MoverJefeComoTrabajadorAction.php
+
+		-
+			message: '#^Parameter \$trabajador of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Organigrama/MoverJefeComoTrabajadorAction.php
+
+		-
+			message: '#^Method App\\Actions\\Organigrama\\MoverJefeInmediatoAction\:\:ejecutar\(\) should return App\\Models\\UnidadOrganica but returns App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Organigrama/MoverJefeInmediatoAction.php
+
+		-
+			message: '#^Parameter \#1 \$unidad of method App\\Actions\\Organigrama\\JefaturaUnidadService\:\:ubicarJefe\(\) expects App\\Models\\UnidadOrganica, App\\Models\\UnidadOrganica\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Organigrama/MoverJefeInmediatoAction.php
+
+		-
+			message: '#^Parameter \#2 \$trabajador of method App\\Actions\\Organigrama\\MoverTrabajadorAction\:\:aplicar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Organigrama/MoverTrabajadorAction.php
+
+		-
+			message: '#^Parameter \#1 \$papeleta of method App\\Services\\NotificarPapeletaService\:\:creada\(\) expects App\\Models\\Papeleta, App\\Models\\Papeleta\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Organigrama/PapeletasAbiertasService.php
+
+		-
+			message: '#^Method App\\Actions\\Organigrama\\ReemplazoDeJefeService\:\:miembrosActivos\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Actions/Organigrama/ReemplazoDeJefeService.php
+
+		-
+			message: '#^Cannot call method finReal\(\) on App\\Models\\Turno\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Actions/Papeleta/CrearPapeletaAction.php
+
+		-
+			message: '#^Method App\\Actions\\Papeleta\\CrearPapeletaAction\:\:crearPapeletaConHistorial\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Papeleta/CrearPapeletaAction.php
+
+		-
+			message: '#^Method App\\Actions\\Papeleta\\CrearPapeletaAction\:\:ejecutar\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Papeleta/CrearPapeletaAction.php
+
+		-
+			message: '#^Method App\\Actions\\Papeleta\\CrearPapeletaAction\:\:validarMotivoYRegimen\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Papeleta/CrearPapeletaAction.php
+
+		-
+			message: '#^Method App\\Actions\\Papeleta\\MarcarRetornoAction\:\:calcularDentroDeRadio\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Papeleta/MarcarRetornoAction.php
+
+		-
+			message: '#^Method App\\Actions\\Papeleta\\MarcarRetornoAction\:\:ejecutar\(\) has parameter \$datosRetorno with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Papeleta/MarcarRetornoAction.php
+
+		-
+			message: '#^Method App\\Actions\\Papeleta\\MarcarRetornoAction\:\:normal\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Papeleta/MarcarRetornoAction.php
+
+		-
+			message: '#^Parameter \#1 \$time of method Carbon\\Carbon\:\:setTimeFromTimeString\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Actions/Papeleta/MarcarRetornoAction.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Actions/Papeleta/ObservarJefeAction.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Actions/Papeleta/ObservarRrhhAction.php
+
+		-
+			message: '#^Property App\\Models\\Sustento\:\:\$estado \(''aprobado''\|''observado''\|''pendiente''\|''presentado''\|''rechazado''\|''vencido''\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Actions/Papeleta/RevisarSustentoAction.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Actions/Papeleta/RevisionPosthocAction.php
+
+		-
+			message: '#^Property App\\Models\\Papeleta\:\:\$revision_posthoc_estado \(''aprobada''\|''no_aplica''\|''no_aprobada''\|''observada''\|''observada_firme''\|''pendiente''\|''respondida''\) does not accept string\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Actions/Papeleta/RevisionPosthocAction.php
+
+		-
+			message: '#^Parameter \#2 \$datos of method App\\Actions\\Usuario\\CrearUsuarioAction\:\:ejecutar\(\) expects array\{name\: string, apellido\: string, dni\: string, email\: string, regimen\: string, sede_id\: int\|null, unidad_organica_id\: int\|null, tipo\: string, \.\.\.\}, array\{name\: mixed, apellido\: mixed, dni\: mixed, email\: mixed, regimen\: ''276''\|''728'', sede_id\: mixed, unidad_organica_id\: int, tipo\: ''jefe_inmediato''\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Actions/Usuario/CambiarEstadoUsuarioAction.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\UnidadOrganica\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\UnidadOrganica\>\:\:\$jefe\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Actions/Usuario/CrearUsuarioAction.php
+
+		-
+			message: '#^Method App\\Actions\\Usuario\\CrearUsuarioAction\:\:ejecutar\(\) should return App\\Models\\User but returns App\\Models\\User\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Usuario/CrearUsuarioAction.php
+
+		-
+			message: '#^Method App\\Actions\\Usuario\\CrearUsuarioAction\:\:resolverSede\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Actions/Usuario/CrearUsuarioAction.php
+
+		-
+			message: '#^Offset ''fecha_ancla'' might not exist on array\{name\: string, apellido\: string, dni\: string, email\: string, regimen\: ''728'', sede_id\: int\|null, unidad_organica_id\: int\|null, tipo\: string, \.\.\.\}\.$#'
+			identifier: offsetAccess.notFound
+			count: 1
+			path: app/Actions/Usuario/CrearUsuarioAction.php
+
+		-
+			message: '#^Method App\\Actions\\Usuario\\EditarUsuarioAction\:\:ejecutar\(\) should return App\\Models\\User but returns App\\Models\\User\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Actions/Usuario/EditarUsuarioAction.php
+
+		-
+			message: '#^Parameter \#1 \$array of function array_flip expects array\<int\|string\>, array\<mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/LimpiarArchivosHuerfanos.php
+
+		-
+			message: '#^Parameter \#3 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/RecalcularJefaturas.php
+
+		-
+			message: '#^Parameter \#5 \.\.\.\$values of function sprintf expects bool\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/RecalcularJefaturas.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Events/PapeletaActualizada.php
+
+		-
+			message: '#^Cannot call method format\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 3
+			path: app/Exports/HistorialTrabajadorExport.php
+
+		-
+			message: '#^Method App\\Exports\\HistorialTrabajadorExport\:\:collection\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HistorialTrabajadorExport.php
+
+		-
+			message: '#^Parameter \#1 \$estado of static method App\\Support\\PapeletaEstadoPresentacion\:\:para\(\) expects Spatie\\ModelStates\\State\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Exports/HistorialTrabajadorExport.php
+
+		-
+			message: '#^Parameter \#1 \$estado of static method App\\Support\\PapeletaEstadoPresentacion\:\:porAbandono\(\) expects Spatie\\ModelStates\\State\|string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Exports/HistorialTrabajadorExport.php
+
+		-
+			message: '#^Binary operation "%%" between mixed and 60 results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: app/Exports/HorasAcumuladasDetalleSheet.php
+
+		-
+			message: '#^Cannot call method format\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Exports/HorasAcumuladasDetalleSheet.php
+
+		-
+			message: '#^Method App\\Exports\\HorasAcumuladasDetalleSheet\:\:__construct\(\) has parameter \$detalle with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HorasAcumuladasDetalleSheet.php
+
+		-
+			message: '#^Method App\\Exports\\HorasAcumuladasDetalleSheet\:\:collection\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HorasAcumuladasDetalleSheet.php
+
+		-
+			message: '#^Parameter \#1 \$num1 of function intdiv expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Exports/HorasAcumuladasDetalleSheet.php
+
+		-
+			message: '#^Method App\\Exports\\HorasAcumuladasExport\:\:__construct\(\) has parameter \$detalle with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HorasAcumuladasExport.php
+
+		-
+			message: '#^Method App\\Exports\\HorasAcumuladasExport\:\:__construct\(\) has parameter \$resumen with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HorasAcumuladasExport.php
+
+		-
+			message: '#^Cannot access offset ''minutos_con_descuento'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Exports/HorasAcumuladasResumenSheet.php
+
+		-
+			message: '#^Method App\\Exports\\HorasAcumuladasResumenSheet\:\:__construct\(\) has parameter \$resumen with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HorasAcumuladasResumenSheet.php
+
+		-
+			message: '#^Method App\\Exports\\HorasAcumuladasResumenSheet\:\:collection\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Exports/HorasAcumuladasResumenSheet.php
+
+		-
+			message: '#^Parameter \#1 \$minutos of method App\\Exports\\HorasAcumuladasResumenSheet\:\:formatoHoras\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Exports/HorasAcumuladasResumenSheet.php
+
+		-
+			message: '#^Parameter \#1 \$path of method App\\Http\\Controllers\\Jefe\\DecisionController\:\:descartarAdjunto\(\) expects string\|null, string\|false\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$jefe of method App\\Actions\\Papeleta\\MarcarRetornoAction\:\:manual\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$jefe of method App\\Actions\\Papeleta\\ObservarJefeAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$jefe of method App\\Actions\\Papeleta\\RechazarJefeAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$jefe of method App\\Actions\\Papeleta\\ReconocerObservacionRrhhAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$jefe of method App\\Actions\\Papeleta\\ResponderPosthocAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$quienAprueba of method App\\Actions\\Papeleta\\AprobarJefeAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\ObservarJefeAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\ReconocerObservacionRrhhAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$justificacion of method App\\Actions\\Papeleta\\MarcarRetornoAction\:\:manual\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$motivo of method App\\Actions\\Papeleta\\RechazarJefeAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$respuesta of method App\\Actions\\Papeleta\\ResponderPosthocAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Parameter \#4 \$adjuntoPath of method App\\Actions\\Papeleta\\ResponderPosthocAction\:\:ejecutar\(\) expects string\|null, string\|false\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Jefe/DecisionController.php
+
+		-
+			message: '#^Cannot call method deletePushSubscription\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/PushSubscriptionController.php
+
+		-
+			message: '#^Cannot call method updatePushSubscription\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/PushSubscriptionController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#1 \$time of static method Carbon\\Carbon\:\:parse\(\) expects Carbon\\Month\|Carbon\\WeekDay\|DateTimeInterface\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$quienCorrige of method App\\Actions\\Papeleta\\CorregirPapeletaRrhhAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$rrhh of method App\\Actions\\Papeleta\\AprobarRrhhAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$rrhh of method App\\Actions\\Papeleta\\ObservarRrhhAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$rrhh of method App\\Actions\\Papeleta\\RechazarRrhhAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$rrhh of method App\\Actions\\Papeleta\\RevisionPosthocAction\:\:aprobar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$rrhh of method App\\Actions\\Papeleta\\RevisionPosthocAction\:\:noAprobar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$rrhh of method App\\Actions\\Papeleta\\RevisionPosthocAction\:\:observar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#2 \$usuario of method App\\Services\\BloqueoRevisionService\:\:liberar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 7
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\ObservarRrhhAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\RevisionPosthocAction\:\:noAprobar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\RevisionPosthocAction\:\:observar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#3 \$motivo of method App\\Actions\\Papeleta\\RechazarRrhhAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Parameter \#5 \$justificacion of method App\\Actions\\Papeleta\\CorregirPapeletaRrhhAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/DecisionController.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: app/Http/Controllers/Rrhh/PapeletaController.php
+
+		-
+			message: '#^Parameter \#1 \$usuario of method App\\Services\\ReporteHorasAcumuladasService\:\:detalle\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/PapeletaController.php
+
+		-
+			message: '#^Parameter \#2 \$usuario of method App\\Services\\BloqueoRevisionService\:\:marcar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/PapeletaController.php
+
+		-
+			message: '#^Parameter \#2 \$revisor of method App\\Actions\\Papeleta\\RevisarSustentoAction\:\:aprobar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/SustentoController.php
+
+		-
+			message: '#^Parameter \#2 \$revisor of method App\\Actions\\Papeleta\\RevisarSustentoAction\:\:observar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/SustentoController.php
+
+		-
+			message: '#^Parameter \#2 \$revisor of method App\\Actions\\Papeleta\\RevisarSustentoAction\:\:rechazar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/SustentoController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\RevisarSustentoAction\:\:observar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/SustentoController.php
+
+		-
+			message: '#^Parameter \#3 \$comentario of method App\\Actions\\Papeleta\\RevisarSustentoAction\:\:rechazar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Rrhh/SustentoController.php
+
+		-
+			message: '#^Cannot call method esJefeDeArea\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#1 \$path of method App\\Http\\Controllers\\Trabajador\\PapeletaController\:\:descartarAdjunto\(\) expects string\|null, string\|false\|null given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#1 \$trabajador of method App\\Actions\\Papeleta\\CrearPapeletaAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#1 \$trabajador of static method App\\Models\\Papeleta\:\:vivaDe\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#2 \$trabajador of method App\\Actions\\Papeleta\\CancelarPapeletaAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#2 \$trabajador of method App\\Actions\\Papeleta\\SubsanarObservacionAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#3 \$respuesta of method App\\Actions\\Papeleta\\SubsanarObservacionAction\:\:ejecutar\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#4 \$adjuntoPath of method App\\Actions\\Papeleta\\SubsanarObservacionAction\:\:ejecutar\(\) expects string\|null, string\|false\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/PapeletaController.php
+
+		-
+			message: '#^Parameter \#1 \$paths of method Illuminate\\Filesystem\\FilesystemAdapter\:\:delete\(\) expects array\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Trabajador/RetornoController.php
+
+		-
+			message: '#^Parameter \#2 \$trabajador of method App\\Actions\\Papeleta\\MarcarRetornoAction\:\:normal\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Trabajador/RetornoController.php
+
+		-
+			message: '#^Parameter \#1 \$paths of method Illuminate\\Filesystem\\FilesystemAdapter\:\:delete\(\) expects array\|string, string\|false given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Http/Controllers/Trabajador/SustentoController.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Cannot call method can\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Cannot call method hasRole\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Cannot call method trabajadoresComoJefeInmediato\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Usuario\\UsuarioController\:\:avisosDeUnidadesSinJefe\(\) has parameter \$unidadIds with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Usuario\\UsuarioController\:\:avisosDeUnidadesSinJefe\(\) should return list\<string\> but returns array\<int, non\-falsy\-string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Usuario\\UsuarioController\:\:subtreeIdsDeAreasQueEncabeza\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Http\\Controllers\\Usuario\\UsuarioController\:\:subtreeIdsDeAreasQueEncabeza\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Usuario/UsuarioController.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\ComentarioRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/ComentarioRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\CorregirPapeletaRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/CorregirPapeletaRequest.php
+
+		-
+			message: '#^Cannot call method can\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Requests/Papeleta/MarcarRetornoRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\MarcarRetornoRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/MarcarRetornoRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\ObservarJefeRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/ObservarJefeRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\ResponderPosthocRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/ResponderPosthocRequest.php
+
+		-
+			message: '#^Cannot call method can\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Requests/Papeleta/RetornoManualRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\RetornoManualRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/RetornoManualRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\RevisarSustentoRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/RevisarSustentoRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Motivo\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Motivo\>\:\:\$adjunto\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Papeleta/StorePapeletaRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Motivo\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Motivo\>\:\:\$nombre\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Papeleta/StorePapeletaRequest.php
+
+		-
+			message: '#^Cannot access property \$regimen on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Requests/Papeleta/StorePapeletaRequest.php
+
+		-
+			message: '#^Cannot call method can\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Requests/Papeleta/StorePapeletaRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\StorePapeletaRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/StorePapeletaRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\StorePapeletaRequest\:\:withValidator\(\) has parameter \$validator with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Requests/Papeleta/StorePapeletaRequest.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Requests/Papeleta/SubirSustentoRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\SubirSustentoRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/SubirSustentoRequest.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Requests/Papeleta/SubsanarObservacionRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Papeleta\\SubsanarObservacionRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Papeleta/SubsanarObservacionRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Usuario\\BuscarPorDniRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Usuario/BuscarPorDniRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\UnidadOrganica\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\UnidadOrganica\>\:\:\$jefe\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/Usuario/CrearUsuarioRequest.php
+
+		-
+			message: '#^Cannot access property \$regimen on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Requests/Usuario/CrearUsuarioRequest.php
+
+		-
+			message: '#^Cannot access property \$unidadesDeArea on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Requests/Usuario/CrearUsuarioRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Usuario\\CrearUsuarioRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Usuario/CrearUsuarioRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Usuario\\CrearUsuarioRequest\:\:unidadesDisponibles\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Http/Requests/Usuario/CrearUsuarioRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Usuario\\CrearUsuarioRequest\:\:withValidator\(\) has parameter \$validator with no type specified\.$#'
+			identifier: missingType.parameter
+			count: 1
+			path: app/Http/Requests/Usuario/CrearUsuarioRequest.php
+
+		-
+			message: '#^Cannot access property \$unidadesQueEncabeza on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Http/Requests/Usuario/EditarUsuarioRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Usuario\\EditarUsuarioRequest\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Http/Requests/Usuario/EditarUsuarioRequest.php
+
+		-
+			message: '#^Method App\\Http\\Requests\\Usuario\\EditarUsuarioRequest\:\:unidadesDisponibles\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Http/Requests/Usuario/EditarUsuarioRequest.php
+
+		-
+			message: '#^Cannot call method update\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Auth/ActualizarPasswordInicial.php
+
+		-
+			message: '#^Method App\\Livewire\\Auth\\ActualizarPasswordInicial\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Auth/ActualizarPasswordInicial.php
+
+		-
+			message: '#^Method App\\Livewire\\Configuraciones\\ConfiguracionForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Configuraciones/ConfiguracionForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Configuraciones/ConfiguracionForm.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\Motivo\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Motivos/MotivoForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Motivos\\MotivoForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Motivos/MotivoForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Motivos/MotivoForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Motivos/MotivoIndex.php
+
+		-
+			message: '#^Cannot access property \$unreadNotifications on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/NotificationBell.php
+
+		-
+			message: '#^Cannot call method notifications\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Livewire/NotificationBell.php
+
+		-
+			message: '#^Cannot call method unreadNotifications\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/NotificationBell.php
+
+		-
+			message: '#^Cannot access property \$unidad_organica_id on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Organigrama/OrganigramaArbol.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Livewire/Organigrama/OrganigramaArbol.php
+
+		-
+			message: '#^Method App\\Livewire\\Organigrama\\OrganigramaArbol\:\:destinosParaMover\(\) should return list\<array\{id\: int, label\: string, hint\: string\}\> but returns array\<int, array\{id\: int, label\: string, hint\: string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Livewire/Organigrama/OrganigramaArbol.php
+
+		-
+			message: '#^Parameter \#5 \$turno of method App\\Actions\\Organigrama\\MoverJefeComoTrabajadorAction\:\:ejecutar\(\) expects array\{turno\?\: string\|null, fecha_ancla\?\: string\|null, dias_trabajo\?\: int\|null, dias_descanso\?\: int\|null\}\|null, array\{turno\: string\|null, fecha_ancla\: string\|null, dias_trabajo\: int\|string, dias_descanso\: int\|string\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/OrganigramaArbol.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Organigrama/PersonaDrawer.php
+
+		-
+			message: '#^Cannot access property \$nombre on App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Organigrama/PersonaDrawer.php
+
+		-
+			message: '#^Cannot access property \$nombre_completo on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Livewire/Organigrama/PersonaDrawer.php
+
+		-
+			message: '#^Cannot access property \$regimen on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Organigrama/PersonaDrawer.php
+
+		-
+			message: '#^Method App\\Livewire\\Organigrama\\PersonaDrawer\:\:messages\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Organigrama/PersonaDrawer.php
+
+		-
+			message: '#^Method App\\Livewire\\Organigrama\\PersonaDrawer\:\:validationAttributes\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Organigrama/PersonaDrawer.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Organigrama\\MoverTrabajadorAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/TrabajadorModal.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:desactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/TrabajadorModal.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:motivoParaNoDesactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/TrabajadorModal.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:reactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/TrabajadorModal.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/TrabajadorModal.php
+
+		-
+			message: '#^Binary operation "\." between ''Dentro de '' and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Cannot call method descendantIds\(\) on App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Method App\\Livewire\\Organigrama\\UnidadModal\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Organigrama\\EliminarUnidadOrganicaAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Organigrama\\GuardarUnidadOrganicaAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Organigrama/UnidadModal.php
+
+		-
+			message: '#^Method App\\Livewire\\Papeletas\\AdminPapeletasIndex\:\:coincidencias\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Papeletas/AdminPapeletasIndex.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int\<0, max\>,string\|false\>\:\:map\(\) expects callable\(string\|false, int\<0, max\>\)\: non\-falsy\-string, Closure\(string\)\: non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Papeletas/AdminPapeletasIndex.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect expects Illuminate\\Contracts\\Support\\Arrayable\<int\<0, max\>, string\>\|iterable\<int\<0, max\>, string\>\|null, list\<string\>\|false given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Papeletas/AdminPapeletasIndex.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Papeletas/JefeIndex.php
+
+		-
+			message: '#^Cannot call method esJefeDeEquipo\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Papeletas/JefeIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Papeletas\\JefeIndex\:\:paginarLista\(\) has parameter \$consulta with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Papeletas/JefeIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Papeletas\\JefeIndex\:\:paginarLista\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Papeletas/JefeIndex.php
+
+		-
+			message: '#^Parameter \#1 \$jefe of method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Papeleta\>\:\:deJefeInmediato\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 4
+			path: app/Livewire/Papeletas/JefeIndex.php
+
+		-
+			message: '#^Parameter \#1 \$jefe of static method Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Papeleta\>\:\:deJefeInmediato\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Papeletas/JefeIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Papeletas\\RrhhIndex\:\:paginarLista\(\) has parameter \$consulta with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Papeletas/RrhhIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Papeletas\\RrhhIndex\:\:paginarLista\(\) return type with generic interface Illuminate\\Contracts\\Pagination\\LengthAwarePaginator does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Papeletas/RrhhIndex.php
+
+		-
+			message: '#^Cannot call method papeletas\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Livewire/Papeletas/TrabajadorIndex.php
+
+		-
+			message: '#^Cannot access property \$permite_camara on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Profile/DeviceSettingsForm.php
+
+		-
+			message: '#^Cannot access property \$permite_gps on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Profile/DeviceSettingsForm.php
+
+		-
+			message: '#^Cannot access property \$volumen_notificacion on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Profile/DeviceSettingsForm.php
+
+		-
+			message: '#^Cannot call method forceFill\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Profile/DeviceSettingsForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\HorasAcumuladasIndex\:\:exportar\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Livewire/Reportes/HorasAcumuladasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\HorasAcumuladasIndex\:\:filtros\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Reportes/HorasAcumuladasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\ResumenPapeletasIndex\:\:exportar\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Livewire/Reportes/ResumenPapeletasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\ResumenPapeletasIndex\:\:filtros\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Reportes/ResumenPapeletasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\ResumenPapeletasIndex\:\:motivos\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Reportes/ResumenPapeletasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\ResumenPapeletasIndex\:\:sedes\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Reportes/ResumenPapeletasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\ResumenPapeletasIndex\:\:trabajadoresDisponibles\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Reportes/ResumenPapeletasIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Reportes\\TrabajadorHistorialIndex\:\:exportar\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Livewire/Reportes/TrabajadorHistorialIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Sedes\\SedeForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Sedes/SedeForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Sedes/SedeForm.php
+
+		-
+			message: '#^Property App\\Livewire\\Sedes\\SedeForm\:\:\$messages has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: app/Livewire/Sedes/SedeForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Sedes/SedeIndex.php
+
+		-
+			message: '#^Cannot access property \$nombre_completo on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Cannot call method addMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Cannot call method startOfMonth\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Cannot call method subMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Turnos\\CalendarioEquipoIndex\:\:equipo276\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Turnos\\CalendarioEquipoIndex\:\:jefeVista\(\) should return App\\Models\\User but returns App\\Models\\User\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Parameter \#5 \$actor of method App\\Services\\ProgramacionTurnoService\:\:guardarEquipo\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Parameter \$actor of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Parameter \$trabajador of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects App\\Models\\User, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/CalendarioEquipoIndex.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Cannot call method addMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Cannot call method hasRole\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Cannot call method puedeGestionarTurnoDe\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Cannot call method startOfMonth\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Cannot call method subMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Method App\\Livewire\\Turnos\\CalendarioIndividualIndex\:\:getListeners\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Property App\\Livewire\\Turnos\\CalendarioIndividualIndex\:\:\$trabajador \(App\\Models\\User\) does not accept App\\Models\\User\|null\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Livewire/Turnos/CalendarioIndividualIndex.php
+
+		-
+			message: '#^Cannot call method puedeGestionarTurnoDe\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Livewire/Turnos/ConfiguracionTurnoForm.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: app/Livewire/Turnos/ConfiguracionTurnoForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Turnos\\ConfiguracionTurnoForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Turnos/ConfiguracionTurnoForm.php
+
+		-
+			message: '#^Parameter \$actor of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/ConfiguracionTurnoForm.php
+
+		-
+			message: '#^Property App\\Livewire\\Turnos\\ConfiguracionTurnoForm\:\:\$messages has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: app/Livewire/Turnos/ConfiguracionTurnoForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/DefinicionTurnos.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionAdmin.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionAdmin.php
+
+		-
+			message: '#^Cannot call method addMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionEquipo.php
+
+		-
+			message: '#^Cannot call method startOfMonth\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionEquipo.php
+
+		-
+			message: '#^Cannot call method subMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionEquipo.php
+
+		-
+			message: '#^Cannot call method translatedFormat\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionEquipo.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\EquipoDelJefeService\:\:para\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Livewire/Turnos/ProgramacionEquipo.php
+
+		-
+			message: '#^Parameter \#5 \$actor of method App\\Services\\ProgramacionTurnoService\:\:guardarEquipo\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionEquipo.php
+
+		-
+			message: '#^Cannot call method addMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Cannot call method puedeGestionarTurnoDe\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Cannot call method startOfMonth\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Cannot call method subMonthNoOverflow\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Cannot call method translatedFormat\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 4
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Parameter \#3 \$actor of method App\\Services\\ProgramacionTurnoService\:\:guardarPlan\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Parameter \#5 \$actor of method App\\Services\\ProgramacionTurnoService\:\:guardarMes\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Turnos/ProgramacionMensual.php
+
+		-
+			message: '#^Cannot access property \$id on App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/UnidadesOrganicas/UnidadOrganicaForm.php
+
+		-
+			message: '#^Cannot call method descendantIds\(\) on App\\Models\\UnidadOrganica\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/UnidadesOrganicas/UnidadOrganicaForm.php
+
+		-
+			message: '#^Method App\\Livewire\\UnidadesOrganicas\\UnidadOrganicaForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/UnidadesOrganicas/UnidadOrganicaForm.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Organigrama\\GuardarUnidadOrganicaAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/UnidadesOrganicas/UnidadOrganicaForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/UnidadesOrganicas/UnidadOrganicaForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/UnidadesOrganicas/UnidadOrganicaIndex.php
+
+		-
+			message: '#^Cannot access offset ''email'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Livewire/Usuarios/BajaConReemplazo.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: app/Livewire/Usuarios/BajaConReemplazo.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:desactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/BajaConReemplazo.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/BajaConReemplazo.php
+
+		-
+			message: '#^Parameter \#3 \$reemplazos of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:desactivar\(\) expects array\<int\|string, array\{modo\?\: string, usuario_id\?\: int\|string\|null, nuevo\?\: array\<string, mixed\>\}\>, array\<int\|string, array\{modo\: mixed, usuario_id\: mixed, nuevo\: mixed\}\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/BajaConReemplazo.php
+
+		-
+			message: '#^Cannot access property \$wasRecentlyCreated on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 9
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:construirAtributos\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:validarDesactivacion\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:validarUnicoAdminActivo\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:validarUnicoRrhhActivo\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:validarUnidad\(\) has parameter \$datos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:motivoParaNoDesactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$roles of method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:validarRoles\(\) expects list\<int\>, array\<int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$time of static method Carbon\\Carbon\:\:parse\(\) expects Carbon\\Month\|Carbon\\WeekDay\|DateTimeInterface\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Support\\Facades\\Hash\:\:make\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#2 \$roles of method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:construirAtributos\(\) expects list\<int\>, array\<int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#3 \$roles of method App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:validarUnidad\(\) expects list\<int\>, array\<int\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \$actor of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \$diasDescanso of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \$diasTrabajo of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \$turno of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Property App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:\$messages has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Property App\\Livewire\\Usuarios\\UsuarioAdminForm\:\:\$rolesSeleccionados type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminForm.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:desactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminIndex.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:motivoParaNoDesactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminIndex.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:reactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminIndex.php
+
+		-
+			message: '#^Parameter \#1 \$boolean of function abort_unless expects bool, bool\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioAdminIndex.php
+
+		-
+			message: '#^Cannot access property \$activo on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 3
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$nombre_completo on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$regimen on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$roles on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$sede on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$sede_id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$unidad_organica_id on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$unidadesDeArea on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot access property \$wasRecentlyCreated on App\\Models\\User\|null\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot call method can\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot call method tokens\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot call method update\(\) on App\\Models\\User\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 8
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Method App\\Livewire\\Usuarios\\UsuarioForm\:\:rules\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$actor of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:motivoParaNoDesactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$callback of function array_map expects \(callable\(mixed\)\: mixed\)\|null, ''intval'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$time of static method Carbon\\Carbon\:\:parse\(\) expects Carbon\\Month\|Carbon\\WeekDay\|DateTimeInterface\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$trabajador of method App\\Actions\\Usuario\\EditarUsuarioAction\:\:ejecutar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$trabajador of method App\\Services\\GeneradorTurnoMensualService\:\:retirarTurno\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$usuario of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:jefaturasPorResolver\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Support\\Facades\\Hash\:\:make\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#2 \$array of function array_map expects array, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#2 \$datos of method App\\Actions\\Usuario\\CrearUsuarioAction\:\:ejecutar\(\) expects array\{name\: string, apellido\: string, dni\: string, email\: string, regimen\: string, sede_id\: int\|null, unidad_organica_id\: int\|null, tipo\: string, \.\.\.\}, array\{name\: mixed, apellido\: mixed, dni\: mixed, email\: mixed, regimen\: mixed, sede_id\: int\|null, unidad_organica_id\: int\|null, tipo\: string, \.\.\.\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#2 \$datos of method App\\Actions\\Usuario\\EditarUsuarioAction\:\:ejecutar\(\) expects array\{name\: string, apellido\: string, email\: string, sede_id\: int\|null, unidad_organica_id\: int\|null\}, array\{name\: mixed, apellido\: mixed, email\: mixed, sede_id\: int\|null, unidad_organica_id\: int\|null\} given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \#2 \$usuario of method App\\Actions\\Usuario\\CambiarEstadoUsuarioAction\:\:motivoParaNoDesactivar\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \$actor of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \$diasDescanso of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \$diasTrabajo of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects int, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Parameter \$turno of method App\\Services\\GeneradorTurnoMensualService\:\:cargarConfiguracion\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Property App\\Livewire\\Usuarios\\UsuarioForm\:\:\$messages has no type specified\.$#'
+			identifier: missingType.property
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Property App\\Livewire\\Usuarios\\UsuarioForm\:\:\$rolesSeleccionados type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Livewire/Usuarios/UsuarioForm.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Models/Motivo.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeConTurnoSinTerminar\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeConTurnoSinTerminar\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeConTurnoTerminado\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeConTurnoTerminado\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeDeEquipoDe\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeDeEquipoDe\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeDeJefeInmediato\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeDeJefeInmediato\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeDelTurnoVigente\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeDelTurnoVigente\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeVivas\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Method App\\Models\\Papeleta\:\:scopeVivas\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Papeleta.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Models/Turno.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 3
+			path: app/Models/Turno.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:equipo\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:nombreCompleto\(\) return type with generic class Illuminate\\Database\\Eloquent\\Casts\\Attribute does not specify its types\: TGet, TSet$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeEquipoDe\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeEquipoDe\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeQueEsJefe\(\) has parameter \$query with generic class Illuminate\\Database\\Eloquent\\Builder but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:scopeQueEsJefe\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:tipoUsuario\(\) should return ''admin''\|''jefe_area''\|''jefe_inmediato''\|''rrhh''\|''trabajador'' but returns string\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:trabajadoresComoJefeInmediato\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:trabajadoresParaReportes\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Models\\User\:\:unidadIdsComoJefe\(\) should return Illuminate\\Support\\Collection\<int, int\> but returns Illuminate\\Support\\Collection\<\(int\|string\), mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/User.php
+
+		-
+			message: '#^Method App\\Notifications\\AlertaOrganizacionalNotification\:\:datosPush\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/AlertaOrganizacionalNotification.php
+
+		-
+			message: '#^Access to an undefined property object\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Notifications/CuentaDesactivadaNotification.php
+
+		-
+			message: '#^Method App\\Notifications\\NotificacionEnVivo\:\:datosExtra\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/NotificacionEnVivo.php
+
+		-
+			message: '#^Method App\\Notifications\\NotificacionEnVivo\:\:datosPush\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/NotificacionEnVivo.php
+
+		-
+			message: '#^Method App\\Notifications\\PapeletaNotification\:\:datosExtra\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/PapeletaNotification.php
+
+		-
+			message: '#^Method App\\Notifications\\PapeletaNotification\:\:datosPush\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Notifications/PapeletaNotification.php
+
+		-
+			message: '#^Binary operation "\." between mixed and ''\|'' results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: app/Providers/FortifyServiceProvider.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Support\\Facades\\Hash\:\:check\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Providers/FortifyServiceProvider.php
+
+		-
+			message: '#^Parameter \#1 \$value of static method Illuminate\\Support\\Str\:\:lower\(\) expects string, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Providers/FortifyServiceProvider.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: app/Services/AlertaPosthocService.php
+
+		-
+			message: '#^Parameter \#1 \$time of static method Carbon\\Carbon\:\:parse\(\) expects Carbon\\Month\|Carbon\\WeekDay\|DateTimeInterface\|float\|int\|string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/AlertaPosthocService.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: app/Services/CalculadorDiasHabiles.php
+
+		-
+			message: '#^Binary operation "\+" between mixed and mixed results in an error\.$#'
+			identifier: binaryOp.invalid
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Cannot call method diffInMinutes\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:calcularAdmin\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:calcularJefe\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:calcularRrhh\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:paraAdmin\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:paraJefe\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:paraRrhh\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:recordar\(\) return type has no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Method App\\Services\\DashboardMetricsService\:\:recordar\(\) should return array but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Parameter \#1 \$num of function round expects float\|int, float\|int\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Unable to resolve the template type TCacheValue in call to static method Illuminate\\Cache\\Repository\:\:remember\(\)$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/DashboardMetricsService.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: app/Services/EquipoDelJefeService.php
+
+		-
+			message: '#^Method App\\Services\\EquipoDelJefeService\:\:para\(\) should return array\{Illuminate\\Support\\Collection\<int, App\\Models\\User\>, bool, list\<int\>\} but returns array\{Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>, bool, array\<int, int\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/EquipoDelJefeService.php
+
+		-
+			message: '#^Method App\\Services\\EquipoDelJefeService\:\:subtreeIdsDeAreasQueEncabeza\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/EquipoDelJefeService.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 8
+			path: app/Services/GeneradorTurnoMensualService.php
+
+		-
+			message: '#^Method App\\Services\\HistorialTrabajadorService\:\:historial\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/HistorialTrabajadorService.php
+
+		-
+			message: '#^Method App\\Services\\HistorialTrabajadorService\:\:resumen\(\) should return array\<string, int\> but returns array\<string, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/HistorialTrabajadorService.php
+
+		-
+			message: '#^Method App\\Services\\HistorialTrabajadorService\:\:trabajadoresVisibles\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/HistorialTrabajadorService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:filter\(\) expects \(callable\(mixed, int\|string\)\: bool\)\|null, Closure\(App\\Models\\User\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/HistorialTrabajadorService.php
+
+		-
+			message: '#^Parameter \#2 \$hasta of static method App\\Support\\Minutos\:\:entre\(\) expects Carbon\\CarbonInterface, Illuminate\\Support\\Carbon\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/HistorialTrabajadorService.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 2
+			path: app/Services/HorarioOrdinarioService.php
+
+		-
+			message: '#^Argument of an invalid type mixed supplied for foreach, only iterables are supported\.$#'
+			identifier: foreach.nonIterable
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Cannot access property \$id on mixed\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Cannot access property \$parent_id on mixed\.$#'
+			identifier: property.nonObject
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Cannot call method map\(\) on mixed\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Cannot cast mixed to int\.$#'
+			identifier: cast.int
+			count: 2
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:construirNodo\(\) has parameter \$porPadre with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:construirNodo\(\) has parameter \$stats with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:construirNodo\(\) should return array\{unidad\: App\\Models\\UnidadOrganica, jefes\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>, jefes_en_filtro\: list\<int\>, filtro_sede\: bool, miembros\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>, hijos\: Illuminate\\Support\\Collection\<int, array\<string, mixed\>\>, total\: int, sin_jefe\: bool\}\|null but returns array\{unidad\: App\\Models\\UnidadOrganica, jefes\: Illuminate\\Support\\Collection\<int, App\\Models\\User\>, jefes_en_filtro\: array\<mixed\>, filtro_sede\: bool, miembros\: Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>, hijos\: mixed, total\: \(float\|int\), sin_jefe\: bool\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:fichaDe\(\) has parameter \$unidades with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:idsEnAlcance\(\) has parameter \$porPadre with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:idsEnAlcance\(\) has parameter \$raicesDeAlcance with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:raicesPara\(\) has parameter \$porPadre with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:raicesPara\(\) has parameter \$unidades with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:raicesPara\(\) should return Illuminate\\Support\\Collection\<int, App\\Models\\UnidadOrganica\> but returns Illuminate\\Support\\Collection\<int, mixed\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Method App\\Services\\Organigrama\\ArmadorOrganigrama\:\:raicesPara\(\) should return Illuminate\\Support\\Collection\<int, App\\Models\\UnidadOrganica\> but returns mixed\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:filter\(\) expects \(callable\(mixed, int\|string\)\: bool\)\|null, Closure\(App\\Models\\UnidadOrganica\)\: bool given\.$#'
+			identifier: argument.type
+			count: 3
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Parameter \#1 \$turno of static method App\\Models\\ConfiguracionTurno\:\:etiquetaDeTurno\(\) expects string\|null, mixed given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Organigrama/ArmadorOrganigrama.php
+
+		-
+			message: '#^Cannot call method startOfDay\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/ProgramacionTurnoService.php
+
+		-
+			message: '#^Cannot call method startOfMonth\(\) on Illuminate\\Support\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/ProgramacionTurnoService.php
+
+		-
+			message: '#^Parameter \#1 \$f of closure expects DateTimeImmutable, DateTimeImmutable\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ProgramacionTurnoService.php
+
+		-
+			message: '#^Parameter \#1 \$trabajador of method App\\Services\\ProgramacionTurnoService\:\:guardarMes\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ProgramacionTurnoService.php
+
+		-
+			message: '#^Cannot access offset ''dia'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Cannot access offset ''dni'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Cannot access offset ''sede'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Cannot access offset ''trabajador'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Cannot access offset ''trabajador_id'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 2
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Cannot access offset ''unidad_organica'' on mixed\.$#'
+			identifier: offsetAccess.nonOffsetAccessible
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Cannot call method startOfMonth\(\) on Carbon\\Carbon\|null\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:detalle\(\) has parameter \$filtros with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:detalle\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:resumenDiarioPorTrabajador\(\) has parameter \$detalle with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:resumenDiarioPorTrabajador\(\) has parameter \$filtros with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:resumenDiarioPorTrabajador\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:resumenPorTrabajador\(\) has parameter \$detalle with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:resumenPorTrabajador\(\) has parameter \$filtros with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteHorasAcumuladasService\:\:resumenPorTrabajador\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Parameter \#1 \$groupBy of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:groupBy\(\) expects \(callable\(mixed, int\|string\)\: non\-falsy\-string\)\|list\<Closure\|string\>\|string, Closure\(array\)\: non\-falsy\-string given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ReporteHorasAcumuladasService.php
+
+		-
+			message: '#^Method App\\Services\\ReporteSustentosService\:\:query\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ReporteSustentosService.php
+
+		-
+			message: '#^Method App\\Services\\ResumenPapeletasService\:\:jefesMasLentos\(\) has parameter \$papeletas with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ResumenPapeletasService.php
+
+		-
+			message: '#^Method App\\Services\\ResumenPapeletasService\:\:resumen\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Services/ResumenPapeletasService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<\(int\|string\),mixed\>\:\:filter\(\) expects \(callable\(mixed, int\|string\)\: bool\)\|null, Closure\(App\\Models\\Papeleta\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ResumenPapeletasService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,mixed\>\:\:filter\(\) expects \(callable\(mixed, int\)\: bool\)\|null, Closure\(App\\Models\\Papeleta\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ResumenPapeletasService.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,mixed\>\:\:map\(\) expects callable\(mixed, int\)\: \(int\|null\), Closure\(App\\Models\\Papeleta\)\: \(int\|null\) given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/ResumenPapeletasService.php
+
+		-
+			message: '#^Parameter \#1 \$num of function round expects float\|int, float\|int\|null given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Services/ResumenPapeletasService.php
+
+		-
+			message: '#^Class App\\States\\Papeleta\\PapeletaState extends generic class Spatie\\ModelStates\\State but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/States/Papeleta/PapeletaState.php
+
+		-
+			message: '#^Method App\\Support\\PapeletaEstadoPresentacion\:\:para\(\) has parameter \$estado with generic class Spatie\\ModelStates\\State but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Support/PapeletaEstadoPresentacion.php
+
+		-
+			message: '#^Method App\\Support\\PapeletaEstadoPresentacion\:\:porAbandono\(\) has parameter \$estado with generic class Spatie\\ModelStates\\State but does not specify its types\: TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Support/PapeletaEstadoPresentacion.php
+
+		-
+			message: '#^Cannot cast mixed to string\.$#'
+			identifier: cast.string
+			count: 1
+			path: app/Support/TituloDePagina.php
+
+		-
+			message: '#^Parameter \#1 \$string of function trim expects string, string\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Support/TituloDePagina.php

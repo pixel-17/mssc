@@ -70,26 +70,32 @@ class AdminSinRolOperativoTest extends TestCase
         $this->assertDatabaseMissing('users', ['dni' => '40555666']);
     }
 
-    public function test_nuevo_usuario_no_ofrece_ni_acepta_el_rol_admin(): void
+    /**
+     * «Cuentas de usuario» ahora es un único formulario de alta («Nuevo
+     * administrador / RR. HH.», ver UsuarioAdminForm): sí ofrece y acepta el
+     * rol admin (alternativo a RR. HH. puro), siempre que no se combine con
+     * trabajador (ver test_el_formulario_de_admin_rechaza_admin_mas_trabajador).
+     */
+    public function test_nuevo_usuario_ofrece_y_acepta_el_rol_admin(): void
     {
         $admin = $this->usuarioDePrueba([], ['admin']);
         $adminId = (int) Role::where('name', 'admin')->value('id');
 
         $componente = Livewire::actingAs($admin)->test(UsuarioAdminForm::class);
 
-        $this->assertFalse($componente->viewData('roles')->contains('name', 'admin'));
+        $this->assertTrue($componente->viewData('roles')->contains('name', 'admin'));
 
         $componente
-            ->set('name', 'Colado')
+            ->set('name', 'Nueva')
             ->set('apellido', 'Admin')
             ->set('dni', '40777888')
-            ->set('email', 'colado.admin@example.com')
-            ->set('regimen', '276')
+            ->set('email', 'nueva.admin@example.com')
+            ->set('regimen', '')
             ->set('rolesSeleccionados', [$adminId])
             ->call('guardar')
-            ->assertHasErrors(['rolesSeleccionados']);
+            ->assertHasNoErrors();
 
-        $this->assertDatabaseMissing('users', ['dni' => '40777888']);
+        $this->assertDatabaseHas('users', ['dni' => '40777888']);
     }
 
     public function test_el_admin_no_tiene_la_via_de_alta_de_jefes_pero_si_la_de_cuentas(): void

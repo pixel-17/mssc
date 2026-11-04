@@ -12,6 +12,7 @@ use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreaEscenarioPapeletas;
 use Tests\TestCase;
 
@@ -19,17 +20,9 @@ use Tests\TestCase;
  * Un 728 SIEMPRE necesita turno vigente para crear una papeleta (ver
  * CrearPapeletaAction, ya no hay MODO_ESTRICTO_728). El generador
  * automático mensual solo continúa una ConfiguracionTurno que ya
- * existe, nunca crea la primera: por eso el alta exige el turno
- * inicial en el mismo paso, para que ningún 728 quede sin horario
- * desde el día uno.
- *
- * El admin NO da de alta trabajadores (UserPolicy::puedeCrearAlgo() lo
- * excluye a propósito: sus altas van por Cuentas de usuario —solo admin
- * o RR. HH. puro, sin régimen/sede/turno— o por el organigrama). Así
- * que el único flujo de ALTA que de verdad ejercita el turno inicial es
- * el de Jefe de Área / Jefe Inmediato (UsuarioForm, vía organigrama);
- * el admin solo puede cargar o cambiar el turno al EDITAR a alguien que
- * ya existe (UsuarioAdminForm), cubierto en UsuarioAdminCrudTest.
+ * existe, nunca crea la primera: por eso ambos flujos de alta
+ * (Admin y Jefe) exigen el turno inicial en el mismo paso, para que
+ * ningún 728 quede sin horario desde el día uno.
  */
 class TurnoInicialAlCrearTest extends TestCase
 {
@@ -48,6 +41,12 @@ class TurnoInicialAlCrearTest extends TestCase
         $this->admin = $this->usuarioDePrueba([], ['admin']);
     }
 
+    /** El formulario de admin exige al menos un rol: sin él el usuario no podría usar el sistema. */
+    private function rolId(string $nombre): int
+    {
+        return (int) Role::where('name', $nombre)->value('id');
+    }
+
     protected function tearDown(): void
     {
         $this->travelBack();
@@ -55,50 +54,84 @@ class TurnoInicialAlCrearTest extends TestCase
         parent::tearDown();
     }
 
-    // "Admin puede crear un 728 sin turno y se le carga después" queda
-    // cubierto por test_jefe_de_area_puede_crear_un_728_sin_turno_por_http()
-    // más abajo: el admin no da de alta trabajadores (ver nota de clase),
-    // así que ya no hay una variante propia de admin que probar aquí.
+    /**
+     * RR. HH. + trabajador ya no se da de alta junto desde «Cuentas de
+     * usuario» (ver UsuarioAdminForm::validarRoles()): se crea como RR. HH.
+     * puro y se agrega el rol trabajador, régimen y sede al editar.
+     */
+    public function test_admin_puede_crear_un_728_sin_turno_y_se_le_carga_despues(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class)
+            ->set('name', 'Rosa')
+            ->set('apellido', 'Quispe')
+            ->set('dni', '70112233')
+            ->set('email', 'rosa@example.com')
+            ->set('regimen', '276')
+            ->set('rolesSeleccionados', [$this->rolId('rrhh')])
+            ->call('guardar')
+            ->assertHasNoErrors();
 
-    public function test_jefe_de_area_crea_un_728_con_turno_y_el_trabajador_puede_crear_papeleta_el_mismo_dia(): void
+        $nuevo = User::where('dni', '70112233')->firstOrFail();
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $nuevo->fresh()])
+            ->set('regimen', '728')
+            ->set('sedeId', $this->sedeDePrueba()->id)
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertFalse(ConfiguracionTurno::where('user_id', $nuevo->id)->exists(), 'el turno no se pide al crear');
+    }
+
+    public function test_admin_crea_un_728_con_turno_y_puede_crear_papeleta_el_mismo_dia(): void
     {
         // Congelado dentro del horario de MANANA (06:00-14:00) para que el
         // turno recién creado esté vigente al llamar a CrearPapeletaAction.
         $this->travelTo(Carbon::parse(now()->toDateString().' 10:00:00'));
 
-        // El jefe de área también encabeza la unidad donde cae el nuevo
-        // trabajador: así dobla como su jefe inmediato para la papeleta,
-        // igual que el resto de este archivo (p. ej. el test de abajo).
-        // Necesita su propio turno vigente para poder aprobarla.
-        $jefeDeArea = $this->usuarioDePrueba(['regimen' => '728']);
-        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
-        $this->conUnidadHija($unidad);
-        $jefeDeArea->update(['unidad_organica_id' => $unidad->id]);
-
+        // Crear una papeleta exige un jefe inmediato activo en la unidad.
+        $jefe = $this->usuarioDePrueba(['regimen' => '728']);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefe->id]);
+        $jefe->update(['unidad_organica_id' => $unidad->id]);
         ConfiguracionTurno::create([
-            'user_id' => $jefeDeArea->id,
+            'user_id' => $jefe->id,
             'turno' => 'MANANA',
             'fecha_ancla' => now()->toDateString(),
             'dias_trabajo' => 6,
             'dias_descanso' => 1,
         ]);
-        $this->turnoDePrueba($jefeDeArea, ['turno' => 'MANANA']);
+        $this->turnoDePrueba($jefe, ['turno' => 'MANANA']);
 
-        Livewire::actingAs($jefeDeArea)
-            ->test(UsuarioForm::class)
+        // RR. HH. + trabajador ya no se da de alta junto (ver
+        // UsuarioAdminForm::validarRoles()): se crea como RR. HH. puro y se
+        // agrega el rol trabajador, régimen, sede, unidad y turno al editar.
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class)
             ->set('name', 'Rosa')
             ->set('apellido', 'Quispe')
             ->set('dni', '70112233')
             ->set('email', 'rosa@example.com')
-            ->set('regimen', '728')
-            ->set('unidadOrganicaId', $unidad->id)
-            ->set('tipo', 'trabajador')
-            ->set('turno', 'MANANA')
-            ->set('fechaAncla', now()->toDateString())
+            ->set('regimen', '276')
+            ->set('rolesSeleccionados', [$this->rolId('rrhh')])
             ->call('guardar')
             ->assertHasNoErrors();
 
         $nuevo = User::where('dni', '70112233')->firstOrFail();
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $nuevo->fresh()])
+            ->set('regimen', '728')
+            ->set('sedeId', $this->sedeDePrueba()->id)
+            ->set('unidadOrganicaId', $unidad->id)
+            ->set('turno', 'MANANA')
+            ->set('fechaAncla', now()->toDateString())
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $nuevo = $nuevo->fresh();
 
         $this->assertTrue(ConfiguracionTurno::where('user_id', $nuevo->id)->exists());
 
@@ -108,25 +141,33 @@ class TurnoInicialAlCrearTest extends TestCase
         $this->assertNotNull($papeleta->id);
     }
 
-    public function test_jefe_de_area_puede_crear_un_276_sin_turno(): void
+    /**
+     * RR. HH. + trabajador ya no se da de alta junto (ver
+     * UsuarioAdminForm::validarRoles()): se crea como RR. HH. puro y se
+     * agrega el rol trabajador y la sede al editar.
+     */
+    public function test_admin_puede_crear_un_276_sin_turno(): void
     {
-        $jefeDeArea = $this->usuarioDePrueba(['regimen' => '276']);
-        $unidad = UnidadOrganica::create(['nombre' => 'Oficina', 'jefe_id' => $jefeDeArea->id]);
-        $this->conUnidadHija($unidad);
-
-        Livewire::actingAs($jefeDeArea)
-            ->test(UsuarioForm::class)
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class)
             ->set('name', 'Rosa')
             ->set('apellido', 'Quispe')
             ->set('dni', '70112233')
             ->set('email', 'rosa@example.com')
             ->set('regimen', '276')
-            ->set('unidadOrganicaId', $unidad->id)
-            ->set('tipo', 'trabajador')
+            ->set('rolesSeleccionados', [$this->rolId('rrhh')])
             ->call('guardar')
             ->assertHasNoErrors();
 
         $nuevo = User::where('dni', '70112233')->firstOrFail();
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $nuevo->fresh()])
+            ->set('sedeId', $this->sedeDePrueba()->id)
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
         $this->assertFalse(ConfiguracionTurno::where('user_id', $nuevo->id)->exists());
     }
 

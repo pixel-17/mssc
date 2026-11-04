@@ -49,18 +49,6 @@ class UsuarioAdminCrudTest extends TestCase
     /**
      * Formulario de alta con los datos mínimos válidos para un 276.
      *
-     * El rol por defecto (RR. HH. + trabajador) es, a propósito, una
-     * combinación que ya NO se puede guardar desde este formulario (ver
-     * validarRoles(): «Cuentas de usuario» solo crea administradores o
-     * RR. HH. puros). Se deja así porque guardar() valida los campos
-     * (rules()/validate()) ANTES de aplicar esa regla de negocio, así
-     * que sirve igual para los tests que solo comprueban errores de
-     * campo (régimen, turno, días, DNI, email) — esos nunca llegan a
-     * evaluar el rol porque validate() ya lanzó la excepción antes.
-     * Cualquier test que SÍ espere terminar de guardar con éxito debe
-     * pasar explícitamente un rolesSeleccionados válido para alta
-     * (admin o rrhh solos).
-     *
      * @param  array<string, mixed>  $datos
      */
     private function formularioDeAlta(array $datos = [])
@@ -71,7 +59,11 @@ class UsuarioAdminCrudTest extends TestCase
             'dni' => '12345678',
             'email' => 'lucia@example.com',
             'regimen' => '276',
-            'rolesSeleccionados' => [$this->rolId('rrhh'), $this->rolId('trabajador')],
+            // RR. HH. puro (sin trabajador): la combinación rrhh+trabajador ya
+            // no se puede dar de alta desde «Cuentas de usuario» (ver
+            // validarRoles()), así que ese rol se agrega al editar donde haga
+            // falta, no en este valor por defecto.
+            'rolesSeleccionados' => [$this->rolId('rrhh')],
             ...$datos,
         ];
 
@@ -86,9 +78,14 @@ class UsuarioAdminCrudTest extends TestCase
 
     // ---------------------------------------------------------------- alta
 
-    public function test_el_admin_da_de_alta_un_rrhh_puro_con_su_rol_y_la_contrasena_es_su_dni(): void
+    public function test_el_admin_da_de_alta_un_276_con_su_rol_y_la_contrasena_es_su_dni(): void
     {
-        $this->formularioDeAlta(['rolesSeleccionados' => [$this->rolId('rrhh')]])
+        // RR. HH. + trabajador ya no se puede dar de alta desde «Cuentas de
+        // usuario» (ver validarRoles()): se crea como RR. HH. puro aquí y
+        // luego se le agrega el rol trabajador, sede y régimen al editar.
+        $sede = $this->sedeDePrueba();
+
+        $this->formularioDeAlta()
             ->call('guardar')
             ->assertHasNoErrors()
             ->assertRedirect(route('usuarios-admin.index'));
@@ -98,12 +95,25 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertSame('Lucía', $usuario->name);
         $this->assertSame('Quispe', $usuario->apellido);
         $this->assertSame('lucia@example.com', $usuario->email);
-        $this->assertSame('276', $usuario->regimen);
         $this->assertTrue($usuario->activo);
         $this->assertTrue($usuario->hasRole('rrhh'));
-        $this->assertFalse($usuario->hasRole('trabajador'));
         $this->assertTrue(Hash::check('12345678', $usuario->password), 'la contraseña inicial es el DNI');
         $this->assertTrue((bool) $usuario->debe_actualizar_password);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario->fresh()])
+            ->set('regimen', '276')
+            ->set('sedeId', $sede->id)
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario->refresh();
+
+        $this->assertSame('276', $usuario->regimen);
+        $this->assertSame($sede->id, $usuario->sede_id);
+        $this->assertTrue($usuario->hasRole('trabajador'));
+        $this->assertTrue($usuario->hasRole('rrhh'));
     }
 
     public function test_no_se_puede_crear_un_usuario_sin_ningun_rol(): void
@@ -198,16 +208,20 @@ class UsuarioAdminCrudTest extends TestCase
     /**
      * Si además de RR. HH. se marca el rol trabajador, sí aplican régimen,
      * sede y unidad orgánica, igual que a cualquier trabajador. Esa
-     * combinación ya no se puede CREAR desde «Cuentas de usuario» (ver
-     * test_no_se_puede_crear_rrhh_mas_trabajador_desde_cuentas_de_usuario
-     * más abajo), pero sí se puede llegar a ella editando a alguien que
-     * ya existe (validarRoles() solo restringe el alta nueva).
+     * combinación ya no se crea desde «Cuentas de usuario» (ver
+     * validarRoles()): se da de alta como RR. HH. puro y se agrega el rol
+     * trabajador al editar.
      */
     public function test_un_rrhh_mas_trabajador_si_necesita_sede_y_unidad(): void
     {
         $sede = $this->sedeDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina de prueba', 'jefe_id' => $this->usuarioDePrueba(['regimen' => '276'])->id]);
-        $usuario = $this->usuarioDePrueba(['regimen' => '276'], ['rrhh']);
+
+        $this->formularioDeAlta()
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '12345678')->firstOrFail();
 
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class, ['usuario' => $usuario->fresh()])
@@ -218,7 +232,7 @@ class UsuarioAdminCrudTest extends TestCase
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $usuario = $usuario->fresh();
+        $usuario->refresh();
 
         $this->assertTrue($usuario->hasRole('rrhh'));
         $this->assertTrue($usuario->hasRole('trabajador'));
@@ -240,36 +254,22 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertNull(User::where('dni', '12345678')->first());
     }
 
-    /**
-     * Tampoco se puede dar de alta RR. HH. + trabajador juntos desde aquí:
-     * esa combinación (un RR. HH. que también marca papeletas) se da de
-     * alta desde el organigrama, donde sí se asigna sede y unidad.
-     */
-    public function test_no_se_puede_crear_rrhh_mas_trabajador_desde_cuentas_de_usuario(): void
-    {
-        $this->formularioDeAlta(['rolesSeleccionados' => [$this->rolId('rrhh'), $this->rolId('trabajador')]])
-            ->call('guardar')
-            ->assertHasErrors(['rolesSeleccionados']);
-
-        $this->assertNull(User::where('dni', '12345678')->first());
-    }
-
     // --------------------------------------------- alta de administrador
 
     /**
-     * «Nuevo administrador» (?tipo=admin): el formulario ya no pide régimen,
-     * sede ni unidad orgánica, y el rol queda fijo en Admin.
+     * Alta nueva: el rol se elige con un radio (rolNuevo, ver guardar()),
+     * no con query params ni con rolesSeleccionados directamente. Elegido
+     * «admin», el formulario ya no pide régimen, sede ni unidad orgánica.
      */
     public function test_nuevo_administrador_se_crea_sin_regimen_sede_ni_unidad_y_con_rol_fijo(): void
     {
-        $componente = Livewire::withQueryParams(['tipo' => 'admin'])
-            ->actingAs($this->admin)
+        $componente = Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class)
-            ->assertSet('rolesSeleccionados', [(string) $this->rolId('admin')])
             ->set('name', 'Nueva')
             ->set('apellido', 'Administradora')
             ->set('dni', '87654321')
             ->set('email', 'nueva.admin@example.com')
+            ->set('rolNuevo', (string) $this->rolId('admin'))
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -287,20 +287,20 @@ class UsuarioAdminCrudTest extends TestCase
 
     /**
      * Aunque el payload de Livewire llegue manipulado (otro rol, régimen,
-     * sede), guardar() lo vuelve a fijar: el rol admin es el único posible
-     * desde este flujo.
+     * sede), guardar() lo vuelve a fijar: elegido «admin» por el radio, es
+     * el único rol posible desde este flujo.
      */
     public function test_nuevo_administrador_ignora_un_payload_manipulado_con_otro_rol_o_regimen(): void
     {
         $sede = $this->sedeDePrueba();
 
-        Livewire::withQueryParams(['tipo' => 'admin'])
-            ->actingAs($this->admin)
+        Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class)
             ->set('name', 'Nueva')
             ->set('apellido', 'Administradora')
             ->set('dni', '87654322')
             ->set('email', 'otra.admin@example.com')
+            ->set('rolNuevo', (string) $this->rolId('admin'))
             ->set('regimen', '276')
             ->set('sedeId', $sede->id)
             ->set('rolesSeleccionados', [$this->rolId('admin'), $this->rolId('rrhh')])
@@ -317,7 +317,7 @@ class UsuarioAdminCrudTest extends TestCase
 
     public function test_al_crear_se_ignora_la_contrasena_escrita_y_se_usa_el_dni(): void
     {
-        $this->formularioDeAlta(['password' => 'OtraClave12345', 'rolesSeleccionados' => [$this->rolId('rrhh')]])
+        $this->formularioDeAlta(['password' => 'OtraClave12345'])
             ->call('guardar')
             ->assertHasNoErrors();
 
@@ -361,7 +361,14 @@ class UsuarioAdminCrudTest extends TestCase
 
     public function test_el_regimen_solo_puede_ser_276_o_728(): void
     {
-        $this->formularioDeAlta(['regimen' => '1057'])
+        // Un RR. HH. puro siempre queda en régimen 276 (ver esSoloRrhh()):
+        // esta regla de validación solo se puede observar al editar a
+        // alguien con rol trabajador.
+        $usuario = $this->usuarioDePrueba(['regimen' => '276'], ['trabajador']);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario])
+            ->set('regimen', '1057')
             ->call('guardar')
             ->assertHasErrors(['regimen' => 'in']);
     }
@@ -373,59 +380,84 @@ class UsuarioAdminCrudTest extends TestCase
             ->assertHasErrors(['email' => 'email']);
     }
 
-    // "Un 728 nuevo no exige turno al crear" ya no se puede probar vía este
-    // formulario: desde «Cuentas de usuario» un alta nueva siempre fuerza
-    // régimen 276 (RR. HH. puro) o ninguno (admin), nunca 728. Esa regla
-    // vive ahora en TurnoInicialAlCrearTest (alta por jefe de área, el
-    // único camino que sigue creando un 728) y, para la edición, en
-    // test_editar_un_728_sin_configuracion_de_turno_no_la_exige más abajo.
+    /**
+     * Un RR. HH. puro siempre queda en régimen 276 (ver esSoloRrhh()): para
+     * observar el régimen 728 en el alta hay que crear primero como RR. HH.
+     * puro y luego editar agregando el rol trabajador y el régimen 728.
+     */
+    public function test_un_728_nuevo_no_exige_turno_en_el_alta(): void
+    {
+        $this->formularioDeAlta()
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '12345678')->firstOrFail();
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario->fresh()])
+            ->set('regimen', '728')
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $this->assertFalse(ConfiguracionTurno::where('user_id', $usuario->id)->exists());
+    }
 
     public function test_un_728_no_acepta_el_turno_de_un_276(): void
     {
-        $this->formularioDeAlta([
-            'regimen' => '728',
-            'turno' => 'DIA',
-            'fechaAncla' => '2026-09-21',
-        ])
+        $usuario = $this->usuarioDePrueba(['regimen' => '276'], ['trabajador']);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario])
+            ->set('regimen', '728')
+            ->set('turno', 'DIA')
+            ->set('fechaAncla', '2026-09-21')
             ->call('guardar')
             ->assertHasErrors(['turno' => 'in']);
 
-        $this->assertFalse(User::where('dni', '12345678')->exists());
+        $this->assertFalse(ConfiguracionTurno::where('user_id', $usuario->id)->exists());
     }
 
     public function test_los_dias_de_trabajo_y_descanso_tienen_limites(): void
     {
-        $this->formularioDeAlta([
-            'regimen' => '728',
-            'turno' => 'MANANA',
-            'fechaAncla' => '2026-09-21',
-            'diasTrabajo' => 0,
-            'diasDescanso' => 31,
-        ])
+        $usuario = $this->usuarioDePrueba(['regimen' => '276'], ['trabajador']);
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario])
+            ->set('regimen', '728')
+            ->set('turno', 'MANANA')
+            ->set('fechaAncla', '2026-09-21')
+            ->set('diasTrabajo', 0)
+            ->set('diasDescanso', 31)
             ->call('guardar')
             ->assertHasErrors(['diasTrabajo' => 'min', 'diasDescanso' => 'max']);
     }
 
     /**
-     * «Crear un 728 con turno y que quede con su configuración» ya no se
-     * puede probar como ALTA desde este formulario (rrhh+trabajador está
-     * bloqueado al crear, y admin/rrhh puros no llevan turno). La misma
-     * invariante — cargar el turno inicial y que genere el mes — sigue
-     * siendo válida al EDITAR, que es como se la ejerce aquí.
+     * Cargar el turno al crear exige régimen 728, lo que a su vez exige el
+     * rol trabajador — y RR. HH. + trabajador ya no se da de alta desde
+     * «Cuentas de usuario» (ver validarRoles()). Se crea como RR. HH. puro
+     * y se agrega trabajador + turno al editar.
      */
-    public function test_cargar_turno_al_editar_un_728_lo_deja_con_su_configuracion_y_el_mes_generado(): void
+    public function test_un_728_con_turno_queda_con_su_configuracion_y_el_mes_generado(): void
     {
-        $usuario = $this->usuarioDePrueba(['regimen' => '728'], ['rrhh', 'trabajador']);
+        $this->formularioDeAlta()
+            ->call('guardar')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('usuarios-admin.index'));
+
+        $usuario = User::where('dni', '12345678')->firstOrFail();
 
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class, ['usuario' => $usuario->fresh()])
+            ->set('regimen', '728')
             ->set('turno', 'MANANA')
             ->set('fechaAncla', '2026-09-21')
             ->set('diasTrabajo', 6)
             ->set('diasDescanso', 1)
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
             ->call('guardar')
-            ->assertHasNoErrors()
-            ->assertRedirect(route('usuarios-admin.index'));
+            ->assertHasNoErrors();
 
         $configuracion = ConfiguracionTurno::where('user_id', $usuario->id)->firstOrFail();
 
@@ -439,13 +471,36 @@ class UsuarioAdminCrudTest extends TestCase
         $this->assertGreaterThan(0, Turno::where('user_id', $usuario->id)->where('es_descanso', true)->count());
     }
 
-    // "Al dar de alta en una unidad se calcula su jefe inmediato" ya no se
-    // puede probar como ALTA desde aquí (ninguna combinación de roles
-    // válida para crear desde «Cuentas de usuario» admite unidad: admin
-    // puro no lleva unidad, rrhh puro la fuerza a null). La misma
-    // invariante —el UserObserver recalculando jefe_inmediato_id al fijar
-    // unidad_organica_id— ya está cubierta al editar, un poco más abajo,
-    // en test_cambiar_de_unidad_recalcula_el_jefe_inmediato().
+    /**
+     * Asignar unidad orgánica exige el rol trabajador, que ya no se da de
+     * alta junto con RR. HH. desde «Cuentas de usuario» (ver
+     * validarRoles()). Se crea como RR. HH. puro y se asigna la unidad al
+     * editar, junto con el rol trabajador.
+     */
+    public function test_al_dar_de_alta_en_una_unidad_se_calcula_su_jefe_inmediato(): void
+    {
+        $jefe = $this->usuarioDePrueba(['regimen' => '276']);
+        $unidad = UnidadOrganica::create(['nombre' => 'Oficina de Rentas', 'jefe_id' => $jefe->id]);
+
+        $this->formularioDeAlta()
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario = User::where('dni', '12345678')->firstOrFail();
+
+        Livewire::actingAs($this->admin)
+            ->test(UsuarioAdminForm::class, ['usuario' => $usuario->fresh()])
+            ->set('regimen', '276')
+            ->set('unidadOrganicaId', $unidad->id)
+            ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $usuario->refresh();
+
+        $this->assertSame($unidad->id, $usuario->unidad_organica_id);
+        $this->assertSame($jefe->id, $usuario->jefe_inmediato_id);
+    }
 
     // ------------------------------------------------------------- edición
 
