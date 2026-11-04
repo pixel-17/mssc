@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -21,7 +22,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $plazo_justificacion_horas_habiles
  * @property bool $es_destino_reclasificacion
  * @property bool $activo
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Papeleta> $papeletas
+ * @property-read Collection<int, Papeleta> $papeletas
  */
 class Motivo extends Model
 {

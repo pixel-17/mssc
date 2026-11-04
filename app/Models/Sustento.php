@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\PapeletaActualizada;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Paso 5, motivo Salud: sin sustento al retorno -> RETORNO_PENDIENTE_SUSTENTO,
@@ -15,11 +16,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $papeleta_id
  * @property string|null $archivo_path
- * @property \Illuminate\Support\Carbon $fecha_limite
+ * @property Carbon $fecha_limite
  * @property 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado' $estado
- * @property \Illuminate\Support\Carbon|null $presentado_at
+ * @property Carbon|null $presentado_at
  * @property int|null $revisado_por_id
- * @property \Illuminate\Support\Carbon|null $revisado_at
+ * @property Carbon|null $revisado_at
  * @property-read Papeleta $papeleta
  * @property-read User|null $revisadoPor
  */

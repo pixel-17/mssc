@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Turnos;
 
+use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Livewire\Turnos\ConfiguracionTurnoForm;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -86,7 +87,7 @@ class ConfiguracionTurnoFormTest extends TestCase
             ->call('guardar')
             ->assertHasNoErrors();
 
-        $papeleta = app(\App\Actions\Papeleta\CrearPapeletaAction::class)
+        $papeleta = app(CrearPapeletaAction::class)
             ->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
 
         $this->assertNotNull($papeleta->id);

@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+
 /**
  * @property int $id
  * @property string $nombre
@@ -12,8 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $longitud
  * @property int $radio_metros
  * @property bool $activo
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $usuarios
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Papeleta> $papeletas
+ * @property-read Collection<int, User> $usuarios
+ * @property-read Collection<int, Papeleta> $papeletas
  */
 class Sede extends Model
 {

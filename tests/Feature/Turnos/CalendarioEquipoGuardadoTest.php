@@ -4,6 +4,7 @@ namespace Tests\Feature\Turnos;
 
 use App\Livewire\Turnos\CalendarioEquipoIndex;
 use App\Models\UnidadOrganica;
+use Carbon\Carbon;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -31,7 +32,7 @@ class CalendarioEquipoGuardadoTest extends TestCase
         // El mes activo del calendario se calcula con now(); se congela "hoy"
         // dentro de octubre 2026 para que las fechas del test caigan en el
         // mes visible por defecto, sin depender de la fecha real del entorno.
-        $this->travelTo(\Carbon\Carbon::parse('2026-10-15'));
+        $this->travelTo(Carbon::parse('2026-10-15'));
     }
 
     public function test_el_jefe_inmediato_guarda_turnos_728_de_su_trabajador_desde_el_calendario(): void

@@ -11,60 +11,62 @@ use App\States\Papeleta\PapeletaState;
 use App\States\Papeleta\PendienteJefe;
 use App\States\Papeleta\PendienteRrhh;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 use Spatie\ModelStates\HasStates;
 
 /**
  * @property int $id
  * @property int|null $en_revision_por_id
- * @property \Illuminate\Support\Carbon|null $en_revision_desde
+ * @property Carbon|null $en_revision_desde
  * @property int $trabajador_id
  * @property int $motivo_id
  * @property int $sede_id
  * @property '276'|'728' $regimen
- * @property \Illuminate\Support\Carbon $dia_operativo
- * @property \Illuminate\Support\Carbon|null $fin_turno_at
+ * @property Carbon $dia_operativo
+ * @property Carbon|null $fin_turno_at
  * @property PapeletaState $estado
  * @property int|null $jefe_inmediato_id
  * @property int|null $resuelto_por_jefe_id
- * @property \Illuminate\Support\Carbon|null $jefe_resuelto_at
+ * @property Carbon|null $jefe_resuelto_at
  * @property int $contador_observaciones_jefe
  * @property bool $observacion_requiere_adjunto
  * @property string|null $observacion_adjunto_path
- * @property \Illuminate\Support\Carbon|null $observacion_subsanada_at
+ * @property Carbon|null $observacion_subsanada_at
  * @property string|null $observacion_respuesta
- * @property \Illuminate\Support\Carbon|null $reloj_jefe_at
+ * @property Carbon|null $reloj_jefe_at
  * @property int|null $jefe_area_id
  * @property int|null $resuelto_por_rrhh_id
- * @property \Illuminate\Support\Carbon|null $rrhh_resuelto_at
+ * @property Carbon|null $rrhh_resuelto_at
  * @property int $contador_observaciones_rrhh
  * @property bool $autorizado_con_rrhh_fuera_horario
  * @property 'no_aplica'|'pendiente'|'observada'|'respondida'|'aprobada'|'observada_firme'|'no_aprobada' $revision_posthoc_estado
  * @property int|null $revision_posthoc_por_id
- * @property \Illuminate\Support\Carbon|null $revision_posthoc_at
+ * @property Carbon|null $revision_posthoc_at
  * @property int $contador_observaciones_posthoc
  * @property string|null $posthoc_observacion
  * @property string|null $posthoc_respuesta
  * @property string|null $posthoc_adjunto_path
- * @property \Illuminate\Support\Carbon|null $posthoc_respondida_at
- * @property \Illuminate\Support\Carbon|null $hora_salida_real
+ * @property Carbon|null $posthoc_respondida_at
+ * @property Carbon|null $hora_salida_real
  * @property int $descuento_refrigerio_minutos
  * @property int|null $rechazada_por_id
  * @property string|null $motivo_rechazo
- * @property \Illuminate\Support\Carbon|null $cancelada_at
- * @property \Illuminate\Support\Carbon|null $vencida_at
+ * @property Carbon|null $cancelada_at
+ * @property Carbon|null $vencida_at
  * @property string|null $causa_finalizacion_sin_retorno
  * @property bool $requiere_visto_bueno
- * @property \Illuminate\Support\Carbon|null $regularizacion_fecha_limite
+ * @property Carbon|null $regularizacion_fecha_limite
  * @property int|null $motivo_original_id
  * @property string|null $justificacion
- * @property \Illuminate\Support\Carbon|null $hora_retorno_estimado
+ * @property Carbon|null $hora_retorno_estimado
  * @property string|null $adjunto_inicial_path
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read User $trabajador
  * @property-read Motivo $motivo
  * @property-read Motivo|null $motivoOriginal
@@ -77,8 +79,8 @@ use Spatie\ModelStates\HasStates;
  * @property-read User|null $rechazadaPor
  * @property-read User|null $enRevisionPor
  * @property-read Retorno|null $retorno
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Sustento> $sustentos
- * @property-read \Illuminate\Database\Eloquent\Collection<int, HistorialPapeleta> $historial
+ * @property-read Collection<int, Sustento> $sustentos
+ * @property-read Collection<int, HistorialPapeleta> $historial
  */
 class Papeleta extends Model
 {

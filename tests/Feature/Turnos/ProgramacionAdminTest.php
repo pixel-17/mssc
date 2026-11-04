@@ -5,6 +5,7 @@ namespace Tests\Feature\Turnos;
 use App\Livewire\Turnos\CalendarioEquipoIndex;
 use App\Livewire\Turnos\ProgramacionAdmin;
 use App\Models\UnidadOrganica;
+use Carbon\Carbon;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -31,7 +32,7 @@ class ProgramacionAdminTest extends TestCase
         // Igual que en CalendarioEquipoGuardadoTest: el mes activo depende
         // de now(), así que se congela "hoy" en octubre 2026 para que las
         // fechas de turno usadas en los tests caigan en el mes por defecto.
-        $this->travelTo(\Carbon\Carbon::parse('2026-10-15'));
+        $this->travelTo(Carbon::parse('2026-10-15'));
     }
 
     public function test_solo_el_admin_puede_entrar_al_buscador(): void

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Configuración vigente del ciclo de turno de UN trabajador. Ver
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $user_id
  * @property string $turno
- * @property \Illuminate\Support\Carbon $fecha_ancla
+ * @property Carbon $fecha_ancla
  * @property int $dias_trabajo
  * @property int $dias_descanso
  * @property int|null $actualizado_por_id

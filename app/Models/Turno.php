@@ -25,7 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property int $user_id
  * @property int|null $sede_id
- * @property \Illuminate\Support\Carbon $fecha
+ * @property Carbon $fecha
  * @property string|null $hora_inicio
  * @property string|null $hora_fin
  * @property bool $es_descanso

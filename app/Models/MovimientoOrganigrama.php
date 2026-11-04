@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Un movimiento de un trabajador entre unidades orgánicas, hecho desde
@@ -26,7 +27,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int|null $jefe_area_anterior_id
  * @property int|null $jefe_area_nuevo_id
  * @property int|null $revierte_id
- * @property \Illuminate\Support\Carbon|null $deshecho_at
+ * @property Carbon|null $deshecho_at
  * @property int|null $deshecho_por_id
  * @property-read User|null $trabajador
  * @property-read User|null $actor

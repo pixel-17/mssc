@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\PapeletaActualizada;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Paso 5: evidencia normal es foto + GPS + hora del servidor simultáneos.
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $latitud
  * @property string|null $longitud
  * @property bool|null $dentro_de_radio
- * @property \Illuminate\Support\Carbon|null $hora_servidor
+ * @property Carbon|null $hora_servidor
  * @property bool $marcado_manual
  * @property bool $generado_por_abandono
  * @property int|null $marcado_manual_por_id

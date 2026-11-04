@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
@@ -24,7 +25,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $apellido
  * @property string $dni
  * @property string $email
- * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property Carbon|null $email_verified_at
  * @property string $password
  * @property '276'|'728'|null $regimen
  * @property bool $activo
@@ -62,7 +63,7 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
-     *  @var list<string> 
+     * @var list<string>
      */
     protected $fillable = [
         'name',
@@ -85,7 +86,7 @@ class User extends Authenticatable
     /**
      * The attributes that should be hidden for serialization.
      *
-     *  @var list<string> 
+     * @var list<string>
      */
     protected $hidden = [
         'password',
@@ -97,7 +98,7 @@ class User extends Authenticatable
     /**
      * The accessors to append to the model's array form.
      *
-     *  @var list<string> 
+     * @var list<string>
      */
     protected $appends = [
         'profile_photo_url',
