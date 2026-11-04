@@ -205,7 +205,7 @@ class PersonaDrawer extends Component
         return;
     }
 
-
+$destino = $permitidas->firstWhere('id', (int) $this->unidadId); 
         $mensaje = $this->tipo === 'jefe_inmediato'
             ? "Se creó a {$nuevo->nombre_completo} como jefe inmediato de {$destino->nombre}."
             : "Se creó a {$nuevo->nombre_completo}.";
