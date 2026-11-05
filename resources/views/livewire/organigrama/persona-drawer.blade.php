@@ -167,12 +167,18 @@
                         <x-icon name="cog" class="size-4" /> Edición completa (DNI, régimen, roles, contraseña, turno)
                     </a>
                 @else
-                    {{-- Antes solo para 728: un 276 también puede necesitar que le carguen
-                         o ajusten la fecha de ancla (ConfiguracionTurnoForm ya soporta
-                         ambos regímenes, ver su mount()). --}}
-                    <a href="{{ route('turnos.configuracion', $persona) }}" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
-                        <x-icon name="clock" class="size-4" /> Configurar turno
-                    </a>
+                    {{-- Antes mandaba a turnos.configuracion (pantalla aparte) y solo para 728;
+                         ahora se configura embebido, acá mismo, para cualquier régimen
+                         (ConfiguracionTurnoForm ya soportaba 276, ver su mount()). --}}
+                    <button type="button" wire:click="alternarTurno" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
+                        <x-icon name="clock" class="size-4" /> {{ $mostrarTurno ? 'Ocultar turno' : 'Configurar turno' }}
+                    </button>
+
+                    @if ($mostrarTurno)
+                        <div class="rounded-xl border border-gray-100 bg-gray-50/60 p-3 dark:border-white/10 dark:bg-white/5" wire:key="turno-inline-{{ $persona->id }}">
+                            <livewire:turnos.configuracion-turno-form :trabajador="$persona" :embebido="true" :key="'turno-form-'.$persona->id" />
+                        </div>
+                    @endif
                 @endif
             @endunless
 

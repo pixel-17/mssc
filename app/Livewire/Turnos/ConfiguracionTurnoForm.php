@@ -31,6 +31,16 @@ class ConfiguracionTurnoForm extends Component
     #[Locked]
     public User $trabajador;
 
+    /**
+     * true cuando se usa embebido (p. ej. dentro de PersonaDrawer, en el
+     * organigrama): sin título de página, sin el layout de pantalla completa
+     * y, al guardar/cancelar, avisa con un evento en vez de redirigir a
+     * turnos.index (#[Layout] no aplica solo cuando se incluye con
+     * <livewire:.../> dentro de otro componente).
+     */
+    #[Locked]
+    public bool $embebido = false;
+
     public string $turno = '';
 
     public string $fechaAncla = '';
@@ -63,11 +73,12 @@ class ConfiguracionTurnoForm extends Component
     #[Locked]
     public bool $sinTurnoVigenteHoy = false;
 
-    public function mount(User $trabajador): void
+    public function mount(User $trabajador, bool $embebido = false): void
     {
         abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
 
         $this->trabajador = $trabajador;
+        $this->embebido = $embebido;
 
         $this->sinTurnoVigenteHoy = Turno::vigenteParaUsuario($trabajador->id) === null;
 
@@ -147,9 +158,25 @@ class ConfiguracionTurnoForm extends Component
             diasDescanso: $datos['diasDescanso'],
         );
 
+        // Embebido (p. ej. en el organigrama): nada de redirect, el contenedor
+        // (PersonaDrawer) escucha este evento y cierra el panel inline.
+        if ($this->embebido) {
+            $this->dispatch('turno-guardado', trabajadorId: $this->trabajador->id);
+
+            return;
+        }
+
         session()->flash('mensaje', 'Configuración de turno cargada. Se generó el horario del mes en curso.');
 
         $this->redirectRoute('turnos.index', navigate: false);
+    }
+
+    /** Solo tiene sentido embebido: en la pantalla completa "Cancelar" es un link directo a turnos.index. */
+    public function cancelar(): void
+    {
+        if ($this->embebido) {
+            $this->dispatch('turno-cancelado');
+        }
     }
 
     /**

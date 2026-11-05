@@ -78,6 +78,9 @@ class PersonaDrawer extends Component
 
     public ?string $error = null;
 
+    /** Muestra/oculta el formulario de turno embebido (ver ConfiguracionTurnoForm). */
+    public bool $mostrarTurno = false;
+
     /** @var Collection<int, UnidadOrganica>|null */
     private ?Collection $permitidasMemo = null;
 
@@ -86,7 +89,7 @@ class PersonaDrawer extends Component
     {
         $actor = $this->actor();
 
-        $this->reset(['name', 'apellido', 'dni', 'email', 'regimen', 'unidadId', 'sedeId', 'error']);
+        $this->reset(['name', 'apellido', 'dni', 'email', 'regimen', 'unidadId', 'sedeId', 'error', 'mostrarTurno']);
         $this->resetValidation();
         $this->personaId = null;
         $this->activo = true;
@@ -116,6 +119,28 @@ class PersonaDrawer extends Component
     public function cerrar(): void
     {
         $this->abierto = false;
+    }
+
+    public function alternarTurno(): void
+    {
+        $this->mostrarTurno = ! $this->mostrarTurno;
+    }
+
+    /** ConfiguracionTurnoForm embebido avisa así en vez de redirigir (ver su guardar()). */
+    #[On('turno-guardado')]
+    public function turnoGuardado(int $trabajadorId): void
+    {
+        $this->mostrarTurno = false;
+
+        if ($trabajadorId === $this->personaId) {
+            $this->dispatch('org-actualizado', mensaje: 'Turno actualizado.', personaId: $trabajadorId);
+        }
+    }
+
+    #[On('turno-cancelado')]
+    public function turnoCancelado(): void
+    {
+        $this->mostrarTurno = false;
     }
 
     public function elegirTipo(string $tipo): void
