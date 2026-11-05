@@ -12,6 +12,7 @@ use App\Livewire\Concerns\ManejaExcepcionesDeUsuario;
 use App\Models\Sede;
 use App\Models\UnidadOrganica;
 use App\Models\User;
+use App\Services\GeneradorTurnoMensualService;
 use App\Support\ReglasDatosUsuario;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Collection;
@@ -233,12 +234,14 @@ class PersonaDrawer extends Component
         $this->authorize('editar', $persona);
 
         $esAdmin = $actor->hasRole('admin');
+        // Régimen: admin y Jefe de Área (no un Jefe Inmediato "puro", que no gestiona turno de su gente).
+        $puedeEditarRegimen = $esAdmin || $actor->esJefeDeArea();
         $encabeza = $persona->unidadesQueEncabeza()->exists();
         $cambiaUnidad = ! $encabeza
             && $this->unidadId !== null
             && (int) $this->unidadId !== (int) $persona->unidad_organica_id;
 
-        $this->validate($this->reglasDeEdicion($actor, $persona, $esAdmin, $cambiaUnidad));
+        $this->validate($this->reglasDeEdicion($actor, $persona, $esAdmin, $puedeEditarRegimen, $cambiaUnidad));
 
         // Solo el admin activa/desactiva (EditarUsuarioRequest tampoco lo admite para los jefes).
         $activo = $esAdmin ? $this->activo : (bool) $persona->activo;
@@ -249,7 +252,7 @@ class PersonaDrawer extends Component
         }
 
         if (! $this->intentar(
-            fn () => $this->aplicarCambiosDePersona($actor, $persona, $estado, $cambiaUnidad, $esAdmin, $activo),
+            fn () => $this->aplicarCambiosDePersona($actor, $persona, $estado, $cambiaUnidad, $esAdmin, $puedeEditarRegimen, $activo),
             fn ($e) => $this->error = $e->getMessage(),
         )) {
             return;
@@ -260,7 +263,7 @@ class PersonaDrawer extends Component
     }
 
     /** @return array<string, array<int, mixed>|string> */
-    private function reglasDeEdicion(User $actor, User $persona, bool $esAdmin, bool $cambiaUnidad): array
+    private function reglasDeEdicion(User $actor, User $persona, bool $esAdmin, bool $puedeEditarRegimen, bool $cambiaUnidad): array
     {
         $reglas = [
             'name' => ['required', 'string', 'max:255'],
@@ -271,6 +274,11 @@ class PersonaDrawer extends Component
             'unidadId' => ['nullable', 'exists:unidad_organicas,id'],
             'activo' => ['boolean'],
         ];
+
+        // Régimen: admin y Jefe de Área; un Jefe Inmediato "puro" no lo toca desde aquí.
+        if ($puedeEditarRegimen) {
+            $reglas['regimen'] = ['required', Rule::in(['276', '728'])];
+        }
 
         if ($cambiaUnidad) {
             $reglas['unidadId'][] = Rule::in($this->unidadesPermitidas($actor)->pluck('id')->all());
@@ -309,7 +317,7 @@ class PersonaDrawer extends Component
     }
 
     /** Mueve de unidad si corresponde, actualiza datos y aplica el cambio de estado. Debe correr dentro de intentar() (ver editar()). */
-    private function aplicarCambiosDePersona(User $actor, User $persona, CambiarEstadoUsuarioAction $estado, bool $cambiaUnidad, bool $esAdmin, bool $activo): void
+    private function aplicarCambiosDePersona(User $actor, User $persona, CambiarEstadoUsuarioAction $estado, bool $cambiaUnidad, bool $esAdmin, bool $puedeEditarRegimen, bool $activo): void
     {
         // Primero la unidad: es la que puede rechazarse por reglas de negocio.
         if ($cambiaUnidad) {
@@ -341,6 +349,15 @@ class PersonaDrawer extends Component
         // se fija aparte para que un null explícito (quitarle la sede) sí se guarde.
         if ($esAdmin) {
             $persona->forceFill(['sede_id' => $this->sedeId])->save();
+        }
+
+        // Régimen: admin y Jefe de Área. Si cambia, el turno cargado (del régimen
+        // anterior) deja de ser válido, así que se retira igual que en
+        // UsuarioAdminForm::cambioDeRegimen() — se reprograma luego desde
+        // la pantalla de turnos.
+        if ($puedeEditarRegimen && $this->regimen !== '' && $this->regimen !== (string) $persona->regimen) {
+            app(GeneradorTurnoMensualService::class)->retirarTurno($persona);
+            $persona->forceFill(['regimen' => $this->regimen])->save();
         }
 
         if ($persona->activo && ! $activo) {
@@ -378,6 +395,7 @@ class PersonaDrawer extends Component
             'creando' => $this->personaId === null,
             'persona' => $persona,
             'esAdmin' => $actor->hasRole('admin'),
+            'puedeEditarRegimen' => $actor->hasRole('admin') || $actor->esJefeDeArea(),
             'puedeCrearJefeInmediato' => $this->puedeCrearJefeInmediato($actor),
             'destino' => $destino,
             'unidades' => $unidades->all(),
@@ -465,6 +483,7 @@ class PersonaDrawer extends Component
             'unidadId.required' => 'Elige la unidad.',
             'unidadId.in' => 'Esa unidad no pertenece a tu área.',
             'sedeId.required' => 'Elige la sede: es necesaria para los cierres.',
+            'regimen.required' => 'Elige el régimen.',
         ];
     }
 }

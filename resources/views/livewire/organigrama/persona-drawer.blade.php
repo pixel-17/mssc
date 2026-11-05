@@ -65,6 +65,20 @@
                             </x-select>
                         </x-admin.campo>
                     </div>
+                @elseif ($puedeEditarRegimen)
+                    {{-- Régimen: admin y Jefe de Área; un Jefe Inmediato "puro" no lo ve ni lo toca desde aquí. --}}
+                    <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen">
+                        <x-select id="persona-regimen" wire:model="regimen">
+                            <option value="">— Selecciona —</option>
+                            <option value="276">276 (día)</option>
+                            <option value="728">728 (rotativo)</option>
+                        </x-select>
+                    </x-admin.campo>
+                    @if ($persona && $regimen !== '' && $regimen !== (string) $persona->regimen)
+                        <div class="rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+                            Al guardar se retira el turno programado: era del régimen anterior. Se reprograma después desde «Configurar turno».
+                        </div>
+                    @endif
                 @endif
 
                 <x-admin.campo label="Correo" for="persona-email" campo="email">
@@ -152,7 +166,10 @@
                     <a href="{{ route('usuarios.editar', $persona) }}?volver=organigrama" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
                         <x-icon name="cog" class="size-4" /> Edición completa (DNI, régimen, roles, contraseña, turno)
                     </a>
-                @elseif ($persona->regimen === '728')
+                @else
+                    {{-- Antes solo para 728: un 276 también puede necesitar que le carguen
+                         o ajusten la fecha de ancla (ConfiguracionTurnoForm ya soporta
+                         ambos regímenes, ver su mount()). --}}
                     <a href="{{ route('turnos.configuracion', $persona) }}" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
                         <x-icon name="clock" class="size-4" /> Configurar turno
                     </a>
