@@ -166,10 +166,17 @@
                     <a href="{{ route('usuarios.editar', $persona) }}?volver=organigrama" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
                         <x-icon name="cog" class="size-4" /> Edición completa (DNI, régimen, roles, contraseña, turno)
                     </a>
+                @elseif ($persona->regimen === '728')
+                    {{-- Mismo criterio que ProgramacionAdmin: un 728 se programa día por día,
+                         no por ciclo. ProgramacionMensual es una pantalla completa (grilla +
+                         pintado en Alpine), así que aquí se enlaza igual que hace el admin
+                         en vez de embeberla. --}}
+                    <a href="{{ route('turnos.programacion', $persona) }}" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
+                        <x-icon name="clock" class="size-4" /> Programar turno
+                    </a>
                 @else
-                    {{-- Antes mandaba a turnos.configuracion (pantalla aparte) y solo para 728;
-                         ahora se configura embebido, acá mismo, para cualquier régimen
-                         (ConfiguracionTurnoForm ya soportaba 276, ver su mount()). --}}
+                    {{-- 276: mismo componente que usa el admin en turnos.configuracion
+                         (ConfiguracionTurnoForm), pero embebido para no salir del panel. --}}
                     <button type="button" wire:click="alternarTurno" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
                         <x-icon name="clock" class="size-4" /> {{ $mostrarTurno ? 'Ocultar turno' : 'Configurar turno' }}
                     </button>
