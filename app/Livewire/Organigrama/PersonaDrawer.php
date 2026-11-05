@@ -35,8 +35,8 @@ use Livewire\Component;
  *  - Alta: CrearUsuarioAction (contraseña inicial = DNI, reingreso de cuentas
  *    desactivadas, jefe inmediato único por unidad) + UserPolicy::crearEnUnidad.
  *    Aquí el actor siempre es admin o jefe de área, así que se usa la vía «de área»
- *    (la unidad se elige explícitamente). El régimen debe coincidir con el del jefe de la
- *    unidad, igual que en CrearUsuarioRequest.
+ *    (la unidad se elige explícitamente). El régimen puede ser distinto al del jefe
+ *    de la unidad; no hay restricción de coincidencia.
  *  - Edición: UserPolicy::editar. Cambiar de unidad pasa por MoverTrabajadorAction (mismo
  *    historial y reglas que arrastrar); nombres, correo y sede por EditarUsuarioAction;
  *    activar/desactivar (solo admin) por CambiarEstadoUsuarioAction.
@@ -185,13 +185,6 @@ class PersonaDrawer extends Component
         $this->authorize('crearEnUnidad', [User::class, (int) $this->unidadId]);
 
         $destino = UnidadOrganica::with('jefe')->find($this->unidadId);
-        $regimenDelJefe = $destino?->jefe?->regimen;
-
-        if ($this->tipo === 'trabajador' && $regimenDelJefe && $regimenDelJefe !== $this->regimen) {
-            $this->addError('regimen', "El régimen debe coincidir con el de su jefe inmediato (régimen {$regimenDelJefe}).");
-
-            return;
-        }
 
         $nuevo = null;
 

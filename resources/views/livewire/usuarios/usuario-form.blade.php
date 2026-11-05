@@ -184,40 +184,6 @@
                 </p>
             @endif
 
-            {{-- Turno (admin y jefe de área al editar un 728 sin turno) --}}
-            @if ($requiereTurno)
-                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <p class="text-sm font-medium mb-1">Turno inicial (régimen 728, opcional)</p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        Este trabajador todavía no tiene un horario cargado. Puedes cargarlo ahora o después;
-                        hasta entonces no podrá crear papeletas. Trabajará {{ $diasTrabajo }} días seguidos y
-                        descansará {{ $diasDescanso }}, repitiendo el ciclo.
-                    </p>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <x-admin.campo label="Turno" for="usuario-form-turno" campo="turno">
-                            <x-select id="usuario-form-turno" wire:model="turno">
-                                <option value="">— Selecciona —</option>
-                                @foreach ($opcionesTurno as $opcion)
-                                    <option value="{{ $opcion }}">{{ $opcion }}</option>
-                                @endforeach
-                            </x-select>
-                        </x-admin.campo>
-
-                        <x-admin.campo label="Fecha inicio del próximo bloque" for="usuario-form-fechaAncla" campo="fechaAncla">
-                            <x-input id="usuario-form-fechaAncla" type="date" wire:model="fechaAncla" class="w-full" />
-                        </x-admin.campo>
-
-                        <x-admin.campo label="Días de trabajo seguidos" for="usuario-form-diasTrabajo" campo="diasTrabajo">
-                            <x-input id="usuario-form-diasTrabajo" type="number" min="1" max="30" wire:model="diasTrabajo" class="w-full" />
-                        </x-admin.campo>
-
-                        <x-admin.campo label="Días de descanso" for="usuario-form-diasDescanso" campo="diasDescanso">
-                            <x-input id="usuario-form-diasDescanso" type="number" min="1" max="30" wire:model="diasDescanso" class="w-full" />
-                        </x-admin.campo>
-                    </div>
-                </div>
-            @endif
-
             {{-- Activo: admin siempre; jefe de área y jefe inmediato solo al editar --}}
             @if ($esAdmin || (($esArea || $esEquipo) && $usuario))
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
