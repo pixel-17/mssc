@@ -75,30 +75,18 @@
                     </div>
                 @endif
 
-                {{-- Régimen: no lo ve el Jefe Inmediato al editar --}}
-                @if (!$esEquipo || $creando)
-                    <x-admin.campo
-                        label="Régimen"
-                        for="usuario-form-regimen" campo="regimen"
-                        :ayuda="$esAdmin ? 'Opcional solo si el usuario es únicamente administrador.' : ''"
-                    >
-                        @if ($esEquipo)
-                            {{-- Jefe Inmediato creando: el régimen se hereda, solo se muestra --}}
-                            <x-select id="usuario-form-regimen" wire:model.live="regimen" disabled>
-                                <option value="">— Selecciona —</option>
-                                <option value="276">276 (día)</option>
-                                <option value="728">728 (rotativo)</option>
-                            </x-select>
-                            <p class="text-xs text-gray-500 dark:text-tinta-100/60 mt-1">Debe coincidir con el tuyo.</p>
-                        @else
-                            <x-select id="usuario-form-regimen" wire:model.live="regimen">
-                                <option value="">— Selecciona —</option>
-                                <option value="276">276 (día)</option>
-                                <option value="728">728 (rotativo)</option>
-                            </x-select>
-                        @endif
-                    </x-admin.campo>
-                @endif
+                {{-- Régimen: visible para todos, incluso el Jefe Inmediato al editar --}}
+                <x-admin.campo
+                    label="Régimen"
+                    for="usuario-form-regimen" campo="regimen"
+                    :ayuda="$esAdmin ? 'Opcional solo si el usuario es únicamente administrador.' : ''"
+                >
+                    <x-select id="usuario-form-regimen" wire:model.live="regimen">
+                        <option value="">— Selecciona —</option>
+                        <option value="276">276 (día)</option>
+                        <option value="728">728 (rotativo)</option>
+                    </x-select>
+                </x-admin.campo>
 
                 {{-- Sede --}}
                 @if ($esAdmin)
@@ -126,6 +114,16 @@
                         <p class="mt-0.5 text-sm font-medium text-tinta-950 dark:text-white">{{ $sedeHeredada ?? 'Elige primero la unidad' }}</p>
                         <p class="mt-1 text-xs text-gray-500 dark:text-tinta-100/60">Se asigna sola: es la sede del jefe inmediato de la unidad elegida.</p>
                     </div>
+                @elseif ($esEquipo && !$creando)
+                    {{-- Jefe Inmediato editando: puede cambiar la sede --}}
+                    <x-admin.campo label="Sede" for="usuario-form-sedeId" campo="sedeId">
+                        <x-select id="usuario-form-sedeId" wire:model="sedeId">
+                            <option value="">— Selecciona una sede —</option>
+                            @foreach ($sedes as $id => $nombre)
+                                <option value="{{ $id }}">{{ $nombre }}</option>
+                            @endforeach
+                        </x-select>
+                    </x-admin.campo>
                 @endif
             </div>
 

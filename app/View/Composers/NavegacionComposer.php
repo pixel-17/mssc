@@ -47,6 +47,7 @@ class NavegacionComposer
         $esAdmin = $usuario->hasRole('admin');
         $esRrhh = $usuario->hasRole('rrhh');
         $esJefe = $usuario->can('crearTrabajadorPropio', User::class);
+        $esJefeDeArea = $usuario->esJefeDeArea();
         $puedeAltaUsuarios = $usuario->can('puedeCrearAlgo', User::class);
 
         $view->with([
@@ -59,7 +60,7 @@ class NavegacionComposer
             // trabajador sin gente a cargo usa el shell móvil.
             'conSidebar' => $esAdmin || $esRrhh || $esJefe,
             'rolLabel' => $esAdmin ? 'Administración' : ($esRrhh ? 'Recursos Humanos' : 'Jefatura'),
-            'secciones' => $this->secciones($usuario, $esAdmin, $esRrhh, $esJefe, $puedeAltaUsuarios),
+            'secciones' => $this->secciones($usuario, $esAdmin, $esRrhh, $esJefe, $esJefeDeArea, $puedeAltaUsuarios),
             'navItems' => $this->navegacionDelTrabajador($esAdmin || $esRrhh || $esJefe),
         ]);
     }
@@ -67,7 +68,7 @@ class NavegacionComposer
     /**
      * @return array<int, array{label: ?string, items: array<int, array<string, mixed>>}>
      */
-    private function secciones(User $usuario, bool $esAdmin, bool $esRrhh, bool $esJefe, bool $puedeAltaUsuarios): array
+    private function secciones(User $usuario, bool $esAdmin, bool $esRrhh, bool $esJefe, bool $esJefeDeArea, bool $puedeAltaUsuarios): array
     {
         $secciones = [[
             'label' => null,
@@ -131,10 +132,6 @@ class NavegacionComposer
             ['label' => 'Sustentos', 'route' => route('reportes.sustentos'), 'active' => request()->routeIs('reportes.sustentos'), 'icon' => 'clipboard'],
         ];
 
-        if ($esRrhh || $esAdmin) {
-            $reportes[] = ['label' => 'Decisiones de RR. HH.', 'route' => route('reportes.decisiones-rrhh'), 'active' => request()->routeIs('reportes.decisiones-rrhh'), 'icon' => 'clipboard'];
-        }
-
         $secciones[] = ['label' => 'Reportes', 'items' => $reportes];
 
         $personas = [];
@@ -143,9 +140,9 @@ class NavegacionComposer
             $personas[] = ['label' => 'Trabajadores', 'route' => route('usuarios.index'), 'active' => request()->routeIs('usuarios.*'), 'icon' => 'users'];
         }
 
-        // Antes solo admin / Jefe de Área: el Jefe Inmediato "puro" también
-        // puede consultar (solo lectura) el organigrama de su propia unidad.
-        if ($esAdmin || $esJefe) {
+        // Organigrama solo para admin y Jefe de Área.
+        // El Jefe Inmediato puro no lo ve en el menú.
+        if ($esAdmin || $esJefeDeArea) {
             $personas[] = ['label' => 'Organigrama', 'route' => route('organigrama.index'), 'active' => request()->routeIs('organigrama.*'), 'icon' => 'share'];
         }
 

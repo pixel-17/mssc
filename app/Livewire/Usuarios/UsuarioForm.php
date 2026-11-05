@@ -154,8 +154,6 @@ class UsuarioForm extends Component
         }
 
         if ($this->esEquipo()) {
-            $this->regimen = (string) (Auth::user()->regimen ?? '');
-
             return;
         }
 
@@ -298,10 +296,6 @@ class UsuarioForm extends Component
      */
     protected function regimenEsperado(): ?string
     {
-        if ($this->esEquipo()) {
-            return Auth::user()->regimen;
-        }
-
         if (! $this->esArea() || ($this->usuario === null && $this->tipo === 'jefe_inmediato')) {
             return null;
         }
@@ -368,10 +362,12 @@ class UsuarioForm extends Component
             }
         }
 
-        // Jefe Inmediato "puro": puede activar/desactivar a sus propios
-        // trabajadores al editarlos (antes solo lo podían admin y área).
+        // Jefe Inmediato "puro": puede activar/desactivar, cambiar sede y régimen
+        // a sus propios trabajadores al editarlos.
         if ($this->esEquipo() && ! $creando) {
             $reglas['activo'] = ['boolean'];
+            $reglas['sedeId'] = ['nullable', 'exists:sedes,id'];
+            $reglas['regimen'] = ['required', 'in:276,728'];
         }
 
         if ($this->admiteConfiguracionTurno() && $this->turno !== '') {
@@ -520,12 +516,15 @@ class UsuarioForm extends Component
                 'name' => $datos['name'],
                 'apellido' => $datos['apellido'],
                 'email' => $datos['email'],
-                // Jefe Inmediato "puro" ($esJefeDeArea = false): la acción ignora
-                // estos dos y deja al trabajador en su sede/unidad actual. Se
-                // envían igual porque el array shape de ejecutar() los exige.
                 'sede_id' => $this->usuario->sede_id,
                 'unidad_organica_id' => $this->usuario->unidad_organica_id,
             ], false);
+
+            // El Jefe Inmediato puede cambiar sede y régimen de sus trabajadores.
+            $this->usuario->update([
+                'sede_id' => $datos['sedeId'] ?? $this->usuario->sede_id,
+                'regimen' => $datos['regimen'] ?? $this->usuario->regimen,
+            ]);
 
             $this->usuario->update(['activo' => $activo]);
 
@@ -677,9 +676,10 @@ class UsuarioForm extends Component
             $atributos['sede_id'] = $datos['sedeId'];
             $atributos['unidad_organica_id'] = in_array($adminId, $roles, true) ? null : $datos['unidadOrganicaId'];
         } else {
-            // Jefe de Área editando: sí puede mover de unidad y cambiar sede.
+            // Jefe de Área editando: sí puede mover de unidad, cambiar sede y régimen.
             $atributos['sede_id'] = $datos['sedeId'];
             $atributos['unidad_organica_id'] = $datos['unidadOrganicaId'];
+            $atributos['regimen'] = $datos['regimen'] ?: null;
         }
 
         $debeRetirarTurno = $this->usuario !== null
