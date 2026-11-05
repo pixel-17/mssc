@@ -9,7 +9,7 @@
     ],
     "license": "MIT",
     "require": {
-        "php": "^8.4",
+        "php": "^8.3",
         "ext-redis": "*",
         "barryvdh/laravel-dompdf": "^3.1",
         "cmixin/business-day": "^1.21",
