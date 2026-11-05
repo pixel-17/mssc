@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9656acfb747fd1fc4877e9e66f1cbfc6",
+    "content-hash": "be7d75032fa84d6b66d2a2362cbd1db1",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -1902,16 +1902,16 @@
         },
         {
             "name": "laravel-notification-channels/webpush",
-            "version": "12.1.0",
+            "version": "13.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel-notification-channels/webpush.git",
-                "reference": "6e9bea3965584fdaa29eb724368adbe7d622fe22"
+                "reference": "53d950ca03b16bb49c45e3332c07a87c7d06a3b1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel-notification-channels/webpush/zipball/6e9bea3965584fdaa29eb724368adbe7d622fe22",
-                "reference": "6e9bea3965584fdaa29eb724368adbe7d622fe22",
+                "url": "https://api.github.com/repos/laravel-notification-channels/webpush/zipball/53d950ca03b16bb49c45e3332c07a87c7d06a3b1",
+                "reference": "53d950ca03b16bb49c45e3332c07a87c7d06a3b1",
                 "shasum": ""
             },
             "require": {
@@ -1966,9 +1966,9 @@
             "homepage": "https://github.com/laravel-notification-channels/webpush",
             "support": {
                 "issues": "https://github.com/laravel-notification-channels/webpush/issues",
-                "source": "https://github.com/laravel-notification-channels/webpush/tree/12.1.0"
+                "source": "https://github.com/laravel-notification-channels/webpush/tree/13.0.1"
             },
-            "time": "2026-08-17T18:02:26+00:00"
+            "time": "2026-09-08T18:36:50+00:00"
         },
         {
             "name": "laravel/fortify",
