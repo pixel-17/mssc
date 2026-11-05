@@ -55,7 +55,7 @@ class ProgramacionTurnoService
 
         $this->validar($trabajador, $anio, $mes, $dias);
 
-        $inicioMes = Carbon::create($anio, $mes, 1)->startOfMonth();
+        $inicioMes = (Carbon::create($anio, $mes, 1) ?? throw new \RuntimeException('Fecha de mes inválida.'))->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
         $ahora = now();
 
@@ -124,7 +124,7 @@ class ProgramacionTurnoService
      */
     public function planPatron(User $trabajador, array $pasos, string $desde, int $meses, bool $continuar, array $diasActuales = []): array
     {
-        $inicio = Carbon::createFromFormat('Y-m-d', $desde)->startOfDay();
+        $inicio = (Carbon::createFromFormat('Y-m-d', $desde) ?: throw new \RuntimeException('Fecha inicial inválida.'))->startOfDay();
         $meses = max(1, min(PatronTurnos::MAX_MESES, $meses));
         $largo = count($pasos);
 
@@ -217,7 +217,15 @@ class ProgramacionTurnoService
 
         DB::transaction(function () use ($equipo, $anio, $mes, $porUsuario, $actor) {
             foreach ($porUsuario as $userId => $dias) {
-                $this->guardarMes($equipo->get((int) $userId), $anio, $mes, $dias, $actor);
+                $trabajador = $equipo->get((int) $userId);
+
+                if (! $trabajador) {
+                    throw ValidationException::withMessages([
+                        'dias' => 'La programación incluye a un trabajador que no está en tu equipo.',
+                    ]);
+                }
+
+                $this->guardarMes($trabajador, $anio, $mes, $dias, $actor);
             }
         });
     }
@@ -341,7 +349,7 @@ class ProgramacionTurnoService
             }
             $racha++;
 
-            if ($racha > self::MAX_DIAS_SEGUIDOS && ! $rachaAvisada) {
+            if ($racha > self::MAX_DIAS_SEGUIDOS && ! $rachaAvisada && $inicioRacha !== null) {
                 $advertencias[] = 'Más de '.self::MAX_DIAS_SEGUIDOS.' días seguidos trabajando desde el '.$etiqueta($inicioRacha).'.';
                 $rachaAvisada = true;
             }

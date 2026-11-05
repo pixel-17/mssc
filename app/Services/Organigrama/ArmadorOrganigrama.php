@@ -331,7 +331,7 @@ class ArmadorOrganigrama
         return [
             'unidad' => $unidad,
             'jefes' => $jefes,
-            'jefes_en_filtro' => $jefesEnFiltro->pluck('id')->all(),
+            'jefes_en_filtro' => $jefesEnFiltro->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
             'filtro_sede' => $hayFiltroSede,
             'miembros' => $miembros,
             'hijos' => $hijos,

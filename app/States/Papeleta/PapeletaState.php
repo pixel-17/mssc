@@ -2,6 +2,7 @@
 
 namespace App\States\Papeleta;
 
+use App\Models\Papeleta;
 use Spatie\ModelStates\State;
 use Spatie\ModelStates\StateConfig;
 
@@ -9,6 +10,8 @@ use Spatie\ModelStates\StateConfig;
  * Estados de la papeleta (documento de flujo, sección "Estados
  * terminales" + diagrama de Pasos 1-6). Los estados terminales
  * sobreescriben esTerminal() a true; el resto se queda en false.
+ *
+ * @extends State<Papeleta>
  */
 abstract class PapeletaState extends State
 {

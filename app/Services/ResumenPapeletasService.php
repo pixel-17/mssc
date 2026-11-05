@@ -38,7 +38,14 @@ class ResumenPapeletasService
     public function __construct(private ReporteHorasAcumuladasService $reporte) {}
 
     /**
-     * @return array{por_motivo: Collection, por_unidad: Collection, total: int, minutos_rrhh: ?int, minutos_jefe: ?int, jefes_lentos: Collection}
+     * @return array{
+     *     por_motivo: Collection<int, array{nombre: string, autorizadas: int, rechazadas: int, no_prosperaron: int, en_tramite: int, total: int}>,
+     *     por_unidad: Collection<int, array{nombre: string, autorizadas: int, rechazadas: int, no_prosperaron: int, en_tramite: int, total: int}>,
+     *     total: int,
+     *     minutos_rrhh: ?int,
+     *     minutos_jefe: ?int,
+     *     jefes_lentos: Collection<int, array{nombre: string, papeletas: int, minutos: int}>
+     * }
      */
     public function resumen(string $mes): array
     {
@@ -108,31 +115,34 @@ class ResumenPapeletasService
     {
         return $papeletas
             ->groupBy($clave)
-            ->map(function (Collection $filas, string $nombre): array {
-                $fila = [
-                    'nombre' => $nombre,
-                    'autorizadas' => 0,
-                    'rechazadas' => 0,
-                    'no_prosperaron' => 0,
-                    'en_tramite' => 0,
-                ];
+            ->map(
+                /** @param Collection<int, Papeleta> $filas */
+                function (Collection $filas, string $nombre): array {
+                    $fila = [
+                        'nombre' => $nombre,
+                        'autorizadas' => 0,
+                        'rechazadas' => 0,
+                        'no_prosperaron' => 0,
+                        'en_tramite' => 0,
+                    ];
 
-                foreach (self::GRUPOS as $grupo => $estados) {
-                    $fila[$grupo] = $filas
-                        ->filter(
-                            fn (Papeleta $p): bool => in_array(
-                                $p->estado::class,
-                                $estados,
-                                true,
-                            ),
-                        )
-                        ->count();
+                    foreach (self::GRUPOS as $grupo => $estados) {
+                        $fila[$grupo] = $filas
+                            ->filter(
+                                fn (Papeleta $p): bool => in_array(
+                                    $p->estado::class,
+                                    $estados,
+                                    true,
+                                ),
+                            )
+                            ->count();
+                    }
+
+                    $fila['total'] = $filas->count();
+
+                    return $fila;
                 }
-
-                $fila['total'] = $filas->count();
-
-                return $fila;
-            })
+            )
             ->sortByDesc('total')
             ->values();
     }
@@ -162,39 +172,44 @@ class ResumenPapeletasService
             })
             ->filter(fn (?int $minutos): bool => $minutos !== null);
 
-        return $minutos->isEmpty() ? null : (int) round($minutos->avg());
+        return $minutos->isEmpty() ? null : (int) round($minutos->avg() ?? 0);
     }
 
-    /** @return Collection<int, array{nombre: string, papeletas: int, minutos: int}> */
-    /** @return Collection<int, array{nombre: string, papeletas: int, minutos: int}> */
+    /**
+     * @param  Collection<int, Papeleta>  $papeletas
+     * @return Collection<int, array{nombre: string, papeletas: int, minutos: int}>
+     */
     private function jefesMasLentos(Collection $papeletas): Collection
     {
         return $papeletas
             ->filter(fn (Papeleta $p) => $p->resueltoPorJefe && $p->jefe_resuelto_at)
             ->groupBy('resuelto_por_jefe_id')
-            ->map(function (Collection $filas): array {
-                /** @var Papeleta $primera */
-                $primera = $filas->first();
+            ->map(
+                /** @param Collection<int, Papeleta> $filas */
+                function (Collection $filas): array {
+                    /** @var Papeleta $primera */
+                    $primera = $filas->first();
 
-                $minutos = $filas
-                    ->map(function (Papeleta $p): ?int {
-                        if (! $p->created_at instanceof CarbonInterface
-                            || ! $p->jefe_resuelto_at instanceof CarbonInterface) {
-                            return null;
-                        }
+                    $minutos = $filas
+                        ->map(function (Papeleta $p): ?int {
+                            if (! $p->created_at instanceof CarbonInterface
+                                || ! $p->jefe_resuelto_at instanceof CarbonInterface) {
+                                return null;
+                            }
 
-                        return Minutos::entre($p->created_at, $p->jefe_resuelto_at);
-                    })
-                    ->filter(fn (?int $minutos): bool => $minutos !== null);
+                            return Minutos::entre($p->created_at, $p->jefe_resuelto_at);
+                        })
+                        ->filter(fn (?int $minutos): bool => $minutos !== null);
 
-                return [
-                    'nombre' => (string) $primera->resueltoPorJefe?->nombre_completo,
-                    'papeletas' => $filas->count(),
-                    'minutos' => $minutos->isEmpty()
-                        ? 0
-                        : (int) round($minutos->avg()),
-                ];
-            })
+                    return [
+                        'nombre' => (string) $primera->resueltoPorJefe?->nombre_completo,
+                        'papeletas' => $filas->count(),
+                        'minutos' => $minutos->isEmpty()
+                            ? 0
+                            : (int) round($minutos->avg() ?? 0),
+                    ];
+                }
+            )
             ->sortByDesc('minutos')
             ->take(10)
             ->values();

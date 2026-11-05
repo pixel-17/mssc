@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Models\Papeleta;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\Cancelada;
 use App\States\Papeleta\Cerrada;
@@ -27,6 +28,7 @@ use Spatie\ModelStates\State;
 class PapeletaEstadoPresentacion
 {
     /**
+     * @param  State<Papeleta>|string  $estado
      * @return array{0: string, 1: string, 2: string} [etiqueta, clases_badge, clase_solida]
      */
     public static function para(State|string $estado): array
@@ -48,6 +50,7 @@ class PapeletaEstadoPresentacion
      *  - EnJustificacion -> todavía puede presentar su justificación
      * Para cualquier otro estado devuelve null (se usa la etiqueta normal).
      *
+     * @param  State<Papeleta>|string  $estado
      * @return array{0: string, 1: string, 2: string}|null
      */
     public static function porAbandono(State|string $estado): ?array

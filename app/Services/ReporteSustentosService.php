@@ -17,6 +17,7 @@ class ReporteSustentosService
 {
     /**
      * @param  array{trabajador_id?: int|null, buscar?: string|null, estado?: string|null, desde?: string|null, hasta?: string|null}  $filtros
+     * @return Builder<Sustento>
      */
     public function query(User $usuario, array $filtros = []): Builder
     {

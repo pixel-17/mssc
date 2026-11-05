@@ -87,6 +87,9 @@ class ReporteHorasAcumuladasService
     /**
      * Detalle fila por fila (una papeleta = una fila), listo para la
      * tabla de detalle diario y para el export.
+     *
+     * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
+     * @return Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: string|null, retorno: string|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int}>
      */
     public function detalle(User $usuario, string $mes, array $filtros = []): Collection
     {
@@ -126,6 +129,10 @@ class ReporteHorasAcumuladasService
      * Acepta el detalle ya calculado (ver ResumenPapeletasIndex::render,
      * que necesita este resumen Y el diario en la misma vista) para no
      * correr la misma query pesada dos veces; si no se pasa, la calcula.
+     *
+     * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
+     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: string|null, retorno: string|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int}>|null  $detalle
+     * @return Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>
      */
     public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
@@ -158,11 +165,18 @@ class ReporteHorasAcumuladasService
      *
      * Mismo criterio que resumenPorTrabajador: acepta el detalle ya
      * calculado para evitar repetir la query.
+     *
+     * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
+     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: string|null, retorno: string|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int}>|null  $detalle
+     * @return Collection<int, array{trabajador_id: int, trabajador: string, dia: string, minutos: int, motivos: string}>
      */
     public function resumenDiarioPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
         return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
-            ->groupBy(fn (array $fila) => $fila['trabajador_id'].'|'.$fila['dia'])
+            ->groupBy(function ($fila) {
+                /** @var array{trabajador_id: int, dia: string} $fila */
+                return $fila['trabajador_id'].'|'.$fila['dia'];
+            })
             ->map(fn (Collection $filas) => [
                 'trabajador_id' => $filas->first()['trabajador_id'],
                 'trabajador' => $filas->first()['trabajador'],
@@ -185,7 +199,7 @@ class ReporteHorasAcumuladasService
             $mes = now()->format('Y-m');
         }
 
-        $inicio = Carbon::createFromFormat('Y-m-d', "{$mes}-01")->startOfMonth();
+        $inicio = (Carbon::createFromFormat('Y-m-d', "{$mes}-01") ?: throw new \RuntimeException('Mes inválido.'))->startOfMonth();
 
         return [$inicio->copy(), $inicio->copy()->endOfMonth()];
     }
