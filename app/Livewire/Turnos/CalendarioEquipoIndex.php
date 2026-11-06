@@ -10,7 +10,6 @@ use App\Services\CalculadorDiasHabiles;
 use App\Services\EquipoDelJefeService;
 use App\Services\GeneradorTurnoMensualService;
 use App\Services\ProgramacionTurnoService;
-use App\Support\PatronDescansoSemanal;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -220,37 +219,19 @@ class CalendarioEquipoIndex extends Component
 
         abort_if($trabajador === null, 403);
 
-        $diasLaborables = array_map(
-            'intval',
-            array_filter(array_map('trim', explode(
-                ',',
-                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
-            )))
-        );
-
-        // Calcula dias_descanso a partir de los días NO laborables de la semana.
-        // PatronDescansoSemanal espera los días de DESCANSO (ISO 1–7).
-        $todosLosDias = [1, 2, 3, 4, 5, 6, 7];
-        $diasDescansoIso = array_values(array_diff($todosLosDias, $diasLaborables));
-
-        // Ancla: lunes de la semana actual (o hoy si no hay días de descanso consecutivos simples).
-        $referencia = now()->startOfWeek();
-
-        $resultado = $diasDescansoIso !== []
-            ? PatronDescansoSemanal::anclaYCiclo($diasDescansoIso, $referencia)
-            : null;
-
-        $diasTrabajo = $resultado['dias_trabajo'] ?? count($diasLaborables);
-        $diasDescanso = $resultado['dias_descanso'] ?? (7 - count($diasLaborables));
-        $fechaAncla = $resultado ? $resultado['fecha_ancla'] : $referencia;
+        // El cálculo del ciclo (días laborables -> dias_trabajo/dias_descanso/
+        // fecha_ancla) vive ahora en GeneradorTurnoMensualService::cicloOrdinario276(),
+        // que cargarConfiguracion() también usa como resguardo para cualquier
+        // trabajador 276 — así no quedan dos cálculos que puedan desalinearse.
+        $ciclo = GeneradorTurnoMensualService::cicloOrdinario276(now()->startOfWeek());
 
         $generador->cargarConfiguracion(
             trabajador: $trabajador,
             turno: ConfiguracionTurno::TURNO_276,
-            fechaAncla: $fechaAncla,
+            fechaAncla: $ciclo['fecha_ancla'],
             actor: auth()->user(),
-            diasTrabajo: $diasTrabajo,
-            diasDescanso: $diasDescanso,
+            diasTrabajo: $ciclo['dias_trabajo'],
+            diasDescanso: $ciclo['dias_descanso'],
         );
 
         $this->mensaje = 'Horario ordinario cargado para '.$trabajador->nombre_completo.'.';

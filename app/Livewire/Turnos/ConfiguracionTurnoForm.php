@@ -85,12 +85,17 @@ class ConfiguracionTurnoForm extends Component
         $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
 
         if ($trabajador->regimen === '276') {
-            // Para 276 los días los define el admin globalmente.
-            // Se calculan aquí y se guardan directamente; el formulario
-            // manual no aplica a este régimen.
+            // Para 276 los días los define el admin globalmente. Se
+            // calculan aquí solo para la vista previa: lo que de verdad
+            // se guarda lo vuelve a calcular e impone
+            // GeneradorTurnoMensualService::cargarConfiguracion(), así
+            // que aunque estos valores se manipulen en el cliente no hay
+            // forma de terminar con un ciclo manual para un 276.
+            $ciclo = GeneradorTurnoMensualService::cicloOrdinario276();
             $this->turno = ConfiguracionTurno::TURNO_276;
-            $this->fechaAncla = now()->startOfWeek()->toDateString();
-            [$this->diasTrabajo, $this->diasDescanso] = $this->ciclo276();
+            $this->fechaAncla = $ciclo['fecha_ancla']->toDateString();
+            $this->diasTrabajo = $ciclo['dias_trabajo'];
+            $this->diasDescanso = $ciclo['dias_descanso'];
         } elseif ($config) {
             $this->turno = $config->turno;
             $this->fechaAncla = $config->fecha_ancla->toDateString();
@@ -213,23 +218,6 @@ class ConfiguracionTurnoForm extends Component
                 ];
             })
             ->all();
-    }
-
-    /**
-     * Calcula dias_trabajo y dias_descanso leyendo HORARIO_ORDINARIO_DIAS_LABORABLES.
-     *
-     * @return array{0: int, 1: int} [dias_trabajo, dias_descanso]
-     */
-    private function ciclo276(): array
-    {
-        $laborables = array_filter(array_map('intval', array_map('trim', explode(
-            ',',
-            (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
-        ))));
-
-        $trabajo = count($laborables);
-
-        return [$trabajo, 7 - $trabajo];
     }
 
     public function render(): View

@@ -8,6 +8,7 @@ use App\Models\Configuracion;
 use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
+use App\Support\PatronDescansoSemanal;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -56,6 +57,24 @@ class GeneradorTurnoMensualService
             throw ValidationException::withMessages([
                 'turno' => 'Este trabajador está marcado como inactivo; no se le puede asignar un turno.',
             ]);
+        }
+
+        // Régimen 276: el ciclo sale SIEMPRE del horario ordinario global
+        // (HORARIO_ORDINARIO_DIAS_LABORABLES), nunca de lo que haya
+        // mandado el formulario. $diasTrabajo/$diasDescanso/$fechaAncla
+        // recibidos se descartan a propósito: ConfiguracionTurnoForm no
+        // bloquea esas propiedades (no son #[Locked]) y solo las oculta
+        // en el Blade para 276, así que sin este resguardo un Jefe podía
+        // mandar un payload de Livewire manipulado con un ciclo manual
+        // para un 276 — algo que la pantalla ni siquiera ofrece como
+        // opción. Este es el único punto por el que pasan tanto el
+        // formulario individual como la carga por lotes de
+        // CalendarioEquipoIndex, así que blindarlo aquí cubre a los dos.
+        if ($trabajador->regimen === '276') {
+            $ciclo = self::cicloOrdinario276($fechaAncla);
+            $fechaAncla = $ciclo['fecha_ancla'];
+            $diasTrabajo = $ciclo['dias_trabajo'];
+            $diasDescanso = $ciclo['dias_descanso'];
         }
 
         $config = ConfiguracionTurno::updateOrCreate(
@@ -191,6 +210,50 @@ class GeneradorTurnoMensualService
         $posicion = (($offset % $ciclo) + $ciclo) % $ciclo;
 
         return $posicion >= $diasTrabajo;
+    }
+
+    /**
+     * Ciclo (dias_trabajo/dias_descanso/fecha_ancla) del horario
+     * ordinario global de régimen 276, calculado SIEMPRE desde
+     * HORARIO_ORDINARIO_DIAS_LABORABLES. Única fuente de verdad: tanto
+     * cargarConfiguracion() (que la impone) como la carga por lotes de
+     * CalendarioEquipoIndex la usan, para no tener el cálculo
+     * duplicado y en riesgo de desalinearse.
+     *
+     * $referencia ancla la semana que se usa como base (normalmente
+     * "ahora" o la fecha que mandó el formulario); el resultado siempre
+     * cae en esa semana o la siguiente, nunca antes.
+     *
+     * @return array{dias_trabajo: int, dias_descanso: int, fecha_ancla: Carbon}
+     */
+    public static function cicloOrdinario276(?Carbon $referencia = null): array
+    {
+        $referencia ??= now();
+
+        $diasLaborables = array_map(
+            'intval',
+            array_filter(array_map('trim', explode(
+                ',',
+                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+            )))
+        );
+
+        // Calcula dias_descanso a partir de los días NO laborables de la
+        // semana. PatronDescansoSemanal espera los días de DESCANSO (ISO 1–7).
+        $todosLosDias = [1, 2, 3, 4, 5, 6, 7];
+        $diasDescansoIso = array_values(array_diff($todosLosDias, $diasLaborables));
+
+        $inicioSemana = $referencia->copy()->startOfWeek();
+
+        $resultado = $diasDescansoIso !== []
+            ? PatronDescansoSemanal::anclaYCiclo($diasDescansoIso, $inicioSemana)
+            : null;
+
+        return [
+            'dias_trabajo' => $resultado['dias_trabajo'] ?? count($diasLaborables),
+            'dias_descanso' => $resultado['dias_descanso'] ?? (7 - count($diasLaborables)),
+            'fecha_ancla' => $resultado['fecha_ancla'] ?? $inicioSemana,
+        ];
     }
 
     /**

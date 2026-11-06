@@ -4,6 +4,7 @@ namespace Tests\Feature\Turnos;
 
 use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Livewire\Turnos\ConfiguracionTurnoForm;
+use App\Models\ConfiguracionTurno;
 use Database\Seeders\ConfiguracionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -91,5 +92,40 @@ class ConfiguracionTurnoFormTest extends TestCase
             ->ejecutar($trabajador->fresh(), $this->motivoDe('PARTICULAR'), []);
 
         $this->assertNotNull($papeleta->id);
+    }
+
+    /**
+     * Regresión: el Blade oculta el formulario manual para 276, pero
+     * diasTrabajo/diasDescanso/fechaAncla NO son #[Locked] en el
+     * componente. Antes de este fix, un payload de Livewire manipulado
+     * (p. ej. desde las devtools) podía mandar un ciclo manual y
+     * guardarConfiguracion() lo aceptaba tal cual para un 276 — algo
+     * que la pantalla ni siquiera ofrece como opción. Ahora
+     * cargarConfiguracion() descarta esos valores para 276 y siempre
+     * impone el ciclo calculado desde HORARIO_ORDINARIO_DIAS_LABORABLES
+     * ('1,2,3,4,5' por defecto -> 5 días de trabajo, 2 de descanso).
+     */
+    public function test_un_payload_manipulado_no_logra_un_ciclo_manual_para_un_276(): void
+    {
+        $trabajador = $this->usuarioDePrueba(['regimen' => '276']);
+        $jefe = $this->conJefeDePrueba($trabajador);
+
+        Livewire::actingAs($jefe)
+            ->test(ConfiguracionTurnoForm::class, ['trabajador' => $trabajador])
+            // Simula el payload manipulado: un ciclo diario (1 día de
+            // trabajo, 1 de descanso) con una fecha ancla arbitraria,
+            // algo que el Blade de 276 nunca expone como input.
+            ->set('diasTrabajo', 1)
+            ->set('diasDescanso', 1)
+            ->set('fechaAncla', '2026-01-01')
+            ->call('guardar')
+            ->assertHasNoErrors();
+
+        $config = ConfiguracionTurno::where('user_id', $trabajador->id)->first();
+
+        $this->assertNotNull($config);
+        $this->assertSame(5, $config->dias_trabajo);
+        $this->assertSame(2, $config->dias_descanso);
+        $this->assertNotSame('2026-01-01', $config->fecha_ancla->toDateString());
     }
 }
