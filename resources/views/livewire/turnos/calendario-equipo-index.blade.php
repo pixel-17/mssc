@@ -254,7 +254,7 @@
                                     @if ($esSoloReferencia)
                                         <span class="text-tinta-800 dark:text-tinta-200">{{ $trabajador->nombre_completo }}</span>
                                     @else
-                                        <a href="{{ route('turnos.calendario.individual-de', $trabajador) }}" class="text-tinta-800 dark:text-tinta-200 hover:underline" title="Ver calendario de {{ $trabajador->nombre_completo }}">
+                                        <a href="{{ $trabajador->regimen === '728' ? route('turnos.calendario.individual-de', $trabajador) : route('turnos.configuracion', $trabajador) }}" class="text-tinta-800 dark:text-tinta-200 hover:underline" title="{{ $trabajador->regimen === '728' ? 'Ver calendario de' : 'Editar turno de' }} {{ $trabajador->nombre_completo }}">
                                             {{ $trabajador->nombre_completo }}
                                         </a>
                                     @endif

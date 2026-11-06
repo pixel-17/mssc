@@ -293,13 +293,21 @@ class GeneradorTurnoMensualService
 
     /**
      * Corre desde el comando programado: para cada trabajador activo
-     * con configuración vigente, genera el mes siguiente si todavía
-     * no tiene nada cargado para ese mes (ver guardia en generarMes).
-     * Los inactivos (retiro, cese, licencia) se saltan directamente:
-     * su ciclo queda "pausado" sin que nadie borre su configuración.
+     * con configuración vigente, genera todo mes que le haya quedado
+     * sin resolver entre el mes en curso y el mes siguiente a hoy
+     * (ambos inclusive), sin tocar ninguno que ya tenga carga (ver
+     * guardia en generarMes). Los inactivos (retiro, cese, licencia)
+     * se saltan directamente: su ciclo queda "pausado" sin que nadie
+     * borre su configuración.
+     *
+     * Antes solo miraba "el mes siguiente a hoy": si a un trabajador
+     * le cargaban el horario después del día 25 (ver bootstrap/app.php),
+     * el mes en curso quedaba huérfano para siempre. Ahora arranca
+     * desde el mes en curso para cubrir ese caso.
      */
     public function generarProximoMesParaTodos(): void
     {
+        $mesEnCurso = now()->startOfMonth();
         $proximoMes = now()->addMonthNoOverflow()->startOfMonth();
 
         $configs = ConfiguracionTurno::with('usuario')
@@ -310,28 +318,35 @@ class GeneradorTurnoMensualService
             return;
         }
 
-        // Una sola consulta para saber qué trabajadores ya tienen el
-        // mes siguiente resuelto, en vez de una por trabajador dentro
-        // de generarMes: en régimen estable (la mayoría de meses ya
-        // generados) esto evita 2 queries redundantes por cada
-        // trabajador activo con turno rotativo.
-        $userIdsConCarga = CargaTurnoMensual::where('anio', $proximoMes->year)
-            ->where('mes', $proximoMes->month)
-            ->whereIn('user_id', $configs->pluck('user_id'))
-            ->pluck('user_id')
+        // Una sola consulta para los dos meses del rango, indexada
+        // por "user_id-anio-mes" para consultar en memoria sin queries
+        // adicionales por trabajador.
+        $cargasExistentes = CargaTurnoMensual::whereIn('user_id', $configs->pluck('user_id'))
+            ->where(function ($q) use ($mesEnCurso, $proximoMes) {
+                $q->where(fn ($q2) => $q2->where('anio', $mesEnCurso->year)->where('mes', $mesEnCurso->month))
+                    ->orWhere(fn ($q2) => $q2->where('anio', $proximoMes->year)->where('mes', $proximoMes->month));
+            })
+            ->get()
+            ->map(fn (CargaTurnoMensual $carga) => "{$carga->user_id}-{$carga->anio}-{$carga->mes}")
             ->all();
 
-        $configs
-            ->reject(fn (ConfiguracionTurno $config) => in_array($config->user_id, $userIdsConCarga, true))
-            ->each(function (ConfiguracionTurno $config) use ($proximoMes) {
+        $configs->each(function (ConfiguracionTurno $config) use ($mesEnCurso, $proximoMes, $cargasExistentes) {
+            for ($mes = $mesEnCurso->copy(); $mes->lessThanOrEqualTo($proximoMes); $mes->addMonthNoOverflow()) {
+                $clave = "{$config->user_id}-{$mes->year}-{$mes->month}";
+
+                if (in_array($clave, $cargasExistentes, true)) {
+                    continue;
+                }
+
                 $this->generarMes(
                     $config->usuario,
-                    $proximoMes->copy(),
+                    $mes->copy(),
                     actor: null,
                     origen: 'automatico',
                     config: $config,
                 );
-            });
+            }
+        });
     }
 
     /**
