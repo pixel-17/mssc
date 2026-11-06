@@ -53,32 +53,9 @@
                 </div>
 
                 @if ($creando)
-                    <div class="grid grid-cols-2 gap-3">
-                        <x-admin.campo label="DNI" for="persona-dni" campo="dni">
-                            <x-input id="persona-dni" type="text" wire:model="dni" maxlength="8" inputmode="numeric" autocomplete="off" />
-                        </x-admin.campo>
-                        <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen">
-                            <x-select id="persona-regimen" wire:model="regimen">
-                                <option value="">— Selecciona —</option>
-                                <option value="276">276 (día)</option>
-                                <option value="728">728 (rotativo)</option>
-                            </x-select>
-                        </x-admin.campo>
-                    </div>
-                @elseif ($puedeEditarRegimen)
-                    {{-- Régimen: admin y Jefe de Área; un Jefe Inmediato "puro" no lo ve ni lo toca desde aquí. --}}
-                    <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen">
-                        <x-select id="persona-regimen" wire:model="regimen">
-                            <option value="">— Selecciona —</option>
-                            <option value="276">276 (día)</option>
-                            <option value="728">728 (rotativo)</option>
-                        </x-select>
+                    <x-admin.campo label="DNI" for="persona-dni" campo="dni">
+                        <x-input id="persona-dni" type="text" wire:model="dni" maxlength="8" inputmode="numeric" autocomplete="off" />
                     </x-admin.campo>
-                    @if ($persona && $regimen !== '' && $regimen !== (string) $persona->regimen)
-                        <div class="rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200" role="status">
-                            Al guardar se retira el turno programado: era del régimen anterior. Se reprograma después desde «Configurar turno».
-                        </div>
-                    @endif
                 @endif
 
                 <x-admin.campo label="Correo" for="persona-email" campo="email">
@@ -144,6 +121,31 @@
                         <x-organigrama.combobox id="persona-sede" model="sedeId" :options="$sedes" :limpiable="! $creando && $esAdmin" placeholder="Buscar sede…" vacio="— Sin sede —" />
                     </x-admin.campo>
                 @endif
+
+                {{-- Régimen: debajo de Sede, tanto en alta como en edición. --}}
+                @if ($creando)
+                    <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen">
+                        <x-select id="persona-regimen" wire:model="regimen">
+                            <option value="">— Selecciona —</option>
+                            <option value="276">276 (día)</option>
+                            <option value="728">728 (rotativo)</option>
+                        </x-select>
+                    </x-admin.campo>
+                @elseif ($puedeEditarRegimen)
+                    {{-- Admin y Jefe de Área; un Jefe Inmediato "puro" no lo ve ni lo toca desde aquí. --}}
+                    <x-admin.campo label="Régimen" for="persona-regimen" campo="regimen">
+                        <x-select id="persona-regimen" wire:model="regimen">
+                            <option value="">— Selecciona —</option>
+                            <option value="276">276 (día)</option>
+                            <option value="728">728 (rotativo)</option>
+                        </x-select>
+                    </x-admin.campo>
+                    @if ($persona && $regimen !== '' && $regimen !== (string) $persona->regimen)
+                        <div class="rounded-xl bg-amber-50 px-3 py-2.5 text-xs text-amber-900 dark:bg-amber-500/10 dark:text-amber-200" role="status">
+                            Al guardar se retira el turno programado: era del régimen anterior. Se reprograma después desde «Configurar turno».
+                        </div>
+                    @endif
+                @endif
             </section>
 
             {{-- Estado (solo admin, solo edición) --}}
@@ -163,29 +165,48 @@
                 </section>
 
                 @if ($esAdmin)
-                    <a href="{{ route('usuarios.editar', $persona) }}?volver=organigrama" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
-                        <x-icon name="cog" class="size-4" /> Edición completa (DNI, régimen, roles, contraseña, turno)
+                    <a href="{{ route('usuarios.editar', $persona) }}?volver=organigrama"
+                       class="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 transition hover:border-tinta-300 hover:bg-tinta-50/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-tinta-400/40 dark:hover:bg-white/10">
+                        <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-tinta-50 text-tinta-700 dark:bg-tinta-500/15 dark:text-tinta-200">
+                            <x-icon name="cog" class="size-5" />
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-medium text-tinta-950 dark:text-white">Edición completa</span>
+                            <span class="block text-xs text-gray-500 dark:text-tinta-50/60">DNI, régimen, roles, contraseña, turno</span>
+                        </span>
+                        <x-icon name="chevron-right" class="size-4 shrink-0 text-gray-400 transition group-hover:text-tinta-600 dark:text-tinta-50/40 dark:group-hover:text-tinta-200" />
                     </a>
                 @elseif ($persona->regimen === '728')
                     {{-- Mismo criterio que ProgramacionAdmin: un 728 se programa día por día,
                          no por ciclo. ProgramacionMensual es una pantalla completa (grilla +
                          pintado en Alpine), así que aquí se enlaza igual que hace el admin
                          en vez de embeberla. --}}
-                    <a href="{{ route('turnos.programacion', $persona) }}" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
-                        <x-icon name="clock" class="size-4" /> Programar turno
+                    <a href="{{ route('turnos.programacion', $persona) }}"
+                       class="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 transition hover:border-tinta-300 hover:bg-tinta-50/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-tinta-400/40 dark:hover:bg-white/10">
+                        <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-tinta-50 text-tinta-700 dark:bg-tinta-500/15 dark:text-tinta-200">
+                            <x-icon name="clock" class="size-5" />
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-medium text-tinta-950 dark:text-white">Programar turno</span>
+                            <span class="block text-xs text-gray-500 dark:text-tinta-50/60">Programación día por día del mes</span>
+                        </span>
+                        <x-icon name="chevron-right" class="size-4 shrink-0 text-gray-400 transition group-hover:text-tinta-600 dark:text-tinta-50/40 dark:group-hover:text-tinta-200" />
                     </a>
                 @else
-                    {{-- 276: mismo componente que usa el admin en turnos.configuracion
-                         (ConfiguracionTurnoForm), pero embebido para no salir del panel. --}}
-                    <button type="button" wire:click="alternarTurno" class="inline-flex items-center gap-1 text-xs text-tinta-700 hover:underline dark:text-tinta-200">
-                        <x-icon name="clock" class="size-4" /> {{ $mostrarTurno ? 'Ocultar turno' : 'Configurar turno' }}
-                    </button>
-
-                    @if ($mostrarTurno)
-                        <div class="rounded-xl border border-gray-100 bg-gray-50/60 p-3 dark:border-white/10 dark:bg-white/5" wire:key="turno-inline-{{ $persona->id }}">
-                            <livewire:turnos.configuracion-turno-form :trabajador="$persona" :embebido="true" :key="'turno-form-'.$persona->id" />
-                        </div>
-                    @endif
+                    {{-- 276: misma pantalla que usa el admin en turnos.configuracion
+                         (ConfiguracionTurnoForm); se navega igual que hace el admin
+                         en vez de embeberla en el drawer. --}}
+                    <a href="{{ route('turnos.configuracion', $persona) }}"
+                       class="group flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-3 py-2.5 transition hover:border-tinta-300 hover:bg-tinta-50/60 dark:border-white/10 dark:bg-white/5 dark:hover:border-tinta-400/40 dark:hover:bg-white/10">
+                        <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-tinta-50 text-tinta-700 dark:bg-tinta-500/15 dark:text-tinta-200">
+                            <x-icon name="clock" class="size-5" />
+                        </span>
+                        <span class="min-w-0 flex-1">
+                            <span class="block text-sm font-medium text-tinta-950 dark:text-white">Configurar turno</span>
+                            <span class="block text-xs text-gray-500 dark:text-tinta-50/60">Ciclo 6x1 con arrastre automático</span>
+                        </span>
+                        <x-icon name="chevron-right" class="size-4 shrink-0 text-gray-400 transition group-hover:text-tinta-600 dark:text-tinta-50/40 dark:group-hover:text-tinta-200" />
+                    </a>
                 @endif
             @endunless
 
