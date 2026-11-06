@@ -87,8 +87,14 @@ class UserPolicy
             return true;
         }
 
-        if ($target->hasAnyRole(['admin', 'rrhh']) || $editor->id === $target->id) {
+        if ($target->hasAnyRole(['admin', 'rrhh'])) {
             return false;
+        }
+
+        // Un jefe (de área o inmediato) puede editar su propia cuenta,
+        // nunca si fuera admin/rrhh (ya descartado arriba).
+        if ($editor->id === $target->id) {
+            return $editor->esJefeTitular();
         }
 
         if ($target->unidad_organica_id

@@ -38,7 +38,7 @@ class UsuarioController extends Controller
         $unidadIds = $this->subtreeIdsDeAreasQueEncabeza($user);
 
         $usuarios = $unidadIds->isNotEmpty()
-            ? User::whereIn('unidad_organica_id', $unidadIds)->where('id', '!=', $user->id)->orderBy('name')->get()
+            ? User::whereIn('unidad_organica_id', $unidadIds)->orderBy('name')->get()
             : $user->trabajadoresComoJefeInmediato();
 
         return view('usuarios.index', [

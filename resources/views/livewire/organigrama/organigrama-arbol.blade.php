@@ -701,7 +701,7 @@
         <div class="fixed inset-0 z-40" @keydown.escape.window="$wire.cerrarPersona()">
             <div class="absolute inset-0 bg-black/30" wire:click="cerrarPersona" aria-hidden="true"></div>
 
-            <aside class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl dark:bg-gray-900"
+            <aside class="absolute right-0 top-0 h-full w-full max-w-md overflow-y-auto bg-white p-6 shadow-xl dark:bg-[var(--surface)]"
                    role="dialog" aria-modal="true" aria-label="Ficha de {{ $p->nombre_completo }}"
                    x-trap.noscroll="true">
                 <div class="flex items-start justify-between gap-3">

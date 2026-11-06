@@ -136,8 +136,8 @@ class UsuarioAdminForm extends Component
     /**
      * ¿Los roles elegidos son únicamente el de RR. HH. (sin el de trabajador)? Un
      * RR. HH. puro no marca papeletas ni tiene turno: no pertenece al organigrama,
-     * así que régimen, sede y unidad orgánica no le corresponden (régimen queda
-     * fijo en 276, ver guardar()).
+     * así que régimen, sede y unidad orgánica no le corresponden (quedan en
+     * null, igual que el administrador — ver guardar()).
      */
     protected function esSoloRrhh(): bool
     {
@@ -182,7 +182,7 @@ class UsuarioAdminForm extends Component
             'dni' => ReglasDatosUsuario::dni($this->usuario?->id, soloActivos: false),
             'email' => ReglasDatosUsuario::email($this->usuario?->id),
             'password' => ['nullable', 'string', 'min:8'],
-            'regimen' => [$this->esSoloAdmin() ? 'nullable' : 'required', 'in:276,728'],
+            'regimen' => [($this->esSoloAdmin() || $this->esSoloRrhh()) ? 'nullable' : 'required', 'in:276,728'],
             'sedeId' => ['nullable', 'exists:sedes,id'],
             'unidadOrganicaId' => ['nullable', 'exists:unidad_organicas,id'],
             'rolesSeleccionados' => ['required', 'array', 'min:1'],
@@ -224,10 +224,11 @@ class UsuarioAdminForm extends Component
             $this->sedeId = null;
             $this->unidadOrganicaId = null;
         } elseif ($this->esSoloRrhh()) {
-            // RR. HH. puro: no pertenece al organigrama. Se recalcula aquí (no
-            // solo al pintar la vista) para que un payload manipulado no pueda
-            // colar sede, unidad u otro régimen.
-            $this->regimen = '276';
+            // RR. HH. puro: no pertenece al organigrama, igual que el
+            // administrador — sin régimen, sede ni unidad. Se recalcula
+            // aquí (no solo al pintar la vista) para que un payload
+            // manipulado no pueda colar sede, unidad u otro régimen.
+            $this->regimen = '';
             $this->sedeId = null;
             $this->unidadOrganicaId = null;
         }
