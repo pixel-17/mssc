@@ -9,7 +9,7 @@
                 </x-admin.campo>
 
                 <div class="sm:col-span-2">
-                    <x-admin.campo-checkbox for="activo" campo="requiereJustificacion" wire:model="activo" label="Los trabajadores pueden elegir este motivo" />
+                    <x-admin.campo-checkbox for="activo" campo="activo" wire:model="activo" label="Los trabajadores pueden elegir este motivo" />
                 </div>
             </div>
 

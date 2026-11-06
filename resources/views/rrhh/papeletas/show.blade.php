@@ -14,6 +14,14 @@
     $topePosthoc = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
     $posthocRespondida = $papeleta->revision_posthoc_estado === 'respondida';
 
+    // Mismo tope configurable que usa jefe/papeletas/show.blade.php (Configuraciones >
+    // TOPE_OBSERVACIONES). Antes estaba hardcodeado como "/3" en esta vista.
+    $topeObservaciones = (int) \App\Models\Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
+    $observarRrhhAgotaElTope = $papeleta->contador_observaciones_rrhh >= $topeObservaciones - 1;
+    $avisoObservarRrhh = $observarRrhhAgotaElTope
+        ? "Esta papeleta ya tiene {$papeleta->contador_observaciones_rrhh}/{$topeObservaciones} observaciones de RRHH. Si la observas, alcanzará el tope y el sistema la rechazará automáticamente en vez de esperar respuesta del jefe."
+        : null;
+
     $sustentoPresentado = ! $soloLectura && $papeleta->estado->equals(EnJustificacion::class)
         ? $papeleta->sustentos->firstWhere('estado', 'presentado')
         : null;
@@ -90,12 +98,12 @@
                             color="green"
                         />
                         @unless ($papeleta->sinJefatura())
-                            <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar (vuelve al jefe)" color="orange" :sugerencias="config('respuestas_rapidas.rrhh_observar')" />
+                            <x-accion-comentario :action="route('rrhh.papeletas.observar', $papeleta)" label="Observar (vuelve al jefe)" color="orange" :sugerencias="config('respuestas_rapidas.rrhh_observar')" :aviso="$avisoObservarRrhh" />
                         @endunless
                         <x-accion-comentario :action="route('rrhh.papeletas.rechazar', $papeleta)" label="Rechazar" color="red" :sugerencias="config('respuestas_rapidas.rrhh_rechazar')" />
                     </div>
                     @if ($papeleta->contador_observaciones_rrhh > 0)
-                        <p class="text-xs text-gray-500 mt-2">Observaciones previas de RRHH: {{ $papeleta->contador_observaciones_rrhh }}/3</p>
+                        <p class="text-xs text-gray-500 mt-2">Observaciones previas de RRHH: {{ $papeleta->contador_observaciones_rrhh }}/{{ $topeObservaciones }}</p>
                     @endif
                 </div>
             @endif
