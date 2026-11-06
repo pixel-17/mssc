@@ -13,7 +13,6 @@ class ConfiguracionSeeder extends Seeder
             ['clave' => 'TOPE_OBSERVACIONES', 'valor' => '3', 'descripcion' => 'Tope de observaciones (del Jefe y de RR. HH., cada uno con su propio contador) antes del rechazo automático.'],
             ['clave' => 'BLOQUE_ALMUERZO_INICIO', 'valor' => '13:00', 'descripcion' => 'Inicio del bloque de almuerzo para el descuento de refrigerio (solo 276).'],
             ['clave' => 'BLOQUE_ALMUERZO_FIN', 'valor' => '14:00', 'descripcion' => 'Fin del bloque de almuerzo para el descuento de refrigerio (solo 276).'],
-            ['clave' => 'SUSTENTO_HORAS_HABILES', 'valor' => '48', 'descripcion' => 'Horas hábiles para presentar sustento de Salud tras el retorno.'],
             ['clave' => 'HORARIO_ORDINARIO_HORA_INICIO', 'valor' => '07:45', 'descripcion' => 'Hora de inicio del horario único global para régimen 276 (ordinario). Reemplaza la fila diaria de turnos. También define desde cuándo RRHH cuenta como "en horario".'],
             ['clave' => 'HORARIO_ORDINARIO_HORA_FIN', 'valor' => '16:15', 'descripcion' => 'Hora de fin del horario único global para régimen 276 (ordinario). También define hasta cuándo RRHH cuenta como "en horario" (los usuarios RRHH inactivos no cuentan).'],
             ['clave' => 'HORARIO_ORDINARIO_DIAS_LABORABLES', 'valor' => '1,2,3,4,5', 'descripcion' => 'Días laborables (ISO: 1=Lunes ... 7=Domingo) del horario ordinario global, separados por coma. También rige los días en que RRHH está "en horario".'],

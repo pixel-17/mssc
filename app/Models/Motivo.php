@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Particular, Salud o Comisión de Servicio. Las reglas de
@@ -66,13 +67,11 @@ class Motivo extends Model
 
     /**
      * Horas hábiles que tiene el trabajador para presentar la justificación
-     * una vez terminada la salida. Plazo propio del motivo; si el admin no
-     * lo definió, el global SUSTENTO_HORAS_HABILES (48 por defecto).
+     * una vez terminada la salida. Se define directamente en cada motivo.
      */
     public function plazoJustificacionHorasHabiles(): int
     {
-        return $this->plazo_justificacion_horas_habiles
-            ?? (int) Configuracion::valorDe('SUSTENTO_HORAS_HABILES', 48);
+        return (int) $this->plazo_justificacion_horas_habiles;
     }
 
     /**

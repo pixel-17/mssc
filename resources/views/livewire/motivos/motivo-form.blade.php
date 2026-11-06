@@ -20,8 +20,8 @@
 
                 @if ($requiereJustificacion)
                     <x-admin.campo label="Horas hábiles para presentarla" for="motivo-form-plazo">
-                        <x-input id="motivo-form-plazo" type="number" min="1" max="720" wire:model="plazoJustificacionHorasHabiles" class="w-full sm:w-48" placeholder="48" />
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Si lo dejas vacío se usa el plazo general (48 horas hábiles).</p>
+                        <x-input id="motivo-form-plazo" type="number" min="1" max="720" wire:model="plazoJustificacionHorasHabiles" class="w-full sm:w-48" placeholder="ej. 48" />
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Horas hábiles que tiene el trabajador para presentar el documento tras el retorno.</p>
                     </x-admin.campo>
                 @else
                     <x-admin.campo-checkbox for="aplicaDescuento" wire:model="aplicaDescuento"
@@ -29,6 +29,10 @@
                         ayuda="El tiempo que el trabajador esté fuera se resta de sus horas del mes." />
                 @endif
             </div>
+
+            <x-admin.campo-checkbox for="esDestinoReclasificacion" wire:model="esDestinoReclasificacion"
+                label="Es el motivo destino de reclasificación"
+                ayuda="⚠️ Importante: cuando RRHH rechaza un sustento o no aprueba una revisión posterior, la papeleta se reclasifica automáticamente a este motivo. Se recomienda marcarlo solo en un motivo que aplique descuento. Si ningún motivo tiene esta opción activa, el sistema no podrá reclasificar papeletas y mostrará un error." />
 
             <x-admin.barra-flotante>
                 <a href="{{ route('motivos.index') }}" class="text-sm text-gray-600 dark:text-gray-400">Cancelar</a>

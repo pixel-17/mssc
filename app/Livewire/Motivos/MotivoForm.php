@@ -43,6 +43,8 @@ class MotivoForm extends Component
 
     public bool $aplicaDescuento = false;
 
+    public bool $esDestinoReclasificacion = false;
+
     public ?int $plazoJustificacionHorasHabiles = null;
 
     public function mount(?Motivo $motivo = null): void
@@ -54,6 +56,7 @@ class MotivoForm extends Component
             $this->requiereJustificacion = $motivo->consecuenciaAlTerminar() === 'justificar';
             $this->aplicaDescuento = $motivo->consecuenciaAlTerminar() === 'descuenta';
             $this->plazoJustificacionHorasHabiles = $motivo->plazo_justificacion_horas_habiles;
+            $this->esDestinoReclasificacion = $motivo->es_destino_reclasificacion;
         }
     }
 
@@ -64,7 +67,8 @@ class MotivoForm extends Component
             'activo' => ['boolean'],
             'requiereJustificacion' => ['boolean'],
             'aplicaDescuento' => ['boolean'],
-            'plazoJustificacionHorasHabiles' => ['nullable', 'integer', 'min:1', 'max:720'],
+            'esDestinoReclasificacion' => ['boolean'],
+            'plazoJustificacionHorasHabiles' => [$this->requiereJustificacion ? 'required' : 'nullable', 'integer', 'min:1', 'max:720'],
         ];
     }
 
@@ -111,6 +115,7 @@ class MotivoForm extends Component
             // Si requiere justificación, el descuento depende de si la presenta.
             'suma_descuento' => ! $requiere && $datos['aplicaDescuento'],
             'plazo_justificacion_horas_habiles' => $requiere ? ($datos['plazoJustificacionHorasHabiles'] ?? null) : null,
+            'es_destino_reclasificacion' => $datos['esDestinoReclasificacion'],
         ];
 
         $this->motivo
