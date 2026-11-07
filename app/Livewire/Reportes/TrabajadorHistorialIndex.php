@@ -14,6 +14,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Buscador + ficha de un trabajador: todo su historial de papeletas
@@ -52,7 +53,7 @@ class TrabajadorHistorialIndex extends Component
     }
 
     /** Descarga en Excel el historial completo del trabajador elegido (mismo alcance que la pantalla). */
-    /** @return \Symfony\Component\HttpFoundation\BinaryFileResponse */
+    /** @return BinaryFileResponse */
     public function exportar(HistorialTrabajadorService $service)
     {
         /** @var User $user */

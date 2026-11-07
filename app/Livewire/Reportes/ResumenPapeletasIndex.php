@@ -18,6 +18,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Reporte de cierre de mes para RR. HH. (y jefes, parcialmente), en dos
@@ -138,7 +139,7 @@ class ResumenPapeletasIndex extends Component
      * pestaña "horas", respetando el mismo mes y filtros que se están
      * viendo en pantalla.
      */
-    /** @return \Symfony\Component\HttpFoundation\BinaryFileResponse */
+    /** @return BinaryFileResponse */
     public function exportar(ReporteHorasAcumuladasService $service)
     {
         $this->validate([

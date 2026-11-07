@@ -255,6 +255,10 @@ class Papeleta extends Model
         AutorizadaYCorriendo::class,
     ];
 
+    /**
+     * @param  Builder<Papeleta>  $query
+     * @return Builder<Papeleta>
+     */
     public function scopeVivas(Builder $query): Builder
     {
         return $query->whereState('estado', self::ESTADOS_VIVOS);
@@ -281,6 +285,9 @@ class Papeleta extends Model
      * tienen fin_turno_at (legadas) se incluyen siempre: ahí decide
      * DeterminadorFinDeTurno en PHP. Permite que los comandos del minuto
      * filtren en SQL (índice estado + fin_turno_at) en vez de cargar todas.
+     *
+     * @param  Builder<Papeleta>  $query
+     * @return Builder<Papeleta>
      */
     public function scopeConTurnoTerminado(Builder $query): Builder
     {
@@ -289,7 +296,12 @@ class Papeleta extends Model
             ->orWhere('papeletas.fin_turno_at', '<', now()));
     }
 
-    /** Complemento de scopeConTurnoTerminado: turno aún vigente (o legada sin fin_turno_at). */
+    /**
+     * Complemento de scopeConTurnoTerminado: turno aún vigente (o legada sin fin_turno_at).
+     *
+     * @param  Builder<Papeleta>  $query
+     * @return Builder<Papeleta>
+     */
     public function scopeConTurnoSinTerminar(Builder $query): Builder
     {
         return $query->where(fn (Builder $q) => $q
@@ -302,6 +314,9 @@ class Papeleta extends Model
      * id en jefe_inmediato_id. Es UN solo jefe por papeleta; si la jefatura
      * de la unidad cambia, las papeletas abiertas se reasignan al jefe nuevo
      * (ver ReasignarPapeletasAbiertasAction) y solo él las decide.
+     *
+     * @param  Builder<Papeleta>  $query
+     * @return Builder<Papeleta>
      */
     public function scopeDeJefeInmediato(Builder $query, User $jefe): Builder
     {
@@ -312,6 +327,9 @@ class Papeleta extends Model
      * Papeletas del turno vigente: las que aún no terminan según
      * fin_turno_at. Sin fin_turno_at (papeletas viejas) se usa el día
      * operativo de hoy. Lo usan "Mis papeletas" y la bandeja del Jefe.
+     *
+     * @param  Builder<Papeleta>  $query
+     * @return Builder<Papeleta>
      */
     public function scopeDelTurnoVigente(Builder $query): Builder
     {
@@ -327,6 +345,9 @@ class Papeleta extends Model
      * Une las columnas fotografiadas (historial estable si cambia el
      * organigrama) con el equipo vivo, que sí incluye a los trabajadores
      * a las unidades hijas.
+     *
+     * @param  Builder<Papeleta>  $query
+     * @return Builder<Papeleta>
      */
     public function scopeDeEquipoDe(Builder $query, User $jefe): Builder
     {

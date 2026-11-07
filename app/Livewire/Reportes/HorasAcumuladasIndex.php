@@ -15,6 +15,7 @@ use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Reporte administrativo-empresarial: a fin de mes, saber qué
@@ -86,7 +87,7 @@ class HorasAcumuladasIndex extends Component
      * Descarga en Excel (2 hojas: resumen mensual + detalle diario)
      * respetando el mismo mes y filtros que se están viendo en pantalla.
      */
-    /** @return \Symfony\Component\HttpFoundation\BinaryFileResponse */
+    /** @return BinaryFileResponse */
     public function exportar(ReporteHorasAcumuladasService $service)
     {
         $this->validate([

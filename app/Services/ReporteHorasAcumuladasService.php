@@ -89,7 +89,7 @@ class ReporteHorasAcumuladasService
      * tabla de detalle diario y para el export.
      *
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
-     * @return Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int<0, max>, minutos_refrigerio: int, minutos: int<0, max>}>
+     * @return Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>
      */
     public function detalle(User $usuario, string $mes, array $filtros = []): Collection
     {
@@ -131,7 +131,7 @@ class ReporteHorasAcumuladasService
      * correr la misma query pesada dos veces; si no se pasa, la calcula.
      *
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
-     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int<0, max>, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
+     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
      * @return Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>
      */
     public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
@@ -139,7 +139,7 @@ class ReporteHorasAcumuladasService
         return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
             ->groupBy('trabajador_id')
             ->map(function (Collection $filas) {
-                /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int<0, max>, minutos_refrigerio: int, minutos: int<0, max>}> $filas */
+                /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}> $filas */
                 $primera = $filas->first() ?? throw new \LogicException('groupBy() nunca produce un grupo vacío.');
                 $conDescuento = $filas->where('suma_descuento', true);
 
@@ -169,7 +169,7 @@ class ReporteHorasAcumuladasService
      * calculado para evitar repetir la query.
      *
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
-     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int<0, max>, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
+     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
      * @return Collection<int, array{trabajador_id: int, trabajador: string, dia: string, minutos: int, motivos: string}>
      */
     public function resumenDiarioPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
@@ -180,7 +180,7 @@ class ReporteHorasAcumuladasService
                 return $fila['trabajador_id'].'|'.$fila['dia'];
             })
             ->map(function (Collection $filas) {
-                /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int<0, max>, minutos_refrigerio: int, minutos: int<0, max>}> $filas */
+                /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}> $filas */
                 $primera = $filas->first() ?? throw new \LogicException('groupBy() nunca produce un grupo vacío.');
 
                 return [

@@ -105,27 +105,27 @@ class PersonaDrawerTest extends TestCase
         $this->assertDatabaseMissing('users', ['dni' => '87654321']);
     }
 
-   public function test_el_regimen_del_trabajador_puede_ser_distinto_al_de_su_jefe_inmediato(): void
-{
-    $this->omar->update(['regimen' => '276']);
+    public function test_el_regimen_del_trabajador_puede_ser_distinto_al_de_su_jefe_inmediato(): void
+    {
+        $this->omar->update(['regimen' => '276']);
 
-    $this->actingAs($this->gina);
+        $this->actingAs($this->gina);
 
-    Livewire::test(PersonaDrawer::class)
-        ->call('abrir', null, $this->oficinaA->id)
-        ->set('name', 'Luz')
-        ->set('apellido', 'Paredes')
-        ->set('dni', '87654321')
-        ->set('email', 'luz@example.com')
-        ->set('regimen', '728')
-        ->call('guardar')
-        ->assertHasNoErrors(['regimen']);
+        Livewire::test(PersonaDrawer::class)
+            ->call('abrir', null, $this->oficinaA->id)
+            ->set('name', 'Luz')
+            ->set('apellido', 'Paredes')
+            ->set('dni', '87654321')
+            ->set('email', 'luz@example.com')
+            ->set('regimen', '728')
+            ->call('guardar')
+            ->assertHasNoErrors(['regimen']);
 
-    $this->assertDatabaseHas('users', [
-        'dni' => '87654321',
-        'regimen' => '728',
-    ]);
-}
+        $this->assertDatabaseHas('users', [
+            'dni' => '87654321',
+            'regimen' => '728',
+        ]);
+    }
 
     public function test_el_admin_crea_un_jefe_inmediato_para_una_unidad_sin_jefe(): void
     {

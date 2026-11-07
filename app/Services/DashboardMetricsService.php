@@ -39,11 +39,13 @@ class DashboardMetricsService
         private readonly ReporteHorasAcumuladasService $reporteHorasAcumuladas,
     ) {}
 
+    /** @return array<string, mixed> */
     public function paraAdmin(): array
     {
         return $this->recordar('admin', fn () => $this->calcularAdmin());
     }
 
+    /** @return array<string, mixed> */
     public function paraRrhh(User $rrhh): array
     {
         // El agregado no depende de CUÁL usuario RRHH lo pide (ver
@@ -53,6 +55,7 @@ class DashboardMetricsService
         return $this->recordar('rrhh', fn () => $this->calcularRrhh($rrhh));
     }
 
+    /** @return array<string, mixed> */
     public function paraJefe(User $jefe): array
     {
         return $this->recordar('jefe:'.$jefe->id, fn () => $this->calcularJefe($jefe));
@@ -75,6 +78,10 @@ class DashboardMetricsService
     /** TTL corto de respaldo por si algún cambio no pasa por PapeletaActualizada (turnos, usuarios). */
     private const TTL_SEGUNDOS = 30;
 
+    /**
+     * @param  \Closure(): array<string, mixed>  $calcular
+     * @return array<string, mixed>
+     */
     private function recordar(string $clave, \Closure $calcular): array
     {
         $version = (int) Cache::get(self::CLAVE_VERSION, 1);
@@ -82,6 +89,7 @@ class DashboardMetricsService
         return Cache::remember("dashboard-metricas:{$version}:{$clave}", self::TTL_SEGUNDOS, $calcular);
     }
 
+    /** @return array<string, mixed> */
     private function calcularAdmin(): array
     {
         $desde = now()->subDays($this->diasVentana);
@@ -118,6 +126,7 @@ class DashboardMetricsService
         ];
     }
 
+    /** @return array<string, mixed> */
     private function calcularRrhh(User $rrhh): array
     {
         $desde = now()->subDays($this->diasVentana);
@@ -196,6 +205,7 @@ class DashboardMetricsService
         ];
     }
 
+    /** @return array<string, mixed> */
     private function calcularJefe(User $jefe): array
     {
         $desde = now()->subDays($this->diasVentana);

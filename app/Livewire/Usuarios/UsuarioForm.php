@@ -16,7 +16,6 @@ use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
 use App\Support\ReglasDatosUsuario;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -89,6 +88,7 @@ class UsuarioForm extends Component
 
     public ?int $unidadOrganicaId = null;
 
+    /** @var array<int, int|string> */
     public array $rolesSeleccionados = [];
 
     public bool $activo = true;

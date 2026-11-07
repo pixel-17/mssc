@@ -108,6 +108,7 @@ class ArmadorOrganigrama
      * todo; Jefe de Área: su rama): $personaId viene del navegador y no
      * se confía en él.
      *
+     * @param  Collection<int, UnidadOrganica>  $unidades
      * @param  array<int, true>  $enAlcance  ids de unidades dentro del alcance (ver idsEnAlcance)
      * @return array<string, mixed>|null
      */
@@ -160,6 +161,8 @@ class ArmadorOrganigrama
      * Ids de todas las unidades dentro del alcance de quien mira: las
      * raíces y todo lo que cuelga de ellas.
      *
+     * @param  Collection<int, UnidadOrganica>  $raicesDeAlcance
+     * @param  Collection<int|string, Collection<int, UnidadOrganica>>  $porPadre
      * @return array<int, true>
      */
     public function idsEnAlcance(Collection $raicesDeAlcance, Collection $porPadre): array
@@ -214,6 +217,8 @@ class ArmadorOrganigrama
     /**
      * Unidades desde donde se empieza a pintar.
      *
+     * @param  Collection<int, UnidadOrganica>  $unidades
+     * @param  Collection<int|string, Collection<int, UnidadOrganica>>  $porPadre
      * @return Collection<int, UnidadOrganica>
      */
     public function raicesPara(User $usuario, Collection $unidades, Collection $porPadre): Collection
@@ -255,6 +260,8 @@ class ArmadorOrganigrama
      * filtrado por la búsqueda y por la sede. null = ese nodo y todo lo
      * de abajo quedan fuera del resultado.
      *
+     * @param  Collection<int|string, Collection<int, UnidadOrganica>>  $porPadre
+     * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
      * @return array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, sin_jefe: bool}|null
      */

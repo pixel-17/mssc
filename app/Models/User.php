@@ -269,6 +269,9 @@ class User extends Authenticatable
      * Usuarios que son jefe de alguien: encabezan una unidad o figuran como
      * jefe inmediato de otro usuario. Misma regla que esJefeDeAlguien(), pero
      * resuelta en SQL para filtrar listas enteras sin 2 consultas por fila.
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
      */
     public function scopeQueEsJefe(Builder $query): Builder
     {
@@ -283,6 +286,9 @@ class User extends Authenticatable
      * Fuente ÚNICA de "mi equipo": trabajadores cuyo jefe inmediato o de
      * área (columnas explícitas) soy yo y todos los de las unidades que
      * encabezo (y sus sub-unidades).
+     *
+     * @param  Builder<User>  $query
+     * @return Builder<User>
      */
     public function scopeEquipoDe(Builder $query, User $jefe): Builder
     {
@@ -301,19 +307,31 @@ class User extends Authenticatable
         });
     }
 
-    /** Equipo del jefe como colección (para selects/buscadores). */
+    /**
+     * Equipo del jefe como colección (para selects/buscadores).
+     *
+     * @return Collection<int, User>
+     */
     public function equipo(): Collection
     {
         return User::equipoDe($this)->orderBy('name')->get();
     }
 
-    /** @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad. */
+    /**
+     * @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad.
+     *
+     * @return Collection<int, User>
+     */
     public function trabajadoresComoJefeInmediato(): Collection
     {
         return $this->equipo();
     }
 
-    /** @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad. */
+    /**
+     * @deprecated usar equipo() / User::equipoDe(); se mantiene por compatibilidad.
+     *
+     * @return Collection<int, User>
+     */
     public function trabajadoresParaReportes(): Collection
     {
         return $this->equipo();

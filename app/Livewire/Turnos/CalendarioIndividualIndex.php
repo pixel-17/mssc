@@ -56,6 +56,8 @@ class CalendarioIndividualIndex extends Component
      * trabajador: el canal App.Models.User.{id} solo lo autoriza a él
      * (routes/channels.php). Admin viendo el calendario de otro se
      * apoya en el refresco periódico de la vista (wire:poll).
+     *
+     * @return array<string, string>
      */
     public function getListeners(): array
     {

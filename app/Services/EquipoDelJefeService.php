@@ -123,6 +123,8 @@ class EquipoDelJefeService
     /**
      * IDs de todas las unidades (encabezadas + sub-unidades) donde el
      * usuario es Jefe de Área. Vacío si solo es Jefe Inmediato.
+     *
+     * @return Collection<int, int>
      */
     private function subtreeIdsDeAreasQueEncabeza(User $user): Collection
     {

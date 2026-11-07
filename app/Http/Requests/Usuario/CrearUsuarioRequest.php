@@ -8,6 +8,7 @@ use App\Support\ReglasDatosUsuario;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * La restricción de QUIÉN puede crear va en UsuarioController (policy),
@@ -82,7 +83,7 @@ class CrearUsuarioRequest extends FormRequest
         ];
     }
 
-    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
             $regimenEsperado = $this->regimenEsperado();

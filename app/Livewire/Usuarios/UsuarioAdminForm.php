@@ -77,6 +77,7 @@ class UsuarioAdminForm extends Component
 
     public ?int $unidadOrganicaId = null;
 
+    /** @var array<int, int|string> */
     public array $rolesSeleccionados = [];
 
     /** Solo en alta nueva: id del rol elegido (radio). Se convierte a rolesSeleccionados al guardar. */
@@ -344,6 +345,7 @@ class UsuarioAdminForm extends Component
      * también como miembro en la nueva. El caso «se le da el rol admin»
      * ya lo bloquea validarRoles() antes de llegar aquí.
      *
+     * @param  array<string, mixed>  $datos
      * @param  list<int>  $roles
      */
     private function validarUnidad(array $datos, int $adminId, array $roles): bool
@@ -365,7 +367,11 @@ class UsuarioAdminForm extends Component
         return true;
     }
 
-    /** Si es el único RR. HH. activo, no se lo puede desactivar ni quitarle el rol. */
+    /**
+     * Si es el único RR. HH. activo, no se lo puede desactivar ni quitarle el rol.
+     *
+     * @param  array<string, mixed>  $datos
+     */
     private function validarUnicoRrhhActivo(array $datos): bool
     {
         if (! $this->usuario?->esUnicoRrhhActivo()) {
@@ -390,7 +396,11 @@ class UsuarioAdminForm extends Component
         return true;
     }
 
-    /** Si es el único administrador activo, no se lo puede desactivar ni quitarle el rol. */
+    /**
+     * Si es el único administrador activo, no se lo puede desactivar ni quitarle el rol.
+     *
+     * @param  array<string, mixed>  $datos
+     */
     private function validarUnicoAdminActivo(array $datos): bool
     {
         if (! $this->usuario?->esUnicoAdminActivo()) {
@@ -418,6 +428,8 @@ class UsuarioAdminForm extends Component
     /**
      * Mismas reglas que desactivar desde la lista o el organigrama (jefe
      * con personas a cargo, etc.).
+     *
+     * @param  array<string, mixed>  $datos
      */
     private function validarDesactivacion(array $datos): bool
     {
@@ -447,6 +459,7 @@ class UsuarioAdminForm extends Component
     }
 
     /**
+     * @param  array<string, mixed>  $datos
      * @param  list<int>  $roles
      * @return array<string, mixed>
      */

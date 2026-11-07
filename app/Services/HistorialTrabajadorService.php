@@ -21,6 +21,8 @@ class HistorialTrabajadorService
      * Trabajadores que $usuario puede buscar: admin/RRHH a cualquiera,
      * jefe solo a quienes ya ve en su propio equipo (ver
      * User::equipoDe()).
+     *
+     * @return Collection<int, User>
      */
     public function trabajadoresVisibles(User $usuario, string $buscar = ''): Collection
     {
@@ -68,6 +70,8 @@ class HistorialTrabajadorService
     /**
      * Todo el historial de papeletas del trabajador (cualquier estado,
      * cualquier fecha), más reciente primero.
+     *
+     * @return Collection<int, array<string, mixed>>
      */
     public function historial(User $trabajador): Collection
     {

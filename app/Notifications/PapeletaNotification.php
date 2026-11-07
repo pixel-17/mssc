@@ -38,6 +38,7 @@ class PapeletaNotification extends NotificacionEnVivo
         parent::__construct($tipo, $titulo, $mensaje, $url);
     }
 
+    /** @return array<string, mixed> */
     protected function datosExtra(): array
     {
         return ['papeleta_id' => $this->papeleta->id];
@@ -53,6 +54,7 @@ class PapeletaNotification extends NotificacionEnVivo
         return 'Ver papeleta';
     }
 
+    /** @return array<string, mixed> */
     protected function datosPush(): array
     {
         return [

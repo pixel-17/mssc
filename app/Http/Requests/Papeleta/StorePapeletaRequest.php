@@ -6,6 +6,7 @@ use App\Models\Motivo;
 use App\Models\Papeleta;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 /**
  * Paso 1: creación. La validación de "justificación obligatoria si
@@ -43,7 +44,7 @@ class StorePapeletaRequest extends FormRequest
         ];
     }
 
-    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
             $motivo = Motivo::find($this->input('motivo_id'));
