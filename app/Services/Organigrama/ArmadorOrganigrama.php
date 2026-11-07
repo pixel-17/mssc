@@ -18,6 +18,20 @@ use Illuminate\Support\Collection;
  *
  * Todo se carga en unas pocas queries y el árbol se arma en memoria (el
  * organigrama es chico, igual que en UnidadOrganica::descendantIds()).
+ *
+ * El nodo del árbol es recursivo (hijos trae el mismo shape que el
+ * nodo que lo contiene), así que se declara como @phpstan-type
+ * autorreferenciado en vez de repetir el array{...} en cada firma;
+ * PHPStan resuelve el alias recursivamente.
+ *
+ * $porPadre sale siempre de UnidadOrganica::query()->get()->groupBy(...),
+ * es decir Eloquent\Collection<..., Eloquent\Collection<...>> — no
+ * Support\Collection: aunque Eloquent\Collection ES-A Support\Collection,
+ * el tipo anidado (TValue del grupo) es invariante en Collection, así
+ * que hay que declararlo con la clase exacta que realmente se recibe.
+ *
+ * @phpstan-type NodoOrganigrama array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, NodoOrganigrama>, total: int, sin_jefe: bool}
+ * @phpstan-type GruposPorPadre Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>
  */
 class ArmadorOrganigrama
 {
@@ -39,7 +53,7 @@ class ArmadorOrganigrama
      * Arma todo lo que pinta el árbol para quien mira: nodos raíz ya
      * filtrados por búsqueda/sede, estadísticas y conteo por sede.
      *
-     * @return array{raices: Collection<int, array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, sin_jefe: bool}>, stats: array<string, int>, conteoSedes: array<int|string, int>, unidades: \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>, enAlcance: array<int, true>}
+     * @return array{raices: Collection<int, NodoOrganigrama>, stats: array<string, int>, conteoSedes: array<int|string, int>, unidades: \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>, enAlcance: array<int, true>}
      */
     public function armar(User $usuario): array
     {
@@ -162,7 +176,7 @@ class ArmadorOrganigrama
      * raíces y todo lo que cuelga de ellas.
      *
      * @param  Collection<int, UnidadOrganica>  $raicesDeAlcance
-     * @param  Collection<int|string, Collection<int, UnidadOrganica>>  $porPadre
+     * @param  GruposPorPadre  $porPadre
      * @return array<int, true>
      */
     public function idsEnAlcance(Collection $raicesDeAlcance, Collection $porPadre): array
@@ -218,7 +232,7 @@ class ArmadorOrganigrama
      * Unidades desde donde se empieza a pintar.
      *
      * @param  Collection<int, UnidadOrganica>  $unidades
-     * @param  Collection<int|string, Collection<int, UnidadOrganica>>  $porPadre
+     * @param  GruposPorPadre  $porPadre
      * @return Collection<int, UnidadOrganica>
      */
     public function raicesPara(User $usuario, Collection $unidades, Collection $porPadre): Collection
@@ -260,10 +274,10 @@ class ArmadorOrganigrama
      * filtrado por la búsqueda y por la sede. null = ese nodo y todo lo
      * de abajo quedan fuera del resultado.
      *
-     * @param  Collection<int|string, Collection<int, UnidadOrganica>>  $porPadre
+     * @param  GruposPorPadre  $porPadre
      * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
-     * @return array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, array<string, mixed>>, total: int, sin_jefe: bool}|null
+     * @return NodoOrganigrama|null
      */
     private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?array
     {

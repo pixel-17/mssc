@@ -22,13 +22,15 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * descuento si RR. HH. o el trabajador lo cuestiona. Mismo estilo visual
  * que "Resumen mensual" (encabezado resaltado, columnas autoajustadas,
  * bordes) para que ambas hojas se lean como parte del mismo reporte.
+ *
+ * @phpstan-import-type FilaDetalleHoras from \App\Services\ReporteHorasAcumuladasService
  */
 class HorasAcumuladasDetalleSheet implements FromCollection, ShouldAutoSize, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
-    /** @param  Collection<int, array<string, mixed>>  $detalle */
+    /** @param  Collection<int, FilaDetalleHoras>  $detalle */
     public function __construct(protected Collection $detalle) {}
 
-    /** @return Collection<int, array<string, mixed>> */
+    /** @return Collection<int, FilaDetalleHoras> */
     public function collection(): Collection
     {
         return $this->detalle;
@@ -56,7 +58,7 @@ class HorasAcumuladasDetalleSheet implements FromCollection, ShouldAutoSize, Wit
     }
 
     /**
-     * @param  array<string, mixed>  $fila
+     * @param  FilaDetalleHoras  $fila
      */
     public function map($fila): array
     {

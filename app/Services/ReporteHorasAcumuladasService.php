@@ -25,6 +25,15 @@ use Illuminate\Support\Collection;
  * el jefe (inmediato o de área) solo ve su propio equipo, vía las
  * columnas fotografiadas en la papeleta (jefe_inmediato_id /
  * jefe_area_id), no por relación en vivo.
+ *
+ * Los shapes de fila se declaran UNA vez aquí (@phpstan-type) y se
+ * reimportan (@phpstan-import-type) en HorasAcumuladasExport y sus
+ * Sheets: antes cada archivo repetía el array{...} a mano y cualquier
+ * divergencia mínima (ej. "int" vs "int<0, max>" en 'minutos') rompía
+ * el chequeo de PHPStan por la invarianza de Collection<TValue>.
+ *
+ * @phpstan-type FilaDetalleHoras array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int}
+ * @phpstan-type FilaResumenHoras array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}
  */
 class ReporteHorasAcumuladasService
 {
@@ -89,7 +98,7 @@ class ReporteHorasAcumuladasService
      * tabla de detalle diario y para el export.
      *
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
-     * @return Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>
+     * @return Collection<int, FilaDetalleHoras>
      */
     public function detalle(User $usuario, string $mes, array $filtros = []): Collection
     {
@@ -131,15 +140,15 @@ class ReporteHorasAcumuladasService
      * correr la misma query pesada dos veces; si no se pasa, la calcula.
      *
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
-     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
-     * @return Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>
+     * @param  Collection<int, FilaDetalleHoras>|null  $detalle
+     * @return Collection<int, FilaResumenHoras>
      */
     public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
         return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
             ->groupBy('trabajador_id')
             ->map(function (Collection $filas) {
-                /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}> $filas */
+                /** @var Collection<int, FilaDetalleHoras> $filas */
                 $primera = $filas->first() ?? throw new \LogicException('groupBy() nunca produce un grupo vacío.');
                 $conDescuento = $filas->where('suma_descuento', true);
 
@@ -169,7 +178,7 @@ class ReporteHorasAcumuladasService
      * calculado para evitar repetir la query.
      *
      * @param  array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool}  $filtros
-     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
+     * @param  Collection<int, FilaDetalleHoras>|null  $detalle
      * @return Collection<int, array{trabajador_id: int, trabajador: string, dia: string, minutos: int, motivos: string}>
      */
     public function resumenDiarioPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
@@ -180,7 +189,7 @@ class ReporteHorasAcumuladasService
                 return $fila['trabajador_id'].'|'.$fila['dia'];
             })
             ->map(function (Collection $filas) {
-                /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}> $filas */
+                /** @var Collection<int, FilaDetalleHoras> $filas */
                 $primera = $filas->first() ?? throw new \LogicException('groupBy() nunca produce un grupo vacío.');
 
                 return [

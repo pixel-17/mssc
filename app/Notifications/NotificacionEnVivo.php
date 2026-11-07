@@ -56,7 +56,11 @@ abstract class NotificacionEnVivo extends Notification implements ShouldQueue
         return ['database', WebPushChannel::class, 'broadcast'];
     }
 
-    /** Claves propias de la subclase que se suman al payload común. @return array<string, mixed> */
+    /**
+     * Claves propias de la subclase que se suman al payload común.
+     *
+     * @return array<string, mixed>
+     */
     protected function datosExtra(): array
     {
         return [];
@@ -68,7 +72,11 @@ abstract class NotificacionEnVivo extends Notification implements ShouldQueue
     /** Texto del botón del push cuando hay url. */
     abstract protected function textoAccion(): string;
 
-    /** Datos que viajan en el push (el service worker los usa al hacer clic). @return array<string, mixed> */
+    /**
+     * Datos que viajan en el push (el service worker los usa al hacer clic).
+     *
+     * @return array<string, mixed>
+     */
     abstract protected function datosPush(): array;
 
     /**

@@ -26,15 +26,17 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * para que se entienda sin tener que volver a la aplicación: encabezado
  * resaltado, columnas autoajustadas y las horas con descuento en rojo
  * cuando hay alguna, igual que en pantalla.
+ *
+ * @phpstan-import-type FilaResumenHoras from \App\Services\ReporteHorasAcumuladasService
  */
 class HorasAcumuladasResumenSheet implements FromCollection, ShouldAutoSize, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     private int $contador = 0;
 
-    /** @param  Collection<int, array<string, mixed>>  $resumen */
+    /** @param  Collection<int, FilaResumenHoras>  $resumen */
     public function __construct(protected Collection $resumen) {}
 
-    /** @return Collection<int, array<string, mixed>> */
+    /** @return Collection<int, FilaResumenHoras> */
     public function collection(): Collection
     {
         return $this->resumen;
@@ -61,7 +63,7 @@ class HorasAcumuladasResumenSheet implements FromCollection, ShouldAutoSize, Wit
     }
 
     /**
-     * @param  array<string, mixed>  $fila
+     * @param  FilaResumenHoras  $fila
      */
     public function map($fila): array
     {

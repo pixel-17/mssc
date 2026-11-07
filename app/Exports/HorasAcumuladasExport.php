@@ -2,7 +2,6 @@
 
 namespace App\Exports;
 
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\Export;
 use Maatwebsite\Excel\Concerns\WithMultipleSheets;
@@ -15,12 +14,15 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
  * Recibe las colecciones YA calculadas por ReporteHorasAcumuladasService
  * (mismo mes/filtros que se ven en pantalla) en vez de recalcular acá,
  * para que lo exportado sea exactamente lo que el usuario está viendo.
+ *
+ * @phpstan-import-type FilaResumenHoras from \App\Services\ReporteHorasAcumuladasService
+ * @phpstan-import-type FilaDetalleHoras from \App\Services\ReporteHorasAcumuladasService
  */
 class HorasAcumuladasExport implements Export, WithMultipleSheets
 {
     /**
-     * @param  Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>  $resumen
-     * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: Carbon|null, retorno: Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int}>  $detalle
+     * @param  Collection<int, FilaResumenHoras>  $resumen
+     * @param  Collection<int, FilaDetalleHoras>  $detalle
      */
     public function __construct(
         protected Collection $resumen,

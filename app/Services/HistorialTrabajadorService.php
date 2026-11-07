@@ -4,7 +4,9 @@ namespace App\Services;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\States\Papeleta\PapeletaState;
 use App\Support\Minutos;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -14,6 +16,8 @@ use Illuminate\Support\Collection;
  * diferencia de ReporteHorasAcumuladasService — pensado para revisar
  * un caso puntual a fondo ("¿qué ha hecho fulano en todo el sistema?"),
  * no para el cierre mensual de planilla.
+ *
+ * @phpstan-type FilaHistorial array{id: int, dia: Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<PapeletaState>, abandono: bool, salida: Carbon|null, retorno: Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}
  */
 class HistorialTrabajadorService
 {
@@ -71,7 +75,7 @@ class HistorialTrabajadorService
      * Todo el historial de papeletas del trabajador (cualquier estado,
      * cualquier fecha), más reciente primero.
      *
-     * @return Collection<int, array<string, mixed>>
+     * @return Collection<int, FilaHistorial>
      */
     public function historial(User $trabajador): Collection
     {
@@ -105,7 +109,7 @@ class HistorialTrabajadorService
      * por condición, horas acumuladas (solo las ya cerradas con
      * retorno) y horas que sí cuentan para descuento.
      *
-     * @param  Collection<int, array<string, mixed>>  $historial
+     * @param  Collection<int, FilaHistorial>  $historial
      * @return array<string, int>
      */
     public function resumen(Collection $historial): array
