@@ -79,6 +79,9 @@ class MotivoCrudTest extends TestCase
                 ->set('nombre', 'Regla '.$codigo)
                 ->set('requiereJustificacion', $requiere)
                 ->set('aplicaDescuento', $descuento)
+                // El plazo es obligatorio cuando requiere justificación: vive
+                // solo en el motivo, ya no hay un valor global de respaldo.
+                ->set('plazoJustificacionHorasHabiles', $requiere ? 48 : null)
                 ->call('guardar')
                 ->assertHasNoErrors();
 

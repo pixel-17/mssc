@@ -163,6 +163,10 @@ class TurnoInicialAlCrearTest extends TestCase
 
         Livewire::actingAs($this->admin)
             ->test(UsuarioAdminForm::class, ['usuario' => $nuevo->fresh()])
+            // El RR. HH. puro quedó sin régimen (igual que el admin, ver
+            // UsuarioAdminForm::guardar()): hay que fijarlo de nuevo al
+            // agregar el rol trabajador, ya no se conserva del alta.
+            ->set('regimen', '276')
             ->set('sedeId', $this->sedeDePrueba()->id)
             ->set('rolesSeleccionados', [$this->rolId('rrhh'), $this->rolId('trabajador')])
             ->call('guardar')

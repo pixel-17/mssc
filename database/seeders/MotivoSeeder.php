@@ -31,6 +31,7 @@ class MotivoSeeder extends Seeder
                 'adjunto' => 'no',
                 'suma_descuento' => false,
                 'requiere_sustento_en_retorno' => true,
+                'plazo_justificacion_horas_habiles' => 48,
                 'es_destino_reclasificacion' => false,
                 'activo' => true,
             ],

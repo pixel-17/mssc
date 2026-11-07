@@ -180,9 +180,9 @@ class UsuarioAdminCrudTest extends TestCase
     /**
      * Un RR. HH. puro (sin el rol trabajador) no pertenece al organigrama:
      * el formulario ni siquiera exige régimen, sede o unidad — quedan en
-     * null/276 aunque el payload traiga otra cosa.
+     * null, igual que el administrador, aunque el payload traiga otra cosa.
      */
-    public function test_un_rrhh_puro_se_crea_sin_sede_ni_unidad_y_con_regimen_fijo_en_276(): void
+    public function test_un_rrhh_puro_se_crea_sin_regimen_sede_ni_unidad(): void
     {
         $sede = $this->sedeDePrueba();
         $unidad = UnidadOrganica::create(['nombre' => 'Oficina de prueba', 'jefe_id' => $this->usuarioDePrueba(['regimen' => '276'])->id]);
@@ -200,7 +200,7 @@ class UsuarioAdminCrudTest extends TestCase
 
         $this->assertTrue($usuario->hasRole('rrhh'));
         $this->assertFalse($usuario->hasRole('trabajador'));
-        $this->assertSame('276', $usuario->regimen);
+        $this->assertNull($usuario->regimen);
         $this->assertNull($usuario->sede_id);
         $this->assertNull($usuario->unidad_organica_id);
     }

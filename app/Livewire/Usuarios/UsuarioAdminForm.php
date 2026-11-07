@@ -37,8 +37,8 @@ use Spatie\Permission\Models\Role;
  * puro (se elige el rol con el checkbox, ver validarRoles()). Un
  * trabajador puro, o un RR. HH. que también sea trabajador, se da de
  * alta desde el organigrama, no desde este formulario. Un RR. HH.
- * puro no pertenece al organigrama: régimen queda fijo en 276 y
- * sede/unidad orgánica no aplican (ver esSoloRrhh()).
+ * puro no pertenece al organigrama: régimen, sede y unidad orgánica
+ * quedan en null, igual que el administrador (ver esSoloRrhh()).
  *
  * jefe_inmediato_id / jefe_area_id NO se editan aquí: se recalculan
  * solos vía UserObserver en cuanto se guarda unidad_organica_id. Para

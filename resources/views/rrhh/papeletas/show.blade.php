@@ -149,9 +149,9 @@
             @endif
 
             @if ($sustentoPresentado)
-                <div class="glass-card p-6" x-data="{ resultado: 'aprobado', enviando: false }">
+                <div class="glass-card p-6" x-data="{ resultado: '{{ old('resultado', 'aprobado') }}', comentario: @js(old('comentario', '')), enviando: false, get bloqueado() { return this.resultado === 'particular' && this.comentario.trim().length < 5; } }">
                     <h3 class="text-sm font-semibold text-gray-700 mb-3">Revisar sustento presentado</h3>
-                    <form method="POST" action="{{ route('rrhh.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3" @submit="enviando = true">
+                    <form method="POST" action="{{ route('rrhh.sustentos.revisar', $sustentoPresentado) }}" class="space-y-3" @submit="if (bloqueado) { $event.preventDefault(); return; } enviando = true">
                         @csrf
                         <div class="flex items-center gap-4 text-sm flex-wrap">
                             <label class="inline-flex items-center gap-1">
@@ -164,10 +164,14 @@
                         <p x-show="resultado === 'particular'" x-cloak class="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
                             El sustento no es válido y no se le dará una nueva oportunidad: la papeleta pasará a Particular y se descontarán las horas que el trabajador estuvo fuera. Esta decisión no se puede deshacer desde aquí.
                         </p>
-                        <textarea name="comentario" aria-label="Motivo" rows="2" maxlength="2000" x-show="resultado === 'particular'"
-                                  placeholder="Motivo (mínimo 5 caracteres)..."
-                                  class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
-                        <button type="submit" :disabled="enviando" :class="{ 'opacity-50 cursor-not-allowed': enviando }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-tinta-600 hover:bg-tinta-700">
+                        <div x-show="resultado === 'particular'" x-cloak>
+                            <textarea name="comentario" aria-label="Motivo" rows="2" maxlength="2000" x-model="comentario"
+                                      placeholder="Motivo (mínimo 5 caracteres)..."
+                                      class="block w-full text-sm rounded-md border-gray-300 shadow-sm focus:border-tinta-500 focus:ring-tinta-500 dark:border-white/15 dark:bg-white/5 dark:text-white"></textarea>
+                            <p class="text-xs text-gray-400 mt-1">Obligatorio para cambiar a Particular.</p>
+                        </div>
+                        @error('comentario')<p class="text-xs text-red-600 mt-1">{{ $message }}</p>@enderror
+                        <button type="submit" :disabled="enviando || bloqueado" :class="{ 'opacity-50 cursor-not-allowed': enviando || bloqueado }" class="inline-flex items-center px-4 py-2 border border-transparent text-xs font-semibold rounded-md text-white bg-tinta-600 hover:bg-tinta-700">
                             <span x-show="! enviando">Confirmar revisión</span>
                             <span x-show="enviando" x-cloak>Enviando…</span>
                         </button>
