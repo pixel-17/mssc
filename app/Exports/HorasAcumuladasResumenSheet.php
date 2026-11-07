@@ -26,17 +26,15 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * para que se entienda sin tener que volver a la aplicación: encabezado
  * resaltado, columnas autoajustadas y las horas con descuento en rojo
  * cuando hay alguna, igual que en pantalla.
- *
- * @phpstan-import-type FilaResumenHoras from \App\Services\ReporteHorasAcumuladasService
  */
 class HorasAcumuladasResumenSheet implements FromCollection, ShouldAutoSize, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     private int $contador = 0;
 
-    /** @param  Collection<int, FilaResumenHoras>  $resumen */
+    /** @param  Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>  $resumen */
     public function __construct(protected Collection $resumen) {}
 
-    /** @return Collection<int, FilaResumenHoras> */
+    /** @return Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}> */
     public function collection(): Collection
     {
         return $this->resumen;
@@ -63,7 +61,7 @@ class HorasAcumuladasResumenSheet implements FromCollection, ShouldAutoSize, Wit
     }
 
     /**
-     * @param  FilaResumenHoras  $fila
+     * @param  array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}  $fila
      */
     public function map($fila): array
     {

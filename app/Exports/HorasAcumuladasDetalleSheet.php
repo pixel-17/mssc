@@ -22,15 +22,13 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  * descuento si RR. HH. o el trabajador lo cuestiona. Mismo estilo visual
  * que "Resumen mensual" (encabezado resaltado, columnas autoajustadas,
  * bordes) para que ambas hojas se lean como parte del mismo reporte.
- *
- * @phpstan-import-type FilaDetalleHoras from \App\Services\ReporteHorasAcumuladasService
  */
 class HorasAcumuladasDetalleSheet implements FromCollection, ShouldAutoSize, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
-    /** @param  Collection<int, FilaDetalleHoras>  $detalle */
+    /** @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>  $detalle */
     public function __construct(protected Collection $detalle) {}
 
-    /** @return Collection<int, FilaDetalleHoras> */
+    /** @return Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}> */
     public function collection(): Collection
     {
         return $this->detalle;
@@ -58,7 +56,7 @@ class HorasAcumuladasDetalleSheet implements FromCollection, ShouldAutoSize, Wit
     }
 
     /**
-     * @param  FilaDetalleHoras  $fila
+     * @param  array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}  $fila
      */
     public function map($fila): array
     {

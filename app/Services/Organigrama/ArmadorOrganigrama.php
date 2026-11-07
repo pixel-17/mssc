@@ -19,19 +19,7 @@ use Illuminate\Support\Collection;
  * Todo se carga en unas pocas queries y el árbol se arma en memoria (el
  * organigrama es chico, igual que en UnidadOrganica::descendantIds()).
  *
- * El nodo del árbol es recursivo (hijos trae el mismo shape que el
- * nodo que lo contiene), así que se declara como @phpstan-type
- * autorreferenciado en vez de repetir el array{...} en cada firma;
- * PHPStan resuelve el alias recursivamente.
- *
- * $porPadre sale siempre de UnidadOrganica::query()->get()->groupBy(...),
- * es decir Eloquent\Collection<..., Eloquent\Collection<...>> — no
- * Support\Collection: aunque Eloquent\Collection ES-A Support\Collection,
- * el tipo anidado (TValue del grupo) es invariante en Collection, así
- * que hay que declararlo con la clase exacta que realmente se recibe.
- *
- * @phpstan-type NodoOrganigrama array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: list<int>, filtro_sede: bool, miembros: Collection<int, User>, hijos: Collection<int, NodoOrganigrama>, total: int, sin_jefe: bool}
- * @phpstan-type GruposPorPadre Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>
+ * @phpstan-type NodoOrganigrama array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: array<int, int>, filtro_sede: bool, miembros: \Illuminate\Database\Eloquent\Collection<int, User>, hijos: Collection<int, NodoOrganigrama>, total: int|float, sin_jefe: bool}
  */
 class ArmadorOrganigrama
 {
@@ -176,7 +164,7 @@ class ArmadorOrganigrama
      * raíces y todo lo que cuelga de ellas.
      *
      * @param  Collection<int, UnidadOrganica>  $raicesDeAlcance
-     * @param  GruposPorPadre  $porPadre
+     * @param  \Illuminate\Database\Eloquent\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @return array<int, true>
      */
     public function idsEnAlcance(Collection $raicesDeAlcance, Collection $porPadre): array
@@ -232,7 +220,7 @@ class ArmadorOrganigrama
      * Unidades desde donde se empieza a pintar.
      *
      * @param  Collection<int, UnidadOrganica>  $unidades
-     * @param  GruposPorPadre  $porPadre
+     * @param  \Illuminate\Database\Eloquent\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @return Collection<int, UnidadOrganica>
      */
     public function raicesPara(User $usuario, Collection $unidades, Collection $porPadre): Collection
@@ -274,7 +262,7 @@ class ArmadorOrganigrama
      * filtrado por la búsqueda y por la sede. null = ese nodo y todo lo
      * de abajo quedan fuera del resultado.
      *
-     * @param  GruposPorPadre  $porPadre
+     * @param  \Illuminate\Database\Eloquent\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
      * @return NodoOrganigrama|null
