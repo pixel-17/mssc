@@ -115,10 +115,16 @@ class CrearUsuarioAction
             // también necesita su ciclo desde el primer día.
             // Un jefe inmediato NO se crea con turno: se programa el suyo.
             if ($datos['regimen'] === '728' && ! $esJefeInmediatoNuevo && ! empty($datos['turno'])) {
+                $fechaAncla = $datos['fecha_ancla'] ?? null;
+
+                if ($fechaAncla === null) {
+                    throw new UsuarioException('fecha_ancla es obligatoria para crear el turno del trabajador 728.');
+                }
+
                 $this->generadorTurno->cargarConfiguracion(
                     trabajador: $nuevo,
                     turno: $datos['turno'],
-                    fechaAncla: Carbon::parse($datos['fecha_ancla']),
+                    fechaAncla: Carbon::parse($fechaAncla),
                     actor: $creador,
                     diasTrabajo: (int) ($datos['dias_trabajo'] ?? 6),
                     diasDescanso: (int) ($datos['dias_descanso'] ?? 1),
@@ -192,7 +198,7 @@ class CrearUsuarioAction
             return $creador->sede_id;
         }
 
-        $sedeDelJefe = UnidadOrganica::with('jefe')->find($datos['unidad_organica_id'])?->jefe?->sede_id;
+        $sedeDelJefe = UnidadOrganica::with('jefe')->find((int) $datos['unidad_organica_id'])?->jefe?->sede_id;
 
         return $sedeDelJefe ?? $creador->sede_id;
     }

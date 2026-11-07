@@ -93,7 +93,7 @@ class ReporteHorasAcumuladasService
      */
     public function detalle(User $usuario, string $mes, array $filtros = []): Collection
     {
-        return $this->query($usuario, $mes, $filtros)->get()->map(function (Papeleta $p) {
+        $resultado = $this->query($usuario, $mes, $filtros)->get()->map(function (Papeleta $p) {
             $horaRetorno = $p->retorno?->hora_servidor;
             $minutosBrutos = ($p->hora_salida_real && $horaRetorno)
                 ? Minutos::entre($p->hora_salida_real, $horaRetorno)
@@ -118,6 +118,9 @@ class ReporteHorasAcumuladasService
                 'minutos' => max(0, $minutosBrutos - (int) $p->descuento_refrigerio_minutos),
             ];
         });
+
+        /** @var Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}> $resultado */
+        return $resultado;
     }
 
     /**

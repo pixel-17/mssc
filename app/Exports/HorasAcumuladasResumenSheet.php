@@ -153,7 +153,7 @@ class HorasAcumuladasResumenSheet implements FromCollection, ShouldAutoSize, Wit
                 // el trabajador sí tiene horas que descontar, igual que la
                 // tabla en pantalla.
                 foreach ($this->resumen->values() as $indice => $fila) {
-                    if (($fila['minutos_con_descuento'] ?? 0) > 0) {
+                    if ($fila['minutos_con_descuento'] > 0) {
                         $filaExcel = $indice + 2;
                         $sheet->getStyle("H{$filaExcel}")->getFont()
                             ->setBold(true)

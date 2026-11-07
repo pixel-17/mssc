@@ -97,7 +97,7 @@ class DecisionController extends Controller
         $this->authorize('responderPosthoc', $papeleta);
 
         $archivoPath = $request->hasFile('archivo')
-            ? $request->file('archivo')->store('papeletas/posthoc', 'local')
+            ? ($request->file('archivo')->store('papeletas/posthoc', 'local') ?: null)
             : null;
 
         try {

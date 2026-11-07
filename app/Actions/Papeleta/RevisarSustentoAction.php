@@ -83,6 +83,9 @@ class RevisarSustentoAction
         return $papeleta;
     }
 
+    /**
+     * @param  'aprobado'|'observado'|'rechazado'  $resultado
+     */
     private function resolver(Sustento $sustento, User $revisor, string $resultado, ?string $comentario = null): Papeleta
     {
         $papeleta = DB::transaction(function () use ($sustento, $revisor, $resultado, $comentario) {

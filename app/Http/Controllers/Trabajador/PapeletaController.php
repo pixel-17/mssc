@@ -56,7 +56,7 @@ class PapeletaController extends Controller
         // El adjunto al crear es solo para los motivos que exigen justificación
         // (Salud): en los demás (p. ej. Comisión de Servicio) se ignora.
         $adjuntoPath = $motivo->requiere_sustento_en_retorno && $request->hasFile('adjunto_inicial_path')
-            ? $request->file('adjunto_inicial_path')->store('papeletas/adjuntos-iniciales', 'local')
+            ? ($request->file('adjunto_inicial_path')->store('papeletas/adjuntos-iniciales', 'local') ?: null)
             : null;
 
         try {
@@ -106,7 +106,7 @@ class PapeletaController extends Controller
     public function subsanar(SubsanarObservacionRequest $request, Papeleta $papeleta, SubsanarObservacionAction $action): RedirectResponse
     {
         $archivoPath = $request->hasFile('archivo')
-            ? $request->file('archivo')->store('papeletas/subsanaciones', 'local')
+            ? ($request->file('archivo')->store('papeletas/subsanaciones', 'local') ?: null)
             : null;
 
         try {

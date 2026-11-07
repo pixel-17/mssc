@@ -62,15 +62,16 @@ class UsuarioController extends Controller
             return [];
         }
 
-        return UnidadOrganica::with('jefe')
+        $avisos = UnidadOrganica::with('jefe')
             ->whereIn('id', $unidadIds)
             ->where('activo', true)
             ->orderBy('nombre')
             ->get()
             ->filter(fn (UnidadOrganica $unidad) => ! $unidad->jefe?->activo)
             ->map(fn (UnidadOrganica $unidad) => "{$unidad->nombre}: sin jefe activo.")
-            ->values()
             ->all();
+
+        return array_values($avisos);
     }
 
     /**

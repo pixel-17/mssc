@@ -47,7 +47,7 @@ class StorePapeletaRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function ($validator) {
-            $motivo = Motivo::find($this->input('motivo_id'));
+            $motivo = Motivo::find((int) $this->input('motivo_id'));
 
             if ($motivo && $motivo->adjunto === 'obligatorio' && ! $this->filled('justificacion')) {
                 $validator->errors()->add('justificacion', "La justificación es obligatoria para el motivo {$motivo->nombre}.");

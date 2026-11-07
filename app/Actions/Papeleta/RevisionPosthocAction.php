@@ -63,6 +63,9 @@ class RevisionPosthocAction
         return $this->resolver($papeleta, $rrhh, 'no_aprobada', $comentario);
     }
 
+    /**
+     * @param  'aprobada'|'observada'|'no_aprobada'  $resultado
+     */
     private function resolver(Papeleta $papeleta, User $rrhh, string $resultado, ?string $comentario = null): Papeleta
     {
         $reclasificada = false;

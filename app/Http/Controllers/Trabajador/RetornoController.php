@@ -23,6 +23,10 @@ class RetornoController extends Controller
     {
         $fotoPath = $request->file('foto')->store('papeletas/retornos', 'local');
 
+        if ($fotoPath === false) {
+            return back()->with('error', 'No se pudo subir la foto de retorno. Intenta de nuevo.');
+        }
+
         try {
             $action->normal($papeleta, Auth::user(), [
                 'foto_path' => $fotoPath,

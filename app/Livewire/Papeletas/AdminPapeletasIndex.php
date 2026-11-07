@@ -112,7 +112,7 @@ class AdminPapeletasIndex extends Component
     /** @return array<string, string> clase de estado => etiqueta */
     public static function estados(): array
     {
-        return collect(glob(app_path('States/Papeleta/*.php')))
+        return collect(glob(app_path('States/Papeleta/*.php')) ?: [])
             ->map(fn (string $archivo) => 'App\\States\\Papeleta\\'.pathinfo($archivo, PATHINFO_FILENAME))
             ->reject(fn (string $clase) => $clase === PapeletaState::class || ! is_subclass_of($clase, PapeletaState::class))
             ->mapWithKeys(fn (string $clase) => [$clase => PapeletaEstadoPresentacion::para($clase)[0]])

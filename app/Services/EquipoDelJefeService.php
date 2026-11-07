@@ -79,7 +79,7 @@ class EquipoDelJefeService
         return [
             $trabajadores,
             $esJefeDeArea,
-            $paresSoloLectura->pluck('id')->map(fn ($id) => (int) $id)->values()->all(),
+            array_values($paresSoloLectura->pluck('id')->map(fn ($id) => (int) $id)->all()),
         ];
     }
 

@@ -115,6 +115,8 @@ trait MueveJefe
         $reemplazos = $this->reemplazos;
         $reemplazaDestino = ($this->reemplazaDestino !== null && $this->reemplazaDestino !== '') ? (int) $this->reemplazaDestino : null;
         $turno = $this->turnoJefe;
+        $turno['dias_trabajo'] = $turno['dias_trabajo'] !== null ? (int) $turno['dias_trabajo'] : null;
+        $turno['dias_descanso'] = $turno['dias_descanso'] !== null ? (int) $turno['dias_descanso'] : null;
 
         if (! $this->modoEdicion || ! is_array($propuesta)) {
             return;

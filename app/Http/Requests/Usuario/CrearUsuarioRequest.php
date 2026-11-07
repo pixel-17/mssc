@@ -125,7 +125,7 @@ class CrearUsuarioRequest extends FormRequest
             return null;
         }
 
-        $unidad = UnidadOrganica::find($this->input('unidad_organica_id'));
+        $unidad = UnidadOrganica::find((int) $this->input('unidad_organica_id'));
 
         return $unidad?->jefe?->regimen;
     }

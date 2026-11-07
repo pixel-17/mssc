@@ -242,7 +242,7 @@ class UsuarioAdminForm extends Component
 
         $adminId = (int) Role::where('name', 'admin')->value('id');
         $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
-        $roles = array_map('intval', $datos['rolesSeleccionados']);
+        $roles = array_values(array_map('intval', $datos['rolesSeleccionados']));
 
         if (! $this->validarRoles($roles, $adminId, $trabajadorId)) {
             return;

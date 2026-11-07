@@ -75,7 +75,7 @@ class HistorialTrabajadorService
      */
     public function historial(User $trabajador): Collection
     {
-        return Papeleta::where('trabajador_id', $trabajador->id)
+        $resultado = Papeleta::where('trabajador_id', $trabajador->id)
             ->with(['motivo', 'sede', 'retorno', 'sustentos'])
             ->orderByDesc('dia_operativo')
             ->get()
@@ -98,6 +98,9 @@ class HistorialTrabajadorService
                 'suma_descuento' => (bool) $p->motivo->suma_descuento,
                 'sustento_estado' => $p->sustentos->last()?->estado,
             ]);
+
+        /** @var Collection<int, array{id: int, dia: \Illuminate\Support\Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<\App\States\Papeleta\PapeletaState>, abandono: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}> $resultado */
+        return $resultado;
     }
 
     /**

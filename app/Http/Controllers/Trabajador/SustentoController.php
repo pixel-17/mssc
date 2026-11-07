@@ -37,6 +37,10 @@ class SustentoController extends Controller
 
         $archivoPath = $request->file('archivo')->store('papeletas/sustentos', 'local');
 
+        if ($archivoPath === false) {
+            return back()->with('error', 'No se pudo subir el archivo de sustento. Intenta de nuevo.');
+        }
+
         try {
             DB::transaction(function () use ($sustento, $archivoPath) {
                 // Relectura bajo lock: dos envíos casi simultáneos (doble clic, dos

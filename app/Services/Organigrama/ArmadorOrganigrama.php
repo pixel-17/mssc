@@ -19,7 +19,9 @@ use Illuminate\Support\Collection;
  * Todo se carga en unas pocas queries y el árbol se arma en memoria (el
  * organigrama es chico, igual que en UnidadOrganica::descendantIds()).
  *
- * @phpstan-type NodoOrganigrama array{unidad: UnidadOrganica, jefes: Collection<int, User>, jefes_en_filtro: array<int, int>, filtro_sede: bool, miembros: \Illuminate\Database\Eloquent\Collection<int, User>, hijos: Collection<int, NodoOrganigrama>, total: int|float, sin_jefe: bool}
+ * NodoOrganigrama es un alias global recursivo, definido en
+ * phpstan.neon (parameters.typeAliases) — un @phpstan-type local no
+ * soporta autorreferencia ('hijos' contiene NodoOrganigrama otra vez).
  */
 class ArmadorOrganigrama
 {
@@ -164,7 +166,7 @@ class ArmadorOrganigrama
      * raíces y todo lo que cuelga de ellas.
      *
      * @param  Collection<int, UnidadOrganica>  $raicesDeAlcance
-     * @param  \Illuminate\Database\Eloquent\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
+     * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @return array<int, true>
      */
     public function idsEnAlcance(Collection $raicesDeAlcance, Collection $porPadre): array
@@ -220,7 +222,7 @@ class ArmadorOrganigrama
      * Unidades desde donde se empieza a pintar.
      *
      * @param  Collection<int, UnidadOrganica>  $unidades
-     * @param  \Illuminate\Database\Eloquent\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
+     * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @return Collection<int, UnidadOrganica>
      */
     public function raicesPara(User $usuario, Collection $unidades, Collection $porPadre): Collection
@@ -262,7 +264,7 @@ class ArmadorOrganigrama
      * filtrado por la búsqueda y por la sede. null = ese nodo y todo lo
      * de abajo quedan fuera del resultado.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
+     * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
      * @return NodoOrganigrama|null

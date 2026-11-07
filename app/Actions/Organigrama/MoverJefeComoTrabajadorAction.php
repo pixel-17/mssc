@@ -136,7 +136,7 @@ class MoverJefeComoTrabajadorAction
                 'propuesta' => ! $comoJefe && $sedePropuesta && (int) $sedePropuesta->id !== (int) $jefe->sede_id ? $sedePropuesta : null,
             ],
             'necesita_turno' => $necesitaTurno,
-            'turnos_validos' => ConfiguracionTurno::turnosValidosPara($jefe),
+            'turnos_validos' => array_values(ConfiguracionTurno::turnosValidosPara($jefe)),
             'avisos' => $avisos,
         ];
     }

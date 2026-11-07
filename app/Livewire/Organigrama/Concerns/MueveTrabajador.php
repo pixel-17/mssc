@@ -242,14 +242,15 @@ trait MueveTrabajador
 
         $actual = (int) $ficha['persona']->unidad_organica_id;
 
-        return $unidades
+        $destinos = $unidades
             ->filter(fn (UnidadOrganica $u) => isset($enAlcance[$u->id]) && $u->activo && (int) $u->id !== $actual)
             ->map(fn (UnidadOrganica $u) => [
                 'id' => (int) $u->id,
                 'label' => $u->nombre,
                 'hint' => $u->jefe->nombre_completo ?? 'sin jefe',
             ])
-            ->values()
             ->all();
+
+        return array_values($destinos);
     }
 }
