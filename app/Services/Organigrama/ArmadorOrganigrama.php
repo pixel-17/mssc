@@ -267,7 +267,14 @@ class ArmadorOrganigrama
      * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
-     * @return NodoOrganigrama|null
+     *@return array{unidad: UnidadOrganica, jefes: Collection<int, User>, ...hijos: Collection<int, NodoOrganigrama>...}|null
+     * El alias NodoOrganigrama no se puede usar "pelado" como tipo de
+     * retorno completo de ESTE método: al ser el propio método el que lo
+     * define recursivamente (hijos vuelve a contener NodoOrganigrama),
+     * PHPStan intenta expandirlo top-level y entra en un bucle infinito
+     * ("Circular definition for type alias"). Envuelto dentro de
+     * Collection<int, NodoOrganigrama> (como en 'hijos' acá y en
+     * armar()) sí funciona, porque ahí la resolución es perezosa.
      */
     private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?array
     {
