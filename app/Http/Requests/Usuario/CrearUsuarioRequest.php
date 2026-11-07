@@ -26,6 +26,7 @@ class CrearUsuarioRequest extends FormRequest
         return true;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         $unidadesDisponibles = $this->unidadesDisponibles();
@@ -81,7 +82,7 @@ class CrearUsuarioRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator): void
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
     {
         $validator->after(function ($validator) {
             $regimenEsperado = $this->regimenEsperado();
@@ -133,6 +134,7 @@ class CrearUsuarioRequest extends FormRequest
      * Jefe de Área: las que encabeza + todas sus sub-unidades. Vacío
      * si no encabeza ninguna (es decir, si solo es Jefe Inmediato).
      */
+    /** @return Collection<int, int> */
     public function unidadesDisponibles(): Collection
     {
         $encabezadas = $this->user()->unidadesDeArea;

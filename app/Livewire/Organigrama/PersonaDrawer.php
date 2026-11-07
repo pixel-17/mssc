@@ -461,6 +461,7 @@ class PersonaDrawer extends Component
         return $this->permitidasMemo = $consulta->get();
     }
 
+    /** @return array<string, string> */
     protected function validationAttributes(): array
     {
         return [
@@ -474,6 +475,7 @@ class PersonaDrawer extends Component
         ];
     }
 
+    /** @return array<string, string> */
     protected function messages(): array
     {
         return [

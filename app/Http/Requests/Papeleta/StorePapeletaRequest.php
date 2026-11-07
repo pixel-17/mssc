@@ -20,6 +20,7 @@ class StorePapeletaRequest extends FormRequest
         return $this->user()->can('crear', Papeleta::class);
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         // 276 (horario fijo): la papeleta y el retorno son del mismo día
@@ -42,7 +43,7 @@ class StorePapeletaRequest extends FormRequest
         ];
     }
 
-    public function withValidator($validator): void
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
     {
         $validator->after(function ($validator) {
             $motivo = Motivo::find($this->input('motivo_id'));

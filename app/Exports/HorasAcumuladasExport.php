@@ -17,6 +17,10 @@ use Maatwebsite\Excel\Concerns\WithMultipleSheets;
  */
 class HorasAcumuladasExport implements Export, WithMultipleSheets
 {
+    /**
+     * @param  Collection<int, array<string, mixed>>  $resumen
+     * @param  Collection<int, array<string, mixed>>  $detalle
+     */
     public function __construct(
         protected Collection $resumen,
         protected Collection $detalle,

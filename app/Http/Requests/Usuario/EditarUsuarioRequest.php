@@ -30,6 +30,7 @@ class EditarUsuarioRequest extends FormRequest
         return true;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         $unidadesDisponibles = $this->unidadesDisponibles();
@@ -64,6 +65,7 @@ class EditarUsuarioRequest extends FormRequest
      * sub-unidades. Vacío si no encabeza ninguna (o sea, si edita como
      * Jefe Inmediato "puro").
      */
+    /** @return Collection<int, int> */
     public function unidadesDisponibles(): Collection
     {
         $encabezadas = $this->user()->unidadesQueEncabeza;

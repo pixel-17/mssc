@@ -174,6 +174,7 @@ class UsuarioAdminForm extends Component
     // cambioDeRegimen() y updatedRegimen() también viven en
     // TieneRolesDeUsuario.
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         $reglas = [
@@ -200,6 +201,7 @@ class UsuarioAdminForm extends Component
         return $reglas;
     }
 
+    /** @var array<string, string> */
     protected $messages = [
         'rolesSeleccionados.required' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',
         'rolesSeleccionados.min' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',

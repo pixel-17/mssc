@@ -25,8 +25,10 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
  */
 class HorasAcumuladasDetalleSheet implements FromCollection, ShouldAutoSize, WithColumnWidths, WithEvents, WithHeadings, WithMapping, WithStyles, WithTitle
 {
+    /** @param  Collection<int, array<string, mixed>>  $detalle */
     public function __construct(protected Collection $detalle) {}
 
+    /** @return Collection<int, array<string, mixed>> */
     public function collection(): Collection
     {
         return $this->detalle;

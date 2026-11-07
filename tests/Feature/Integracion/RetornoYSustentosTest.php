@@ -294,6 +294,51 @@ class RetornoYSustentosTest extends TestCase
         $this->assertTrue($sustento->papeleta->fresh()->estado->equals(EnJustificacion::class));
     }
 
+    /**
+     * Tercera decisión de RRHH sobre un sustento: no es válido y no amerita
+     * una nueva oportunidad. Mismo destino que el vencimiento automático
+     * (ReclasificarAParticularAction), pero disparado por un humano, así
+     * que el actor queda en el historial (ver RevisarSustentoAction::rechazar()).
+     */
+    public function test_rrhh_envia_el_sustento_a_particular_y_la_papeleta_se_reclasifica_con_descuento(): void
+    {
+        $papeleta = $this->papeletaDePrueba($this->trabajador, EnJustificacion::class, [
+            'motivo_id' => $this->motivoDe('SALUD')->id,
+        ]);
+        $ruta = 'papeletas/sustentos/prueba.pdf';
+        Storage::disk('local')->put($ruta, 'contenido-del-sustento');
+        $sustento = Sustento::create([
+            'papeleta_id' => $papeleta->id,
+            'archivo_path' => $ruta,
+            'fecha_limite' => now()->addDays(2),
+            'estado' => 'presentado',
+            'presentado_at' => now(),
+        ]);
+
+        $this->actingAs($this->rrhh)
+            ->post(route('rrhh.sustentos.revisar', $sustento), [
+                'resultado' => 'particular',
+                'comentario' => 'El certificado no corresponde a la fecha de la salida.',
+            ])
+            ->assertSessionHas('success');
+
+        $sustento = $sustento->fresh();
+        $papeleta = $papeleta->fresh();
+
+        $this->assertSame('rechazado', $sustento->estado);
+        $this->assertSame($this->rrhh->id, $sustento->revisado_por_id);
+        $this->assertNotNull($sustento->revisado_at);
+
+        $this->assertTrue($papeleta->estado->equals(Finalizada::class));
+        $this->assertSame($this->motivoDe('PARTICULAR')->id, $papeleta->motivo_id);
+        $this->assertSame($this->motivoDe('SALUD')->id, $papeleta->motivo_original_id);
+        $this->assertTrue($papeleta->motivo->suma_descuento);
+
+        $historial = $papeleta->historial()->latest('id')->first();
+        $this->assertSame($this->rrhh->id, $historial->actor_id);
+        $this->assertSame('rrhh', $historial->actor_tipo);
+    }
+
     public function test_solo_rrhh_ajeno_puede_revisar_sustentos(): void
     {
         $sustento = $this->sustentoPresentado();

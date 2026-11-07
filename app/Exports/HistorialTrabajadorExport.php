@@ -19,6 +19,7 @@ class HistorialTrabajadorExport implements FromCollection, WithHeadings, WithMap
     /** @param  Collection<int, array<string, mixed>>  $historial */
     public function __construct(protected Collection $historial) {}
 
+    /** @return Collection<int, array<string, mixed>> */
     public function collection(): Collection
     {
         return $this->historial;

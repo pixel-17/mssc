@@ -26,6 +26,7 @@ class SubsanarObservacionRequest extends FormRequest
         return (int) $papeleta->trabajador_id === (int) $this->user()->id;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         $papeleta = $this->route('papeleta');

@@ -55,6 +55,7 @@ class SedeForm extends Component
         }
     }
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         return [
@@ -67,6 +68,7 @@ class SedeForm extends Component
         ];
     }
 
+    /** @var array<string, string> */
     protected $messages = [
         'radioMetros.max' => 'El radio no puede superar los '.self::RADIO_MAXIMO_METROS.' metros.',
         'radioMetros.min' => 'El radio mínimo es de 10 metros.',

@@ -28,6 +28,7 @@ class ActualizarPasswordInicial extends Component
 
     public string $password_confirmation = '';
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         $dni = (string) Auth::user()?->dni;

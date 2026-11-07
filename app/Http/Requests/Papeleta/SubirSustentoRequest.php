@@ -24,6 +24,7 @@ class SubirSustentoRequest extends FormRequest
         return $sustento->papeleta->trabajador_id === $this->user()->id;
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

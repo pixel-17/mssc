@@ -25,7 +25,11 @@ use Illuminate\Support\Collection;
  */
 class ReemplazoDeJefeService
 {
-    /** Trabajadores activos de la unidad, sin contar a $jefe. */
+    /**
+     * Trabajadores activos de la unidad, sin contar a $jefe.
+     *
+     * @return HasMany<User, UnidadOrganica>
+     */
     public function miembrosActivos(
         UnidadOrganica $unidad,
         User $jefe

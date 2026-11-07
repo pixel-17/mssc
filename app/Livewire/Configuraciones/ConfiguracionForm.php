@@ -47,6 +47,7 @@ class ConfiguracionForm extends Component
         $this->valor = $configuracion->valor;
     }
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         return ['valor' => self::reglasParaClave($this->configuracion->clave)];

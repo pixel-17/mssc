@@ -115,6 +115,7 @@ class UnidadModal extends Component
         return $actor;
     }
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         return [

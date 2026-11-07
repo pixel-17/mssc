@@ -254,6 +254,7 @@ class UsuarioForm extends Component
     // Validación
     // ─────────────────────────────────────────────────────────────────
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         $creando = $this->usuario === null;
@@ -314,6 +315,7 @@ class UsuarioForm extends Component
         return $reglas;
     }
 
+    /** @var array<string, string> */
     protected $messages = [
         'rolesSeleccionados.required' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',
         'rolesSeleccionados.min' => 'Selecciona al menos un rol: un usuario sin rol no puede usar el sistema.',

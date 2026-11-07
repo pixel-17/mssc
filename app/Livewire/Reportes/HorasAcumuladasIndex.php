@@ -63,6 +63,7 @@ class HorasAcumuladasIndex extends Component
         $this->mes = now()->format('Y-m');
     }
 
+    /** @return array<string, mixed> */
     protected function filtros(): array
     {
         return [
@@ -85,6 +86,7 @@ class HorasAcumuladasIndex extends Component
      * Descarga en Excel (2 hojas: resumen mensual + detalle diario)
      * respetando el mismo mes y filtros que se están viendo en pantalla.
      */
+    /** @return \Symfony\Component\HttpFoundation\BinaryFileResponse */
     public function exportar(ReporteHorasAcumuladasService $service)
     {
         $this->validate([

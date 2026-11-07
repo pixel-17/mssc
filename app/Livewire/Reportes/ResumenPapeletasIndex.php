@@ -114,6 +114,7 @@ class ResumenPapeletasIndex extends Component
         return $user->hasRole('admin') || $user->hasRole('rrhh');
     }
 
+    /** @return array<string, mixed> */
     protected function filtros(): array
     {
         return [
@@ -137,6 +138,7 @@ class ResumenPapeletasIndex extends Component
      * pestaña "horas", respetando el mismo mes y filtros que se están
      * viendo en pantalla.
      */
+    /** @return \Symfony\Component\HttpFoundation\BinaryFileResponse */
     public function exportar(ReporteHorasAcumuladasService $service)
     {
         $this->validate([
@@ -154,7 +156,11 @@ class ResumenPapeletasIndex extends Component
         return Excel::download(new HorasAcumuladasExport($resumen, $detalle), $nombreArchivo);
     }
 
-    /** Trabajadores disponibles para el filtro de la pestaña "horas" (memoizado: una vez por request). */
+    /**
+     * Trabajadores disponibles para el filtro de la pestaña "horas" (memoizado: una vez por request).
+     *
+     * @return Collection<int, User>
+     */
     #[Computed]
     public function trabajadoresDisponibles(): Collection
     {
@@ -173,6 +179,7 @@ class ResumenPapeletasIndex extends Component
      * datos de estructura organizacional fuera de su alcance, aunque la
      * query de papeletas ya estaba protegida.
      */
+    /** @return Collection<int, Sede> */
     #[Computed]
     public function sedes(): Collection
     {
@@ -185,6 +192,7 @@ class ResumenPapeletasIndex extends Component
         return $query->orderBy('nombre')->get();
     }
 
+    /** @return Collection<int, Motivo> */
     #[Computed]
     public function motivos(): Collection
     {

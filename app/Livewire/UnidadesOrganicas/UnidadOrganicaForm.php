@@ -66,6 +66,7 @@ class UnidadOrganicaForm extends Component
         }
     }
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         return [

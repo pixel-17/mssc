@@ -8,6 +8,7 @@ namespace App\Http\Requests\Papeleta;
  */
 class ObservarJefeRequest extends ComentarioRequest
 {
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

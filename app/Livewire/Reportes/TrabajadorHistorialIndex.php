@@ -52,6 +52,7 @@ class TrabajadorHistorialIndex extends Component
     }
 
     /** Descarga en Excel el historial completo del trabajador elegido (mismo alcance que la pantalla). */
+    /** @return \Symfony\Component\HttpFoundation\BinaryFileResponse */
     public function exportar(HistorialTrabajadorService $service)
     {
         /** @var User $user */

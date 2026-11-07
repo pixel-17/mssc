@@ -179,6 +179,8 @@ class CrearUsuarioAction
      *   del creador en vez de quedar vacía.
      * - Trabajador: por defecto la sede de su jefe inmediato (jefe_id de
      *   la unidad) o, si no hay, la del creador. No se elige a mano.
+     *
+     * @param  array<string, mixed>  $datos
      */
     private function resolverSede(User $creador, array $datos, bool $esJefeDeArea, bool $esJefeInmediatoNuevo): ?int
     {

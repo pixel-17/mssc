@@ -53,6 +53,7 @@ class UsuarioController extends Controller
      * Una línea por unidad activa del área que no tiene un jefe activo
      * (sin jefe asignado o con el jefe dado de baja).
      *
+     * @param  Collection<int, int>  $unidadIds
      * @return list<string>
      */
     private function avisosDeUnidadesSinJefe(Collection $unidadIds): array
@@ -76,6 +77,8 @@ class UsuarioController extends Controller
      * IDs de todas las unidades (encabezadas + sub-unidades) donde
      * $user puede crear como Jefe de Área. Vacío si $user no encabeza
      * ninguna unidad (o sea, es "solo" Jefe Inmediato, o ni eso).
+     *
+     * @return Collection<int, int>
      */
     private function subtreeIdsDeAreasQueEncabeza(User $user): Collection
     {

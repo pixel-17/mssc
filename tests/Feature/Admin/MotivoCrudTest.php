@@ -114,6 +114,45 @@ class MotivoCrudTest extends TestCase
         $this->assertNull(Motivo::where('nombre', 'Sin plazo')->firstOrFail()->plazo_justificacion_horas_habiles);
     }
 
+    /**
+     * El plazo vive solo en el motivo (ya no hay un valor global de
+     * respaldo, ver migración remove_sustento_horas_habiles_y_plazo_obligatorio):
+     * si requiere justificación pero se deja el plazo vacío, el formulario
+     * debe rechazarlo. Sin esta regla, un motivo así nace con
+     * plazo_justificacion_horas_habiles en null y AbrirJustificacion lo
+     * castea a 0, dejando el sustento vencido desde el instante que nace.
+     */
+    public function test_el_plazo_es_obligatorio_si_requiere_justificacion(): void
+    {
+        Livewire::actingAs($this->admin)
+            ->test(MotivoForm::class)
+            ->set('nombre', 'Sin plazo pero justifica')
+            ->set('requiereJustificacion', true)
+            ->set('plazoJustificacionHorasHabiles', null)
+            ->call('guardar')
+            ->assertHasErrors(['plazoJustificacionHorasHabiles' => 'required']);
+
+        $this->assertFalse(Motivo::where('nombre', 'Sin plazo pero justifica')->exists());
+    }
+
+    /**
+     * El formulario impide guardar sin plazo (ver test anterior), pero
+     * cualquier otra vía que inserte el motivo directo en BD (un seeder,
+     * un tinker, una migración de datos) no pasa por esa regla. Documenta
+     * el comportamiento real de Motivo::plazoJustificacionHorasHabiles()
+     * para que quede explícito: si el dato queda en null, el plazo es 0
+     * horas hábiles, no un valor por defecto razonable ni una excepción.
+     */
+    public function test_el_plazo_en_null_se_trata_como_cero_horas_habiles(): void
+    {
+        $motivo = $this->motivoNuevo([
+            'requiere_sustento_en_retorno' => true,
+            'plazo_justificacion_horas_habiles' => null,
+        ]);
+
+        $this->assertSame(0, $motivo->plazoJustificacionHorasHabiles());
+    }
+
     public function test_editar_precarga_las_reglas_y_conserva_el_codigo_original(): void
     {
         $motivo = $this->motivoNuevo(['suma_descuento' => true]);

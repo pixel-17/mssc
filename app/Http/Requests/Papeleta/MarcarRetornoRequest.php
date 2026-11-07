@@ -16,6 +16,7 @@ class MarcarRetornoRequest extends FormRequest
         return $this->user()->can('marcarRetorno', $this->route('papeleta'));
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

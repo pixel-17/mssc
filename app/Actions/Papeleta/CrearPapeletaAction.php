@@ -80,6 +80,9 @@ class CrearPapeletaAction
         private RrhhHorarioService $horarioRrhh,
     ) {}
 
+    /**
+     * @param  array<string, mixed>  $datos
+     */
     public function ejecutar(User $trabajador, Motivo $motivo, array $datos): Papeleta
     {
         $this->validarMotivoYRegimen($trabajador, $motivo, $datos);
@@ -115,6 +118,8 @@ class CrearPapeletaAction
     /**
      * Validaciones que no dependen de jefatura ni de turno: régimen
      * asignado, motivo vigente y justificación cuando el motivo la exige.
+     *
+     * @param  array<string, mixed>  $datos
      */
     private function validarMotivoYRegimen(User $trabajador, Motivo $motivo, array $datos): void
     {
@@ -236,6 +241,7 @@ class CrearPapeletaAction
      * DB::transaction (ver ejecutar()): revalida bajo lock que el
      * trabajador sigue sin papeleta viva antes de insertar.
      *
+     * @param  array<string, mixed>  $datos
      * @param  array{directoARrhh: bool, jefeInmediatoId: ?int, jefeAreaId: ?int, esJefeInmediatoDeLaUnidad: bool}  $jefatura
      */
     private function crearPapeletaConHistorial(

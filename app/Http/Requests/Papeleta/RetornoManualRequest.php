@@ -15,6 +15,7 @@ class RetornoManualRequest extends FormRequest
         return $this->user()->can('marcarRetornoManual', $this->route('papeleta'));
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [

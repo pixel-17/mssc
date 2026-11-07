@@ -195,6 +195,8 @@ class CalendarioEquipoIndex extends Component
     /**
      * Trabajadores 276 del equipo que este usuario puede tocar (los de solo lectura
      * no entran). Se resuelve en cada acción: nunca se confía en lo que vio el navegador.
+     *
+     * @return Collection<int, User>
      */
     private function equipo276(): Collection
     {

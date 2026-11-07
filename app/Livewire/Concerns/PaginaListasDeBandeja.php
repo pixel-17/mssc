@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Concerns;
 
+use App\Models\Papeleta;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -37,6 +38,9 @@ trait PaginaListasDeBandeja
      * Pagina una lista. Si la página pedida ya no existe (p. ej. se
      * aprobó la última papeleta de la página 2), vuelve a la última
      * página válida en vez de mostrar la lista vacía.
+     *
+     * @param  Builder<Papeleta>  $consulta
+     * @return LengthAwarePaginator<int, Papeleta>
      */
     protected function paginarLista(Builder $consulta, string $nombre): LengthAwarePaginator
     {

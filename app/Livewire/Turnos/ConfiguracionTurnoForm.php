@@ -108,6 +108,7 @@ class ConfiguracionTurnoForm extends Component
         }
     }
 
+    /** @return array<string, mixed> */
     protected function rules(): array
     {
         return [
@@ -118,6 +119,7 @@ class ConfiguracionTurnoForm extends Component
         ];
     }
 
+    /** @var array<string, string> */
     protected $messages = [
         'turno.in' => 'Ese turno no existe para el régimen de este trabajador.',
     ];

@@ -31,8 +31,10 @@ class HorasAcumuladasResumenSheet implements FromCollection, ShouldAutoSize, Wit
 {
     private int $contador = 0;
 
+    /** @param  Collection<int, array<string, mixed>>  $resumen */
     public function __construct(protected Collection $resumen) {}
 
+    /** @return Collection<int, array<string, mixed>> */
     public function collection(): Collection
     {
         return $this->resumen;

@@ -45,6 +45,9 @@ class MarcarRetornoAction
 {
     use ExigeDecisorAjeno;
 
+    /**
+     * @param  array<string, mixed>  $datos
+     */
     public function normal(Papeleta $papeleta, User $trabajador, array $datos): Papeleta
     {
         if ($papeleta->trabajador_id !== $trabajador->id) {
@@ -99,6 +102,8 @@ class MarcarRetornoAction
      * todavía": el segundo espera a que el primero confirme, relee, y
      * recibe el PapeletaException amigable en vez de chocar contra el
      * unique constraint de `retornos.papeleta_id` con un error crudo.
+     *
+     * @param  array<string, mixed>  $datosRetorno
      */
     private function ejecutar(Papeleta $papeleta, array $datosRetorno): Papeleta
     {
@@ -153,6 +158,9 @@ class MarcarRetornoAction
         });
     }
 
+    /**
+     * @param  array<string, mixed>  $datos
+     */
     private function calcularDentroDeRadio(Papeleta $papeleta, array $datos): ?bool
     {
         if (empty($datos['latitud']) || empty($datos['longitud'])) {
