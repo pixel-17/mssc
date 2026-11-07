@@ -40,12 +40,17 @@
                     <td class="px-4 py-3">{{ $usuario->roles->pluck('name')->join(', ') }}</td>
                     <td class="px-4 py-3"><x-admin.estado :activo="$usuario->activo" /></td>
                     <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-                        @unless ($usuario->regimen === null)
+                        @if ($usuario->regimen === '728')
+                            <a href="{{ route('turnos.programacion', $usuario) }}" class="btn-row">
+                                <x-icon name="calendar" class="size-3.5" />
+                                Programar horario
+                            </a>
+                        @elseif ($usuario->regimen !== null)
                             <a href="{{ route('turnos.configuracion', $usuario) }}" class="btn-row">
                                 <x-icon name="calendar" class="size-3.5" />
                                 Programar horario
                             </a>
-                        @endunless
+                        @endif
                         <x-admin.accion-editar :href="route('usuarios-admin.editar', $usuario)" />
                         @if ($usuario->activo)
                             <x-admin.accion-eliminar

@@ -152,6 +152,11 @@ class UsuarioAdminForm extends Component
      * ¿Se puede cargar el turno inicial desde este formulario? Es OPCIONAL: al crear no se
      * pide (lo programan después); si llega, se valida y se carga. Un 728 sin turno no puede
      * crear papeletas (ver CrearPapeletaAction) hasta que se lo carguen.
+     *
+     * Nota: la sección de turno ya no se muestra en este formulario (se
+     * quitó de la vista, se carga desde Turnos\ConfiguracionTurnoForm); esto
+     * sigue acá porque rules()/guardar() lo necesitan si algo llegara a
+     * fijar turno/fechaAncla por otra vía.
      */
     protected function admiteConfiguracionTurno(): bool
     {
@@ -567,10 +572,6 @@ class UsuarioAdminForm extends Component
                 ->get(),
             'esAdminRol' => $this->incluyeAdmin(),
             'esSoloRrhhRol' => $this->esSoloRrhh(),
-            'requiereTurno' => $this->usuario !== null && $this->admiteConfiguracionTurno(),
-            'opcionesTurno' => $this->regimen
-                ? ConfiguracionTurno::turnosValidosPara(new User(['regimen' => $this->regimen]))
-                : [],
         ]);
     }
 }
