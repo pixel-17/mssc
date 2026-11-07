@@ -188,13 +188,14 @@ class ConfiguracionTurnoForm extends Component
     }
 
     /**
-     * 14 días desde el lunes de la semana actual, marcados
+     * Todos los días del mes en curso (que es el mes que de verdad se
+     * genera al guardar, ver guardar() más arriba), marcados
      * trabajo/descanso con la MISMA cuenta que se va a guardar
      * (GeneradorTurnoMensualService::esDescansoEnFecha). Así el admin
      * ve el resultado real antes de guardar, sin reimplementar la
      * lógica del ciclo en Blade/JS.
      *
-     * @return array<int, array{fecha: string, etiqueta: string, descanso: bool}>|null
+     * @return array<int, array{fecha: string, etiqueta: string, descanso: bool, yaProgramado: bool}>|null
      */
     private function previsualizacion(): ?array
     {
@@ -208,16 +209,29 @@ class ConfiguracionTurnoForm extends Component
             return null;
         }
 
-        $inicio = now()->startOfWeek(Carbon::MONDAY);
+        $inicio = now()->startOfMonth();
+        $fin = now()->endOfMonth();
+        $diasEnMes = $inicio->diffInDays($fin) + 1;
 
-        return collect(range(0, 13))
-            ->map(function (int $i) use ($inicio, $ancla) {
+        // Fechas que YA tienen un registro guardado en `turnos` para este
+        // trabajador: se pintan distinto (azulado) en la vista previa para
+        // que el admin/jefe note que esos días ya están programados de
+        // verdad, no son solo un cálculo del ciclo que todavía no se guardó.
+        $fechasYaProgramadas = Turno::where('user_id', $this->trabajador->id)
+            ->whereBetween('fecha', [$inicio->toDateString(), $fin->toDateString()])
+            ->pluck('fecha')
+            ->map(fn ($fecha) => Carbon::parse($fecha)->toDateString())
+            ->all();
+
+        return collect(range(0, $diasEnMes - 1))
+            ->map(function (int $i) use ($inicio, $ancla, $fechasYaProgramadas) {
                 $dia = $inicio->copy()->addDays($i);
 
                 return [
                     'fecha' => $dia->toDateString(),
                     'etiqueta' => ucfirst($dia->translatedFormat('D d')),
                     'descanso' => GeneradorTurnoMensualService::esDescansoEnFecha($ancla, $dia, $this->diasTrabajo, $this->diasDescanso),
+                    'yaProgramado' => in_array($dia->toDateString(), $fechasYaProgramadas, true),
                 ];
             })
             ->all();

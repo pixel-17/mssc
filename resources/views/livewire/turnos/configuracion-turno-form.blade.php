@@ -38,17 +38,30 @@
 
                 @if ($previsualizacion)
                     <div class="border-t pt-4 dark:border-gray-700">
-                        <p class="text-sm font-medium mb-2">Vista previa (próximas 2 semanas)</p>
+                        <p class="text-sm font-medium mb-2">Vista previa ({{ ucfirst(now()->translatedFormat('F Y')) }})</p>
                         <div @class(['grid gap-1.5 text-center', 'grid-cols-7' => ! $embebido, 'grid-cols-4' => $embebido])>
+                            @if (! $embebido)
+                                @php($offset = \Illuminate\Support\Carbon::parse($previsualizacion[0]['fecha'])->dayOfWeekIso - 1)
+                                @for ($i = 0; $i < $offset; $i++)
+                                    <div></div>
+                                @endfor
+                            @endif
                             @foreach ($previsualizacion as $dia)
                                 <div wire:key="configuracion-turno-form-preview-{{ $dia['fecha'] }}"
                                     class="rounded-md border px-1 py-2 text-xs
-                                    {{ $dia['descanso'] ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-tinta-50 text-tinta-800 border-tinta-200 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30' }}">
+                                    {{ $dia['yaProgramado']
+                                        ? 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30'
+                                        : ($dia['descanso'] ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-tinta-50 text-tinta-800 border-tinta-200 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30') }}">
                                     <div class="font-medium">{{ $dia['etiqueta'] }}</div>
                                     <div class="mt-1">{{ $dia['descanso'] ? 'D' : 'T' }}</div>
                                 </div>
                             @endforeach
                         </div>
+                        <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-blue-100 border border-blue-300 dark:bg-blue-500/20 dark:border-blue-500/40"></span> Ya programado</span>
+                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-tinta-50 border border-tinta-200 dark:bg-tinta-500/10 dark:border-tinta-500/30"></span> Por programar</span>
+                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-gray-100 border border-gray-300 dark:bg-gray-800 dark:border-gray-700"></span> Descanso</span>
+                        </p>
                     </div>
                 @endif
 
@@ -124,17 +137,30 @@
 
                 @if ($previsualizacion)
                     <div class="border-t pt-4 dark:border-gray-700">
-                        <p class="text-sm font-medium mb-2">Vista previa (próximas 2 semanas)</p>
+                        <p class="text-sm font-medium mb-2">Vista previa ({{ ucfirst(now()->translatedFormat('F Y')) }})</p>
                         <div @class(['grid gap-1.5 text-center', 'grid-cols-7' => ! $embebido, 'grid-cols-4' => $embebido])>
+                            @if (! $embebido)
+                                @php($offset = \Illuminate\Support\Carbon::parse($previsualizacion[0]['fecha'])->dayOfWeekIso - 1)
+                                @for ($i = 0; $i < $offset; $i++)
+                                    <div></div>
+                                @endfor
+                            @endif
                             @foreach ($previsualizacion as $dia)
                                 <div wire:key="configuracion-turno-form-preview-{{ $dia['fecha'] }}"
                                     class="rounded-md border px-1 py-2 text-xs
-                                    {{ $dia['descanso'] ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-tinta-50 text-tinta-800 border-tinta-200 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30' }}">
+                                    {{ $dia['yaProgramado']
+                                        ? 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30'
+                                        : ($dia['descanso'] ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-tinta-50 text-tinta-800 border-tinta-200 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30') }}">
                                     <div class="font-medium">{{ $dia['etiqueta'] }}</div>
                                     <div class="mt-1">{{ $dia['descanso'] ? ($embebido ? 'D' : 'Descanso') : ($embebido ? 'T' : 'Trabajo') }}</div>
                                 </div>
                             @endforeach
                         </div>
+                        <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
+                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-blue-100 border border-blue-300 dark:bg-blue-500/20 dark:border-blue-500/40"></span> Ya programado</span>
+                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-tinta-50 border border-tinta-200 dark:bg-tinta-500/10 dark:border-tinta-500/30"></span> Por programar</span>
+                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-gray-100 border border-gray-300 dark:bg-gray-800 dark:border-gray-700"></span> Descanso</span>
+                        </p>
                     </div>
                 @endif
 
