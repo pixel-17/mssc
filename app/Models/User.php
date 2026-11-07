@@ -200,6 +200,7 @@ class User extends Authenticatable
         'trabajador' => 'Trabajador',
     ];
 
+    /** @var 'admin'|'rrhh'|'jefe_area'|'jefe_inmediato'|'trabajador'|null */
     private ?string $tipoUsuarioMemo = null;
 
     /**
@@ -466,10 +467,11 @@ class User extends Authenticatable
     }
 
     /** "Nombre Apellido" listo para reportes/planillas y listados. */
+    /** @return Attribute<string, never> */
     protected function nombreCompleto(): Attribute
     {
         return Attribute::make(
-            get: fn () => trim("{$this->name} {$this->apellido}"),
+            get: fn (): string => trim("{$this->name} {$this->apellido}"),
         );
     }
 }

@@ -77,6 +77,14 @@ class UsuarioForm extends Component
 
     public string $regimen = '';
 
+    /**
+     * Aquí el turno no se pide ni se edita (ver vista: se carga después desde
+     * Turnos). Existe solo para que TieneRolesDeUsuario::updatedRegimen()
+     * pueda limpiarlo sin crear una propiedad dinámica si alguna vez se
+     * llegara a usar en este formulario.
+     */
+    public string $turno = '';
+
     public ?int $sedeId = null;
 
     public ?int $unidadOrganicaId = null;

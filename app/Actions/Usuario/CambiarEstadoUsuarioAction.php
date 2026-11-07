@@ -65,7 +65,7 @@ class CambiarEstadoUsuarioAction
      * Unidades que encabeza $usuario y que todavía tienen personas activas o
      * sub-unidades: para cada una hay que decidir qué pasa con la jefatura.
      *
-     * @return Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int<0, max>, subunidades: int<0, max>, pendientes: int}>
+     * @return Collection<int, array{unidad: UnidadOrganica, es_area: bool, personas: int, subunidades: int, pendientes: int}>
      */
     public function jefaturasPorResolver(User $usuario): Collection
     {
