@@ -5,13 +5,6 @@ parameters:
     paths:
         - app
 
-    # Alias global (no local/@phpstan-type) porque SÍ soporta
-    # autorreferencia: NodoOrganigrama es un árbol, 'hijos' contiene
-    # NodoOrganigrama otra vez. Usado en
-    # App\Services\Organigrama\ArmadorOrganigrama.
-    typeAliases:
-        NodoOrganigrama: 'array{unidad: \App\Models\UnidadOrganica, jefes: \Illuminate\Support\Collection<int, \App\Models\User>, jefes_en_filtro: array<int, int>, filtro_sede: bool, miembros: \Illuminate\Database\Eloquent\Collection<int, \App\Models\User>, hijos: \Illuminate\Support\Collection<int, NodoOrganigrama>, total: int|float, sin_jefe: bool}'
-
     # Nivel de partida conservador: sube el número a medida que se corrigen
     # los hallazgos existentes (9 es el máximo). Empezar alto en un proyecto
     # sin análisis estático previo genera cientos de falsos positivos de

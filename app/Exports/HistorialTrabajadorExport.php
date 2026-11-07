@@ -44,10 +44,10 @@ class HistorialTrabajadorExport implements FromCollection, WithHeadings, WithMap
     {
         return [
             $fila['id'],
-            $fila['dia']?->format('d/m/Y'),
+            $fila['dia']->format('d/m/Y'),
             $fila['motivo'],
             $fila['sede'],
-            (($fila['abandono'] ?? false)
+            ($fila['abandono']
                 ? (PapeletaEstadoPresentacion::porAbandono($fila['estado_fqcn']) ?? PapeletaEstadoPresentacion::para($fila['estado_fqcn']))
                 : PapeletaEstadoPresentacion::para($fila['estado_fqcn']))[0],
             $fila['salida']?->format('d/m/Y H:i'),

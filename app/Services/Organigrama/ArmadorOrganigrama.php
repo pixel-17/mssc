@@ -19,9 +19,10 @@ use Illuminate\Support\Collection;
  * Todo se carga en unas pocas queries y el árbol se arma en memoria (el
  * organigrama es chico, igual que en UnidadOrganica::descendantIds()).
  *
- * NodoOrganigrama es un alias global recursivo, definido en
- * phpstan.neon (parameters.typeAliases) — un @phpstan-type local no
- * soporta autorreferencia ('hijos' contiene NodoOrganigrama otra vez).
+ * Cada nodo del árbol es una instancia de NodoOrganigrama (ver esa
+ * clase): no un array con un alias de tipo, porque PHPStan no soporta
+ * tipos recursivos (ni @phpstan-type local ni un alias global en
+ * phpstan.neon) y 'hijos' vuelve a contener nodos del mismo tipo.
  */
 class ArmadorOrganigrama
 {
@@ -44,6 +45,10 @@ class ArmadorOrganigrama
      * filtrados por búsqueda/sede, estadísticas y conteo por sede.
      *
      * @return array{raices: Collection<int, NodoOrganigrama>, stats: array<string, int>, conteoSedes: array<int|string, int>, unidades: \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>, enAlcance: array<int, true>}
+     *
+     * NodoOrganigrama aquí ya no es un alias de tipo: es la clase
+     * App\Services\Organigrama\NodoOrganigrama (mismo namespace, por eso
+     * se referencia sin "use").
      */
     public function armar(User $usuario): array
     {
@@ -267,16 +272,8 @@ class ArmadorOrganigrama
      * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
-     *@return array{unidad: UnidadOrganica, jefes: Collection<int, User>, ...hijos: Collection<int, NodoOrganigrama>...}|null
-     * El alias NodoOrganigrama no se puede usar "pelado" como tipo de
-     * retorno completo de ESTE método: al ser el propio método el que lo
-     * define recursivamente (hijos vuelve a contener NodoOrganigrama),
-     * PHPStan intenta expandirlo top-level y entra en un bucle infinito
-     * ("Circular definition for type alias"). Envuelto dentro de
-     * Collection<int, NodoOrganigrama> (como en 'hijos' acá y en
-     * armar()) sí funciona, porque ahí la resolución es perezosa.
      */
-    private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?array
+    private function construirNodo(UnidadOrganica $unidad, Collection $porPadre, array &$stats, array &$conteoSedes): ?NodoOrganigrama
     {
         $q = mb_strtolower(trim($this->buscar));
         $hayFiltroSede = $this->sede !== '';
@@ -346,15 +343,15 @@ class ArmadorOrganigrama
         $stats['sin_sede'] += $miembros->whereNull('sede_id')->count() + $jefesEnFiltro->whereNull('sede_id')->count();
         $stats['sin_jefe'] += $sinJefe ? 1 : 0;
 
-        return [
-            'unidad' => $unidad,
-            'jefes' => $jefes,
-            'jefes_en_filtro' => $jefesEnFiltro->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
-            'filtro_sede' => $hayFiltroSede,
-            'miembros' => $miembros,
-            'hijos' => $hijos,
-            'total' => $miembros->count() + $jefesEnFiltro->count() + $hijos->sum('total'),
-            'sin_jefe' => $sinJefe,
-        ];
+        return new NodoOrganigrama(
+            unidad: $unidad,
+            jefes: $jefes,
+            jefesEnFiltro: $jefesEnFiltro->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
+            filtroSede: $hayFiltroSede,
+            miembros: $miembros,
+            hijos: $hijos,
+            total: $miembros->count() + $jefesEnFiltro->count() + $hijos->sum('total'),
+            sinJefe: $sinJefe,
+        );
     }
 }

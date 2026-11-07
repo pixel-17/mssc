@@ -115,8 +115,13 @@ trait MueveJefe
         $reemplazos = $this->reemplazos;
         $reemplazaDestino = ($this->reemplazaDestino !== null && $this->reemplazaDestino !== '') ? (int) $this->reemplazaDestino : null;
         $turno = $this->turnoJefe;
-        $turno['dias_trabajo'] = $turno['dias_trabajo'] !== null ? (int) $turno['dias_trabajo'] : null;
-        $turno['dias_descanso'] = $turno['dias_descanso'] !== null ? (int) $turno['dias_descanso'] : null;
+        // $turnoJefe es int|string (nunca null: ver su @var), igual que
+        // $reemplazaDestino arriba — un <input type="number"> vaciado llega
+        // como '' y no como null. Antes solo se comprobaba !== null, así que
+        // un campo vaciado por el jefe se colaba como 0 en vez de quedar en
+        // null (y disparar el valor por defecto en la Action).
+        $turno['dias_trabajo'] = $turno['dias_trabajo'] !== '' ? (int) $turno['dias_trabajo'] : null;
+        $turno['dias_descanso'] = $turno['dias_descanso'] !== '' ? (int) $turno['dias_descanso'] : null;
 
         if (! $this->modoEdicion || ! is_array($propuesta)) {
             return;
