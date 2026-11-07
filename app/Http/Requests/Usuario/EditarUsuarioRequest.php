@@ -68,7 +68,7 @@ class EditarUsuarioRequest extends FormRequest
     /** @return Collection<int, int> */
     public function unidadesDisponibles(): Collection
     {
-        $encabezadas = $this->user()->unidadesQueEncabeza;
+        $encabezadas = $this->user()?->unidadesQueEncabeza ?? collect();
 
         $ids = collect();
         foreach ($encabezadas as $unidad) {

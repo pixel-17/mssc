@@ -86,8 +86,11 @@ class UnidadOrganicaForm extends Component
 
         $esNueva = $this->unidad === null;
 
+        /** @var User $actor */
+        $actor = auth()->user();
+
         if (! $this->intentar(
-            fn () => $guardar->ejecutar(auth()->user(), $this->unidad, [
+            fn () => $guardar->ejecutar($actor, $this->unidad, [
                 'nombre' => $datos['nombre'],
                 'tipo' => $datos['tipo'],
                 'parent_id' => $datos['parentId'],
@@ -106,10 +109,13 @@ class UnidadOrganicaForm extends Component
 
     public function render(): View
     {
+        $unidadId = $this->unidad?->id;
+        $descendientes = $this->unidad?->descendantIds() ?? [];
+
         $padresDisponibles = UnidadOrganica::orderBy('nombre')
-            ->when($this->unidad, fn ($query) => $query
-                ->whereKeyNot($this->unidad->id)
-                ->whereNotIn('id', $this->unidad->descendantIds()))
+            ->when($unidadId, fn ($query) => $query
+                ->whereKeyNot($unidadId)
+                ->whereNotIn('id', $descendientes))
             ->pluck('nombre', 'id');
 
         return view('livewire.unidades-organicas.unidad-organica-form', [

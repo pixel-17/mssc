@@ -62,7 +62,7 @@ class GuardarUnidadOrganicaAction
                 : UnidadOrganica::create($atributos);
 
             if ($ubicarJefe) {
-                $jefaturas->ubicarJefe($unidad->fresh());
+                $jefaturas->ubicarJefe($unidad->fresh() ?? $unidad);
             }
 
             return $unidad;

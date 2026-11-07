@@ -397,7 +397,7 @@ class CrearPapeletaAction
     private function resolverFinDeTurno(User $trabajador, ?Turno $turno): Carbon
     {
         if ($trabajador->regimen === '728') {
-            return $turno->finReal() ?? now()->endOfDay();
+            return $turno?->finReal() ?? now()->endOfDay();
         }
 
         return app(HorarioOrdinarioService::class)->finDelDia(now());

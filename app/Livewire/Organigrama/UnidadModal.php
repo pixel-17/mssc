@@ -142,8 +142,11 @@ class UnidadModal extends Component
             return;
         }
 
+        /** @var User $actor */
+        $actor = auth()->user();
+
         if (! $this->intentar(
-            fn () => $guardar->ejecutar(auth()->user(), $unidad, [
+            fn () => $guardar->ejecutar($actor, $unidad, [
                 'nombre' => $datos['nombre'],
                 'tipo' => $datos['tipo'] ?: null,
                 'parent_id' => $datos['parentId'],
@@ -172,8 +175,11 @@ class UnidadModal extends Component
             return;
         }
 
+        /** @var User $actor */
+        $actor = auth()->user();
+
         if (! $this->intentar(
-            fn () => $eliminar->ejecutar(auth()->user(), $unidad),
+            fn () => $eliminar->ejecutar($actor, $unidad),
             fn ($e) => $this->error = $e->getMessage(),
         )) {
             return;
@@ -198,9 +204,12 @@ class UnidadModal extends Component
         // Jefe de Área creando: solo puede depender de la unidad sobre la que
         // pulsó «Agregar sub-unidad» — el campo se bloquea en la vista, pero
         // igual se limita aquí la opción disponible.
+        $unidadId = $unidad?->id;
+        $descendientes = $unidad?->descendantIds() ?? [];
+
         $padres = $esAdmin
             ? UnidadOrganica::orderBy('nombre')
-                ->when($unidad, fn ($q) => $q->whereKeyNot($unidad->id)->whereNotIn('id', $unidad->descendantIds()))
+                ->when($unidadId, fn ($q) => $q->whereKeyNot($unidadId)->whereNotIn('id', $descendientes))
                 ->get(['id', 'nombre'])
                 ->map(fn ($u) => ['id' => $u->id, 'label' => $u->nombre, 'hint' => null])
                 ->all()

@@ -204,7 +204,7 @@ class MoverJefeComoTrabajadorAction
 
             if ($datosTurno !== null) {
                 $this->generadorTurno->cargarConfiguracion(
-                    trabajador: $jefe->fresh(),
+                    trabajador: $jefe->fresh() ?? $jefe,
                     turno: $datosTurno['turno'],
                     fechaAncla: Carbon::parse($datosTurno['fecha_ancla']),
                     actor: $actor,

@@ -52,6 +52,7 @@ class JefeIndex extends Component
 
     public function render(): View
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
 
         // Solo jefes de equipo: el admin no tiene bandeja de jefe ni por URL.

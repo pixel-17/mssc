@@ -8,6 +8,7 @@ use App\Actions\Papeleta\ObservarRrhhAction;
 use App\Actions\Papeleta\RechazarRrhhAction;
 use App\Actions\Papeleta\RevisionPosthocAction;
 use App\Exceptions\PapeletaException;
+use App\Http\Controllers\Concerns\ResuelveUsuarioAutenticado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\ComentarioRequest;
 use App\Http\Requests\Papeleta\CorregirPapeletaRequest;
@@ -15,7 +16,6 @@ use App\Models\Papeleta;
 use App\Services\BloqueoRevisionService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * Decisiones de RRHH (Paso 3: aprobar/rechazar/observar) + revisión
@@ -23,17 +23,19 @@ use Illuminate\Support\Facades\Auth;
  */
 class DecisionController extends Controller
 {
+    use ResuelveUsuarioAutenticado;
+
     public function aprobar(Papeleta $papeleta, AprobarRrhhAction $action, BloqueoRevisionService $bloqueo): RedirectResponse
     {
         $this->authorize('decidirComoRrhh', $papeleta);
 
         try {
-            $action->ejecutar($papeleta, Auth::user());
+            $action->ejecutar($papeleta, $this->usuarioAutenticado());
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('success', 'Papeleta autorizada.');
     }
@@ -43,12 +45,12 @@ class DecisionController extends Controller
         $this->authorize('decidirComoRrhh', $papeleta);
 
         try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
+            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('comentario'));
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('warning', 'Papeleta rechazada.');
     }
@@ -58,12 +60,12 @@ class DecisionController extends Controller
         $this->authorize('decidirComoRrhh', $papeleta);
 
         try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('comentario'));
+            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('comentario'));
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('success', 'Observación registrada, vuelve al jefe inmediato.');
     }
@@ -73,12 +75,12 @@ class DecisionController extends Controller
         $this->authorize('revisarPosthoc', $papeleta);
 
         try {
-            $action->aprobar($papeleta, Auth::user());
+            $action->aprobar($papeleta, $this->usuarioAutenticado());
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('success', 'Revisión post-hoc aprobada.');
     }
@@ -88,12 +90,12 @@ class DecisionController extends Controller
         $this->authorize('revisarPosthoc', $papeleta);
 
         try {
-            $action->observar($papeleta, Auth::user(), $request->input('comentario'));
+            $action->observar($papeleta, $this->usuarioAutenticado(), $request->input('comentario'));
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('success', 'Revisión post-hoc observada.');
     }
@@ -103,12 +105,12 @@ class DecisionController extends Controller
         $this->authorize('revisarPosthoc', $papeleta);
 
         try {
-            $action->noAprobar($papeleta, Auth::user(), $request->input('comentario'));
+            $action->noAprobar($papeleta, $this->usuarioAutenticado(), $request->input('comentario'));
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('success', 'Revisión post-hoc no aprobada: la papeleta pasó a Particular (con descuento).');
     }
@@ -120,7 +122,7 @@ class DecisionController extends Controller
         try {
             $action->ejecutar(
                 $papeleta,
-                Auth::user(),
+                $this->usuarioAutenticado(),
                 $request->filled('hora_retorno') ? Carbon::parse($request->input('hora_retorno')) : null,
                 $request->filled('motivo_id') ? (int) $request->input('motivo_id') : null,
                 $request->input('comentario'),
@@ -129,7 +131,7 @@ class DecisionController extends Controller
             return back()->withInput()->with('error', $e->getMessage());
         }
 
-        $bloqueo->liberar($papeleta, Auth::user());
+        $bloqueo->liberar($papeleta, $this->usuarioAutenticado());
 
         return back()->with('success', 'Papeleta corregida. La corrección quedó en el historial.');
     }

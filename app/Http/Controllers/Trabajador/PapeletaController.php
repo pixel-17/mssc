@@ -7,6 +7,7 @@ use App\Actions\Papeleta\CrearPapeletaAction;
 use App\Actions\Papeleta\RrhhHorarioService;
 use App\Actions\Papeleta\SubsanarObservacionAction;
 use App\Exceptions\PapeletaException;
+use App\Http\Controllers\Concerns\ResuelveUsuarioAutenticado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\StorePapeletaRequest;
 use App\Http\Requests\Papeleta\SubsanarObservacionRequest;
@@ -14,7 +15,6 @@ use App\Models\Motivo;
 use App\Models\Papeleta;
 use App\Services\ArchivoSubidaService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use Throwable;
@@ -27,13 +27,15 @@ use Throwable;
  */
 class PapeletaController extends Controller
 {
+    use ResuelveUsuarioAutenticado;
+
     public function create(RrhhHorarioService $horarioRrhh): View|RedirectResponse
     {
         $this->authorize('crear', Papeleta::class);
 
         // Con una papeleta viva no se puede crear otra: se lleva al trabajador a esa
         // papeleta, donde puede cancelarla o finalizarla, en vez de dejarlo llenar el formulario.
-        if ($viva = Papeleta::vivaDe(Auth::user())) {
+        if ($viva = Papeleta::vivaDe($this->usuarioAutenticado())) {
             return redirect()
                 ->route('trabajador.papeletas.show', $viva)
                 ->with('error', $viva->mensajeDeBloqueoParaNueva());
@@ -44,7 +46,7 @@ class PapeletaController extends Controller
         // Si quien crea es jefe de área y RRHH está fuera de horario, la papeleta
         // se autorizará automáticamente al enviar. Se pasa el flag a la vista para
         // mostrar el aviso de confirmación antes de que el usuario envíe el formulario.
-        $usuario = Auth::user();
+        $usuario = $this->usuarioAutenticado();
         $avisarAutorizacionAutomatica = $usuario->esJefeDeArea() && ! $horarioRrhh->estaEnHorarioAhora();
 
         return view('trabajador.papeletas.create', compact('motivos', 'avisarAutorizacionAutomatica'));
@@ -61,7 +63,7 @@ class PapeletaController extends Controller
             : null;
 
         try {
-            $papeleta = $action->ejecutar(Auth::user(), $motivo, [
+            $papeleta = $action->ejecutar($this->usuarioAutenticado(), $motivo, [
                 'justificacion' => $request->input('justificacion'),
                 'adjunto_inicial_path' => $adjuntoPath,
                 'hora_retorno_estimado' => $request->input('hora_retorno_estimado'),
@@ -111,7 +113,7 @@ class PapeletaController extends Controller
             : null;
 
         try {
-            $action->ejecutar($papeleta, Auth::user(), $request->input('respuesta'), $archivoPath);
+            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('respuesta'), $archivoPath);
         } catch (PapeletaException $e) {
             $this->descartarAdjunto($archivoPath);
 
@@ -132,7 +134,7 @@ class PapeletaController extends Controller
         $this->authorize('cancelar', $papeleta);
 
         try {
-            $action->ejecutar($papeleta, Auth::user());
+            $action->ejecutar($papeleta, $this->usuarioAutenticado());
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());
         }

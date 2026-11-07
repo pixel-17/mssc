@@ -277,6 +277,10 @@ class UsuarioAdminForm extends Component
 
         DB::transaction(fn () => $this->guardarUsuario($atributos, $datos, $requiereTurno, $generador, $debeRetirarTurno));
 
+        if ($this->usuario === null) {
+            return;
+        }
+
         session()->flash('mensaje', $this->usuario->wasRecentlyCreated ? 'Usuario creado.' : 'Usuario actualizado.');
 
         $this->redirectRoute('usuarios-admin.index', navigate: false);
@@ -442,7 +446,10 @@ class UsuarioAdminForm extends Component
             return true;
         }
 
-        $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+        /** @var User $actor */
+        $actor = Auth::user();
+
+        $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar($actor, $this->usuario);
 
         if ($motivo !== null) {
             $this->addError('activo', $motivo);
@@ -526,11 +533,14 @@ class UsuarioAdminForm extends Component
         PapeletaActualizada::olvidarDestinatariosFijos();
 
         if ($requiereTurno && $datos['activo']) {
+            /** @var User $actor */
+            $actor = Auth::user();
+
             $generador->cargarConfiguracion(
                 trabajador: $this->usuario,
                 turno: $datos['turno'],
                 fechaAncla: Carbon::parse($datos['fechaAncla']),
-                actor: Auth::user(),
+                actor: $actor,
                 diasTrabajo: $datos['diasTrabajo'],
                 diasDescanso: $datos['diasDescanso'],
             );

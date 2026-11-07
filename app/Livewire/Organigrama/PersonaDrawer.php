@@ -187,6 +187,12 @@ class PersonaDrawer extends Component
 
         $destino = UnidadOrganica::with('jefe')->find($this->unidadId);
 
+        if ($destino === null) {
+            $this->error = 'La unidad de destino ya no existe.';
+
+            return;
+        }
+
         $nuevo = null;
 
         if (! $this->intentar(function () use ($actor, &$nuevo) {
@@ -205,6 +211,10 @@ class PersonaDrawer extends Component
                 'dias_descanso' => null,
             ], true);
         }, fn ($e) => $this->error = $e->getMessage())) {
+            return;
+        }
+
+        if ($nuevo === null) {
             return;
         }
 

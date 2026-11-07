@@ -92,7 +92,7 @@ class HistorialTrabajadorService
                 'abandono' => $p->esAbandono(),
                 'salida' => $p->hora_salida_real,
                 'retorno' => $p->retorno?->hora_servidor,
-                'minutos' => ($p->hora_salida_real && $p->retorno)
+                'minutos' => ($p->hora_salida_real && $p->retorno?->hora_servidor)
                     ? Minutos::entre($p->hora_salida_real, $p->retorno->hora_servidor)
                     : null,
                 'suma_descuento' => (bool) $p->motivo->suma_descuento,

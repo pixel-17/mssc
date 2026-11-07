@@ -69,12 +69,17 @@ class ProgramacionMensual extends Component
 
     public function mesAnterior(): void
     {
-        $this->irA(Carbon::create($this->anio, $this->mes, 1)->subMonthNoOverflow());
+        $this->irA($this->primerDiaDelMes()->subMonthNoOverflow());
     }
 
     public function mesSiguiente(): void
     {
-        $this->irA(Carbon::create($this->anio, $this->mes, 1)->addMonthNoOverflow());
+        $this->irA($this->primerDiaDelMes()->addMonthNoOverflow());
+    }
+
+    private function primerDiaDelMes(): Carbon
+    {
+        return Carbon::create($this->anio, $this->mes, 1) ?? now();
     }
 
     public function irAHoy(): void
@@ -175,10 +180,13 @@ class ProgramacionMensual extends Component
      */
     private function persistir(ProgramacionTurnoService $servicio, array $dias): void
     {
-        $servicio->guardarMes($this->trabajador, $this->anio, $this->mes, $dias, auth()->user());
+        /** @var User $actor */
+        $actor = auth()->user();
+
+        $servicio->guardarMes($this->trabajador, $this->anio, $this->mes, $dias, $actor);
 
         $this->advertencias = [];
-        $this->mensaje = 'Programación de '.Carbon::create($this->anio, $this->mes, 1)->translatedFormat('F Y').' guardada.';
+        $this->mensaje = 'Programación de '.$this->primerDiaDelMes()->translatedFormat('F Y').' guardada.';
         $this->version++;
     }
 
@@ -187,11 +195,14 @@ class ProgramacionMensual extends Component
      */
     private function persistirPlan(ProgramacionTurnoService $servicio, array $plan): void
     {
-        $servicio->guardarPlan($this->trabajador, $plan, auth()->user());
+        /** @var User $actor */
+        $actor = auth()->user();
+
+        $servicio->guardarPlan($this->trabajador, $plan, $actor);
 
         $claves = array_keys($plan);
-        $primero = Carbon::createFromFormat('Y-m-d', $claves[0].'-01');
-        $ultimo = Carbon::createFromFormat('Y-m-d', end($claves).'-01');
+        $primero = Carbon::createFromFormat('Y-m-d', $claves[0].'-01') ?: now();
+        $ultimo = Carbon::createFromFormat('Y-m-d', end($claves).'-01') ?: now();
 
         $this->advertencias = [];
         $this->planPendiente = [];
@@ -213,13 +224,13 @@ class ProgramacionMensual extends Component
 
     private function autorizar(User $trabajador): void
     {
-        abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
+        abort_unless((bool) auth()->user()?->puedeGestionarTurnoDe($trabajador), 403);
         abort_unless($trabajador->regimen === '728', 403, 'La programación día por día solo aplica al régimen 728.');
     }
 
     public function render(): View
     {
-        $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
+        $inicioMes = $this->primerDiaDelMes()->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
 
         $validos = [...ConfiguracionTurno::TURNOS_728, ProgramacionTurnoService::DESCANSO];

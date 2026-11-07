@@ -188,6 +188,10 @@ class MoverTrabajadorAction
 
             [, $destino] = $this->validarDeshacer($actor, $original, $trabajador);
 
+            if ($trabajador === null) {
+                throw new UsuarioException('La persona ya no existe.');
+            }
+
             $reversion = $this->aplicar($actor, $trabajador, $destino, [
                 'sede_id' => $original->cambioSede() ? $original->sede_anterior_id : null,
                 'revierte' => $original,

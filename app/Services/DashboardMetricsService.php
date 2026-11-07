@@ -138,8 +138,8 @@ class DashboardMetricsService
         $promedioMinutos = $resueltasPeriodo->isEmpty()
             ? null
             : (int) round($resueltasPeriodo->avg(
-                fn (Papeleta $p) => $p->created_at->diffInMinutes($p->rrhh_resuelto_at)
-            ));
+                fn (Papeleta $p) => $p->created_at?->diffInMinutes($p->rrhh_resuelto_at) ?? 0
+            ) ?? 0);
 
         // "Quién está afuera ahora mismo": lista en vivo (se re-renderiza
         // con el resto del dashboard vía EscuchaNotificacionesEnVivo), la

@@ -72,7 +72,7 @@ class PapeletasAbiertasService
 
             // Fuera de la transacción: un fallo al avisar nunca revierte la reasignación.
             try {
-                app(NotificarPapeletaService::class)->creada($papeleta->fresh());
+                app(NotificarPapeletaService::class)->creada($papeleta->fresh() ?? $papeleta);
             } catch (Throwable $e) {
                 report($e);
             }

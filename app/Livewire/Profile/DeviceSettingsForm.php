@@ -33,6 +33,7 @@ class DeviceSettingsForm extends Component
 
     public function mount(): void
     {
+        /** @var \App\Models\User $usuario */
         $usuario = Auth::user();
 
         $this->volumen = $usuario->volumen_notificacion;
@@ -42,6 +43,7 @@ class DeviceSettingsForm extends Component
 
     public function guardar(): void
     {
+        /** @var \App\Models\User $usuario */
         $usuario = Auth::user();
 
         $usuario->forceFill([

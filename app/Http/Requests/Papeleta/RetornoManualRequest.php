@@ -12,7 +12,7 @@ class RetornoManualRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('marcarRetornoManual', $this->route('papeleta'));
+        return (bool) $this->user()?->can('marcarRetornoManual', $this->route('papeleta'));
     }
 
     /** @return array<string, mixed> */

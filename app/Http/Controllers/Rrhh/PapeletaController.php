@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Rrhh;
 
+use App\Http\Controllers\Concerns\ResuelveUsuarioAutenticado;
 use App\Http\Controllers\Controller;
 use App\Models\Motivo;
 use App\Models\Papeleta;
@@ -19,6 +20,8 @@ use Illuminate\View\View;
  */
 class PapeletaController extends Controller
 {
+    use ResuelveUsuarioAutenticado;
+
     public function show(Request $request, Papeleta $papeleta, ReporteHorasAcumuladasService $reporte, BloqueoRevisionService $bloqueo): View
     {
         $this->authorize('view', $papeleta);
@@ -27,7 +30,7 @@ class PapeletaController extends Controller
 
         // Bloqueo suave: se intenta tomar la revisión. Si la tiene otro, se
         // pasa $enRevisionPor a la vista para mostrar el aviso (no bloquea).
-        $tomado = $bloqueo->marcar($papeleta, $request->user());
+        $tomado = $bloqueo->marcar($papeleta, $this->usuarioAutenticado());
         $enRevisionPor = $tomado ? null : $bloqueo->nombreRevisor($papeleta);
 
         $historialMes = $this->historialDelMes($request, $papeleta, $reporte);
@@ -55,7 +58,7 @@ class PapeletaController extends Controller
             ->whereKeyNot($papeleta->getKey())
             ->whereBetween('dia_operativo', [$inicio->toDateString(), $fin->toDateString()]);
 
-        $detalle = $reporte->detalle($request->user(), $mes, ['trabajador_id' => $papeleta->trabajador_id])
+        $detalle = $reporte->detalle($this->usuarioAutenticado(), $mes, ['trabajador_id' => $papeleta->trabajador_id])
             ->reject(fn (array $fila) => $fila['papeleta_id'] === $papeleta->getKey());
 
         return [

@@ -161,8 +161,8 @@ class UsuarioForm extends Component
         }
 
         if ($this->esArea()) {
-            $this->regimen = (string) (Auth::user()->regimen ?? '');
-            $this->sedeId ??= Auth::user()->sede_id;
+            $this->regimen = (string) (Auth::user()?->regimen ?? '');
+            $this->sedeId ??= Auth::user()?->sede_id;
         }
     }
 
@@ -233,6 +233,11 @@ class UsuarioForm extends Component
     protected function idsDeArea(?User $actor = null): array
     {
         $actor ??= Auth::user();
+
+        if ($actor === null) {
+            return [];
+        }
+
         $ids = collect();
 
         foreach ($actor->unidadesDeArea as $u) {
@@ -410,12 +415,21 @@ class UsuarioForm extends Component
      */
     protected function guardarComoJefeInmediato(array $datos): void
     {
-        abort_unless(Auth::user()->can('editar', $this->usuario), 403);
+        if ($this->usuario === null) {
+            return;
+        }
 
-        $activo = (bool) ($datos['activo'] ?? $this->usuario->activo);
+        $usuario = $this->usuario;
 
-        if ($this->usuario->activo && ! $activo) {
-            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+        /** @var User $actor */
+        $actor = Auth::user();
+
+        abort_unless($actor->can('editar', $usuario), 403);
+
+        $activo = (bool) ($datos['activo'] ?? $usuario->activo);
+
+        if ($usuario->activo && ! $activo) {
+            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar($actor, $usuario);
 
             if ($motivo !== null) {
                 $this->addError('activo', $motivo);
@@ -423,7 +437,7 @@ class UsuarioForm extends Component
                 return;
             }
 
-            $cargo = app(CambiarEstadoUsuarioAction::class)->jefaturasPorResolver($this->usuario);
+            $cargo = app(CambiarEstadoUsuarioAction::class)->jefaturasPorResolver($usuario);
 
             if ($cargo->isNotEmpty()) {
                 $this->addError('activo', 'Tiene personas a cargo: desactívalo desde Usuarios para elegir su reemplazo.');
@@ -432,35 +446,35 @@ class UsuarioForm extends Component
             }
         }
 
-        $debeRetirarTurno = $this->usuario->activo && ! $activo;
+        $debeRetirarTurno = $usuario->activo && ! $activo;
 
-        DB::transaction(function () use ($datos, $activo, $debeRetirarTurno) {
-            app(EditarUsuarioAction::class)->ejecutar($this->usuario, [
+        DB::transaction(function () use ($datos, $activo, $debeRetirarTurno, $usuario) {
+            app(EditarUsuarioAction::class)->ejecutar($usuario, [
                 'name' => $datos['name'],
                 'apellido' => $datos['apellido'],
                 'email' => $datos['email'],
-                'sede_id' => $this->usuario->sede_id,
-                'unidad_organica_id' => $this->usuario->unidad_organica_id,
+                'sede_id' => $usuario->sede_id,
+                'unidad_organica_id' => $usuario->unidad_organica_id,
             ], false);
 
             // El Jefe Inmediato puede cambiar sede y régimen de sus trabajadores.
-            $this->usuario->update([
-                'sede_id' => $datos['sedeId'] ?? $this->usuario->sede_id,
-                'regimen' => $datos['regimen'] ?? $this->usuario->regimen,
+            $usuario->update([
+                'sede_id' => $datos['sedeId'] ?? $usuario->sede_id,
+                'regimen' => $datos['regimen'] ?? $usuario->regimen,
             ]);
 
-            $this->usuario->update(['activo' => $activo]);
+            $usuario->update(['activo' => $activo]);
 
             if (! $activo) {
-                $this->usuario->tokens()->delete();
+                $usuario->tokens()->delete();
             }
 
             if ($debeRetirarTurno) {
-                app(GeneradorTurnoMensualService::class)->retirarTurno($this->usuario);
+                app(GeneradorTurnoMensualService::class)->retirarTurno($usuario);
             }
         });
 
-        session()->flash('mensaje', "Usuario {$this->usuario->nombre_completo} actualizado.");
+        session()->flash('mensaje', "Usuario {$usuario->nombre_completo} actualizado.");
 
         $this->redirectRoute('usuarios.index', navigate: false);
     }
@@ -479,7 +493,7 @@ class UsuarioForm extends Component
         // Jefe de Área no modifica roles: conserva los actuales.
         $roles = $esAdmin
             ? array_map('intval', $datos['rolesSeleccionados'])
-            : $this->usuario->roles->pluck('id')->map(fn ($id) => (int) $id)->all();
+            : ($this->usuario?->roles ?? collect())->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $activo = ($esAdmin || $this->esArea())
             ? (bool) ($datos['activo'] ?? $this->usuario->activo ?? true)
@@ -556,7 +570,10 @@ class UsuarioForm extends Component
         // ── Guardia de desactivación (admin y jefe de área) ─────────
 
         if ($this->usuario?->activo && ! $activo) {
-            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar(Auth::user(), $this->usuario);
+            /** @var User $actor */
+            $actor = Auth::user();
+
+            $motivo = app(CambiarEstadoUsuarioAction::class)->motivoParaNoDesactivar($actor, $this->usuario);
 
             if ($motivo !== null) {
                 $this->addError('activo', $motivo);
@@ -627,6 +644,10 @@ class UsuarioForm extends Component
             }
         });
 
+        if ($this->usuario === null) {
+            return;
+        }
+
         session()->flash('mensaje', $this->usuario->wasRecentlyCreated ? 'Usuario creado.' : 'Usuario actualizado.');
 
         $this->redirectRoute($esAdmin ? 'usuarios-admin.index' : 'usuarios.index', navigate: false);
@@ -649,7 +670,7 @@ class UsuarioForm extends Component
         }
 
         return UnidadOrganica::with('jefe.sede')->find($this->unidadOrganicaId)?->jefe?->sede->nombre
-            ?? Auth::user()->sede->nombre
+            ?? Auth::user()?->sede?->nombre
             ?? 'Sin sede';
     }
 
@@ -682,7 +703,7 @@ class UsuarioForm extends Component
                 : collect(),
             'esAdminRol' => $this->esAdmin() && $this->incluyeAdmin(),
             'sedeHeredada' => $this->sedeHeredada(),
-            'sedeDelCreador' => Auth::user()->sede?->nombre,
+            'sedeDelCreador' => Auth::user()?->sede?->nombre,
         ]);
     }
 }

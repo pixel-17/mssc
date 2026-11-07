@@ -85,10 +85,11 @@ class MotivoForm extends Component
 
         $codigo = $base;
         $sufijo = 1;
+        $motivoId = $this->motivo?->id;
 
         while (
             Motivo::where('codigo', $codigo)
-                ->when($this->motivo, fn ($query) => $query->whereKeyNot($this->motivo->id))
+                ->when($motivoId, fn ($query) => $query->whereKeyNot($motivoId))
                 ->exists()
         ) {
             $codigo = $base.'_'.(++$sufijo);

@@ -29,6 +29,7 @@ class UsuarioController extends Controller
 {
     public function index(): View|RedirectResponse
     {
+        /** @var User $user */
         $user = Auth::user();
 
         // La admin no tiene trabajadores propios: gestiona cuentas desde su panel.

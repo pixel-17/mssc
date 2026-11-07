@@ -33,6 +33,7 @@ class CalendarioIndividualIndex extends Component
 
     public function mount(?User $trabajador = null): void
     {
+        /** @var User $actor */
         $actor = auth()->user();
 
         if ($trabajador === null) {
@@ -75,16 +76,21 @@ class CalendarioIndividualIndex extends Component
 
     public function mesAnterior(): void
     {
-        $fecha = Carbon::create($this->anio, $this->mes, 1)->subMonthNoOverflow();
+        $fecha = $this->primerDiaDelMes()->subMonthNoOverflow();
         $this->anio = $fecha->year;
         $this->mes = $fecha->month;
     }
 
     public function mesSiguiente(): void
     {
-        $fecha = Carbon::create($this->anio, $this->mes, 1)->addMonthNoOverflow();
+        $fecha = $this->primerDiaDelMes()->addMonthNoOverflow();
         $this->anio = $fecha->year;
         $this->mes = $fecha->month;
+    }
+
+    private function primerDiaDelMes(): Carbon
+    {
+        return Carbon::create($this->anio, $this->mes, 1) ?? now();
     }
 
     public function irAHoy(): void
@@ -95,7 +101,7 @@ class CalendarioIndividualIndex extends Component
 
     public function render(): View
     {
-        $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
+        $inicioMes = $this->primerDiaDelMes()->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
 
         $turnosPorDia = Turno::where('user_id', $this->trabajador->id)

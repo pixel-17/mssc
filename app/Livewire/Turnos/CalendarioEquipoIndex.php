@@ -73,7 +73,7 @@ class CalendarioEquipoIndex extends Component
     public function mount(?int $jefeId = null): void
     {
         if ($jefeId !== null) {
-            abort_unless(auth()->user()?->hasRole('admin'), 403);
+            abort_unless((bool) auth()->user()?->hasRole('admin'), 403);
             $this->jefeId = $jefeId;
         }
 
@@ -89,22 +89,30 @@ class CalendarioEquipoIndex extends Component
     private function jefeVista(): User
     {
         if ($this->jefeId === null) {
-            return auth()->user();
+            /** @var User $usuario */
+            $usuario = auth()->user();
+
+            return $usuario;
         }
 
-        abort_unless(auth()->user()?->hasRole('admin'), 403);
+        abort_unless((bool) auth()->user()?->hasRole('admin'), 403);
 
         return User::findOrFail($this->jefeId);
     }
 
     public function mesAnterior(): void
     {
-        $this->irA(Carbon::create($this->anio, $this->mes, 1)->subMonthNoOverflow());
+        $this->irA($this->primerDiaDelMes()->subMonthNoOverflow());
     }
 
     public function mesSiguiente(): void
     {
-        $this->irA(Carbon::create($this->anio, $this->mes, 1)->addMonthNoOverflow());
+        $this->irA($this->primerDiaDelMes()->addMonthNoOverflow());
+    }
+
+    private function primerDiaDelMes(): Carbon
+    {
+        return Carbon::create($this->anio, $this->mes, 1) ?? now();
     }
 
     public function irAHoy(): void
@@ -168,7 +176,10 @@ class CalendarioEquipoIndex extends Component
      */
     private function persistir(ProgramacionTurnoService $servicio, Collection $equipo, array $cambios): void
     {
-        $servicio->guardarEquipo($equipo, $this->anio, $this->mes, $cambios, auth()->user());
+        /** @var User $actor */
+        $actor = auth()->user();
+
+        $servicio->guardarEquipo($equipo, $this->anio, $this->mes, $cambios, $actor);
 
         $this->advertencias = [];
         $this->mensaje = 'Turnos guardados para '.count($cambios).' '.(count($cambios) === 1 ? 'trabajador' : 'trabajadores').'.';
@@ -227,11 +238,14 @@ class CalendarioEquipoIndex extends Component
         // trabajador 276 — así no quedan dos cálculos que puedan desalinearse.
         $ciclo = GeneradorTurnoMensualService::cicloOrdinario276(now()->startOfWeek());
 
+        /** @var User $actor */
+        $actor = auth()->user();
+
         $generador->cargarConfiguracion(
             trabajador: $trabajador,
             turno: ConfiguracionTurno::TURNO_276,
             fechaAncla: $ciclo['fecha_ancla'],
-            actor: auth()->user(),
+            actor: $actor,
             diasTrabajo: $ciclo['dias_trabajo'],
             diasDescanso: $ciclo['dias_descanso'],
         );
@@ -246,7 +260,7 @@ class CalendarioEquipoIndex extends Component
 
         [$trabajadores, $esJefeDeArea, $soloLectura] = app(EquipoDelJefeService::class)->para($jefe);
 
-        $inicioMes = Carbon::create($this->anio, $this->mes, 1)->startOfMonth();
+        $inicioMes = $this->primerDiaDelMes()->startOfMonth();
         $finMes = $inicioMes->copy()->endOfMonth();
         $dias = collect(range(1, $finMes->day));
         $fechas = collect(range(1, $finMes->day))->map(fn (int $d) => $inicioMes->copy()->day($d));

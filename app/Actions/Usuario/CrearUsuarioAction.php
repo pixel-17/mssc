@@ -131,7 +131,7 @@ class CrearUsuarioAction
                 );
             }
 
-            return $nuevo->fresh();
+            return $nuevo->fresh() ?? $nuevo;
         });
 
         return $nuevo;

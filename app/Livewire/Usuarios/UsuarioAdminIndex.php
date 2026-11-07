@@ -65,8 +65,11 @@ class UsuarioAdminIndex extends Component
     {
         $this->autorizarAdmin();
 
+        /** @var User $actor */
+        $actor = auth()->user();
+
         // Jefe con gente a cargo: se decide el reemplazo en su propio panel.
-        if ($usuario->activo && $estado->motivoParaNoDesactivar(auth()->user(), $usuario) === null
+        if ($usuario->activo && $estado->motivoParaNoDesactivar($actor, $usuario) === null
             && $estado->jefaturasPorResolver($usuario)->isNotEmpty()) {
             $this->dispatch('usuario-baja-abrir', id: $usuario->id);
 
@@ -80,7 +83,7 @@ class UsuarioAdminIndex extends Component
         }
 
         if (! $this->intentar(
-            fn () => $estado->desactivar(auth()->user(), $usuario),
+            fn () => $estado->desactivar($actor, $usuario),
             fn ($e) => session()->now('error', $e->getMessage()),
         )) {
             return;
@@ -96,8 +99,11 @@ class UsuarioAdminIndex extends Component
     {
         $this->autorizarAdmin();
 
+        /** @var User $actor */
+        $actor = auth()->user();
+
         if (! $this->intentar(
-            fn () => $estado->reactivar(auth()->user(), $usuario),
+            fn () => $estado->reactivar($actor, $usuario),
             fn ($e) => session()->now('error', $e->getMessage()),
         )) {
             return;

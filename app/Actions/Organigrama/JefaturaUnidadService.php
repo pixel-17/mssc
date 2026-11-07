@@ -63,8 +63,10 @@ class JefaturaUnidadService
         }
 
         if ($ubicarJefe) {
+            $unidadId = $unidad?->id;
+
             $otraUnidad = $jefe->unidadesQueEncabeza()
-                ->when($unidad, fn ($q) => $q->whereKeyNot($unidad->id))
+                ->when($unidadId, fn ($q) => $q->whereKeyNot($unidadId))
                 ->first();
 
             if ($otraUnidad) {

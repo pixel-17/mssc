@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Trabajador;
 
 use App\Actions\Papeleta\MarcarRetornoAction;
 use App\Exceptions\PapeletaException;
+use App\Http\Controllers\Concerns\ResuelveUsuarioAutenticado;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\MarcarRetornoRequest;
 use App\Models\Papeleta;
 use App\Services\ArchivoSubidaService;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
 
@@ -20,6 +20,8 @@ use Throwable;
  */
 class RetornoController extends Controller
 {
+    use ResuelveUsuarioAutenticado;
+
     public function store(MarcarRetornoRequest $request, Papeleta $papeleta, MarcarRetornoAction $action, ArchivoSubidaService $archivos): RedirectResponse
     {
         $fotoPath = $archivos->guardar($request->file('foto'), 'papeletas/retornos');
@@ -29,7 +31,7 @@ class RetornoController extends Controller
         }
 
         try {
-            $action->normal($papeleta, Auth::user(), [
+            $action->normal($papeleta, $this->usuarioAutenticado(), [
                 'foto_path' => $fotoPath,
                 'latitud' => $request->input('latitud'),
                 'longitud' => $request->input('longitud'),

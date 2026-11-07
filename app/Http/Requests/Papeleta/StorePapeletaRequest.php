@@ -18,7 +18,7 @@ class StorePapeletaRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('crear', Papeleta::class);
+        return (bool) $this->user()?->can('crear', Papeleta::class);
     }
 
     /** @return array<string, mixed> */
@@ -30,7 +30,7 @@ class StorePapeletaRequest extends FormRequest
         // medianoche) — acotar a "hoy" rechazaría un retorno real y
         // legítimo a la madrugada del día siguiente. Tope: fin del día
         // siguiente, no de hoy.
-        $tope = $this->user()->regimen === '728'
+        $tope = $this->user()?->regimen === '728'
             ? now()->addDay()->endOfDay()
             : now()->endOfDay();
 

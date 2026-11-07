@@ -106,9 +106,9 @@ class MoverJefeInmediatoAction
             $unidad->parent_id = $destino->id;
             $unidad->save();
 
-            app(JefaturaUnidadService::class)->ubicarJefe($unidad->fresh());
+            app(JefaturaUnidadService::class)->ubicarJefe($unidad->fresh() ?? $unidad);
 
-            return $unidad->fresh();
+            return $unidad->fresh() ?? $unidad;
         });
     }
 

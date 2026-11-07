@@ -118,7 +118,7 @@ class CrearUsuarioRequest extends FormRequest
         $esJefeDeArea = $unidadesDisponibles->isNotEmpty();
 
         if (! $esJefeDeArea) {
-            return $this->user()->regimen;
+            return $this->user()?->regimen;
         }
 
         if ($this->input('tipo') !== 'trabajador') {
@@ -138,7 +138,7 @@ class CrearUsuarioRequest extends FormRequest
     /** @return Collection<int, int> */
     public function unidadesDisponibles(): Collection
     {
-        $encabezadas = $this->user()->unidadesDeArea;
+        $encabezadas = $this->user()?->unidadesDeArea ?? collect();
 
         $ids = collect();
         foreach ($encabezadas as $unidad) {

@@ -57,6 +57,8 @@ class TrabajadorIndex extends Component
     public function render(): View
     {
         $termino = trim($this->buscar);
+
+        /** @var \App\Models\User $usuario */
         $usuario = Auth::user();
 
         $papeletas = $usuario->papeletas()

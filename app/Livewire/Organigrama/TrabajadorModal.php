@@ -91,6 +91,7 @@ class TrabajadorModal extends Component
             return;
         }
 
+        /** @var User $actor */
         $actor = auth()->user();
 
         // Validar la desactivación ANTES de tocar nada: si se rechaza, no queda a medias.

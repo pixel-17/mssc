@@ -53,7 +53,10 @@ class ActualizarPasswordInicial extends Component
     {
         $datos = $this->validate();
 
-        Auth::user()->update([
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $user->update([
             'password' => Hash::make($datos['password']),
             'debe_actualizar_password' => false,
         ]);

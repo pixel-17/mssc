@@ -2,10 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Concerns\ResuelveUsuarioAutenticado;
 use App\Rules\EndpointPushPermitido;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 
 /**
@@ -17,6 +17,8 @@ use Illuminate\Validation\Rule;
  */
 class PushSubscriptionController extends Controller
 {
+    use ResuelveUsuarioAutenticado;
+
     public function store(Request $request): JsonResponse
     {
         $datos = $request->validate([
@@ -27,7 +29,7 @@ class PushSubscriptionController extends Controller
             'contentEncoding' => ['nullable', 'string', Rule::in(['aesgcm', 'aes128gcm'])],
         ]);
 
-        Auth::user()->updatePushSubscription(
+        $this->usuarioAutenticado()->updatePushSubscription(
             endpoint: $datos['endpoint'],
             key: $datos['keys']['p256dh'],
             token: $datos['keys']['auth'],
@@ -43,7 +45,7 @@ class PushSubscriptionController extends Controller
             'endpoint' => ['required', 'string', 'max:500'],
         ]);
 
-        Auth::user()->deletePushSubscription($datos['endpoint']);
+        $this->usuarioAutenticado()->deletePushSubscription($datos['endpoint']);
 
         return response()->json(['ok' => true]);
     }

@@ -75,7 +75,7 @@ class ConfiguracionTurnoForm extends Component
 
     public function mount(User $trabajador, bool $embebido = false): void
     {
-        abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
+        abort_unless((bool) auth()->user()?->puedeGestionarTurnoDe($trabajador), 403);
         abort_unless($trabajador->regimen === '276', 403, 'Esta pantalla es solo para régimen 276; el 728 se programa día por día en turnos.programacion.');
 
         $this->trabajador = $trabajador;
@@ -153,15 +153,18 @@ class ConfiguracionTurnoForm extends Component
 
     public function guardar(GeneradorTurnoMensualService $generador): void
     {
-        abort_unless(auth()->user()->puedeGestionarTurnoDe($this->trabajador), 403);
+        abort_unless((bool) auth()->user()?->puedeGestionarTurnoDe($this->trabajador), 403);
 
         $datos = $this->validate();
+
+        /** @var User $actor */
+        $actor = auth()->user();
 
         $generador->cargarConfiguracion(
             trabajador: $this->trabajador,
             turno: $datos['turno'],
             fechaAncla: Carbon::parse($datos['fechaAncla']),
-            actor: auth()->user(),
+            actor: $actor,
             diasTrabajo: $datos['diasTrabajo'],
             diasDescanso: $datos['diasDescanso'],
         );

@@ -23,7 +23,7 @@ class SubsanarObservacionRequest extends FormRequest
             return false;
         }
 
-        return (int) $papeleta->trabajador_id === (int) $this->user()->id;
+        return (int) $papeleta->trabajador_id === (int) $this->user()?->id;
     }
 
     /** @return array<string, mixed> */
