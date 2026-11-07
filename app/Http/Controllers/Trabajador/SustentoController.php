@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\SubirSustentoRequest;
 use App\Models\Papeleta;
 use App\Models\Sustento;
+use App\Services\ArchivoSubidaService;
 use App\States\Papeleta\EnJustificacion;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
@@ -23,7 +24,7 @@ use Throwable;
  */
 class SustentoController extends Controller
 {
-    public function store(SubirSustentoRequest $request, Sustento $sustento): RedirectResponse
+    public function store(SubirSustentoRequest $request, Sustento $sustento, ArchivoSubidaService $archivos): RedirectResponse
     {
         if ($sustento->estado !== 'pendiente') {
             return back()->with('error', 'Este sustento ya fue presentado o revisado.');
@@ -35,7 +36,7 @@ class SustentoController extends Controller
             return back()->with('error', 'Esta papeleta ya no admite justificación.');
         }
 
-        $archivoPath = $request->file('archivo')->store('papeletas/sustentos', 'local');
+        $archivoPath = $archivos->guardar($request->file('archivo'), 'papeletas/sustentos');
 
         if ($archivoPath === false) {
             return back()->with('error', 'No se pudo subir el archivo de sustento. Intenta de nuevo.');

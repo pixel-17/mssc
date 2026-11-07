@@ -7,6 +7,7 @@ use App\Exceptions\PapeletaException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Papeleta\MarcarRetornoRequest;
 use App\Models\Papeleta;
+use App\Services\ArchivoSubidaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -19,9 +20,9 @@ use Throwable;
  */
 class RetornoController extends Controller
 {
-    public function store(MarcarRetornoRequest $request, Papeleta $papeleta, MarcarRetornoAction $action): RedirectResponse
+    public function store(MarcarRetornoRequest $request, Papeleta $papeleta, MarcarRetornoAction $action, ArchivoSubidaService $archivos): RedirectResponse
     {
-        $fotoPath = $request->file('foto')->store('papeletas/retornos', 'local');
+        $fotoPath = $archivos->guardar($request->file('foto'), 'papeletas/retornos');
 
         if ($fotoPath === false) {
             return back()->with('error', 'No se pudo subir la foto de retorno. Intenta de nuevo.');

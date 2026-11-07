@@ -12,6 +12,7 @@ use App\Http\Requests\Papeleta\StorePapeletaRequest;
 use App\Http\Requests\Papeleta\SubsanarObservacionRequest;
 use App\Models\Motivo;
 use App\Models\Papeleta;
+use App\Services\ArchivoSubidaService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -49,14 +50,14 @@ class PapeletaController extends Controller
         return view('trabajador.papeletas.create', compact('motivos', 'avisarAutorizacionAutomatica'));
     }
 
-    public function store(StorePapeletaRequest $request, CrearPapeletaAction $action): RedirectResponse
+    public function store(StorePapeletaRequest $request, CrearPapeletaAction $action, ArchivoSubidaService $archivos): RedirectResponse
     {
         $motivo = Motivo::findOrFail($request->integer('motivo_id'));
 
         // El adjunto al crear es solo para los motivos que exigen justificación
         // (Salud): en los demás (p. ej. Comisión de Servicio) se ignora.
         $adjuntoPath = $motivo->requiere_sustento_en_retorno && $request->hasFile('adjunto_inicial_path')
-            ? ($request->file('adjunto_inicial_path')->store('papeletas/adjuntos-iniciales', 'local') ?: null)
+            ? ($archivos->guardar($request->file('adjunto_inicial_path'), 'papeletas/adjuntos-iniciales') ?: null)
             : null;
 
         try {
@@ -103,10 +104,10 @@ class PapeletaController extends Controller
      * archivo nunca debe quedar suelto en disco si la Action no llegó a
      * referenciarlo.
      */
-    public function subsanar(SubsanarObservacionRequest $request, Papeleta $papeleta, SubsanarObservacionAction $action): RedirectResponse
+    public function subsanar(SubsanarObservacionRequest $request, Papeleta $papeleta, SubsanarObservacionAction $action, ArchivoSubidaService $archivos): RedirectResponse
     {
         $archivoPath = $request->hasFile('archivo')
-            ? ($request->file('archivo')->store('papeletas/subsanaciones', 'local') ?: null)
+            ? ($archivos->guardar($request->file('archivo'), 'papeletas/subsanaciones') ?: null)
             : null;
 
         try {

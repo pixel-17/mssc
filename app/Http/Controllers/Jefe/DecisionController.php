@@ -16,6 +16,7 @@ use App\Http\Requests\Papeleta\ObservarJefeRequest;
 use App\Http\Requests\Papeleta\ResponderPosthocRequest;
 use App\Http\Requests\Papeleta\RetornoManualRequest;
 use App\Models\Papeleta;
+use App\Services\ArchivoSubidaService;
 use App\States\Papeleta\ObservadaPorRrhh;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
@@ -92,12 +93,12 @@ class DecisionController extends Controller
      * Igual que en el flujo del trabajador, un archivo nunca debe quedar
      * suelto en disco si la Action no llegó a referenciarlo.
      */
-    public function responderPosthoc(ResponderPosthocRequest $request, Papeleta $papeleta, ResponderPosthocAction $action): RedirectResponse
+    public function responderPosthoc(ResponderPosthocRequest $request, Papeleta $papeleta, ResponderPosthocAction $action, ArchivoSubidaService $archivos): RedirectResponse
     {
         $this->authorize('responderPosthoc', $papeleta);
 
         $archivoPath = $request->hasFile('archivo')
-            ? ($request->file('archivo')->store('papeletas/posthoc', 'local') ?: null)
+            ? ($archivos->guardar($request->file('archivo'), 'papeletas/posthoc') ?: null)
             : null;
 
         try {
