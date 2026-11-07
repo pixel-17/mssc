@@ -76,6 +76,7 @@ class ConfiguracionTurnoForm extends Component
     public function mount(User $trabajador, bool $embebido = false): void
     {
         abort_unless(auth()->user()->puedeGestionarTurnoDe($trabajador), 403);
+        abort_unless($trabajador->regimen === '276', 403, 'Esta pantalla es solo para régimen 276; el 728 se programa día por día en turnos.programacion.');
 
         $this->trabajador = $trabajador;
         $this->embebido = $embebido;
