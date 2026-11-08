@@ -161,7 +161,7 @@ class UsuarioForm extends Component
         }
 
         if ($this->esArea()) {
-            $this->regimen = (string) (Auth::user()?->regimen ?? '');
+            $this->regimen = (string) (Auth::user()->regimen ?? '');
             $this->sedeId ??= Auth::user()?->sede_id;
         }
     }
@@ -493,7 +493,7 @@ class UsuarioForm extends Component
         // Jefe de Área no modifica roles: conserva los actuales.
         $roles = $esAdmin
             ? array_map('intval', $datos['rolesSeleccionados'])
-            : ($this->usuario?->roles ?? collect())->pluck('id')->map(fn ($id) => (int) $id)->all();
+            : ($this->usuario->roles ?? collect())->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         $activo = ($esAdmin || $this->esArea())
             ? (bool) ($datos['activo'] ?? $this->usuario->activo ?? true)
@@ -670,7 +670,7 @@ class UsuarioForm extends Component
         }
 
         return UnidadOrganica::with('jefe.sede')->find($this->unidadOrganicaId)?->jefe?->sede->nombre
-            ?? Auth::user()?->sede?->nombre
+            ?? Auth::user()?->sede->nombre
             ?? 'Sin sede';
     }
 

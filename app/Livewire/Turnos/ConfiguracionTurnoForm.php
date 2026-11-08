@@ -6,6 +6,7 @@ use App\Models\ConfiguracionTurno;
 use App\Models\Turno;
 use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
+use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;

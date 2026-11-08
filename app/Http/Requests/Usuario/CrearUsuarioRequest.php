@@ -138,7 +138,7 @@ class CrearUsuarioRequest extends FormRequest
     /** @return Collection<int, int> */
     public function unidadesDisponibles(): Collection
     {
-        $encabezadas = $this->user()?->unidadesDeArea ?? collect();
+        $encabezadas = $this->user()->unidadesDeArea ?? collect();
 
         $ids = collect();
         foreach ($encabezadas as $unidad) {
