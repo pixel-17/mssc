@@ -115,9 +115,8 @@ class MotivoCrudTest extends TestCase
     }
 
     /**
-     * El plazo vive solo en el motivo (ya no hay un valor global de
-     * respaldo, ver migración remove_sustento_horas_habiles_y_plazo_obligatorio):
-     * si requiere justificación pero se deja el plazo vacío, el formulario
+     * El plazo vive solo en el motivo (no hay un valor global de
+     * respaldo): si requiere justificación pero se deja el plazo vacío, el formulario
      * debe rechazarlo. Sin esta regla, un motivo así nace con
      * plazo_justificacion_horas_habiles en null y AbrirJustificacion lo
      * castea a 0, dejando el sustento vencido desde el instante que nace.

@@ -23,7 +23,9 @@ return new class extends Migration
             $table->boolean('suma_descuento')->default(false);
             $table->boolean('requiere_sustento_en_retorno')->default(false); // Salud
 
-            // Plazo propio de justificación; null = configuración global SUSTENTO_HORAS_HABILES.
+            // Plazo propio de justificación (horas hábiles). No hay valor
+            // global de respaldo: todo motivo que requiere sustento debe
+            // traer su propio plazo (ver MotivoForm y MotivoSeeder).
             $table->unsignedSmallInteger('plazo_justificacion_horas_habiles')->nullable();
 
             // Motivo al que se reclasifica una Salud sin sustento
