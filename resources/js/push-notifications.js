@@ -112,7 +112,7 @@ async function desuscribir() {
 }
 
 /**
- * Componente Alpine usado en navigation-menu.blade.php
+ * Componente Alpine usado en profile/device-settings-form.blade.php
  * (x-data="msscPushToggle()"): un único botón que activa o desactiva
  * push según el estado actual de la suscripción del navegador.
  */

@@ -4,9 +4,22 @@
 
     <x-slot name="form">
         <div class="col-span-6 divide-y divide-tinta-100 dark:divide-white/10">
-            {{-- Notificaciones: activar/desactivar sigue en el botón del
-                 menú (msscPushToggle); aquí solo el volumen del sonido
-                 in-app. --}}
+            {{-- Activa/desactiva la suscripción push del navegador actual
+                 (resources/js/push-notifications.js). Si el navegador no
+                 soporta push o no hay VAPID_PUBLIC_KEY configurada, el
+                 botón queda deshabilitado; la bandeja in-app sigue
+                 funcionando igual. --}}
+            <x-fila-ajuste x-data="msscPushToggle()"
+                           :titulo="__('Notificaciones push')"
+                           :descripcion="__('Recibe avisos del navegador aunque esta pestaña esté cerrada.')">
+                <x-slot name="detalle">
+                    <button type="button" x-on:click="alternar()" x-bind:disabled="!soportado"
+                            class="text-sm font-medium text-tinta-700 underline underline-offset-2 hover:text-tinta-950 disabled:cursor-not-allowed disabled:text-tinta-400 disabled:no-underline dark:text-tinta-200 dark:hover:text-white dark:disabled:text-zinc-600"
+                            x-text="etiqueta">
+                    </button>
+                </x-slot>
+            </x-fila-ajuste>
+
             <x-fila-ajuste x-data="msscVolumenNotificacion({{ \Illuminate\Support\Js::from($volumen) }})"
                            :titulo="__('Volumen de sonido de notificación')"
                            :descripcion="__('Qué tan fuerte suena el aviso dentro de la app.')">
