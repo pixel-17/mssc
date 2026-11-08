@@ -6,6 +6,12 @@
             </h2>
         @endunless
 
+        @if ($mensajeExito)
+            <div class="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                <p class="text-sm text-emerald-800 dark:text-emerald-300">{{ $mensajeExito }}</p>
+            </div>
+        @endif
+
         @if ($sinTurnoVigenteHoy)
             <div class="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 dark:bg-amber-500/10 dark:border-amber-500/30">
                 <p class="text-sm text-amber-800 dark:text-amber-300">
@@ -15,166 +21,25 @@
             </div>
         @endif
 
-        @if ($trabajador->regimen === '276')
-            {{-- 276: el admin ya configuró los días laborables globalmente.
-                 Aquí solo se muestra qué se va a pintar y se confirma con un botón. --}}
-            <p class="text-sm text-gray-500">
-                Régimen 276 (horario ordinario). Los días de trabajo los define el Admin en Configuraciones
-                y aplican igual para todos. Aquí solo se genera el horario de este mes para este trabajador.
-            </p>
+        {{-- Esta pantalla es solo para régimen 276 (mount() aborta con 403
+             para cualquier otro); el ciclo lo define el Admin globalmente,
+             así que acá no hay nada que editar: calendario del mes (en
+             blanco si no se generó, coloreado si ya se generó) y el botón. --}}
+        <div @class(['space-y-4', 'glass-card p-6' => ! $embebido])>
+            @include('livewire.turnos.partials.calendario-mes')
 
-            <div @class(['space-y-4', 'glass-card p-6' => ! $embebido])>
-                <div>
-                    <p class="text-sm font-medium mb-2">Semana (lunes a domingo) — días laborables configurados por el Admin</p>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach ([1 => 'Lunes', 2 => 'Martes', 3 => 'Miércoles', 4 => 'Jueves', 5 => 'Viernes', 6 => 'Sábado', 7 => 'Domingo'] as $iso => $nombre)
-                            <span class="inline-flex items-center rounded-full border px-3 py-1 text-xs font-medium
-                                {{ in_array($nombre, $diasLaborables276 ?? []) ? 'bg-tinta-50 text-tinta-800 border-tinta-300 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30' : 'bg-gray-50 text-gray-400 border-gray-200 dark:bg-gray-900 dark:border-gray-800' }}">
-                                {{ $nombre }}
-                            </span>
-                        @endforeach
-                    </div>
-                </div>
-
-                @if ($previsualizacion)
-                    <div class="border-t pt-4 dark:border-gray-700">
-                        <p class="text-sm font-medium mb-2">Vista previa ({{ ucfirst(now()->translatedFormat('F Y')) }})</p>
-                        <div @class(['grid gap-1.5 text-center', 'grid-cols-7' => ! $embebido, 'grid-cols-4' => $embebido])>
-                            @if (! $embebido)
-                                @php($offset = \Illuminate\Support\Carbon::parse($previsualizacion[0]['fecha'])->dayOfWeekIso - 1)
-                                @for ($i = 0; $i < $offset; $i++)
-                                    <div></div>
-                                @endfor
-                            @endif
-                            @foreach ($previsualizacion as $dia)
-                                <div wire:key="configuracion-turno-form-preview-{{ $dia['fecha'] }}"
-                                    class="rounded-md border px-1 py-2 text-xs
-                                    {{ $dia['yaProgramado']
-                                        ? 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30'
-                                        : ($dia['descanso'] ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-tinta-50 text-tinta-800 border-tinta-200 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30') }}">
-                                    <div class="font-medium">{{ $dia['etiqueta'] }}</div>
-                                    <div class="mt-1">{{ $dia['descanso'] ? 'D' : 'T' }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-blue-100 border border-blue-300 dark:bg-blue-500/20 dark:border-blue-500/40"></span> Ya programado</span>
-                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-tinta-50 border border-tinta-200 dark:bg-tinta-500/10 dark:border-tinta-500/30"></span> Por programar</span>
-                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-gray-100 border border-gray-300 dark:bg-gray-800 dark:border-gray-700"></span> Descanso</span>
-                        </p>
-                    </div>
+            <div class="flex items-center justify-end gap-3 border-t pt-4 dark:border-gray-700">
+                @if ($embebido)
+                    <button type="button" wire:click="cancelar" class="text-sm text-gray-500">Cancelar</button>
+                @else
+                    <a href="{{ route('turnos.index') }}" class="text-sm text-gray-500">Cancelar</a>
                 @endif
-
-                <div class="flex items-center justify-end gap-3 border-t pt-4 dark:border-gray-700">
-                    @if ($embebido)
-                        <button type="button" wire:click="cancelar" class="text-sm text-gray-500">Cancelar</button>
-                    @else
-                        <a href="{{ route('turnos.index') }}" class="text-sm text-gray-500">Cancelar</a>
-                    @endif
-                    <button type="button" wire:click="guardar" wire:loading.attr="disabled"
-                        class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm disabled:opacity-50">
-                        <span wire:loading wire:target="guardar">Generando…</span>
-                        <span wire:loading.remove wire:target="guardar">Generar horario de este mes</span>
-                    </button>
-                </div>
+                <button type="button" wire:click="guardar" wire:loading.attr="disabled"
+                    class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm disabled:opacity-50">
+                    <span wire:loading wire:target="guardar">Generando…</span>
+                    <span wire:loading.remove wire:target="guardar">Generar horario de este mes</span>
+                </button>
             </div>
-
-        @else
-            {{-- 728: formulario completo con ciclo editable --}}
-            <p class="text-sm text-gray-500">
-                Régimen {{ $trabajador->regimen }}. El trabajador trabajará {{ $diasTrabajo }} días seguidos en el
-                turno elegido y descansará {{ $diasDescanso }}, repitiendo el ciclo sin cortarse entre meses.
-            </p>
-
-            <form wire:submit="guardar" @class(['space-y-6', 'glass-card p-6' => ! $embebido])>
-                <div @class(['grid grid-cols-1 gap-4', 'sm:grid-cols-2' => ! $embebido])>
-                    <div>
-                        <label for="configuracion-turno-form-turno" class="block text-sm font-medium mb-1">Turno</label>
-                        <select id="configuracion-turno-form-turno" wire:model="turno" class="w-full rounded-md border-gray-300 dark:bg-gray-800 dark:[color-scheme:dark]">
-                            @foreach ($opcionesTurno as $opcion)
-                                <option value="{{ $opcion }}">{{ $opcion }}</option>
-                            @endforeach
-                        </select>
-                        @error('turno') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label for="configuracion-turno-form-fechaAncla" class="block text-sm font-medium mb-1">Fecha en que empieza su próximo bloque de trabajo</label>
-                        <input id="configuracion-turno-form-fechaAncla" type="date" wire:model.live="fechaAncla" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                        @error('fechaAncla') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label for="configuracion-turno-form-diasTrabajo" class="block text-sm font-medium mb-1">Días de trabajo seguidos</label>
-                        <input id="configuracion-turno-form-diasTrabajo" type="number" min="1" max="30" wire:model.live="diasTrabajo" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                        @error('diasTrabajo') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label for="configuracion-turno-form-diasDescanso" class="block text-sm font-medium mb-1">Días de descanso</label>
-                        <input id="configuracion-turno-form-diasDescanso" type="number" min="1" max="30" wire:model.live="diasDescanso" class="w-full rounded-md border-gray-300 dark:bg-gray-800">
-                        @error('diasDescanso') <span class="text-sm text-red-600">{{ $message }}</span> @enderror
-                    </div>
-                </div>
-
-                <div class="border-t pt-4 dark:border-gray-700">
-                    <label class="block text-sm font-medium mb-2">O marca directamente qué días descansa</label>
-                    <div class="flex flex-wrap gap-2">
-                        @foreach (['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'] as $i => $nombreDia)
-                            @php($valorDia = $i + 1)
-                            <label class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm cursor-pointer select-none
-                                {{ in_array($valorDia, $diasSemanaDescanso) ? 'bg-tinta-800 text-white border-tinta-800' : 'bg-white dark:bg-gray-800 dark:border-gray-700' }}">
-                                <input type="checkbox" wire:model="diasSemanaDescanso" value="{{ $valorDia }}" class="hidden">
-                                {{ $nombreDia }}
-                            </label>
-                        @endforeach
-                        <button type="button" wire:click="aplicarDiasSemana" class="inline-flex items-center px-3 py-1.5 rounded-md border text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-800">
-                            Aplicar
-                        </button>
-                    </div>
-                    @error('diasSemanaDescanso') <p class="text-sm text-red-600 mt-2">{{ $message }}</p> @enderror
-                </div>
-
-                @if ($previsualizacion)
-                    <div class="border-t pt-4 dark:border-gray-700">
-                        <p class="text-sm font-medium mb-2">Vista previa ({{ ucfirst(now()->translatedFormat('F Y')) }})</p>
-                        <div @class(['grid gap-1.5 text-center', 'grid-cols-7' => ! $embebido, 'grid-cols-4' => $embebido])>
-                            @if (! $embebido)
-                                @php($offset = \Illuminate\Support\Carbon::parse($previsualizacion[0]['fecha'])->dayOfWeekIso - 1)
-                                @for ($i = 0; $i < $offset; $i++)
-                                    <div></div>
-                                @endfor
-                            @endif
-                            @foreach ($previsualizacion as $dia)
-                                <div wire:key="configuracion-turno-form-preview-{{ $dia['fecha'] }}"
-                                    class="rounded-md border px-1 py-2 text-xs
-                                    {{ $dia['yaProgramado']
-                                        ? 'bg-blue-50 text-blue-800 border-blue-200 dark:bg-blue-500/10 dark:text-blue-300 dark:border-blue-500/30'
-                                        : ($dia['descanso'] ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400' : 'bg-tinta-50 text-tinta-800 border-tinta-200 dark:bg-tinta-500/10 dark:text-tinta-300 dark:border-tinta-500/30') }}">
-                                    <div class="font-medium">{{ $dia['etiqueta'] }}</div>
-                                    <div class="mt-1">{{ $dia['descanso'] ? ($embebido ? 'D' : 'Descanso') : ($embebido ? 'T' : 'Trabajo') }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500">
-                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-blue-100 border border-blue-300 dark:bg-blue-500/20 dark:border-blue-500/40"></span> Ya programado</span>
-                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-tinta-50 border border-tinta-200 dark:bg-tinta-500/10 dark:border-tinta-500/30"></span> Por programar</span>
-                            <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm bg-gray-100 border border-gray-300 dark:bg-gray-800 dark:border-gray-700"></span> Descanso</span>
-                        </p>
-                    </div>
-                @endif
-
-                <div class="flex items-center justify-end gap-3">
-                    @if ($embebido)
-                        <button type="button" wire:click="cancelar" class="text-sm text-gray-500">Cancelar</button>
-                    @else
-                        <a href="{{ route('turnos.index') }}" class="text-sm text-gray-500">Cancelar</a>
-                    @endif
-                    <button type="submit" class="inline-flex items-center px-4 py-2 bg-tinta-800 text-white rounded-md text-sm">
-                        Guardar y generar este mes
-                    </button>
-                </div>
-            </form>
-        @endif
+        </div>
     </div>
 </div>
