@@ -35,6 +35,23 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(self.registration.showNotification(titulo, opciones));
+
+    // Badging API: pone/actualiza el numerito sobre el icono del PWA
+    // (escritorio/taskbar). Funciona aunque la app esté cerrada, porque
+    // corre acá en el service worker, no en la pestaña. 'setAppBadge' no
+    // existe en todos los navegadores (Firefox y Safari en escritorio no
+    // lo soportan todavía), por eso el chequeo de soporte antes de usarlo.
+    const cantidadNoLeidas = payload.data && typeof payload.data.badgeCount === 'number'
+        ? payload.data.badgeCount
+        : null;
+
+    if (cantidadNoLeidas !== null && 'setAppBadge' in self.navigator) {
+        event.waitUntil(
+            cantidadNoLeidas > 0
+                ? self.navigator.setAppBadge(cantidadNoLeidas).catch(() => {})
+                : self.navigator.clearAppBadge().catch(() => {})
+        );
+    }
 });
 
 self.addEventListener('notificationclick', (event) => {

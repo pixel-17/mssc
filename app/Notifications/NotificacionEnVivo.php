@@ -126,6 +126,16 @@ abstract class NotificacionEnVivo extends Notification implements ShouldQueue
 
         $datos = $this->datosPush();
 
+        // Cantidad de no leídas en este momento (el canal 'database' ya
+        // corrió antes que este, ver via(), así que incluye la propia
+        // notificación que se está entregando). El service worker la usa
+        // para sincronizar el icono vía la Badging API (navigator.
+        // setAppBadge), que es lo único que puede actualizar el icono del
+        // PWA instalado aunque la app esté cerrada — ver public/sw.js.
+        $datos['badgeCount'] = method_exists($notifiable, 'unreadNotifications')
+            ? $notifiable->unreadNotifications()->count()
+            : null;
+
         if ($datos !== []) {
             $mensaje->data($datos);
         }

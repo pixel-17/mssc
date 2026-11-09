@@ -58,9 +58,19 @@ class NotificationBell extends Component
         /** @var User $usuario */
         $usuario = Auth::user();
 
+        $noLeidas = $usuario->unreadNotifications()->count();
+
+        // Sincroniza el icono del PWA (Badging API, ver resources/js/
+        // app-badge.js) cada vez que la campana se re-renderiza: carga
+        // inicial, al marcar como leída, o al llegar una notificación en
+        // vivo. Así el icono no se queda desactualizado mientras la
+        // pestaña sigue abierta (public/sw.js cubre el caso con la app
+        // cerrada).
+        $this->dispatch('contador-notificaciones-actualizado', cantidad: $noLeidas);
+
         return view('livewire.notification-bell', [
             'notificaciones' => $usuario->notifications()->latest()->take($this->porMostrar)->get(),
-            'noLeidas' => $usuario->unreadNotifications()->count(),
+            'noLeidas' => $noLeidas,
         ]);
     }
 }
