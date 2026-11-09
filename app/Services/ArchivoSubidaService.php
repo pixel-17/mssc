@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\JpegEncoder;
 use Intervention\Image\ImageManager;
 use Throwable;
 
@@ -57,10 +58,10 @@ class ArchivoSubidaService
 
             // scaleDown solo achica si la imagen es más grande que el máximo;
             // una foto que ya viene chica no se toca ni pierde calidad de más.
-            $imagen = $manager->read($archivo->getRealPath())
+            $imagen = $manager->decode($archivo->getRealPath())
                 ->scaleDown(width: self::ANCHO_MAXIMO, height: self::ALTO_MAXIMO);
 
-            $contenido = (string) $imagen->toJpeg(self::CALIDAD_JPEG);
+            $contenido = (string) $imagen->encode(new JpegEncoder(quality: self::CALIDAD_JPEG));
 
             $ruta = $carpeta.'/'.Str::random(40).'.jpg';
 
