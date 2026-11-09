@@ -30,7 +30,7 @@ class CalculadorDiasHabiles
     {
         $dias = array_map(
             'trim',
-            explode(',', (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5'))
+            explode(',', Configuracion::valorTextoDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5'))
         );
 
         return in_array((string) $fecha->isoWeekday(), $dias, true);

@@ -163,7 +163,7 @@ class MarcarRetornoAction
      */
     private function calcularDentroDeRadio(Papeleta $papeleta, array $datos): ?bool
     {
-        if (empty($datos['latitud']) || empty($datos['longitud'])) {
+        if (empty($datos['latitud']) || empty($datos['longitud']) || ! is_numeric($datos['latitud']) || ! is_numeric($datos['longitud'])) {
             return null;
         }
 
@@ -208,8 +208,8 @@ class MarcarRetornoAction
             return 0;
         }
 
-        $inicioAlmuerzo = Configuracion::valorDe('BLOQUE_ALMUERZO_INICIO', '13:00');
-        $finAlmuerzo = Configuracion::valorDe('BLOQUE_ALMUERZO_FIN', '14:00');
+        $inicioAlmuerzo = Configuracion::valorTextoDe('BLOQUE_ALMUERZO_INICIO', '13:00');
+        $finAlmuerzo = Configuracion::valorTextoDe('BLOQUE_ALMUERZO_FIN', '14:00');
 
         $bloqueInicio = $papeleta->hora_salida_real->copy()
             ->setTimeFromTimeString($inicioAlmuerzo);

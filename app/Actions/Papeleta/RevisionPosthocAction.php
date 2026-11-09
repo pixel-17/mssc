@@ -89,7 +89,7 @@ class RevisionPosthocAction
             $estadoNuevo = $resultado;
 
             if ($resultado === 'observada') {
-                $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
+                $tope = Configuracion::valorEnteroDe('TOPE_OBSERVACIONES', 3);
                 $actual->contador_observaciones_posthoc++;
                 $actual->posthoc_observacion = $comentario;
 

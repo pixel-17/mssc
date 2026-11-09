@@ -51,7 +51,7 @@ class ObservarRrhhAction
                 throw new PapeletaException('Esta papeleta no tiene jefe superior que pueda responder una observación: solo puedes aprobarla o rechazarla.');
             }
 
-            $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
+            $tope = Configuracion::valorEnteroDe('TOPE_OBSERVACIONES', 3);
 
             $actual->contador_observaciones_rrhh++;
 

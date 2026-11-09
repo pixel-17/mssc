@@ -111,7 +111,7 @@ class PantallasPorRolYSesionTest extends TestCase
         $this->actingAs($this->ajeno)->get($url)->assertForbidden();
     }
 
-   public function test_la_configuracion_de_turno_de_un_trabajador_solo_la_abre_quien_puede_gestionarlo(): void
+    public function test_la_configuracion_de_turno_de_un_trabajador_solo_la_abre_quien_puede_gestionarlo(): void
     {
         $trabajador276 = $this->usuarioDePrueba(['regimen' => '276', 'unidad_organica_id' => $this->trabajador->unidad_organica_id]);
 

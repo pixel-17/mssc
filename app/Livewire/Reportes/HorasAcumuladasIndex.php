@@ -64,7 +64,7 @@ class HorasAcumuladasIndex extends Component
         $this->mes = now()->format('Y-m');
     }
 
-    /** @return array<string, mixed> */
+    /** @return array{trabajador_id?: int|null, buscar?: string|null, sede_id?: int|null, unidad_organica_id?: int|null, motivo_id?: int|null, regimen?: string|null, solo_con_descuento?: bool} */
     protected function filtros(): array
     {
         return [

@@ -54,7 +54,7 @@ class DecisionController extends Controller
         $this->reabrirSiObservadaPorRrhh($papeleta, 'Rechazada directamente tras observación de RRHH.');
 
         return $this->resolverDecision(
-            fn () => $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('comentario')),
+            fn () => $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->string('comentario')->toString()),
             'warning',
             'Papeleta rechazada.',
         );
@@ -70,7 +70,7 @@ class DecisionController extends Controller
             fn () => $action->ejecutar(
                 $papeleta,
                 $this->usuarioAutenticado(),
-                $request->input('comentario'),
+                $request->string('comentario')->toString(),
                 requiereAdjunto: $request->boolean('requiere_adjunto'),
             ),
             'success',
@@ -83,7 +83,7 @@ class DecisionController extends Controller
         $this->authorize('reconocerObservacionRrhh', $papeleta);
 
         return $this->resolverDecision(
-            fn () => $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('comentario')),
+            fn () => $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->string('comentario')->toString()),
             'success',
             'Observación de RRHH reconocida, papeleta reabierta para tu decisión.',
         );
@@ -103,7 +103,7 @@ class DecisionController extends Controller
             : null;
 
         try {
-            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('respuesta'), $archivoPath);
+            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->string('respuesta')->toString(), $archivoPath);
         } catch (PapeletaException $e) {
             $this->descartarAdjunto($archivoPath);
 
@@ -131,7 +131,7 @@ class DecisionController extends Controller
         $this->authorize('marcarRetornoManual', $papeleta);
 
         return $this->resolverDecision(
-            fn () => $action->manual($papeleta, $this->usuarioAutenticado(), $request->input('justificacion')),
+            fn () => $action->manual($papeleta, $this->usuarioAutenticado(), $request->string('justificacion')->toString()),
             'success',
             'Retorno manual registrado por falla de conectividad.',
         );

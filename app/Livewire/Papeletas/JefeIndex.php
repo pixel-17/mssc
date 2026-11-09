@@ -5,6 +5,7 @@ namespace App\Livewire\Papeletas;
 use App\Livewire\Concerns\EscuchaNotificacionesEnVivo;
 use App\Livewire\Concerns\PaginaListasDeBandeja;
 use App\Models\Papeleta;
+use App\Models\User;
 use App\States\Papeleta\AutorizadaYCorriendo;
 use App\States\Papeleta\ObservadaPorJefe;
 use App\States\Papeleta\ObservadaPorRrhh;
@@ -52,7 +53,7 @@ class JefeIndex extends Component
 
     public function render(): View
     {
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = Auth::user();
 
         // Solo jefes de equipo: el admin no tiene bandeja de jefe ni por URL.

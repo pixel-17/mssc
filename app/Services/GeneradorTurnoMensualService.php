@@ -234,7 +234,7 @@ class GeneradorTurnoMensualService
             'intval',
             array_filter(array_map('trim', explode(
                 ',',
-                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+                Configuracion::valorTextoDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
             )))
         );
 
@@ -377,20 +377,20 @@ class GeneradorTurnoMensualService
     {
         return match ($turno) {
             'MANANA' => [
-                (string) Configuracion::valorDe('TURNO_MANANA_HORA_INICIO', '06:00'),
-                (string) Configuracion::valorDe('TURNO_MANANA_HORA_FIN', '14:00'),
+                Configuracion::valorTextoDe('TURNO_MANANA_HORA_INICIO', '06:00'),
+                Configuracion::valorTextoDe('TURNO_MANANA_HORA_FIN', '14:00'),
             ],
             'TARDE' => [
-                (string) Configuracion::valorDe('TURNO_TARDE_HORA_INICIO', '14:00'),
-                (string) Configuracion::valorDe('TURNO_TARDE_HORA_FIN', '22:00'),
+                Configuracion::valorTextoDe('TURNO_TARDE_HORA_INICIO', '14:00'),
+                Configuracion::valorTextoDe('TURNO_TARDE_HORA_FIN', '22:00'),
             ],
             'NOCHE' => [
-                (string) Configuracion::valorDe('TURNO_NOCHE_HORA_INICIO', '22:00'),
-                (string) Configuracion::valorDe('TURNO_NOCHE_HORA_FIN', '06:00'),
+                Configuracion::valorTextoDe('TURNO_NOCHE_HORA_INICIO', '22:00'),
+                Configuracion::valorTextoDe('TURNO_NOCHE_HORA_FIN', '06:00'),
             ],
             default => [
-                (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_INICIO', HorarioOrdinarioService::HORA_INICIO_DEFECTO),
-                (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_FIN', HorarioOrdinarioService::HORA_FIN_DEFECTO),
+                Configuracion::valorTextoDe('HORARIO_ORDINARIO_HORA_INICIO', HorarioOrdinarioService::HORA_INICIO_DEFECTO),
+                Configuracion::valorTextoDe('HORARIO_ORDINARIO_HORA_FIN', HorarioOrdinarioService::HORA_FIN_DEFECTO),
             ],
         };
     }

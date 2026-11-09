@@ -113,7 +113,7 @@ class PapeletaController extends Controller
             : null;
 
         try {
-            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->input('respuesta'), $archivoPath);
+            $action->ejecutar($papeleta, $this->usuarioAutenticado(), $request->string('respuesta')->toString(), $archivoPath);
         } catch (PapeletaException $e) {
             $this->descartarAdjunto($archivoPath);
 

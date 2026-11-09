@@ -3,6 +3,7 @@
 namespace App\Livewire\Papeletas;
 
 use App\Livewire\Concerns\EscuchaNotificacionesEnVivo;
+use App\Models\User;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Layout;
@@ -58,7 +59,7 @@ class TrabajadorIndex extends Component
     {
         $termino = trim($this->buscar);
 
-        /** @var \App\Models\User $usuario */
+        /** @var User $usuario */
         $usuario = Auth::user();
 
         $papeletas = $usuario->papeletas()

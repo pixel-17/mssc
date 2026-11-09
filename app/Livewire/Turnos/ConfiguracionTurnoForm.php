@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\GeneradorTurnoMensualService;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
@@ -139,7 +140,7 @@ class ConfiguracionTurnoForm extends Component
      * justo después de guardar aparecen pintados con el color real de
      * cada turno.
      *
-     * @return array{inicioMes: Carbon, semanas: array<int, array<int, int|null>>, turnosPorDia: \Illuminate\Support\Collection<int, Turno>, hoy: Carbon}
+     * @return array{inicioMes: Carbon, semanas: array<int, array<int, int|null>>, turnosPorDia: Collection<int, Turno>, hoy: Carbon}
      */
     private function calendarioDelMes(): array
     {

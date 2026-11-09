@@ -52,8 +52,8 @@ class AlertaPosthocService
             return false;
         }
 
-        $umbralCantidad = max(1, (int) Configuracion::valorDe('POSTHOC_ALERTA_CANTIDAD', self::CANTIDAD_DEFECTO));
-        $umbralHoras = max(1, (int) Configuracion::valorDe('POSTHOC_ALERTA_HORAS', self::HORAS_DEFECTO));
+        $umbralCantidad = max(1, Configuracion::valorEnteroDe('POSTHOC_ALERTA_CANTIDAD', self::CANTIDAD_DEFECTO));
+        $umbralHoras = max(1, Configuracion::valorEnteroDe('POSTHOC_ALERTA_HORAS', self::HORAS_DEFECTO));
 
         $horasDeLaMasAntigua = $this->horasDeLaMasAntigua();
 
@@ -99,7 +99,7 @@ class AlertaPosthocService
             ->selectRaw('MIN(COALESCE(hora_salida_real, created_at)) as desde')
             ->value('desde');
 
-        if ($masAntigua === null) {
+        if (! is_string($masAntigua) && ! is_int($masAntigua)) {
             return 0;
         }
 

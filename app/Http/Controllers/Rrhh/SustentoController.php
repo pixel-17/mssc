@@ -21,8 +21,8 @@ class SustentoController extends Controller
         try {
             match ($request->input('resultado')) {
                 'aprobado' => $action->aprobar($sustento, $this->usuarioAutenticado()),
-                'particular' => $action->rechazar($sustento, $this->usuarioAutenticado(), $request->input('comentario')),
-                default => $action->observar($sustento, $this->usuarioAutenticado(), $request->input('comentario')),
+                'particular' => $action->rechazar($sustento, $this->usuarioAutenticado(), $request->string('comentario')->toString()),
+                default => $action->observar($sustento, $this->usuarioAutenticado(), $request->string('comentario')->toString()),
             };
         } catch (PapeletaException $e) {
             return back()->with('error', $e->getMessage());

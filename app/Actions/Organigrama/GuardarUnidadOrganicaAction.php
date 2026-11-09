@@ -169,7 +169,7 @@ class GuardarUnidadOrganicaAction
      *
      * @throws UsuarioException
      */
-    private function validarSinCiclos(?UnidadOrganica $unidad, mixed $parentId): void
+    private function validarSinCiclos(?UnidadOrganica $unidad, ?int $parentId): void
     {
         if (! $unidad || ! $parentId) {
             return;
@@ -179,7 +179,7 @@ class GuardarUnidadOrganicaAction
 
         $prohibidos = [$unidad->id, ...$unidad->descendantIds()];
 
-        if (in_array((int) $parentId, $prohibidos, true)) {
+        if (in_array($parentId, $prohibidos, true)) {
             throw new UsuarioException('Esa unidad no puede ser su propio padre ni el de un descendiente suyo.');
         }
     }

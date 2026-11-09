@@ -52,7 +52,7 @@ class ObservarJefeAction
                 throw new PapeletaException('Esta papeleta ya no está pendiente de decisión del jefe.');
             }
 
-            $tope = (int) Configuracion::valorDe('TOPE_OBSERVACIONES', 3);
+            $tope = Configuracion::valorEnteroDe('TOPE_OBSERVACIONES', 3);
 
             $actual->contador_observaciones_jefe++;
 

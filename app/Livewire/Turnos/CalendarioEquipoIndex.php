@@ -343,7 +343,7 @@ class CalendarioEquipoIndex extends Component
             'intval',
             array_filter(array_map('trim', explode(
                 ',',
-                (string) Configuracion::valorDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
+                Configuracion::valorTextoDe('HORARIO_ORDINARIO_DIAS_LABORABLES', '1,2,3,4,5')
             )))
         );
     }

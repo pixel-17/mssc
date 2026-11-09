@@ -184,9 +184,9 @@ class Turno extends Model
         }
 
         return match ((string) $this->hora_inicio) {
-            (string) Configuracion::valorDe('TURNO_MANANA_HORA_INICIO', '06:00') => 'MANANA',
-            (string) Configuracion::valorDe('TURNO_TARDE_HORA_INICIO', '14:00') => 'TARDE',
-            (string) Configuracion::valorDe('TURNO_NOCHE_HORA_INICIO', '22:00') => 'NOCHE',
+            Configuracion::valorTextoDe('TURNO_MANANA_HORA_INICIO', '06:00') => 'MANANA',
+            Configuracion::valorTextoDe('TURNO_TARDE_HORA_INICIO', '14:00') => 'TARDE',
+            Configuracion::valorTextoDe('TURNO_NOCHE_HORA_INICIO', '22:00') => 'NOCHE',
             default => 'DIA',
         };
     }

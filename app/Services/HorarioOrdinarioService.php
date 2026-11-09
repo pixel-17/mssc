@@ -81,8 +81,8 @@ class HorarioOrdinarioService
     private function ventanaDeHoy(): array
     {
         return [
-            (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_INICIO', self::HORA_INICIO_DEFECTO),
-            (string) Configuracion::valorDe('HORARIO_ORDINARIO_HORA_FIN', self::HORA_FIN_DEFECTO),
+            Configuracion::valorTextoDe('HORARIO_ORDINARIO_HORA_INICIO', self::HORA_INICIO_DEFECTO),
+            Configuracion::valorTextoDe('HORARIO_ORDINARIO_HORA_FIN', self::HORA_FIN_DEFECTO),
         ];
     }
 }

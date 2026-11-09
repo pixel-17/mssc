@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Papeleta;
 use App\Models\User;
+use App\States\Papeleta\PapeletaState;
 use App\Support\Minutos;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /**
@@ -71,7 +73,7 @@ class HistorialTrabajadorService
      * Todo el historial de papeletas del trabajador (cualquier estado,
      * cualquier fecha), más reciente primero.
      *
-     * @return Collection<int, array{id: int, dia: \Illuminate\Support\Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<\App\States\Papeleta\PapeletaState>, abandono: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}>
+     * @return Collection<int, array{id: int, dia: Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<PapeletaState>, abandono: bool, salida: Carbon|null, retorno: Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}>
      */
     public function historial(User $trabajador): Collection
     {
@@ -99,7 +101,7 @@ class HistorialTrabajadorService
                 'sustento_estado' => $p->sustentos->last()?->estado,
             ]);
 
-        /** @var Collection<int, array{id: int, dia: \Illuminate\Support\Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<\App\States\Papeleta\PapeletaState>, abandono: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}> $resultado */
+        /** @var Collection<int, array{id: int, dia: Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<PapeletaState>, abandono: bool, salida: Carbon|null, retorno: Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}> $resultado */
         return $resultado;
     }
 
@@ -108,7 +110,7 @@ class HistorialTrabajadorService
      * por condición, horas acumuladas (solo las ya cerradas con
      * retorno) y horas que sí cuentan para descuento.
      *
-     * @param  Collection<int, array{id: int, dia: \Illuminate\Support\Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<\App\States\Papeleta\PapeletaState>, abandono: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}>  $historial
+     * @param  Collection<int, array{id: int, dia: Carbon, motivo: string, sede: string, estado: string, estado_fqcn: class-string<PapeletaState>, abandono: bool, salida: Carbon|null, retorno: Carbon|null, minutos: int|null, suma_descuento: bool, sustento_estado: 'pendiente'|'presentado'|'vencido'|'aprobado'|'observado'|'rechazado'|null}>  $historial
      * @return array<string, int>
      */
     public function resumen(Collection $historial): array
