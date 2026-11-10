@@ -124,9 +124,21 @@ abstract class NotificacionEnVivo extends Notification implements ShouldQueue
             ->badge('/icons/badge-72.png')
             ->tag($this->etiquetaPush());
 
+        // badgeCount: lo lee public/sw.js para actualizar el numerito del
+        // ícono con la app cerrada (ver resources/js/app-badge.js, que
+        // cubre el mismo numerito mientras la pestaña sigue abierta).
+        // Se cuenta aquí, al momento de entregar el push -- en cuanto el
+        // worker procesa este job -- y no al despachar la notificación,
+        // para que incluya esta misma notificación recién guardada en
+        // 'database' (ese canal corre antes que 'webpush' en via()).
+        $datosPush = [
+            ...$this->datosPush(),
+            'badgeCount' => $notifiable->unreadNotifications()->count(),
+        ];
+
         // Cada implementación concreta de datosPush() siempre devuelve algo:
         // no hay forma de que quede vacío, así que se asigna directo.
-        $mensaje->data($this->datosPush());
+        $mensaje->data($datosPush);
 
         if ($this->url) {
             $mensaje->action($this->textoAccion(), 'ver');
