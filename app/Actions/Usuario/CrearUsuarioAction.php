@@ -191,14 +191,15 @@ class CrearUsuarioAction
     private function resolverSede(User $creador, array $datos, bool $esJefeDeArea, bool $esJefeInmediatoNuevo): ?int
     {
         if ($esJefeInmediatoNuevo) {
-            return $datos['sede_id'] ?? $creador->sede_id;
+            return is_numeric($datos['sede_id'] ?? null) ? (int) $datos['sede_id'] : $creador->sede_id;
         }
 
         if (! $esJefeDeArea) {
             return $creador->sede_id;
         }
 
-        $sedeDelJefe = UnidadOrganica::with('jefe')->find((int) $datos['unidad_organica_id'])?->jefe?->sede_id;
+        $unidadOrganicaId = is_numeric($datos['unidad_organica_id'] ?? null) ? (int) $datos['unidad_organica_id'] : 0;
+        $sedeDelJefe = UnidadOrganica::with('jefe')->find($unidadOrganicaId)?->jefe?->sede_id;
 
         return $sedeDelJefe ?? $creador->sede_id;
     }

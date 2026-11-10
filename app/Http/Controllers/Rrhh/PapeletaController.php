@@ -67,8 +67,8 @@ class PapeletaController extends Controller
             'rechazadas' => (clone $delMes)->whereState('estado', Rechazada::class)->count(),
             'observaciones' => (int) (clone $delMes)->sum('contador_observaciones_jefe')
                 + (int) (clone $delMes)->sum('contador_observaciones_rrhh'),
-            'minutos' => (int) $detalle->sum('minutos'),
-            'minutos_con_descuento' => (int) $detalle->where('suma_descuento', true)->sum('minutos'),
+            'minutos' => (static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0)($detalle->sum('minutos')),
+            'minutos_con_descuento' => (static fn (mixed $v): int => is_numeric($v) ? (int) $v : 0)($detalle->where('suma_descuento', true)->sum('minutos')),
         ];
     }
 }

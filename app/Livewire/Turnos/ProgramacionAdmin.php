@@ -98,7 +98,7 @@ class ProgramacionAdmin extends Component
             'idsJefes' => $equipos->idsDeJefes()->all(),
             // Jefe de área = encabeza una unidad que tiene sub-unidades debajo.
             // Quien encabeza una unidad sin sub-unidades es Jefe inmediato de su gente.
-            'idsJefesDeArea' => UnidadOrganica::whereNotNull('jefe_id')->whereHas('hijos')->pluck('jefe_id')->map(fn ($id) => (int) $id)->all(),
+            'idsJefesDeArea' => UnidadOrganica::whereNotNull('jefe_id')->whereHas('hijos')->pluck('jefe_id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all(),
             'jefe' => $this->jefeId ? User::find($this->jefeId) : null,
         ]);
     }

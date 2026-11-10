@@ -170,7 +170,7 @@ class PapeletaActualizada implements ShouldBroadcastNow
         return Cache::remember(
             self::CACHE_DESTINATARIOS_FIJOS,
             self::TTL_DESTINATARIOS_FIJOS,
-            fn () => User::role(['rrhh', 'admin'])->pluck('id')->map(fn ($id) => (int) $id)->all(),
+            fn () => User::role(['rrhh', 'admin'])->pluck('id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all(),
         );
     }
 

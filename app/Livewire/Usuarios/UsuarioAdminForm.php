@@ -107,7 +107,7 @@ class UsuarioAdminForm extends Component
             $this->regimen = $usuario->regimen ?? '';
             $this->sedeId = $usuario->sede_id;
             $this->unidadOrganicaId = $usuario->unidad_organica_id;
-            $this->rolesSeleccionados = $usuario->roles->pluck('id')->all();
+            $this->rolesSeleccionados = self::aEnteros($usuario->roles->pluck('id')->all());
             $this->activo = $usuario->activo;
 
             $config = ConfiguracionTurno::where('user_id', $usuario->id)->first();
@@ -140,10 +140,32 @@ class UsuarioAdminForm extends Component
      * así que régimen, sede y unidad orgánica no le corresponden (quedan en
      * null, igual que el administrador — ver guardar()).
      */
+    private static function idDelRol(string $nombre): int
+    {
+        $id = Role::where('name', $nombre)->value('id');
+
+        return is_numeric($id) ? (int) $id : 0;
+    }
+
+    /** @return array<int, int> */
+    private static function aEnteros(mixed $valores): array
+    {
+        if (! is_array($valores)) {
+            return [];
+        }
+
+        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $valores);
+    }
+
+    private static function aTexto(mixed $valor): string
+    {
+        return is_scalar($valor) ? (string) $valor : '';
+    }
+
     protected function esSoloRrhh(): bool
     {
-        $rrhhId = (int) Role::where('name', 'rrhh')->value('id');
-        $roles = array_map('intval', $this->rolesSeleccionados);
+        $rrhhId = self::idDelRol('rrhh');
+        $roles = self::aEnteros($this->rolesSeleccionados);
 
         return $rrhhId > 0 && $roles !== [] && array_diff($roles, [$rrhhId]) === [];
     }
@@ -245,9 +267,9 @@ class UsuarioAdminForm extends Component
 
         $datos = $this->validate();
 
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-        $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
-        $roles = array_values(array_map('intval', $datos['rolesSeleccionados']));
+        $adminId = self::idDelRol('admin');
+        $trabajadorId = self::idDelRol('trabajador');
+        $roles = array_values(self::aEnteros($datos['rolesSeleccionados']));
 
         if (! $this->validarRoles($roles, $adminId, $trabajadorId)) {
             return;
@@ -318,8 +340,8 @@ class UsuarioAdminForm extends Component
         // da de alta desde el organigrama, nunca desde este formulario.
         // Un RR. HH. con rol trabajador también se da de alta desde el organigrama.
         if ($this->usuario === null) {
-            $rrhhId = (int) Role::where('name', 'rrhh')->value('id');
-            $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
+            $rrhhId = self::idDelRol('rrhh');
+            $trabajadorId = self::idDelRol('trabajador');
 
             if (! in_array($adminId, $roles, true) && ! in_array($rrhhId, $roles, true)) {
                 $this->addError('rolesSeleccionados', 'Desde Cuentas de usuario solo se crean administradores o RR. HH. puros. Para dar de alta trabajadores, hazlo desde el organigrama.');
@@ -365,7 +387,7 @@ class UsuarioAdminForm extends Component
 
         if ($this->usuario
             && $this->usuario->unidad_organica_id !== null
-            && (int) $datos['unidadOrganicaId'] !== (int) $this->usuario->unidad_organica_id
+            && (is_numeric($datos['unidadOrganicaId']) ? (int) $datos['unidadOrganicaId'] : 0) !== (int) $this->usuario->unidad_organica_id
             && $this->usuario->unidadesQueEncabeza()->exists()
         ) {
             $this->addError('unidadOrganicaId', 'Encabeza una unidad: reasigna primero esa jefatura antes de moverlo a otra unidad.');
@@ -387,8 +409,8 @@ class UsuarioAdminForm extends Component
             return true;
         }
 
-        $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');
-        $conservaRol = in_array($rolRrhhId, array_map('intval', $datos['rolesSeleccionados']), true);
+        $rolRrhhId = self::idDelRol('rrhh');
+        $conservaRol = in_array($rolRrhhId, self::aEnteros($datos['rolesSeleccionados']), true);
 
         if (! $datos['activo']) {
             $this->addError('activo', 'Es el único usuario de RR. HH. activo: sin él, toda papeleta aprobada por el jefe se autorizaría sola. Designa primero a otra persona con rol RR. HH.');
@@ -416,8 +438,8 @@ class UsuarioAdminForm extends Component
             return true;
         }
 
-        $rolAdminId = (int) Role::where('name', 'admin')->value('id');
-        $conservaRol = in_array($rolAdminId, array_map('intval', $datos['rolesSeleccionados']), true);
+        $rolAdminId = self::idDelRol('admin');
+        $conservaRol = in_array($rolAdminId, self::aEnteros($datos['rolesSeleccionados']), true);
 
         if (! $datos['activo']) {
             $this->addError('activo', 'Es el único administrador activo: sin él nadie puede gestionar el sistema. Designa primero a otro administrador.');
@@ -503,7 +525,7 @@ class UsuarioAdminForm extends Component
             // Reseteo manual opcional: si el admin llenó el campo, se
             // le pedirá actualizarla de nuevo en su próximo ingreso.
             if (filled($datos['password'])) {
-                $atributos['password'] = Hash::make($datos['password']);
+                $atributos['password'] = Hash::make(self::aTexto($datos['password']));
                 $atributos['debe_actualizar_password'] = true;
             }
 
@@ -521,7 +543,7 @@ class UsuarioAdminForm extends Component
             // Alta nueva: la contraseña inicial siempre es el DNI,
             // nunca lo que se haya escrito en el campo (que ni
             // siquiera se muestra en este caso, ver la vista).
-            $atributos['password'] = Hash::make($datos['dni']);
+            $atributos['password'] = Hash::make(self::aTexto($datos['dni']));
             $atributos['debe_actualizar_password'] = true;
 
             $this->usuario = User::create($atributos);
@@ -529,7 +551,7 @@ class UsuarioAdminForm extends Component
 
         // Los checkboxes de Livewire llegan como strings ("3"): Spatie los tomaría por
         // NOMBRE de rol (RoleDoesNotExist). Con enteros los busca por id.
-        $this->usuario->syncRoles(array_map('intval', $datos['rolesSeleccionados']));
+        $this->usuario->syncRoles(self::aEnteros($datos['rolesSeleccionados']));
         PapeletaActualizada::olvidarDestinatariosFijos();
 
         if ($requiereTurno && $datos['activo']) {
@@ -538,11 +560,11 @@ class UsuarioAdminForm extends Component
 
             $generador->cargarConfiguracion(
                 trabajador: $this->usuario,
-                turno: $datos['turno'],
-                fechaAncla: Carbon::parse($datos['fechaAncla']),
+                turno: self::aTexto($datos['turno']),
+                fechaAncla: Carbon::parse(self::aTexto($datos['fechaAncla'])),
                 actor: $actor,
-                diasTrabajo: $datos['diasTrabajo'],
-                diasDescanso: $datos['diasDescanso'],
+                diasTrabajo: is_numeric($datos['diasTrabajo']) ? (int) $datos['diasTrabajo'] : 0,
+                diasDescanso: is_numeric($datos['diasDescanso']) ? (int) $datos['diasDescanso'] : 0,
             );
         }
     }

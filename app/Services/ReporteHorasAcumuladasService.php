@@ -137,6 +137,12 @@ class ReporteHorasAcumuladasService
      * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
      * @return Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>
      */
+    /** Collection::sum() devuelve mixed cuando no reconoce el shape; esto lo deja en int. */
+    private static function sumaEntera(mixed $valor): int
+    {
+        return is_numeric($valor) ? (int) $valor : 0;
+    }
+
     public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
         return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
@@ -153,8 +159,8 @@ class ReporteHorasAcumuladasService
                     'sede' => $primera['sede'],
                     'unidad_organica' => $primera['unidad_organica'],
                     'papeletas' => $filas->count(),
-                    'minutos_totales' => (int) $filas->sum('minutos'),
-                    'minutos_con_descuento' => (int) $conDescuento->sum('minutos'),
+                    'minutos_totales' => self::sumaEntera($filas->sum('minutos')),
+                    'minutos_con_descuento' => self::sumaEntera($conDescuento->sum('minutos')),
                     'papeletas_con_descuento' => $conDescuento->count(),
                 ];
             })
@@ -190,7 +196,7 @@ class ReporteHorasAcumuladasService
                     'trabajador_id' => $primera['trabajador_id'],
                     'trabajador' => $primera['trabajador'],
                     'dia' => $primera['dia'],
-                    'minutos' => (int) $filas->sum('minutos'),
+                    'minutos' => self::sumaEntera($filas->sum('minutos')),
                     'motivos' => $filas->pluck('motivo')->unique()->implode(', '),
                 ];
             })

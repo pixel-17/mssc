@@ -47,7 +47,8 @@ class Turno extends Model
         // Eloquent no dispara eventos de modelo para ellas. Esos dos
         // servicios siguen notificando a mano después de escribir.
         static::saved(function (self $turno) {
-            $antes = $turno->wasChanged('user_id') ? (int) $turno->getOriginal('user_id') : null;
+            $original = $turno->getOriginal('user_id');
+            $antes = $turno->wasChanged('user_id') && is_numeric($original) ? (int) $original : null;
 
             HorarioActualizado::notificar(...array_filter([$turno->user_id, $antes]));
         });

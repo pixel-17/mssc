@@ -48,7 +48,7 @@ class FortifyServiceProvider extends ServiceProvider
             // Credenciales correctas pero cuenta desactivada: se notifica al
             // correo registrado del usuario y se muestra un mensaje neutro en
             // pantalla (no confirma si las credenciales eran correctas).
-            if ($user && Hash::check($request->password, $user->password) && ! $user->activo) {
+            if ($user && Hash::check($request->string('password')->toString(), $user->password) && ! $user->activo) {
                 $user->notify(new CuentaDesactivadaNotification);
 
                 throw ValidationException::withMessages([
@@ -57,7 +57,7 @@ class FortifyServiceProvider extends ServiceProvider
             }
 
             // Credenciales correctas + activo: entra.
-            if ($user && Hash::check($request->password, $user->password)) {
+            if ($user && Hash::check($request->string('password')->toString(), $user->password)) {
                 return $user;
             }
 
@@ -66,7 +66,7 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('login', function (Request $request) {
-            $throttleKey = Str::transliterate(Str::lower($request->input(Fortify::username())).'|'.$request->ip());
+            $throttleKey = Str::transliterate(Str::lower($request->string(Fortify::username())->toString()).'|'.$request->ip());
 
             return Limit::perMinute(5)->by($throttleKey);
         });
@@ -76,10 +76,10 @@ class FortifyServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('passkeys', function (Request $request) {
-            $credentialId = $request->input('credential.id');
+            $credentialId = $request->string('credential.id')->toString();
 
             return Limit::perMinute(10)->by(
-                ($credentialId ?: $request->session()->getId()).'|'.$request->ip()
+                ($credentialId !== '' ? $credentialId : $request->session()->getId()).'|'.$request->ip()
             );
         });
     }

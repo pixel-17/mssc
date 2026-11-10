@@ -198,13 +198,15 @@ class CambiarEstadoUsuarioAction
             throw new UsuarioException('El régimen del jefe nuevo debe ser 276 o 728.');
         }
 
+        $aTexto = static fn (mixed $v): string => is_scalar($v) ? (string) $v : '';
+
         app(CrearUsuarioAction::class)->ejecutar($actor, [
-            'name' => $nuevo['name'],
-            'apellido' => $nuevo['apellido'],
-            'dni' => $nuevo['dni'],
-            'email' => $nuevo['email'],
-            'regimen' => $nuevo['regimen'],
-            'sede_id' => $nuevo['sede_id'] ?? $saliente->sede_id,
+            'name' => $aTexto($nuevo['name']),
+            'apellido' => $aTexto($nuevo['apellido']),
+            'dni' => $aTexto($nuevo['dni']),
+            'email' => $aTexto($nuevo['email']),
+            'regimen' => $aTexto($nuevo['regimen']),
+            'sede_id' => is_numeric($nuevo['sede_id'] ?? null) ? (int) $nuevo['sede_id'] : $saliente->sede_id,
             'unidad_organica_id' => $unidad->id,
             'tipo' => 'jefe_inmediato',
         ], true);

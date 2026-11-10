@@ -126,7 +126,7 @@ class UsuarioForm extends Component
             $this->regimen = $existente->regimen ?? '';
             $this->sedeId = $existente->sede_id;
             $this->unidadOrganicaId = $existente->unidad_organica_id;
-            $this->rolesSeleccionados = $existente->roles->pluck('id')->all();
+            $this->rolesSeleccionados = self::aEnteros($existente->roles->pluck('id')->all());
             $this->activo = $existente->activo;
 
             return;
@@ -136,7 +136,7 @@ class UsuarioForm extends Component
 
         if ($this->esAdmin() && request()->query('tipo') === 'admin') {
             $this->nuevoAdmin = true;
-            $adminId = (int) Role::where('name', 'admin')->value('id');
+            $adminId = self::idDelRol('admin');
             $this->rolesSeleccionados = $adminId > 0 ? [(string) $adminId] : [];
 
             return;
@@ -207,6 +207,28 @@ class UsuarioForm extends Component
         abort_unless($actor->can('puedeCrearAlgo', User::class), 403);
 
         return 'equipo';
+    }
+
+    private static function idDelRol(string $nombre): int
+    {
+        $id = Role::where('name', $nombre)->value('id');
+
+        return is_numeric($id) ? (int) $id : 0;
+    }
+
+    /** @return array<int, int> */
+    private static function aEnteros(mixed $valores): array
+    {
+        if (! is_array($valores)) {
+            return [];
+        }
+
+        return array_map(static fn (mixed $id): int => is_numeric($id) ? (int) $id : 0, $valores);
+    }
+
+    private static function aTexto(mixed $valor): string
+    {
+        return is_scalar($valor) ? (string) $valor : '';
     }
 
     protected function esAdmin(): bool
@@ -376,11 +398,11 @@ class UsuarioForm extends Component
 
         try {
             $nuevo = app(CrearUsuarioAction::class)->ejecutar($actor, [
-                'name' => $datos['name'],
-                'apellido' => $datos['apellido'],
-                'dni' => $datos['dni'],
-                'email' => $datos['email'],
-                'regimen' => $datos['regimen'],
+                'name' => self::aTexto($datos['name']),
+                'apellido' => self::aTexto($datos['apellido']),
+                'dni' => self::aTexto($datos['dni']),
+                'email' => self::aTexto($datos['email']),
+                'regimen' => self::aTexto($datos['regimen']),
                 'sede_id' => $esArea ? $this->sedeId : null,
                 'unidad_organica_id' => $esArea ? $this->unidadOrganicaId : null,
                 'tipo' => $esArea ? $this->tipo : 'trabajador',
@@ -450,9 +472,9 @@ class UsuarioForm extends Component
 
         DB::transaction(function () use ($datos, $activo, $debeRetirarTurno, $usuario) {
             app(EditarUsuarioAction::class)->ejecutar($usuario, [
-                'name' => $datos['name'],
-                'apellido' => $datos['apellido'],
-                'email' => $datos['email'],
+                'name' => self::aTexto($datos['name']),
+                'apellido' => self::aTexto($datos['apellido']),
+                'email' => self::aTexto($datos['email']),
                 'sede_id' => $usuario->sede_id,
                 'unidad_organica_id' => $usuario->unidad_organica_id,
             ], false);
@@ -487,13 +509,13 @@ class UsuarioForm extends Component
     protected function guardarComoAdminOArea(array $datos, GeneradorTurnoMensualService $generador): void
     {
         $esAdmin = $this->esAdmin();
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-        $trabajadorId = (int) Role::where('name', 'trabajador')->value('id');
+        $adminId = self::idDelRol('admin');
+        $trabajadorId = self::idDelRol('trabajador');
 
         // Jefe de Área no modifica roles: conserva los actuales.
         $roles = $esAdmin
-            ? array_map('intval', $datos['rolesSeleccionados'])
-            : ($this->usuario->roles ?? collect())->pluck('id')->map(fn ($id) => (int) $id)->all();
+            ? self::aEnteros($datos['rolesSeleccionados'])
+            : self::aEnteros(($this->usuario->roles ?? collect())->pluck('id')->all());
 
         $activo = ($esAdmin || $this->esArea())
             ? (bool) ($datos['activo'] ?? $this->usuario->activo ?? true)
@@ -521,7 +543,7 @@ class UsuarioForm extends Component
             }
 
             if ($this->usuario?->esUnicoRrhhActivo()) {
-                $rolRrhhId = (int) Role::where('name', 'rrhh')->value('id');
+                $rolRrhhId = self::idDelRol('rrhh');
 
                 if (! $activo) {
                     $this->addError('activo', 'Es el único usuario de RR. HH. activo. Designa primero a otra persona.');
@@ -559,7 +581,7 @@ class UsuarioForm extends Component
         // no se tocó) y aparece también como miembro en la nueva.
         if ($this->usuario
             && $this->usuario->unidad_organica_id !== null
-            && (int) $datos['unidadOrganicaId'] !== (int) $this->usuario->unidad_organica_id
+            && (is_numeric($datos['unidadOrganicaId']) ? (int) $datos['unidadOrganicaId'] : 0) !== (int) $this->usuario->unidad_organica_id
             && $this->usuario->unidadesQueEncabeza()->exists()
         ) {
             $this->addError('unidadOrganicaId', 'Encabeza una unidad: reasigna primero esa jefatura antes de moverlo a otra unidad.');
@@ -618,7 +640,7 @@ class UsuarioForm extends Component
         DB::transaction(function () use ($atributos, $datos, $generador, $debeRetirarTurno, $esAdmin, $activo, $roles) {
             if ($this->usuario) {
                 if ($esAdmin && filled($datos['password'] ?? null)) {
-                    $atributos['password'] = Hash::make($datos['password']);
+                    $atributos['password'] = Hash::make(self::aTexto($datos['password']));
                     $atributos['debe_actualizar_password'] = true;
                 }
 
@@ -632,7 +654,7 @@ class UsuarioForm extends Component
                     $generador->retirarTurno($this->usuario);
                 }
             } else {
-                $atributos['password'] = Hash::make($datos['dni']);
+                $atributos['password'] = Hash::make(self::aTexto($datos['dni']));
                 $atributos['debe_actualizar_password'] = true;
 
                 $this->usuario = User::create($atributos);

@@ -4,6 +4,7 @@ namespace App\Actions\Fortify;
 
 use App\Models\User;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Laravel\Fortify\Contracts\UpdatesUserProfileInformation;
@@ -26,29 +27,27 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
         ])->validateWithBag('updateProfileInformation');
 
-        if (isset($input['photo'])) {
+        if ($input['photo'] instanceof UploadedFile) {
             $user->updateProfilePhoto($input['photo']);
         }
 
-        if ($input['email'] !== $user->email &&
+        $email = is_string($input['email']) ? $input['email'] : '';
+
+        if ($email !== $user->email &&
             $user instanceof MustVerifyEmail) {
-            $this->updateVerifiedUser($user, $input);
+            $this->updateVerifiedUser($user, $email);
         } else {
             $user->forceFill([
-                'email' => $input['email'],
+                'email' => $email,
             ])->save();
         }
     }
 
-    /**
-     * Update the given verified user's profile information.
-     *
-     * @param  array<string, string>  $input
-     */
-    protected function updateVerifiedUser(User $user, array $input): void
+    /** Update the given verified user's profile information. */
+    protected function updateVerifiedUser(User $user, string $email): void
     {
         $user->forceFill([
-            'email' => $input['email'],
+            'email' => $email,
             'email_verified_at' => null,
         ])->save();
 

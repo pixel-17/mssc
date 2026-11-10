@@ -189,6 +189,13 @@ class UnidadModal extends Component
         $this->dispatch('org-actualizado', mensaje: 'Unidad eliminada.');
     }
 
+    private function nombreDePadre(int $parentId): string
+    {
+        $nombre = UnidadOrganica::whereKey($parentId)->value('nombre');
+
+        return is_string($nombre) ? $nombre : '';
+    }
+
     public function render(): View
     {
         if (! $this->abierto) {
@@ -251,7 +258,7 @@ class UnidadModal extends Component
             // Subtítulo: dónde cuelga la unidad (o cuántas personas tiene).
             'contexto' => $unidad
                 ? $unidad->padre?->nombre
-                : ($this->parentId ? 'Dentro de '.UnidadOrganica::whereKey($this->parentId)->value('nombre') : 'Unidad raíz'),
+                : ($this->parentId ? 'Dentro de '.$this->nombreDePadre($this->parentId) : 'Unidad raíz'),
             'esAdmin' => $esAdmin,
         ]);
     }

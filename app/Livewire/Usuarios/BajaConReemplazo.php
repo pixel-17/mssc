@@ -39,6 +39,7 @@ class BajaConReemplazo extends Component
      *
      * @var array<int|string, array<string, mixed>>
      */
+    /** @var array<int|string, array{modo?: string, usuario_id?: int|string|null, nuevo?: array<string, mixed>}> */
     public array $decisiones = [];
 
     public ?string $error = null;
@@ -91,7 +92,8 @@ class BajaConReemplazo extends Component
             ];
 
             if ($modo === CambiarEstadoUsuarioAction::REEMPLAZO_NUEVO) {
-                $correo = (string) ($decision['nuevo']['email'] ?? '');
+                $emailNuevo = $decision['nuevo']['email'] ?? '';
+                $correo = is_scalar($emailNuevo) ? (string) $emailNuevo : '';
                 if ($correo !== '' && User::where('email', $correo)->exists()) {
                     $this->error = 'El correo '.$correo.' ya está registrado: usa otro o elige a esa persona como reemplazo.';
 

@@ -100,9 +100,13 @@ trait MueveJefe
 
         $this->propuestaJefe = [
             'jefe' => (int) $jefe->id,
-            'origen' => (int) ($unidad !== null
-                ? $unidad['unidad']->parent_id
-                : ($jefe->unidadesQueEncabeza()->value('parent_id') ?? 0)),
+            'origen' => $unidad !== null
+                ? (int) $unidad['unidad']->parent_id
+                : (static function () use ($jefe): int {
+                    $valor = $jefe->unidadesQueEncabeza()->value('parent_id');
+
+                    return is_numeric($valor) ? (int) $valor : 0;
+                })(),
             'destino' => (int) $destino->id,
         ];
     }

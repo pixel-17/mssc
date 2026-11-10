@@ -240,6 +240,10 @@ trait MueveTrabajador
             return [];
         }
 
+        if (! $ficha['persona'] instanceof User) {
+            return [];
+        }
+
         $actual = (int) $ficha['persona']->unidad_organica_id;
 
         $destinos = $unidades

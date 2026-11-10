@@ -459,7 +459,7 @@ class User extends Authenticatable
     /** @return Collection<int, int> */
     private function unidadIdsComoJefe(): Collection
     {
-        return UnidadOrganica::where('jefe_id', $this->id)->pluck('id');
+        return UnidadOrganica::where('jefe_id', $this->id)->pluck('id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->values();
     }
 
     /**

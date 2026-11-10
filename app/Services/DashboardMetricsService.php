@@ -84,7 +84,8 @@ class DashboardMetricsService
      */
     private function recordar(string $clave, \Closure $calcular): array
     {
-        $version = (int) Cache::get(self::CLAVE_VERSION, 1);
+        $versionCache = Cache::get(self::CLAVE_VERSION, 1);
+        $version = is_numeric($versionCache) ? (int) $versionCache : 1;
 
         return Cache::remember("dashboard-metricas:{$version}:{$clave}", self::TTL_SEGUNDOS, $calcular);
     }
@@ -97,7 +98,8 @@ class DashboardMetricsService
         $porEstado = Papeleta::whereNotState('estado', $this->estadosTerminales())
             ->selectRaw('estado, count(*) as total')
             ->groupBy('estado')
-            ->pluck('total', 'estado');
+            ->pluck('total', 'estado')
+            ->map(fn (mixed $v): int => is_numeric($v) ? (int) $v : 0);
 
         return [
             'usuarios_total' => User::count(),

@@ -149,7 +149,8 @@ class ArmadorOrganigrama
             ->groupBy('estado')
             ->pluck('total', 'estado');
 
-        $turno = ConfiguracionTurno::where('user_id', $persona->id)->value('turno');
+        $turnoValor = ConfiguracionTurno::where('user_id', $persona->id)->value('turno');
+        $turno = is_string($turnoValor) ? $turnoValor : null;
 
         return [
             'persona' => $persona,
@@ -159,10 +160,14 @@ class ArmadorOrganigrama
             ]),
             'turno' => $turno ? ConfiguracionTurno::etiquetaDeTurno($turno) : null,
             'pendientes' => collect(self::ESTADOS_PENDIENTES)
-                ->map(fn (string $etiqueta, string $estado) => ['etiqueta' => $etiqueta, 'total' => (int) ($porEstado[$estado] ?? 0)])
+                ->map(function (string $etiqueta, string $estado) use ($porEstado): array {
+                    $total = $porEstado[$estado] ?? 0;
+
+                    return ['etiqueta' => $etiqueta, 'total' => is_numeric($total) ? (int) $total : 0];
+                })
                 ->filter(fn (array $fila) => $fila['total'] > 0)
                 ->values(),
-            'pendientes_total' => (int) $porEstado->sum(),
+            'pendientes_total' => is_numeric($totalPendientes = $porEstado->sum()) ? (int) $totalPendientes : 0,
         ];
     }
 
@@ -171,13 +176,14 @@ class ArmadorOrganigrama
      * raíces y todo lo que cuelga de ellas.
      *
      * @param  Collection<int, UnidadOrganica>  $raicesDeAlcance
-     * @param  Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
+     * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @return array<int, true>
      */
     public function idsEnAlcance(Collection $raicesDeAlcance, Collection $porPadre): array
     {
         $enAlcance = [];
-        $pendientes = $raicesDeAlcance->pluck('id')->all();
+        /** @var array<int, int> $pendientes */
+        $pendientes = $raicesDeAlcance->pluck('id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all();
 
         while ($pendientes) {
             $id = array_pop($pendientes);
@@ -227,7 +233,7 @@ class ArmadorOrganigrama
      * Unidades desde donde se empieza a pintar.
      *
      * @param  Collection<int, UnidadOrganica>  $unidades
-     * @param  Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
+     * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @return Collection<int, UnidadOrganica>
      */
     public function raicesPara(User $usuario, Collection $unidades, Collection $porPadre): Collection
@@ -269,7 +275,7 @@ class ArmadorOrganigrama
      * filtrado por la búsqueda y por la sede. null = ese nodo y todo lo
      * de abajo quedan fuera del resultado.
      *
-     * @param  Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
+     * @param  \Illuminate\Support\Collection<int|string, \Illuminate\Database\Eloquent\Collection<int, UnidadOrganica>>  $porPadre
      * @param  array<string, int>  $stats
      * @param  array<int|string, int>  $conteoSedes
      */
@@ -346,11 +352,11 @@ class ArmadorOrganigrama
         return new NodoOrganigrama(
             unidad: $unidad,
             jefes: $jefes,
-            jefesEnFiltro: $jefesEnFiltro->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
+            jefesEnFiltro: $jefesEnFiltro->pluck('id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->values()->all(),
             filtroSede: $hayFiltroSede,
             miembros: $miembros,
             hijos: $hijos,
-            total: $miembros->count() + $jefesEnFiltro->count() + $hijos->sum('total'),
+            total: $miembros->count() + $jefesEnFiltro->count() + (is_numeric($totalHijos = $hijos->sum('total')) ? (int) $totalHijos : 0),
             sinJefe: $sinJefe,
         );
     }

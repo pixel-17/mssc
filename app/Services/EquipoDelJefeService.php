@@ -79,7 +79,7 @@ class EquipoDelJefeService
         return [
             $trabajadores,
             $esJefeDeArea,
-            array_values($paresSoloLectura->pluck('id')->map(fn ($id) => (int) $id)->all()),
+            array_values($paresSoloLectura->pluck('id')->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)->all()),
         ];
     }
 
@@ -115,7 +115,7 @@ class EquipoDelJefeService
     {
         return UnidadOrganica::whereNotNull('jefe_id')->pluck('jefe_id')
             ->merge(User::whereNotNull('jefe_inmediato_id')->distinct()->pluck('jefe_inmediato_id'))
-            ->map(fn ($id) => (int) $id)
+            ->map(fn (mixed $id): int => is_numeric($id) ? (int) $id : 0)
             ->unique()
             ->values();
     }

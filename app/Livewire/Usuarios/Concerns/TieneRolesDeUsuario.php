@@ -34,8 +34,8 @@ trait TieneRolesDeUsuario
      */
     protected function esSoloAdmin(): bool
     {
-        $adminId = (int) Role::where('name', 'admin')->value('id');
-        $roles = array_map('intval', $this->rolesSeleccionados);
+        $adminId = self::idDelRolAdmin();
+        $roles = array_map(static fn (mixed $id): int => (int) $id, $this->rolesSeleccionados);
 
         return $adminId > 0 && $roles !== [] && array_diff($roles, [$adminId]) === [];
     }
@@ -43,9 +43,17 @@ trait TieneRolesDeUsuario
     /** ¿Entre los roles elegidos está el de administrador? Un admin no tiene unidad ni jefes. */
     protected function incluyeAdmin(): bool
     {
-        $adminId = (int) Role::where('name', 'admin')->value('id');
+        $adminId = self::idDelRolAdmin();
+        $roles = array_map(static fn (mixed $id): int => (int) $id, $this->rolesSeleccionados);
 
-        return $adminId > 0 && in_array($adminId, array_map('intval', $this->rolesSeleccionados), true);
+        return $adminId > 0 && in_array($adminId, $roles, true);
+    }
+
+    private static function idDelRolAdmin(): int
+    {
+        $id = Role::where('name', 'admin')->value('id');
+
+        return is_numeric($id) ? (int) $id : 0;
     }
 
     /** ¿Se está cambiando el régimen de un usuario ya existente? */

@@ -129,7 +129,7 @@ class ResumenPapeletasService
                     foreach (self::GRUPOS as $grupo => $estados) {
                         $fila[$grupo] = $filas
                             ->filter(
-                                fn (Papeleta $p): bool => in_array(
+                                fn (mixed $p): bool => $p instanceof Papeleta && in_array(
                                     $p->estado::class,
                                     $estados,
                                     true,

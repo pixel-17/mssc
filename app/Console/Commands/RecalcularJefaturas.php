@@ -47,12 +47,18 @@ class RecalcularJefaturas extends Command
 
                     $usuariosCambiados++;
 
+                    $original = static function (string $campo) use ($usuario): string {
+                        $valor = $usuario->getOriginal($campo);
+
+                        return is_scalar($valor) ? (string) $valor : 'null';
+                    };
+
                     $this->line(sprintf(
                         '  usuario #%d: jefe inmediato %s -> %s | jefe de área %s -> %s',
                         $usuario->id,
-                        $usuario->getOriginal('jefe_inmediato_id') ?? 'null',
+                        $original('jefe_inmediato_id'),
                         $usuario->jefe_inmediato_id ?? 'null',
-                        $usuario->getOriginal('jefe_area_id') ?? 'null',
+                        $original('jefe_area_id'),
                         $usuario->jefe_area_id ?? 'null',
                     ));
 
