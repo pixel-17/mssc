@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UnidadOrganicaSeeder::class,
-
+            MotivoSeeder::class,
             ConfiguracionSeeder::class,
         ]);
 

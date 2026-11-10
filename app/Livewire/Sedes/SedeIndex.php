@@ -26,17 +26,31 @@ class SedeIndex extends Component
     {
         $this->autorizarAdmin();
 
+        // users.sede_id usa ->nullOnDelete() (ver migración create_users_table):
+        // el DELETE de la sede NUNCA falla por FK aunque tenga trabajadores
+        // asignados, la BD simplemente les pone sede_id = null en silencio.
+        // Por eso no basta con esperar la QueryException de más abajo (esa
+        // solo cubre papeletas, cuya FK sí es RESTRICT): hay que cortar
+        // explícitamente aquí si hay usuarios, antes de que eso pase.
+        if ($sede->usuarios()->exists()) {
+            $sede->forceFill(['activo' => false])->save();
+            session()->now('mensaje', 'Sede desactivada: tiene usuarios asociados y no puede borrarse.');
+
+            return;
+        }
+
         try {
             $sede->delete();
             session()->now('mensaje', 'Sede eliminada.');
         } catch (QueryException $e) {
-            // FK (papeletas, usuarios, hijos...): no se pierde historial, se desactiva.
+            // FK de papeletas (RESTRICT, ver migración create_papeletas_table):
+            // no se pierde historial, se desactiva.
             if (! str_starts_with((string) $e->getCode(), '23')) {
                 throw $e;
             }
 
             $sede->forceFill(['activo' => false])->save();
-            session()->now('mensaje', 'Sede desactivada: tiene usuarios o papeletas asociados y no puede borrarse.');
+            session()->now('mensaje', 'Sede desactivada: tiene papeletas asociadas y no puede borrarse.');
         }
     }
 

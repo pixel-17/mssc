@@ -152,6 +152,27 @@ class SedeCrudTest extends TestCase
         $this->assertModelExists($papeleta);
     }
 
+    /**
+     * users.sede_id usa ->nullOnDelete(): sin este corte explícito en
+     * SedeIndex::eliminar(), el DELETE de la sede no lanza ninguna
+     * QueryException (a diferencia del caso con papeletas, que sí es
+     * RESTRICT) y la sede se borra igual, dejando a sus trabajadores con
+     * sede_id = null en silencio.
+     */
+    public function test_eliminar_una_sede_con_trabajadores_pero_sin_papeletas_la_desactiva_en_vez_de_borrarla(): void
+    {
+        $sede = $this->sedeNueva(['nombre' => 'Sede con trabajadores']);
+        $trabajador = $this->usuarioDePrueba(['sede_id' => $sede->id]);
+
+        Livewire::actingAs($this->admin)
+            ->test(SedeIndex::class)
+            ->call('eliminar', $sede->id);
+
+        $this->assertModelExists($sede);
+        $this->assertFalse($sede->fresh()->activo);
+        $this->assertSame($sede->id, $trabajador->fresh()->sede_id);
+    }
+
     public function test_el_listado_muestra_las_sedes(): void
     {
         $this->sedeNueva(['nombre' => 'Sede visible en el listado']);

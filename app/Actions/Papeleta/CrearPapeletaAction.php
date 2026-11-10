@@ -132,6 +132,17 @@ class CrearPapeletaAction
             );
         }
 
+        // Al crear un trabajador se permite dejar la sede vacía (ver
+        // UsuarioForm::rules()), pero papeletas.sede_id es NOT NULL (es
+        // fotografía inmutable, ver comentario en la migración). Sin este
+        // corte, el INSERT fallaba crudo igual que antes pasaba con
+        // régimen. Mismo criterio: mensaje claro antes del INSERT.
+        if (! $trabajador->sede_id) {
+            throw new PapeletaException(
+                'Tu usuario no tiene una sede asignada. Comunícate con Administración para regularizarlo antes de crear una papeleta.'
+            );
+        }
+
         if (! $motivo->activo) {
             throw new PapeletaException("El motivo {$motivo->nombre} ya no está disponible.");
         }
