@@ -123,6 +123,12 @@ class ReporteHorasAcumuladasService
         return $resultado;
     }
 
+    /** Collection::sum() devuelve mixed cuando no reconoce el shape; esto lo deja en int. */
+    private static function sumaEntera(mixed $valor): int
+    {
+        return is_numeric($valor) ? (int) $valor : 0;
+    }
+
     /**
      * Agregado mensual por trabajador — responde directo la pregunta
      * "quién salió más / a quién le toca descuento": total de horas,
@@ -137,12 +143,6 @@ class ReporteHorasAcumuladasService
      * @param  Collection<int, array{papeleta_id: int, trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, dia: string, motivo: string, suma_descuento: bool, salida: \Illuminate\Support\Carbon|null, retorno: \Illuminate\Support\Carbon|null, minutos_brutos: int, minutos_refrigerio: int, minutos: int<0, max>}>|null  $detalle
      * @return Collection<int, array{trabajador_id: int, trabajador: string, dni: string, sede: string|null, unidad_organica: string|null, papeletas: int, minutos_totales: int, minutos_con_descuento: int, papeletas_con_descuento: int}>
      */
-    /** Collection::sum() devuelve mixed cuando no reconoce el shape; esto lo deja en int. */
-    private static function sumaEntera(mixed $valor): int
-    {
-        return is_numeric($valor) ? (int) $valor : 0;
-    }
-
     public function resumenPorTrabajador(User $usuario, string $mes, array $filtros = [], ?Collection $detalle = null): Collection
     {
         return ($detalle ?? $this->detalle($usuario, $mes, $filtros))
