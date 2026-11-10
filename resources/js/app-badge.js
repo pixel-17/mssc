@@ -36,8 +36,12 @@ export function actualizarBadgeApp(cantidad) {
 }
 
 document.addEventListener('livewire:init', () => {
-    Livewire.on('contador-notificaciones-actualizado', (cantidad) => {
-        // Livewire 3 manda el payload como array de argumentos.
-        actualizarBadgeApp(Array.isArray(cantidad) ? cantidad[0] : cantidad);
+    // NotificationBell despacha con un parametro NOMBRADO
+    // ($this->dispatch('contador-notificaciones-actualizado', cantidad: $noLeidas)),
+    // y Livewire.on() entrega esos parametros como UN OBJETO con esa
+    // clave — nunca como el valor suelto ni como array. Desestructurar
+    // { cantidad } es lo correcto aqui.
+    Livewire.on('contador-notificaciones-actualizado', ({ cantidad }) => {
+        actualizarBadgeApp(cantidad);
     });
 });
