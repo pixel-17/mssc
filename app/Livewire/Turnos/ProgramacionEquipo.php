@@ -56,7 +56,8 @@ class ProgramacionEquipo extends Component
         // para() igual mete al propio actor en el equipo (push($user)), y
         // cualquier trabajador 728 -- sin ser jefe de nadie -- podía
         // editar su propio horario desde esta pantalla de equipo.
-        abort_unless((bool) auth()->user()?->esJefeDeAlguien(), 403);
+       $actor = auth()->user();
+       abort_unless($actor?->hasRole('admin') || (bool) $actor?->esJefeDeAlguien(), 403);
 
         $this->anio = now()->year;
         $this->mes = now()->month;

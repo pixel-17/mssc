@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
@@ -115,7 +116,7 @@ abstract class NotificacionEnVivo extends Notification implements ShouldQueue
         ]);
     }
 
-    public function toWebPush(object $notifiable, self $notification): WebPushMessage
+    public function toWebPush(User $notifiable, self $notification): WebPushMessage
     {
         $mensaje = (new WebPushMessage)
             ->title($this->titulo)
