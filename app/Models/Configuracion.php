@@ -59,6 +59,43 @@ class Configuracion extends Model
         return is_scalar($valor) ? (string) $valor : $default;
     }
 
+    /**
+     * Versión legible del valor para el listado admin (ver
+     * configuracion-index.blade.php): "1,2,3,4,5" como "Lunes, Martes...",
+     * las horas con su sufijo y los minutos/horas/días hábiles con su
+     * unidad. No se usa para validar ni guardar, solo para mostrar — el
+     * valor crudo sigue siendo el que se edita en ConfiguracionForm.
+     */
+    public function valorFormateado(): string
+    {
+        if (preg_match('/(_HORA_(INICIO|FIN)|^BLOQUE_ALMUERZO_(INICIO|FIN))$/', $this->clave)) {
+            return "{$this->valor} h";
+        }
+
+        if ($this->clave === 'HORARIO_ORDINARIO_DIAS_LABORABLES') {
+            $nombres = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+
+            return collect(explode(',', $this->valor))
+                ->filter(fn ($dia) => $dia !== '')
+                ->map(fn ($dia) => $nombres[((int) $dia) - 1] ?? $dia)
+                ->implode(', ');
+        }
+
+        if (str_ends_with($this->clave, '_MINUTOS')) {
+            return "{$this->valor} min";
+        }
+
+        if (str_ends_with($this->clave, '_HORAS_HABILES')) {
+            return "{$this->valor} horas hábiles";
+        }
+
+        if (str_ends_with($this->clave, '_DIAS_HABILES')) {
+            return "{$this->valor} días hábiles";
+        }
+
+        return $this->valor;
+    }
+
     protected static function booted(): void
     {
         static::saved(fn (self $configuracion) => Cache::forget(self::claveCache($configuracion->clave)));
