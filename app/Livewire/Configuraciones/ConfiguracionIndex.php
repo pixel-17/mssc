@@ -119,8 +119,11 @@ class ConfiguracionIndex extends Component
     {
         $this->resetErrorBag();
 
-        $this->bloqueInicio = Configuracion::where('clave', self::CLAVE_BLOQUE_INICIO)->value('valor') ?? '';
-        $this->bloqueFin = Configuracion::where('clave', self::CLAVE_BLOQUE_FIN)->value('valor') ?? '';
+        $valorInicio = Configuracion::where('clave', self::CLAVE_BLOQUE_INICIO)->value('valor');
+        $this->bloqueInicio = is_string($valorInicio) ? $valorInicio : '';
+
+        $valorFin = Configuracion::where('clave', self::CLAVE_BLOQUE_FIN)->value('valor');
+        $this->bloqueFin = is_string($valorFin) ? $valorFin : '';
         $this->esBloqueAlmuerzo = true;
         $this->editandoId = null;
 
